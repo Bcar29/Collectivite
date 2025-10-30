@@ -1,0 +1,41 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="commune.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="LiveCharts.Wpf" Version="0.9.7" />
+    <PackageReference Include="MaterialDesignColors" Version="5.3.0" />
+    <PackageReference Include="MaterialDesignThemes" Version="5.3.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.10">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.10" />
+    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="commune.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

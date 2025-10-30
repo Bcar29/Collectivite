@@ -1,0 +1,271 @@
+# ═══════════════════════════════════════════════════════════
+# FICHIER .GITIGNORE POUR PROJET WPF/C# (.NET)
+# Projet : Collectivite - Gestion Budgétaire
+# ═══════════════════════════════════════════════════════════
+
+# ───────────────────────────────────────────────────────────
+# VISUAL STUDIO / RIDER
+# ───────────────────────────────────────────────────────────
+
+# Dossiers temporaires de Visual Studio
+.vs/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Fichiers utilisateur Visual Studio
+*.userprefs
+
+# ReSharper (JetBrains)
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+
+# ───────────────────────────────────────────────────────────
+# BUILD ET COMPILATION
+# ───────────────────────────────────────────────────────────
+
+# Dossiers de sortie de build
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Fichiers de build
+*.dll
+*.exe
+*.pdb
+*.cache
+*.ilk
+*.lib
+*.exp
+*.vshost.*
+
+# NuGet Packages
+*.nupkg
+*.snupkg
+**/packages/*
+!**/packages/build/
+*.nuget.props
+*.nuget.targets
+
+# Dossier des packages NuGet (si pas restaurés automatiquement)
+packages/
+
+# ───────────────────────────────────────────────────────────
+# .NET CORE / .NET 5+
+# ───────────────────────────────────────────────────────────
+
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# ───────────────────────────────────────────────────────────
+# ENTITY FRAMEWORK
+# ───────────────────────────────────────────────────────────
+
+# Migrations (DÉCOMMENTEZ si vous ne voulez pas versionner les migrations)
+# **/Migrations/
+
+# Base de données locale
+*.mdf
+*.ldf
+*.ndf
+
+# SQLite
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# ───────────────────────────────────────────────────────────
+# FICHIERS DE CONFIGURATION SENSIBLES
+# ───────────────────────────────────────────────────────────
+
+# Fichiers de configuration avec mots de passe
+# (ATTENTION : Ne jamais commiter de mots de passe !)
+appsettings.Development.json
+appsettings.Local.json
+**/appsettings.*.json
+!**/appsettings.json
+!**/appsettings.Production.json
+
+# Fichiers de connexion
+connectionStrings.config
+secrets.json
+
+# Variables d'environnement
+.env
+.env.local
+.env.*.local
+
+# ───────────────────────────────────────────────────────────
+# TESTS
+# ───────────────────────────────────────────────────────────
+
+# Résultats de tests
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+*.trx
+*.coverage
+*.coveragexml
+
+# Code Coverage Tools
+*.dotCover
+
+# ───────────────────────────────────────────────────────────
+# WINDOWS
+# ───────────────────────────────────────────────────────────
+
+# Fichiers système Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Fichiers de raccourcis Windows
+*.lnk
+
+# ───────────────────────────────────────────────────────────
+# MACOS
+# ───────────────────────────────────────────────────────────
+
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# ───────────────────────────────────────────────────────────
+# LINUX
+# ───────────────────────────────────────────────────────────
+
+*~
+.directory
+.Trash-*
+
+# ───────────────────────────────────────────────────────────
+# DOCUMENTATION ET TEMPORAIRES
+# ───────────────────────────────────────────────────────────
+
+# Fichiers temporaires
+*.tmp
+*.temp
+*.bak
+*.swp
+*~.nib
+*.old
+
+# Documentation générée
+[Dd]oc[Oo]utput/
+DocProject/
+
+# ───────────────────────────────────────────────────────────
+# LOGS
+# ───────────────────────────────────────────────────────────
+
+*.log
+logs/
+*.log.*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ───────────────────────────────────────────────────────────
+# PUBLICATION
+# ───────────────────────────────────────────────────────────
+
+# Profils de publication
+*.pubxml
+*.publishproj
+
+# Dossier de publication
+publish/
+PublishProfiles/
+
+# Web Deploy
+*.Publish.xml
+*.azurePubxml
+
+# ───────────────────────────────────────────────────────────
+# WPFSPECIFIQUE
+# ───────────────────────────────────────────────────────────
+
+# Fichiers générés automatiquement par WPF
+*.g.cs
+*.g.i.cs
+GeneratedInternalTypeHelper.cs
+
+# ───────────────────────────────────────────────────────────
+# AUTRES
+# ───────────────────────────────────────────────────────────
+
+# Fichiers de verrouillage
+*.lock
+
+# Node modules (si vous utilisez npm pour quelque chose)
+node_modules/
+
+# Bower
+bower_components/
+
+# Webpack
+dist/
+
+# Archives
+*.zip
+*.rar
+*.7z
+*.tar
+*.gz
+
+# Fichiers de sauvegarde d'éditeurs
+*.bak
+*.gho
+*.ori
+*.orig
+*.tmp
+
+# ───────────────────────────────────────────────────────────
+# SPÉCIFIQUE AU PROJET COLLECTIVITE
+# ───────────────────────────────────────────────────────────
+
+# Fichiers de test/debug personnels
+TODO.txt
+NOTES.txt
+test-data/
+
+# Exports et rapports générés
+exports/
+reports/
+*.pdf
+*.xlsx
+*.docx
+
+# Sauvegardes de base de données
+*.sql.backup
+backups/
+
+# Fichiers de migration générés (si besoin)
+# Migrations/
+
+# Certificats et clés (TRÈS IMPORTANT)
+*.pfx
+*.cer
+*.key
+*.pem
+
+# ═══════════════════════════════════════════════════════════
+# FIN DU FICHIER .GITIGNORE
+# ═══════════════════════════════════════════════════════════
