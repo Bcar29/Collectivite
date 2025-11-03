@@ -2,6 +2,10 @@ using Collectivite.Services;
 using Collectivite.ViewModels;
 using System.Windows;
 
+// Ajoutez cette ligne pour inclure le namespace contenant CommunePage
+using Collectivite.Views.Pages;
+using Collectivite.Views;
+
 namespace Collectivite
 {
     public partial class MainWindow : Window
@@ -13,7 +17,7 @@ namespace Collectivite
             InitializeComponent();
 
             // Initialiser le service de navigation
-           NavigationService.Instance.MainFrame = MainContentFrame;
+            NavigationService.Instance.MainFrame = MainContentFrame;
 
             // Initialiser le ViewModel
             var context = new AppDbContext();
@@ -34,7 +38,8 @@ namespace Collectivite
         private void CommuneButton_Click(object sender, RoutedEventArgs e)
         {
             _viewModel.UpdatePageTitle("CONFIGURATION - COMMUNE");
-            // NavigationService.Instance.NavigateTo(new Views.Pages.CommunePage());
+            // Utilisez le type CommunePage directement grâce à l'import
+            NavigationService.Instance.NavigateTo(new Views.Pages.CommunePage());
             _viewModel.IsMenuOpen = false;
         }
 
@@ -62,7 +67,7 @@ namespace Collectivite
         private void NavigateToDashboard()
         {
             _viewModel.UpdatePageTitle("TABLEAU DE BORD");
-            NavigationService.Instance.NavigateTo(new Views.Pages.DashboardPage());
+            NavigationService.Instance.NavigateTo(new DashboardPage());
         }
 
         // Méthode temporaire pour afficher un placeholder
@@ -70,7 +75,7 @@ namespace Collectivite
         {
             var grid = new System.Windows.Controls.Grid();
             grid.Background = System.Windows.Media.Brushes.White;
-            
+
             var stack = new System.Windows.Controls.StackPanel
             {
                 VerticalAlignment = VerticalAlignment.Center,

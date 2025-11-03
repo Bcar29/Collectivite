@@ -22,13 +22,13 @@ namespace Collectivite.Models
     public class Nommenclature
     {
         public int Id { get; set; }
-        public string? Chapitre {  get; set; }
+        public string? Chapitre { get; set; }
         public string? Article { get; set; }
         public string? Paragraphe { get; set; }
         public string? SousParagraphe { get; set; }
         public required string Intitule { get; set; }
         public required NatureType Nature { get; set; }
-        public required  SectionType Section { get; set; }
+        public required SectionType Section { get; set; }
 
         // Auto reference 
         public int? ParentId { get; set; }

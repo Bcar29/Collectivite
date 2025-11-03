@@ -12,10 +12,10 @@ namespace Collectivite.ViewModels
         public DashboardViewModel()
         {
             _statistics = new BudgetStatistics();
-            
+
             // Initialiser les données
             LoadDashboardData();
-            
+
             // Commandes pour les actions rapides
             NewMandatCommand = new RelayCommand(_ => ExecuteQuickAction("Nouveau Mandat"));
             NewBonCommandeCommand = new RelayCommand(_ => ExecuteQuickAction("Nouveau Bon de Commande"));
@@ -132,16 +132,16 @@ namespace Collectivite.ViewModels
 
             for (int i = 0; i < months.Length; i++)
             {
-                LineChartData.Add(new ChartDataPoint 
-                { 
-                    Label = months[i], 
+                LineChartData.Add(new ChartDataPoint
+                {
+                    Label = months[i],
                     Value = recettes[i],
                     Category = "Recettes"
                 });
-                
-                LineChartData.Add(new ChartDataPoint 
-                { 
-                    Label = months[i], 
+
+                LineChartData.Add(new ChartDataPoint
+                {
+                    Label = months[i],
                     Value = depenses[i],
                     Category = "Dépenses"
                 });

@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using System.Windows.Input;
 
 namespace Collectivite.Utils
@@ -17,6 +18,14 @@ namespace Collectivite.Utils
         public RelayCommand(Action<object?> execute, Func<object?, bool>? canExecute = null)
         {
             _execute = execute ?? throw new ArgumentNullException(nameof(execute));
+            _canExecute = canExecute;
+        }
+
+        // Async overload that accepts a Func<object?, Task>
+        public RelayCommand(Func<object?, Task> executeAsync, Func<object?, bool>? canExecute = null)
+        {
+            if (executeAsync == null) throw new ArgumentNullException(nameof(executeAsync));
+            _execute = (obj) => _ = executeAsync(obj);
             _canExecute = canExecute;
         }
 
@@ -53,6 +62,14 @@ namespace Collectivite.Utils
             _canExecute = canExecute;
         }
 
+        // Async overload for generic version
+        public RelayCommand(Func<T?, Task> executeAsync, Func<T?, bool>? canExecute = null)
+        {
+            if (executeAsync == null) throw new ArgumentNullException(nameof(executeAsync));
+            _execute = (arg) => _ = executeAsync(arg);
+            _canExecute = canExecute;
+        }
+
         public bool CanExecute(object? parameter)
         {
             return _canExecute == null || _canExecute((T?)parameter);
@@ -61,6 +78,11 @@ namespace Collectivite.Utils
         public void Execute(object? parameter)
         {
             _execute((T?)parameter);
+        }
+
+        public void RaiseCanExecuteChanged()
+        {
+            CommandManager.InvalidateRequerySuggested();
         }
     }
 }

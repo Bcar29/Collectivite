@@ -36,7 +36,7 @@
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Foreground" Value="#9E9E9E"/>
             <Setter Property="Margin" Value="20,15,0,5"/>
-            
+
         </Style>
     </Window.Resources>
 
@@ -91,7 +91,7 @@
 
                         <!-- Section Configuration -->
                         <TextBlock Text="Configuration" Style="{StaticResource MenuHeaderStyle}"/>
-                        
+
                         <Button Style="{StaticResource MenuButtonStyle}"
                                Click="CommuneButton_Click">
                             <StackPanel Orientation="Horizontal">

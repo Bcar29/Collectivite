@@ -60,7 +60,7 @@ namespace Collectivite.ViewModels
                 var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
                 if (parts.Length >= 2)
                     return $"{parts[0][0]}{parts[1][0]}".ToUpper();
-                
+
                 return name.Length >= 2 ? name.Substring(0, 2).ToUpper() : name[0].ToString().ToUpper();
             }
         }
@@ -96,7 +96,7 @@ namespace Collectivite.ViewModels
             if (result == MessageBoxResult.Yes)
             {
                 _authService.Logout();
-                
+
                 // Ouvrir la fenêtre de connexion
                 var loginWindow = new Views.LoginWindow();
                 loginWindow.Show();

@@ -75,7 +75,7 @@ namespace Collectivite.Models
         public decimal DepensesEngagees { get; set; }
         public decimal RecettesPercues { get; set; }
         public decimal SoldeDisponible { get; set; }
-        
+
         public double TauxExecution => BudgetTotal > 0 ? (double)(DepensesEngagees / BudgetTotal * 100) : 0;
         public double TauxRecettes => BudgetTotal > 0 ? (double)(RecettesPercues / BudgetTotal * 100) : 0;
     }
