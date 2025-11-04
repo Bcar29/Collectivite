@@ -1,18 +1,31 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Collectivite.Models
 {
+    [Table("Exercices")]
     public class Exercice
     {
+        [Key]
         public int Id { get; set; }
-        public required string Libelle { get; set; }
+
+        [Required(ErrorMessage = "Le libellé est obligatoire")]
+        [MaxLength(100)]
+        public string? Libelle { get; set; }
+
+        [Required(ErrorMessage = "La date de début est obligatoire")]
         public DateOnly DateDebut { get; set; }
-        public DateOnly dateFin {  get; set; }
+
+        [Required(ErrorMessage = "La date de fin est obligatoire")]
+        public DateOnly DateFin { get; set; }
+
+        [Required]
         public bool EstCloture { get; set; }
-        public ICollection<BudgetPrimitif>? BudgetsPrimitifs { get; set; } = new List<BudgetPrimitif>();
+
+        // 🔹 Relation : Un exercice a un seul budget primitif
+        public BudgetPrimitif? BudgetPrimitif { get; set; }
+       
     }
 }

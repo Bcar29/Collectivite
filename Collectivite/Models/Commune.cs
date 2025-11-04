@@ -12,5 +12,6 @@ namespace Collectivite.Models
         public required string Nom { get; set; }
         public ICollection<BudgetPrimitif>? BudgetsPrimitifs { get; set; } = new List<BudgetPrimitif>();
         public ICollection<User>? Users { get; set; } = new List<User>();
+        public ICollection<Exercice>? Exercices { get; set; } = new List<Exercice>();
     }
 }

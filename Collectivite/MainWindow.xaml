@@ -117,6 +117,19 @@
                         </Button>
 
                         <Button Style="{StaticResource MenuButtonStyle}"
+                                Click="NommenclatureButton_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="BookmarkMultiple" 
+                                                   VerticalAlignment="Center"
+                                                   Width="22"
+                                                   Height="22"
+                                                   Margin="0,0,15,0"/>
+                                <TextBlock Text="Nommenclature" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+
+                        <Button Style="{StaticResource MenuButtonStyle}"
                                Click="BudgetPrimitifButton_Click">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="FileDocument" 
@@ -139,7 +152,7 @@
                                                        Width="22"
                                                        Height="22"
                                                        Margin="0,0,15,0"/>
-                                <TextBlock Text="Budget Line" VerticalAlignment="Center"/>
+                                <TextBlock Text="Ligne Budgetaire" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
 

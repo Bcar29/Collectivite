@@ -1,0 +1,206 @@
+﻿<Page x:Class="Collectivite.Views.Pages.ExercicePage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+      Background="#F5F5F5"
+      Title="Gestion des Exercices">
+
+    <Page.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </Page.Resources>
+
+    <Grid>
+        <!-- Overlay de chargement -->
+        <Grid Background="#80000000" 
+              Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"
+              Panel.ZIndex="999">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}"
+                           Value="0"
+                           IsIndeterminate="True"
+                           Width="60"
+                           Height="60"/>
+                <TextBlock Text="Chargement..." 
+                         Foreground="White"
+                         FontSize="16"
+                         Margin="0,20,0,0"
+                         HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Contenu principal -->
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20">
+            <StackPanel>
+
+                <!-- Header avec bouton d'ajout -->
+                <Grid Margin="0,0,0,20">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="CalendarRange" 
+                                               Width="32" 
+                                               Height="32"
+                                               Foreground="#1976D2"
+                                               VerticalAlignment="Center"/>
+                        <TextBlock Text="Gestion des Exercices" 
+                                 FontSize="24"
+                                 FontWeight="SemiBold"
+                                 Margin="15,0,0,0"
+                                 VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                            Height="40"
+                            Command="{Binding OpenAddDialogCommand}"
+                            HorizontalAlignment="Right">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Plus" 
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,8,0"/>
+                            <TextBlock Text="Nouvel Exercice" 
+                                     VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
+
+                <!-- DataGrid -->
+                <materialDesign:Card Padding="0" 
+                                   UniformCornerRadius="8">
+                    <DataGrid ItemsSource="{Binding Exercices}"
+                              SelectedItem="{Binding SelectedExercice}"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              CanUserDeleteRows="False"
+                              IsReadOnly="True"
+                              SelectionMode="Single"
+                              materialDesign:DataGridAssist.CellPadding="13 8 8 8"
+                              materialDesign:DataGridAssist.ColumnHeaderPadding="8">
+
+                        <DataGrid.Columns>
+
+                            <!-- Libelle -->
+                            <DataGridTextColumn Header="Libelle" 
+                                              Binding="{Binding Libelle}"
+                                              Width="100"/>
+
+                            <!-- Période -->
+                            <DataGridTextColumn Header="Debut de l'exercice" 
+                                              Binding="{Binding DateDebut}"
+                                              Width="250"/>
+
+                            <DataGridTextColumn Header="Fin de l'exercice" 
+                                                  Binding="{Binding DateFin}"
+                                                  Width="250"/>
+
+
+                            <!-- Actions -->
+                            <DataGridTemplateColumn Header="Actions" Width="200">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" 
+                                                  HorizontalAlignment="Center">
+
+                                            <!-- Bouton Modifier -->
+                                            <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                  ToolTip="Modifier"
+                                                  Command="{Binding DataContext.OpenEditDialogCommand, 
+                                                          RelativeSource={RelativeSource AncestorType=Page}}"
+                                                  CommandParameter="{Binding}"
+                                                  Margin="4,0">
+                                                <materialDesign:PackIcon Kind="Pencil" 
+                                                                       Foreground="#1976D2"/>
+                                            </Button>
+
+                                            <!-- Bouton Clôturer -->
+                                            <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                  ToolTip="Clôturer"
+                                                  Command="{Binding DataContext.CloturerCommand, 
+                                                          RelativeSource={RelativeSource AncestorType=Page}}"
+                                                  CommandParameter="{Binding}"
+                                                  IsEnabled="{Binding EstCloture, Converter={StaticResource InverseBooleanConverter}}"
+                                                  Margin="4,0">
+                                                <materialDesign:PackIcon Kind="Lock" 
+                                                                       Foreground="#FF9800"/>
+                                            </Button> 
+
+                                            <!-- Bouton Supprimer -->
+                                            <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                  ToolTip="Supprimer"
+                                                  Command="{Binding DataContext.DeleteCommand, 
+                                                          RelativeSource={RelativeSource AncestorType=Page}}"
+                                                  CommandParameter="{Binding}"
+                                                  Margin="4,0">
+                                                <materialDesign:PackIcon Kind="Delete" 
+                                                                       Foreground="#F44336"/>
+                                            </Button>
+
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </materialDesign:Card>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Dialog Modal -->
+        <materialDesign:DialogHost IsOpen="{Binding IsDialogOpen}"
+                                 CloseOnClickAway="False"
+                                 Panel.ZIndex="1000">
+            <materialDesign:DialogHost.DialogContent>
+                <StackPanel Width="500" Margin="20">
+
+                    <!-- Titre du dialog -->
+                    <TextBlock Text="{Binding DialogTitle}"
+                             FontSize="20"
+                             FontWeight="SemiBold"
+                             Margin="0,0,0,20"/>
+
+                    <!-- Libelle -->
+                    <TextBox materialDesign:HintAssist.Hint="Libelle *"
+                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                           Text="{Binding DialogExercice.Libelle, UpdateSourceTrigger=PropertyChanged}"
+                           Margin="0,0,0,15"/>
+
+                    <!-- Date de début -->
+                    <DatePicker materialDesign:HintAssist.Hint="Date de début *"
+                              Style="{StaticResource MaterialDesignOutlinedDatePicker}"
+                              SelectedDate="{Binding DialogExercice.DateDebut}"
+                              Margin="0,0,0,15"/>
+
+                    <!-- Date de fin -->
+                    <DatePicker materialDesign:HintAssist.Hint="Date de fin *"
+                              Style="{StaticResource MaterialDesignOutlinedDatePicker}"
+                              SelectedDate="{Binding DialogExercice.DateFin}"
+                              Margin="0,0,0,15"/>
+
+                    <!-- Statut 
+                    <ComboBox materialDesign:HintAssist.Hint="Statut"
+                            Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                            SelectedItem="{Binding DialogExercice.estCloturer}"
+                            Margin="0,0,0,15">
+                        <ComboBoxItem Content="En cours"/>
+                        <ComboBoxItem Content="Approuvé"/>
+                        <ComboBoxItem Content="Clôturé"/>
+                    </ComboBox> -->
+
+                    <!-- Boutons -->
+                    <StackPanel Orientation="Horizontal" 
+                              HorizontalAlignment="Right">
+                        <Button Style="{StaticResource MaterialDesignFlatButton}"
+                              Content="Annuler"
+                              Command="{Binding CancelCommand}"
+                              Margin="0,0,10,0"/>
+
+                        <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                              Content="Enregistrer"
+                              Command="{Binding SaveCommand}"/>
+                    </StackPanel>
+
+                </StackPanel>
+            </materialDesign:DialogHost.DialogContent>
+        </materialDesign:DialogHost>
+
+    </Grid>
+</Page>

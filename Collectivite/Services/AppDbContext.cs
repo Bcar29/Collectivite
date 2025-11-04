@@ -40,18 +40,24 @@ namespace Collectivite.Services
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // 1️ Relation Commune ↔ BudgetPrimitif (1 → N)
-            modelBuilder.Entity<BudgetPrimitif>()
-                .HasOne(b => b.Commune)
-                .WithMany(c => c.BudgetsPrimitifs)
-                .HasForeignKey(b => b.CommuneId)
-                .OnDelete(DeleteBehavior.Restrict);
+            //modelBuilder.Entity<BudgetPrimitif>()
+            //    .HasOne(b => b.Commune)
+            //    .WithMany(c => c.BudgetsPrimitifs)
+            //    .HasForeignKey(b => b.CommuneId)
+            //    .OnDelete(DeleteBehavior.Restrict);
 
-            // 2️ Relation Exercice ↔ BudgetPrimitif (1 → N)
+
             modelBuilder.Entity<BudgetPrimitif>()
                 .HasOne(b => b.Exercice)
-                .WithMany(e => e.BudgetsPrimitifs)
-                .HasForeignKey(b => b.ExerciceId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .WithOne(e => e.BudgetPrimitif)
+                .HasForeignKey<BudgetPrimitif>(e => e.ExerciceId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Index unique pour garantir la relation One-to-One
+            modelBuilder.Entity<BudgetPrimitif>()
+                .HasIndex(e => e.ExerciceId)
+                .IsUnique();
+
 
             // 3️ Relation BudgetPrimitif ↔ BudgetLine (1 → N)
             modelBuilder.Entity<BudgetLine>()
@@ -80,6 +86,8 @@ namespace Collectivite.Services
                 .WithMany(c => c.Users)
                 .HasForeignKey(u => u.CommuneId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            
         }
     }
 }

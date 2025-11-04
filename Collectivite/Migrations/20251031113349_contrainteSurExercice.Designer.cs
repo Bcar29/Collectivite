@@ -4,6 +4,7 @@ using Collectivite.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Collectivite.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251031113349_contrainteSurExercice")]
+    partial class contrainteSurExercice
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -59,7 +62,7 @@ namespace Collectivite.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("CommuneId")
+                    b.Property<int>("CommuneId")
                         .HasColumnType("int");
 
                     b.Property<DateOnly>("DateVote")
@@ -75,8 +78,7 @@ namespace Collectivite.Migrations
 
                     b.HasIndex("CommuneId");
 
-                    b.HasIndex("ExerciceId")
-                        .IsUnique();
+                    b.HasIndex("ExerciceId");
 
                     b.ToTable("BudgetsPrimitifs");
                 });
@@ -106,9 +108,6 @@ namespace Collectivite.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("CommuneId")
-                        .HasColumnType("int");
-
                     b.Property<DateOnly>("DateDebut")
                         .HasColumnType("date");
 
@@ -118,6 +117,9 @@ namespace Collectivite.Migrations
                     b.Property<bool>("EstCloture")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<int>("IdCommune")
+                        .HasColumnType("int");
+
                     b.Property<string>("Libelle")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -125,7 +127,7 @@ namespace Collectivite.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CommuneId");
+                    b.HasIndex("IdCommune");
 
                     b.ToTable("Exercices");
                 });
@@ -139,24 +141,20 @@ namespace Collectivite.Migrations
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Article")
-                        .HasMaxLength(10)
-                        .HasColumnType("varchar(10)");
+                        .HasColumnType("longtext");
 
                     b.Property<string>("Chapitre")
-                        .HasMaxLength(10)
-                        .HasColumnType("varchar(10)");
+                        .HasColumnType("longtext");
 
                     b.Property<string>("Intitule")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("varchar(200)");
+                        .HasColumnType("longtext");
 
                     b.Property<int>("Nature")
                         .HasColumnType("int");
 
                     b.Property<string>("Paragraphe")
-                        .HasMaxLength(10)
-                        .HasColumnType("varchar(10)");
+                        .HasColumnType("longtext");
 
                     b.Property<int?>("ParentId")
                         .HasColumnType("int");
@@ -165,8 +163,7 @@ namespace Collectivite.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("SousParagraphe")
-                        .HasMaxLength(10)
-                        .HasColumnType("varchar(10)");
+                        .HasColumnType("longtext");
 
                     b.HasKey("Id");
 
@@ -230,24 +227,32 @@ namespace Collectivite.Migrations
 
             modelBuilder.Entity("Collectivite.Models.BudgetPrimitif", b =>
                 {
-                    b.HasOne("Collectivite.Models.Commune", null)
+                    b.HasOne("Collectivite.Models.Commune", "Commune")
                         .WithMany("BudgetsPrimitifs")
-                        .HasForeignKey("CommuneId");
+                        .HasForeignKey("CommuneId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("Collectivite.Models.Exercice", "Exercice")
-                        .WithOne("BudgetPrimitif")
-                        .HasForeignKey("Collectivite.Models.BudgetPrimitif", "ExerciceId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .WithMany("BudgetsPrimitifs")
+                        .HasForeignKey("ExerciceId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Commune");
 
                     b.Navigation("Exercice");
                 });
 
             modelBuilder.Entity("Collectivite.Models.Exercice", b =>
                 {
-                    b.HasOne("Collectivite.Models.Commune", null)
+                    b.HasOne("Collectivite.Models.Commune", "Commune")
                         .WithMany("Exercices")
-                        .HasForeignKey("CommuneId");
+                        .HasForeignKey("IdCommune")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Commune");
                 });
 
             modelBuilder.Entity("Collectivite.Models.Nommenclature", b =>
@@ -287,7 +292,7 @@ namespace Collectivite.Migrations
 
             modelBuilder.Entity("Collectivite.Models.Exercice", b =>
                 {
-                    b.Navigation("BudgetPrimitif");
+                    b.Navigation("BudgetsPrimitifs");
                 });
 
             modelBuilder.Entity("Collectivite.Models.Nommenclature", b =>

@@ -1,0 +1,336 @@
+﻿<Page x:Class="Collectivite.Views.Pages.BudgetPrimitifPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+      Language="fr-FR"
+      Background="#F5F5F5"
+      Title="Gestion des Budgets Primitifs">
+
+    <Page.Resources>
+        <!-- Converters -->
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </Page.Resources>
+
+    <Grid>
+        <!-- ═══════════════════════════════════════════════════════════
+             OVERLAY DE CHARGEMENT
+             ═══════════════════════════════════════════════════════════ -->
+        <Grid Background="#80000000" 
+              Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"
+              Panel.ZIndex="999">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}"
+                           Value="0"
+                           IsIndeterminate="True"
+                           Width="60"
+                           Height="60"/>
+                <TextBlock Text="Chargement..." 
+                         Foreground="White"
+                         FontSize="16"
+                         Margin="0,20,0,0"
+                         HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             CONTENU PRINCIPAL
+             ═══════════════════════════════════════════════════════════ -->
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20">
+            <StackPanel>
+
+                <!-- ───────────────────────────────────────────────────
+                     HEADER AVEC BOUTON D'AJOUT
+                     ─────────────────────────────────────────────────── -->
+                <Grid Margin="0,0,0,20">
+                    <!-- Titre -->
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="CashMultiple" 
+                                               Width="32" 
+                                               Height="32"
+                                               Foreground="#1976D2"
+                                               VerticalAlignment="Center"/>
+                        <TextBlock Text="Gestion des Budgets Primitifs" 
+                                 FontSize="24"
+                                 FontWeight="SemiBold"
+                                 Margin="15,0,0,0"
+                                 VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <!-- Bouton Ajouter -->
+                    <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                            Height="40"
+                            Command="{Binding OppenAddBudgetPrimitifCommand}"
+                            HorizontalAlignment="Right">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Plus" 
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,8,0"/>
+                            <TextBlock Text="Nouveau Budget" 
+                                     VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
+
+                <!-- ───────────────────────────────────────────────────
+                     DATAGRID DES BUDGETS PRIMITIFS
+                     ─────────────────────────────────────────────────── -->
+                <materialDesign:Card Padding="0" 
+                                   UniformCornerRadius="8">
+                    <DataGrid ItemsSource="{Binding BudgetPrimitifs}"
+                              SelectedItem="{Binding SelectedBudgetPrimitif}"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              CanUserDeleteRows="False"
+                              IsReadOnly="True"
+                              SelectionMode="Single"
+                              materialDesign:DataGridAssist.CellPadding="13 8 8 8"
+                              materialDesign:DataGridAssist.ColumnHeaderPadding="8">
+
+                        <DataGrid.Columns>
+
+                            <!-- Exercice -->
+                            <DataGridTextColumn Header="Exercice" 
+                                              Binding="{Binding Exercice.Libelle}"
+                                              Width="200"
+                                              FontWeight="Medium"/>
+
+                            <!-- Année (si disponible dans Exercice) -->
+                            <DataGridTemplateColumn Header="Année" Width="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="CalendarRange" 
+                                                                   Width="16" 
+                                                                   Height="16"
+                                                                   Foreground="#1976D2"
+                                                                   VerticalAlignment="Center"
+                                                                   Margin="0,0,8,0"/>
+                                            <TextBlock Text="{Binding Exercice.Annee}"
+                                                     VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Montant -->
+                            <DataGridTemplateColumn Header="Montant" Width="200">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="CurrencyUsd" 
+                                                                   Width="18" 
+                                                                   Height="18"
+                                                                   Foreground="#388E3C"
+                                                                   VerticalAlignment="Center"
+                                                                   Margin="0,0,8,0"/>
+                                            <TextBlock VerticalAlignment="Center"
+                                                     FontWeight="SemiBold"
+                                                     Foreground="#388E3C">
+                                                <TextBlock.Text>
+                                                    <MultiBinding StringFormat="{}{0:N0} GNF">
+                                                        <Binding Path="Montant"/>
+                                                    </MultiBinding>
+                                                </TextBlock.Text>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Date de vote -->
+                            <DataGridTemplateColumn Header="Date de Vote" Width="180">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="CalendarCheck" 
+                                                                   Width="16" 
+                                                                   Height="16"
+                                                                   Foreground="#F57C00"
+                                                                   VerticalAlignment="Center"
+                                                                   Margin="0,0,8,0"/>
+                                            <TextBlock Text="{Binding DateVote, StringFormat='dd/MM/yyyy'}"
+                                                     VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Statut (optionnel) -->
+                            <DataGridTemplateColumn Header="Statut" Width="150">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Background="#E8F5E9"
+                                              CornerRadius="12"
+                                              Padding="10,4">
+                                            <TextBlock Text="Voté"
+                                                     Foreground="#388E3C"
+                                                     FontSize="11"
+                                                     FontWeight="SemiBold"
+                                                     HorizontalAlignment="Center"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Actions -->
+                            <DataGridTemplateColumn Header="Actions" Width="150">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" 
+                                                  HorizontalAlignment="Center">
+
+                                            <!-- Bouton Modifier -->
+                                            <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                  ToolTip="Modifier"
+                                                  Command="{Binding DataContext.OppenEditBudgetPrimitifCommand, 
+                                                          RelativeSource={RelativeSource AncestorType=Page}}"
+                                                  CommandParameter="{Binding}"
+                                                  Margin="4,0">
+                                                <materialDesign:PackIcon Kind="Pencil" 
+                                                                       Foreground="#1976D2"/>
+                                            </Button>
+
+                                            <!-- Bouton Supprimer -->
+                                            <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                  ToolTip="Supprimer"
+                                                  Command="{Binding DataContext.DeleteBudgetPrimitifCommand, 
+                                                          RelativeSource={RelativeSource AncestorType=Page}}"
+                                                  CommandParameter="{Binding}"
+                                                  Margin="4,0">
+                                                <materialDesign:PackIcon Kind="Delete" 
+                                                                       Foreground="#F44336"/>
+                                            </Button>
+
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </materialDesign:Card>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             DIALOG MODAL AJOUT/MODIFICATION
+             ═══════════════════════════════════════════════════════════ -->
+        <materialDesign:DialogHost IsOpen="{Binding IsDialogOpen}"
+                                 CloseOnClickAway="False"
+                                 Panel.ZIndex="1000">
+            <materialDesign:DialogHost.DialogContent>
+                <StackPanel Width="550" Margin="20">
+
+                    <!-- Titre du dialog -->
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+                        <materialDesign:PackIcon Kind="CashMultiple" 
+                                               Width="24" 
+                                               Height="24"
+                                               Foreground="#1976D2"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,10,0"/>
+                        <TextBlock Text="{Binding DialogTitle}"
+                                 FontSize="20"
+                                 FontWeight="SemiBold"
+                                 VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <!-- Sélection de l'exercice -->
+                    <ComboBox materialDesign:HintAssist.Hint="Exercice *"
+                            Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                            ItemsSource="{Binding Exercices}"
+                            SelectedValue="{Binding DialogBudgetPrimitif.ExerciceId, UpdateSourceTrigger=PropertyChanged}"
+                            SelectedValuePath="Id"
+                            DisplayMemberPath="Libelle"
+                            Margin="0,0,0,15">
+                        <!--   <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="CalendarRange" 
+                                                           Width="16" 
+                                                           Height="16"
+                                                           Foreground="#1976D2"
+                                                           VerticalAlignment="Center"
+                                                           Margin="0,0,8,0"/>
+                                    <TextBlock>
+                                        <Run Text="{Binding Libelle}"/>
+                                        <Run Text=" (" Foreground="#666"/>
+                                        <Run Text="{Binding Annee}" Foreground="#666"/>
+                                        <Run Text=")" Foreground="#666"/>
+                                    </TextBlock>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>-->
+                    </ComboBox>
+
+                    <!-- Montant -->
+                    <TextBox materialDesign:HintAssist.Hint="Montant du budget (GNF) *"
+                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                           Text="{Binding DialogBudgetPrimitif.Montant, UpdateSourceTrigger=PropertyChanged, StringFormat=N0}"
+                           Margin="0,0,0,15">
+                        <TextBox.InputBindings>
+                            <KeyBinding Key="Enter" Command="{Binding SaveBudgetPrimitifCommand}"/>
+                        </TextBox.InputBindings>
+                    </TextBox>
+
+                    <!-- Date de vote -->
+                    <DatePicker materialDesign:HintAssist.Hint="Date de vote *"
+                              Style="{StaticResource MaterialDesignOutlinedDatePicker}"
+                              SelectedDate="{Binding DilogBudgetPrimitifDateVote}"
+                              Margin="0,0,0,15"/>
+
+                    <!-- Section d'information -->
+                    <Border Background="#FFF3E0"
+                          CornerRadius="8"
+                          Padding="15"
+                          Margin="0,0,0,15">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <materialDesign:PackIcon Kind="InformationOutline" 
+                                                       Width="20" 
+                                                       Height="20"
+                                                       Foreground="#F57C00"
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,8,0"/>
+                                <TextBlock Text="Information" 
+                                         FontWeight="SemiBold"
+                                         FontSize="14"
+                                         Foreground="#F57C00"
+                                         VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <TextBlock Text="Le budget primitif représente la prévision budgétaire initiale votée pour l'exercice fiscal sélectionné."
+                                     FontSize="12"
+                                     Foreground="#424242"
+                                     TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Note explicative -->
+                    <TextBlock Text="* Champs obligatoires"
+                             FontSize="11"
+                             Foreground="#666"
+                             FontStyle="Italic"
+                             Margin="5,0,0,15"/>
+
+                    <!-- Boutons -->
+                    <StackPanel Orientation="Horizontal" 
+                              HorizontalAlignment="Right">
+                        <Button Style="{StaticResource MaterialDesignFlatButton}"
+                              Content="Annuler"
+                              Command="{Binding CancelBudgetPrimitifCommand}"
+                              Margin="0,0,10,0"
+                              Width="100"/>
+
+                        <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                              Content="Enregistrer"
+                              Command="{Binding SaveBudgetPrimitifCommand}"
+                              Width="120"/>
+                    </StackPanel>
+
+                </StackPanel>
+            </materialDesign:DialogHost.DialogContent>
+        </materialDesign:DialogHost>
+
+    </Grid>
+</Page>

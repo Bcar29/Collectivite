@@ -41,14 +41,21 @@ namespace Collectivite
         private void ExerciceButton_Click(object sender, RoutedEventArgs e)
         {
             _viewModel.UpdatePageTitle("CONFIGURATION - EXERCICE");
-            // NavigationService.Instance.NavigateTo(new Views.Pages.ExercicePage());
+             NavigationService.Instance.NavigateTo(new Views.Pages.ExercicePage());
+            _viewModel.IsMenuOpen = false;
+        }
+
+        private void NommenclatureButton_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.UpdatePageTitle("CONFIGURATION - EXERCICE");
+            NavigationService.Instance.NavigateTo(new Views.Pages.NommenclaturePage());
             _viewModel.IsMenuOpen = false;
         }
 
         private void BudgetPrimitifButton_Click(object sender, RoutedEventArgs e)
         {
             _viewModel.UpdatePageTitle("CONFIGURATION - BUDGET PRIMITIF");
-            // NavigationService.Instance.NavigateTo(new Views.Pages.BudgetPrimitifPage());
+             NavigationService.Instance.NavigateTo(new Views.Pages.BudgetPrimitifPage());
             _viewModel.IsMenuOpen = false;
         }
 
