@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace Collectivite.Services
 {
@@ -45,6 +46,16 @@ namespace Collectivite.Services
                 .FirstOrDefaultAsync(e => e.Id == exerciceId);
         }
 
+        // recuperer le dernier details commune qui n'est pas lie à un exercice
+        public async Task<DetailCommune?> LastDetailCommune()
+        {
+            return await _context.DetailCommunes
+                .Where(e => e.Exercice == null)
+                .OrderByDescending(e => e.Id)
+                .FirstOrDefaultAsync();
+        }
+
+
         // Ajouter un nouvel exercice
         public async Task<(bool Success, string Message, Exercice? Exercice)> CreateAsync(Exercice exercice)
         {
@@ -71,6 +82,21 @@ namespace Collectivite.Services
                 if (exercice.DateFin <= exercice.DateDebut)
                 {
                     return (false, "La date de fin doit être après la date de début.", null);
+                }
+
+                // validation de la liaison avec details de la commune
+                if (exercice.DetailCommune == null)
+                {
+                    DetailCommune? dt = await LastDetailCommune();
+                    if (dt != null)
+                    {
+                        exercice.IdDetailCommune = dt.Id;
+                    }
+                    else
+                    {
+                    return (false, "La liaison au details de la commune .", null);
+                    }
+                    
                 }
 
                 _context.Exercices.Add(exercice);
@@ -144,6 +170,33 @@ namespace Collectivite.Services
             catch (Exception ex)
             {
                 return (false, $"Erreur lors de la suppression : {ex.Message}");
+            }
+        }
+
+        public async Task<(bool Success, string Message)> CloturerAsync(int id)
+        {
+            try
+            {
+                var exercice = await _context.Exercices.FindAsync(id);
+
+                if (exercice == null)
+                {
+                    return (false, "Exercice introuvable.");
+                }
+
+                if (exercice.EstCloture)
+                {
+                    return (false, "Cet exercice est déjà clôturé.");
+                }
+
+                exercice.EstCloture = true;
+                await _context.SaveChangesAsync();
+
+                return (true, $"L'exercice '{exercice.Libelle}' a été clôturé avec succès.");
+            }
+            catch (Exception ex)
+            {
+                return (false, $"Erreur lors de la clôture : {ex.Message}");
             }
         }
     }

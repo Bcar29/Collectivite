@@ -21,7 +21,13 @@ namespace Collectivite.ViewModels
         public ExerciceViewModel(ExerciceService exerciceService)
         {
             _exerciceService = exerciceService;
-            _dialogExercice = new Exercice();
+            _dialogExercice = new Exercice
+            {
+                Libelle = "",
+                DateDebut = DateOnly.FromDateTime(DateTime.Now),
+                DateFin = DateOnly.FromDateTime(DateTime.Now.AddYears(1)),
+                EstCloture = false
+            };
 
             // Commandes
             LoadDataCommand = new RelayCommand(async _ => await LoadDataAsync());
@@ -30,7 +36,7 @@ namespace Collectivite.ViewModels
             SaveCommand = new RelayCommand(async _ => await SaveAsync(), _ => CanSave());
             CancelCommand = new RelayCommand(_ => CancelDialog());
             DeleteCommand = new RelayCommand<Exercice>(async exercice => await DeleteAsync(exercice));
-            //CloturerCommand = new RelayCommand<Exercice>(async exercice => await CloturerAsync(exercice));
+            CloturerCommand = new RelayCommand<Exercice>(async exercice => await CloturerAsync(exercice));
 
             // Charger les données au démarrage
             LoadDataCommand.Execute(null);
@@ -56,7 +62,7 @@ namespace Collectivite.ViewModels
         {
             get => _isDialogOpen;
             set => SetProperty(ref _isDialogOpen, value);
-        } 
+        }
 
         public Exercice DialogExercice
         {
@@ -68,6 +74,27 @@ namespace Collectivite.ViewModels
         {
             get => _isEditMode;
             set => SetProperty(ref _isEditMode, value);
+        }
+
+        // ✅ CORRECTION : Propriétés pour les dates avec conversion DateTime <-> DateOnly
+        public DateTime DialogExerciceDateDebut
+        {
+            get => DialogExercice.DateDebut.ToDateTime(TimeOnly.MinValue);
+            set
+            {
+                DialogExercice.DateDebut = DateOnly.FromDateTime(value);
+                OnPropertyChanged();
+            }
+        }
+
+        public DateTime DialogExerciceDateFin
+        {
+            get => DialogExercice.DateFin.ToDateTime(TimeOnly.MinValue);
+            set
+            {
+                DialogExercice.DateFin = DateOnly.FromDateTime(value);
+                OnPropertyChanged();
+            }
         }
 
         public string DialogTitle => IsEditMode ? "Modifier l'exercice" : "Nouvel exercice";
@@ -116,14 +143,20 @@ namespace Collectivite.ViewModels
         private void OpenAddDialog()
         {
             IsEditMode = false;
+
+            // ✅ CORRECTION : Initialiser TOUTES les propriétés y compris les dates
             DialogExercice = new Exercice
             {
-
+                Libelle = "",
                 DateDebut = DateOnly.FromDateTime(DateTime.Now),
-                DateFin = DateOnly.FromDateTime(DateTime.Now.AddMonths(12)),
-                EstCloture = false,
-                //IdCommune = 1 // TODO: Récupérer depuis l'utilisateur connecté
+                DateFin = DateOnly.FromDateTime(DateTime.Now.AddYears(1)),
+                EstCloture = false
             };
+
+            // ✅ IMPORTANT : Notifier les changements de dates
+            OnPropertyChanged(nameof(DialogExerciceDateDebut));
+            OnPropertyChanged(nameof(DialogExerciceDateFin));
+
             IsDialogOpen = true;
         }
 
@@ -138,23 +171,34 @@ namespace Collectivite.ViewModels
                 Libelle = exercice.Libelle,
                 DateDebut = exercice.DateDebut,
                 DateFin = exercice.DateFin,
-                EstCloture = exercice.EstCloture,
-                //IdCommune = exercice.IdCommune,
-                
+                EstCloture = exercice.EstCloture
+                // ✅ Ne pas copier les relations (BudgetPrimitifs)
             };
+
+            // ✅ IMPORTANT : Notifier les changements de dates
+            OnPropertyChanged(nameof(DialogExerciceDateDebut));
+            OnPropertyChanged(nameof(DialogExerciceDateFin));
+
             IsDialogOpen = true;
         }
 
         private bool CanSave()
         {
             return DialogExercice != null &&
-                   
-                   DialogExercice.DateDebut != default &&
-                   DialogExercice.DateFin != default;
+                   !string.IsNullOrWhiteSpace(DialogExercice.Libelle) &&
+                   DialogExercice.DateDebut < DialogExercice.DateFin;
         }
 
         private async System.Threading.Tasks.Task SaveAsync()
         {
+            // ✅ Validation des dates
+            if (DialogExercice.DateDebut >= DialogExercice.DateFin)
+            {
+                MessageBox.Show("La date de début doit être antérieure à la date de fin.",
+                    "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             IsLoading = true;
 
             try
@@ -217,10 +261,11 @@ namespace Collectivite.ViewModels
             if (exercice == null) return;
 
             var result = MessageBox.Show(
-                $"Êtes-vous sûr de vouloir supprimer l'exercice {exercice.Libelle} ?",
-                "Confirmation",
+                $"Êtes-vous sûr de vouloir supprimer l'exercice '{exercice.Libelle}' ?\n\n" +
+                "⚠️ Attention : Tous les budgets liés seront également supprimés !",
+                "Confirmation de suppression",
                 MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
+                MessageBoxImage.Warning);
 
             if (result == MessageBoxResult.Yes)
             {
@@ -242,35 +287,46 @@ namespace Collectivite.ViewModels
             }
         }
 
-        //private async System.Threading.Tasks.Task CloturerAsync(Exercice? exercice)
-        //{
-        //    if (exercice == null) return;
+        // ✅ CORRECTION : Méthode Clôturer décommentée et corrigée
+        private async System.Threading.Tasks.Task CloturerAsync(Exercice? exercice)
+        {
+            if (exercice == null) return;
 
-        //    var result = MessageBox.Show(
-        //        $"Êtes-vous sûr de vouloir clôturer l'exercice {exercice.Annee} ?\nCette action est irréversible.",
-        //        "Confirmation",
-        //        MessageBoxButton.YesNo,
-        //        MessageBoxImage.Warning);
+            // ✅ Vérifier si déjà clôturé
+            if (exercice.EstCloture)
+            {
+                MessageBox.Show("Cet exercice est déjà clôturé.",
+                    "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
 
-        //    if (result == MessageBoxResult.Yes)
-        //    {
-        //        IsLoading = true;
+            var result = MessageBox.Show(
+                $"Êtes-vous sûr de vouloir clôturer l'exercice '{exercice.Libelle}' ?\n\n" +
+                "⚠️ Cette action est irréversible !\n" +
+                "Une fois clôturé, l'exercice ne pourra plus être modifié.",
+                "Confirmation de clôture",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
 
-        //        var (success, message) = await _exerciceService.CloturerAsync(exercice.Id);
+            if (result == MessageBoxResult.Yes)
+            {
+                IsLoading = true;
 
-        //        MessageBox.Show(message,
-        //            success ? "Succès" : "Erreur",
-        //            MessageBoxButton.OK,
-        //            success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                var (success, message) = await _exerciceService.CloturerAsync(exercice.Id);
 
-        //        if (success)
-        //        {
-        //            await LoadDataAsync();
-        //        }
+                MessageBox.Show(message,
+                    success ? "Succès" : "Erreur",
+                    MessageBoxButton.OK,
+                    success ? MessageBoxImage.Information : MessageBoxImage.Warning);
 
-        //        IsLoading = false;
-        //    }
-        //}
+                if (success)
+                {
+                    await LoadDataAsync();
+                }
+
+                IsLoading = false;
+            }
+        }
 
         #endregion
     }
