@@ -9,8 +9,10 @@ namespace Collectivite.Models
 {
     public class BudgetPrimitif
     {
+
         [Key]
         public int Id {  get; set; }
+
         public int ExerciceId { get; set; }
         public Exercice Exercice { get; set; } = null!;
         [Required(ErrorMessage = "le montant du budget est obligatoire")]

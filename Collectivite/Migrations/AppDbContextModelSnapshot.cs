@@ -59,9 +59,6 @@ namespace Collectivite.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("CommuneId")
-                        .HasColumnType("int");
-
                     b.Property<DateOnly>("DateVote")
                         .HasColumnType("date");
 
@@ -72,8 +69,6 @@ namespace Collectivite.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CommuneId");
 
                     b.HasIndex("ExerciceId")
                         .IsUnique();
@@ -89,6 +84,18 @@ namespace Collectivite.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateOnly>("DateCreation")
+                        .HasColumnType("date");
+
+                    b.Property<double>("DistanceCapitale")
+                        .HasColumnType("double");
+
+                    b.Property<double>("DistanceChefLieuProvince")
+                        .HasColumnType("double");
+
+                    b.Property<double>("DistanceChefLieuRegion")
+                        .HasColumnType("double");
+
                     b.Property<string>("Nom")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -96,6 +103,117 @@ namespace Collectivite.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Communes");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.DetailCommune", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<double>("Densite")
+                        .HasColumnType("double");
+
+                    b.Property<int>("EffectifPermanent")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EffectifTemporaire")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EffectifTotalPersonnel")
+                        .HasColumnType("int");
+
+                    b.Property<int>("IdCommune")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NombreCentresSante")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NombreClassesPrimaires")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NombreClassesSecondaires")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NombreConseillers")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NombreCooperatives")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NombreDelegationSpeciale")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NombreDetenteursArmesFeu")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NombreDistricts")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NombreEcoles")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NombreEcolesPrimaires")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NombreEcolesSecondaires")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NombreElevesPrimaires")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NombreElevesSecondaires")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NombreForages")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NombreGroupements")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NombreMarches")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NombreMarchesHebdomadaires")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NombreMarchesJournaliers")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NombreOng")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NombreOngEtrangeres")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NombreOngNationales")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NombreQuartiers")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NombreSecteurs")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PopulationFemmes")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PopulationHommes")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PopulationTotale")
+                        .HasColumnType("int");
+
+                    b.Property<double>("Superficie")
+                        .HasColumnType("double");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdCommune");
+
+                    b.ToTable("DetailCommunes");
                 });
 
             modelBuilder.Entity("Collectivite.Models.Exercice", b =>
@@ -106,9 +224,6 @@ namespace Collectivite.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("CommuneId")
-                        .HasColumnType("int");
-
                     b.Property<DateOnly>("DateDebut")
                         .HasColumnType("date");
 
@@ -118,6 +233,9 @@ namespace Collectivite.Migrations
                     b.Property<bool>("EstCloture")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<int>("IdDetailCommune")
+                        .HasColumnType("int");
+
                     b.Property<string>("Libelle")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -125,7 +243,8 @@ namespace Collectivite.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CommuneId");
+                    b.HasIndex("IdDetailCommune")
+                        .IsUnique();
 
                     b.ToTable("Exercices");
                 });
@@ -230,10 +349,6 @@ namespace Collectivite.Migrations
 
             modelBuilder.Entity("Collectivite.Models.BudgetPrimitif", b =>
                 {
-                    b.HasOne("Collectivite.Models.Commune", null)
-                        .WithMany("BudgetsPrimitifs")
-                        .HasForeignKey("CommuneId");
-
                     b.HasOne("Collectivite.Models.Exercice", "Exercice")
                         .WithOne("BudgetPrimitif")
                         .HasForeignKey("Collectivite.Models.BudgetPrimitif", "ExerciceId")
@@ -243,11 +358,26 @@ namespace Collectivite.Migrations
                     b.Navigation("Exercice");
                 });
 
+            modelBuilder.Entity("Collectivite.Models.DetailCommune", b =>
+                {
+                    b.HasOne("Collectivite.Models.Commune", "Commune")
+                        .WithMany("DetailCommunes")
+                        .HasForeignKey("IdCommune")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Commune");
+                });
+
             modelBuilder.Entity("Collectivite.Models.Exercice", b =>
                 {
-                    b.HasOne("Collectivite.Models.Commune", null)
-                        .WithMany("Exercices")
-                        .HasForeignKey("CommuneId");
+                    b.HasOne("Collectivite.Models.DetailCommune", "DetailCommune")
+                        .WithOne("Exercice")
+                        .HasForeignKey("Collectivite.Models.Exercice", "IdDetailCommune")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("DetailCommune");
                 });
 
             modelBuilder.Entity("Collectivite.Models.Nommenclature", b =>
@@ -278,11 +408,14 @@ namespace Collectivite.Migrations
 
             modelBuilder.Entity("Collectivite.Models.Commune", b =>
                 {
-                    b.Navigation("BudgetsPrimitifs");
-
-                    b.Navigation("Exercices");
+                    b.Navigation("DetailCommunes");
 
                     b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.DetailCommune", b =>
+                {
+                    b.Navigation("Exercice");
                 });
 
             modelBuilder.Entity("Collectivite.Models.Exercice", b =>
