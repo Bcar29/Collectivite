@@ -17,15 +17,18 @@ namespace Collectivite.Models
 
         [Required(ErrorMessage = "La date de début est obligatoire")]
         public DateOnly DateDebut { get; set; }
-
-        [Required(ErrorMessage = "La date de fin est obligatoire")]
-        public DateOnly DateFin { get; set; }
-
-        [Required]
+        public DateOnly dateFin { get; set; }
         public bool EstCloture { get; set; }
+        // ══════════════════════════════════════════════════
+        // RELATION AVEC DETAILCOMMUNE (One-to-One)
+        // ══════════════════════════════════════════════════
+        [ForeignKey("DetailCommune")]
+        [Required]
+        public int IdDetailCommune { get; set; }
 
-        // 🔹 Relation : Un exercice a un seul budget primitif
-        public BudgetPrimitif? BudgetPrimitif { get; set; }
-       
+        // Propriété de navigation vers DetailCommune
+        public DetailCommune DetailCommune { get; set; } = null!;
+
+        public ICollection<BudgetPrimitif>? BudgetsPrimitifs { get; set; } = new List<BudgetPrimitif>();
     }
 }

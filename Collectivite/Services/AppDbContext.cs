@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System.IO;
+using System.Windows.Media.Imaging;
 
 namespace Collectivite.Services
 {
@@ -13,6 +14,7 @@ namespace Collectivite.Services
         public DbSet<BudgetLine> BudgetLines { get; set; }
         public DbSet<Nommenclature> Nommenclatures { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<DetailCommune> DetailCommunes { get; set; }
 
         // Constructeur par défaut pour les migrations
         public AppDbContext() { }
@@ -46,6 +48,12 @@ namespace Collectivite.Services
             //    .HasForeignKey(b => b.CommuneId)
             //    .OnDelete(DeleteBehavior.Restrict);
 
+            //1️ Relation Commune ↔ DetailCommune(1 → N)
+            modelBuilder.Entity<DetailCommune>()
+                .HasOne(d => d.Commune)
+                .WithMany(c => c.DetailCommunes)
+                .HasForeignKey(b => b.IdCommune)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<BudgetPrimitif>()
                 .HasOne(b => b.Exercice)
@@ -87,7 +95,19 @@ namespace Collectivite.Services
                 .HasForeignKey(u => u.CommuneId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            
+            // ══════════════════════════════════════════════════════════════
+            // CONFIGURATION EXERCICE → DETAILCOMMUNE (One-to-One)
+            // ══════════════════════════════════════════════════════════════
+            modelBuilder.Entity<Exercice>()
+                .HasOne(e => e.DetailCommune)           // Exercice a UN DetailCommune
+                .WithOne(d => d.Exercice)                // DetailCommune a UN Exercice
+                .HasForeignKey<Exercice>(e => e.IdDetailCommune)  // Clé étrangère dans Exercice
+                .OnDelete(DeleteBehavior.Restrict);      // Empêche la suppression en cascade
+
+            // Index unique pour garantir la relation One-to-One
+            modelBuilder.Entity<Exercice>()
+                .HasIndex(e => e.IdDetailCommune)
+                .IsUnique();
         }
     }
 }

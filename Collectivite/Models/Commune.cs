@@ -1,17 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
+using System.IO.Packaging;
+
 
 namespace Collectivite.Models
 {
     public class Commune
     {
+        [Key]
         public int Id { get; set; }
-        public required string Nom { get; set; }
-        public ICollection<BudgetPrimitif>? BudgetsPrimitifs { get; set; } = new List<BudgetPrimitif>();
-        public ICollection<User>? Users { get; set; } = new List<User>();
-        public ICollection<Exercice>? Exercices { get; set; } = new List<Exercice>();
+        [Required]
+        public string? Nom { get; set; }
+
+        // Distances (en km) - Non modifiables après création
+        public double DistanceChefLieuProvince { get; set; }
+        public double DistanceChefLieuRegion { get; set; }
+        public double DistanceCapitale { get; set; }
+
+        public DateOnly DateCreation { get; set; }
+
+        // Relations
+        public ICollection<DetailCommune>? DetailCommunes { get; set; } = new List<DetailCommune>();
+        public ICollection<User>? Users { get; set; } = [];
     }
 }
