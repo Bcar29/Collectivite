@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Collectivite.Services
 {
-    class NommenclatureService
+   public class NommenclatureService
     {
         private readonly AppDbContext _context;
         public NommenclatureService(AppDbContext context)

@@ -94,7 +94,7 @@
                                               Width="200"
                                               FontWeight="Medium"/>
 
-                            <!-- Année (si disponible dans Exercice) -->
+                            <!-- Année (si disponible dans Exercice) 
                             <DataGridTemplateColumn Header="Année" Width="120">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -110,7 +110,7 @@
                                         </StackPanel>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
+                            </DataGridTemplateColumn> -->
 
                             <!-- Montant -->
                             <DataGridTemplateColumn Header="Montant" Width="200">
