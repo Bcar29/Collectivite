@@ -67,7 +67,10 @@ namespace Collectivite
         private void BudgetLineButton_Click(object sender, RoutedEventArgs e)
         {
             _viewModel.UpdatePageTitle("GESTION BUDGÉTAIRE - BUDGET LINE");
+
             //NavigationService.Instance.NavigateTo(new Views.Pages.BudgetLinePage());
+
+             NavigationService.Instance.NavigateTo(new Views.Pages.BudgetLinesPage());
             _viewModel.IsMenuOpen = false;
         }
 
