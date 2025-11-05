@@ -33,9 +33,6 @@ namespace Collectivite.Migrations
                     b.Property<int>("BudgetPrimitifId")
                         .HasColumnType("int");
 
-                    b.Property<int>("MontantActu")
-                        .HasColumnType("int");
-
                     b.Property<int>("MontantPrevu")
                         .HasColumnType("int");
 
@@ -294,6 +291,37 @@ namespace Collectivite.Migrations
                     b.ToTable("Nommenclatures");
                 });
 
+            modelBuilder.Entity("Collectivite.Models.Remaniement", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("IdBudgetLine")
+                        .HasColumnType("int");
+
+                    b.Property<double>("Montant")
+                        .HasColumnType("double");
+
+                    b.Property<string>("Motif")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("TypeRemaniement")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdBudgetLine");
+
+                    b.ToTable("Remaniements");
+                });
+
             modelBuilder.Entity("Collectivite.Models.User", b =>
                 {
                     b.Property<int>("Id")
@@ -390,6 +418,17 @@ namespace Collectivite.Migrations
                     b.Navigation("Parent");
                 });
 
+            modelBuilder.Entity("Collectivite.Models.Remaniement", b =>
+                {
+                    b.HasOne("Collectivite.Models.BudgetLine", "BudgetLine")
+                        .WithMany("Remaniements")
+                        .HasForeignKey("IdBudgetLine")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BudgetLine");
+                });
+
             modelBuilder.Entity("Collectivite.Models.User", b =>
                 {
                     b.HasOne("Collectivite.Models.Commune", "Commune")
@@ -399,6 +438,11 @@ namespace Collectivite.Migrations
                         .IsRequired();
 
                     b.Navigation("Commune");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.BudgetLine", b =>
+                {
+                    b.Navigation("Remaniements");
                 });
 
             modelBuilder.Entity("Collectivite.Models.BudgetPrimitif", b =>

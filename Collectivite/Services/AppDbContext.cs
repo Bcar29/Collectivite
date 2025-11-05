@@ -15,6 +15,7 @@ namespace Collectivite.Services
         public DbSet<Nommenclature> Nommenclatures { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<DetailCommune> DetailCommunes { get; set; }
+        public DbSet<Remaniement> Remaniements { get; set; }
 
         // Constructeur par défaut pour les migrations
         public AppDbContext() { }
@@ -108,6 +109,16 @@ namespace Collectivite.Services
             modelBuilder.Entity<Exercice>()
                 .HasIndex(e => e.IdDetailCommune)
                 .IsUnique();
+
+
+            // ══════════════════════════════════════════════════════════════
+            // CONFIGURATION BudgetLine → Remaniement (One-to-Many)
+            // ══════════════════════════════════════════════════════════════
+            modelBuilder.Entity<Remaniement>()
+                .HasOne( r => r.BudgetLine)
+                .WithMany(bl => bl.Remaniements)
+                .HasForeignKey(bl => bl.IdBudgetLine)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

@@ -67,10 +67,16 @@ namespace Collectivite
         private void BudgetLineButton_Click(object sender, RoutedEventArgs e)
         {
             _viewModel.UpdatePageTitle("GESTION BUDGÉTAIRE - BUDGET LINE");
-            // NavigationService.Instance.NavigateTo(new Views.Pages.BudgetLinePage());
+            //NavigationService.Instance.NavigateTo(new Views.Pages.BudgetLinePage());
             _viewModel.IsMenuOpen = false;
         }
 
+        private void RemaniementButton_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.UpdatePageTitle("CONFIGURATION - BUDGET REMANIE");
+            NavigationService.Instance.NavigateTo(new Views.Pages.RemaniementPage());
+            _viewModel.IsMenuOpen = false;
+        }
         private void NavigateToDashboard()
         {
             _viewModel.UpdatePageTitle("TABLEAU DE BORD");

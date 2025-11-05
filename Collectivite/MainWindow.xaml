@@ -155,8 +155,8 @@
                                 <TextBlock Text="Ligne Budgetaire" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
-
-                        <Button Style="{StaticResource MenuButtonStyle}">
+                        <!-- Gestion des Remaniements -->
+                        <Button Style="{StaticResource MenuButtonStyle}" Click="RemaniementButton_Click">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="Refresh" 
                                                        VerticalAlignment="Center"
