@@ -22,6 +22,31 @@ namespace Collectivite.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
+            modelBuilder.Entity("Collectivite.Models.BonCommande", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("DateCreation")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<byte[]>("FichierJoin")
+                        .IsRequired()
+                        .HasColumnType("longblob");
+
+                    b.Property<string>("Numero")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("varchar(10)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("BonCommandes");
+                });
+
             modelBuilder.Entity("Collectivite.Models.BudgetLine", b =>
                 {
                     b.Property<int>("Id")
@@ -103,6 +128,135 @@ namespace Collectivite.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Communes");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.CompteBancaire", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BIC")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Banque")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("IBAN")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("Pays")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("TiersId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TiersId", "IBAN")
+                        .IsUnique();
+
+                    b.ToTable("CompteBancaires");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.CompteComptable", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("IntituleCompte")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("NumeroCompte")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("CompteComptables");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.Contrats", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("DateEcheance")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("DateSignature")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("ExerciceId")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("FichierJoin")
+                        .HasColumnType("longblob");
+
+                    b.Property<double>("MontantContrat")
+                        .HasColumnType("double");
+
+                    b.Property<string>("NumeroContrat")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Objet")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("TiersId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExerciceId");
+
+                    b.HasIndex("TiersId");
+
+                    b.ToTable("Contrats");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.DetailBonCommande", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BonCommandeId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<double>("PrixUnitaire")
+                        .HasColumnType("double");
+
+                    b.Property<int>("Quantite")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BonCommandeId");
+
+                    b.ToTable("DetailsBonCommandes");
                 });
 
             modelBuilder.Entity("Collectivite.Models.DetailCommune", b =>
@@ -216,6 +370,144 @@ namespace Collectivite.Migrations
                     b.ToTable("DetailCommunes");
                 });
 
+            modelBuilder.Entity("Collectivite.Models.DetailsFacture", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("FactureId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Libelle")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<double>("MontantTotal")
+                        .HasColumnType("double");
+
+                    b.Property<double>("PrixUnitaire")
+                        .HasColumnType("double");
+
+                    b.Property<double>("Quantite")
+                        .HasColumnType("double");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FactureId");
+
+                    b.ToTable("DetailsFactures");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.EcritureComptable", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CompteCreditId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CompteDebitId")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly>("DateEcriture")
+                        .HasColumnType("date");
+
+                    b.Property<int?>("MandatId")
+                        .HasColumnType("int");
+
+                    b.Property<double>("Montant")
+                        .HasColumnType("double");
+
+                    b.Property<int?>("OrdreRecetteId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompteCreditId");
+
+                    b.HasIndex("CompteDebitId");
+
+                    b.HasIndex("MandatId");
+
+                    b.HasIndex("OrdreRecetteId");
+
+                    b.ToTable("EcritureComptables");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.Engagement", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BonCommandeId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("BudgetLineId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CommuneId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ContratId")
+                        .HasColumnType("int");
+
+                    b.Property<double>("CreditsBudgetaires")
+                        .HasColumnType("double");
+
+                    b.Property<DateTime>("DateEngagement")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<double>("EngagementsAnterieurs")
+                        .HasColumnType("double");
+
+                    b.Property<int>("ExerciceId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("FactureId")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("FichierJoin")
+                        .HasColumnType("longblob");
+
+                    b.Property<double>("MontantEngagement")
+                        .HasColumnType("double");
+
+                    b.Property<string>("Objet")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("TiersId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BonCommandeId");
+
+                    b.HasIndex("BudgetLineId");
+
+                    b.HasIndex("CommuneId");
+
+                    b.HasIndex("ContratId");
+
+                    b.HasIndex("ExerciceId");
+
+                    b.HasIndex("FactureId");
+
+                    b.HasIndex("TiersId");
+
+                    b.ToTable("Engagements");
+                });
+
             modelBuilder.Entity("Collectivite.Models.Exercice", b =>
                 {
                     b.Property<int>("Id")
@@ -247,6 +539,131 @@ namespace Collectivite.Migrations
                         .IsUnique();
 
                     b.ToTable("Exercices");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.Facture", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("ContratId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("DateEcheance")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("DateFacture")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<int>("ExerciceId")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("FichierJoin")
+                        .HasColumnType("longblob");
+
+                    b.Property<double>("MontantHT")
+                        .HasColumnType("double");
+
+                    b.Property<double>("MontantTTC")
+                        .HasColumnType("double");
+
+                    b.Property<string>("NumeroFacture")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<double>("TauxTVA")
+                        .HasColumnType("double");
+
+                    b.Property<int>("TiersId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ContratId");
+
+                    b.HasIndex("ExerciceId");
+
+                    b.HasIndex("TiersId");
+
+                    b.ToTable("Factures");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.Mandat", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<double>("AutresPrecomptes")
+                        .HasColumnType("double");
+
+                    b.Property<string>("Bordereau")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<DateTime>("DateEmission")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DatePaiement")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("EngagementId")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("FichierJoin")
+                        .HasColumnType("longblob");
+
+                    b.Property<int>("Mois")
+                        .HasColumnType("int");
+
+                    b.Property<double>("MontantBrut")
+                        .HasColumnType("double");
+
+                    b.Property<string>("MontantLettre")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<double>("MontantNet")
+                        .HasColumnType("double");
+
+                    b.Property<string>("Motif")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("NumeroMandat")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<string>("Objet")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<double>("Rts")
+                        .HasColumnType("double");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EngagementId")
+                        .IsUnique();
+
+                    b.ToTable("Mandats");
                 });
 
             modelBuilder.Entity("Collectivite.Models.Nommenclature", b =>
@@ -294,7 +711,11 @@ namespace Collectivite.Migrations
                     b.ToTable("Nommenclatures");
                 });
 
+<<<<<<< HEAD
             modelBuilder.Entity("Collectivite.Models.Remaniement", b =>
+=======
+            modelBuilder.Entity("Collectivite.Models.OrdreRecette", b =>
+>>>>>>> c9d73e0e493acd0c6b972fdafc7115f5663f9559
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -302,6 +723,7 @@ namespace Collectivite.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
+<<<<<<< HEAD
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime(6)");
 
@@ -319,15 +741,136 @@ namespace Collectivite.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("TypeRemaniement")
+=======
+                    b.Property<int>("BudgetLineId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CommuneId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Comptable")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("DateOrdre")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("ExerciceId")
+                        .HasColumnType("int");
+
+                    b.Property<double>("MontantOrdre")
+                        .HasColumnType("double");
+
+                    b.Property<string>("MontantOrdreLettre")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("NumeroOrdre")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<int>("TiersId")
+>>>>>>> c9d73e0e493acd0c6b972fdafc7115f5663f9559
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
+<<<<<<< HEAD
                     b.HasIndex("IdBudgetLine");
 
                     b.HasIndex("RemaniementParentId");
 
                     b.ToTable("Remaniements");
+=======
+                    b.HasIndex("BudgetLineId");
+
+                    b.HasIndex("CommuneId");
+
+                    b.HasIndex("ExerciceId");
+
+                    b.HasIndex("TiersId");
+
+                    b.ToTable("OrdreRecettes");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.Recensement", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BudgetLineId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CommuneId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ExerciceId")
+                        .HasColumnType("int");
+
+                    b.Property<double>("MontantRecense")
+                        .HasColumnType("double");
+
+                    b.Property<int>("TiersId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BudgetLineId");
+
+                    b.HasIndex("CommuneId");
+
+                    b.HasIndex("ExerciceId");
+
+                    b.HasIndex("TiersId");
+
+                    b.ToTable("Recensements");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.Tiers", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Adresse")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<bool>("IsActif")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Nif")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Nom")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Prenom")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Rccm")
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Tiers");
+>>>>>>> c9d73e0e493acd0c6b972fdafc7115f5663f9559
                 });
 
             modelBuilder.Entity("Collectivite.Models.User", b =>
@@ -394,6 +937,47 @@ namespace Collectivite.Migrations
                     b.Navigation("Exercice");
                 });
 
+            modelBuilder.Entity("Collectivite.Models.CompteBancaire", b =>
+                {
+                    b.HasOne("Collectivite.Models.Tiers", "Tiers")
+                        .WithMany("CompteBancaires")
+                        .HasForeignKey("TiersId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Tiers");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.Contrats", b =>
+                {
+                    b.HasOne("Collectivite.Models.Exercice", "Exercice")
+                        .WithMany("Contrats")
+                        .HasForeignKey("ExerciceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Collectivite.Models.Tiers", "Tiers")
+                        .WithMany("Contrats")
+                        .HasForeignKey("TiersId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Exercice");
+
+                    b.Navigation("Tiers");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.DetailBonCommande", b =>
+                {
+                    b.HasOne("Collectivite.Models.BonCommande", "BonCommande")
+                        .WithMany("Details")
+                        .HasForeignKey("BonCommandeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BonCommande");
+                });
+
             modelBuilder.Entity("Collectivite.Models.DetailCommune", b =>
                 {
                     b.HasOne("Collectivite.Models.Commune", "Commune")
@@ -403,6 +987,105 @@ namespace Collectivite.Migrations
                         .IsRequired();
 
                     b.Navigation("Commune");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.DetailsFacture", b =>
+                {
+                    b.HasOne("Collectivite.Models.Facture", "Facture")
+                        .WithMany("Details")
+                        .HasForeignKey("FactureId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Facture");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.EcritureComptable", b =>
+                {
+                    b.HasOne("Collectivite.Models.CompteComptable", "CompteCredit")
+                        .WithMany()
+                        .HasForeignKey("CompteCreditId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Collectivite.Models.CompteComptable", "CompteDebit")
+                        .WithMany()
+                        .HasForeignKey("CompteDebitId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Collectivite.Models.Mandat", "Mandat")
+                        .WithMany("EcritureComptables")
+                        .HasForeignKey("MandatId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Collectivite.Models.OrdreRecette", "OrdreRecette")
+                        .WithMany("EcritureComptables")
+                        .HasForeignKey("OrdreRecetteId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("CompteCredit");
+
+                    b.Navigation("CompteDebit");
+
+                    b.Navigation("Mandat");
+
+                    b.Navigation("OrdreRecette");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.Engagement", b =>
+                {
+                    b.HasOne("Collectivite.Models.BonCommande", "BonCommande")
+                        .WithMany()
+                        .HasForeignKey("BonCommandeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Collectivite.Models.BudgetLine", "BudgetLine")
+                        .WithMany("Engagements")
+                        .HasForeignKey("BudgetLineId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Collectivite.Models.Commune", "Commune")
+                        .WithMany("Engagements")
+                        .HasForeignKey("CommuneId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Collectivite.Models.Contrats", "Contrat")
+                        .WithMany("Engagements")
+                        .HasForeignKey("ContratId");
+
+                    b.HasOne("Collectivite.Models.Exercice", "Exercice")
+                        .WithMany("Engagements")
+                        .HasForeignKey("ExerciceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Collectivite.Models.Facture", "Facture")
+                        .WithMany("Engagements")
+                        .HasForeignKey("FactureId");
+
+                    b.HasOne("Collectivite.Models.Tiers", "Tiers")
+                        .WithMany("Engagements")
+                        .HasForeignKey("TiersId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("BonCommande");
+
+                    b.Navigation("BudgetLine");
+
+                    b.Navigation("Commune");
+
+                    b.Navigation("Contrat");
+
+                    b.Navigation("Exercice");
+
+                    b.Navigation("Facture");
+
+                    b.Navigation("Tiers");
                 });
 
             modelBuilder.Entity("Collectivite.Models.Exercice", b =>
@@ -416,6 +1099,43 @@ namespace Collectivite.Migrations
                     b.Navigation("DetailCommune");
                 });
 
+            modelBuilder.Entity("Collectivite.Models.Facture", b =>
+                {
+                    b.HasOne("Collectivite.Models.Contrats", "Contrats")
+                        .WithMany("Factures")
+                        .HasForeignKey("ContratId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Collectivite.Models.Exercice", "Exercice")
+                        .WithMany()
+                        .HasForeignKey("ExerciceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Collectivite.Models.Tiers", "Tiers")
+                        .WithMany("Factures")
+                        .HasForeignKey("TiersId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Contrats");
+
+                    b.Navigation("Exercice");
+
+                    b.Navigation("Tiers");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.Mandat", b =>
+                {
+                    b.HasOne("Collectivite.Models.Engagement", "Engagement")
+                        .WithOne("Mandat")
+                        .HasForeignKey("Collectivite.Models.Mandat", "EngagementId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Engagement");
+                });
+
             modelBuilder.Entity("Collectivite.Models.Nommenclature", b =>
                 {
                     b.HasOne("Collectivite.Models.Nommenclature", "Parent")
@@ -426,6 +1146,7 @@ namespace Collectivite.Migrations
                     b.Navigation("Parent");
                 });
 
+<<<<<<< HEAD
             modelBuilder.Entity("Collectivite.Models.Remaniement", b =>
                 {
                     b.HasOne("Collectivite.Models.BudgetLine", "BudgetLine")
@@ -441,6 +1162,76 @@ namespace Collectivite.Migrations
                     b.Navigation("BudgetLine");
 
                     b.Navigation("RemaniementParent");
+=======
+            modelBuilder.Entity("Collectivite.Models.OrdreRecette", b =>
+                {
+                    b.HasOne("Collectivite.Models.BudgetLine", "BudgetLine")
+                        .WithMany()
+                        .HasForeignKey("BudgetLineId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Collectivite.Models.Commune", "Commune")
+                        .WithMany()
+                        .HasForeignKey("CommuneId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Collectivite.Models.Exercice", "Exercice")
+                        .WithMany()
+                        .HasForeignKey("ExerciceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Collectivite.Models.Tiers", "Tiers")
+                        .WithMany()
+                        .HasForeignKey("TiersId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("BudgetLine");
+
+                    b.Navigation("Commune");
+
+                    b.Navigation("Exercice");
+
+                    b.Navigation("Tiers");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.Recensement", b =>
+                {
+                    b.HasOne("Collectivite.Models.BudgetLine", "BudgetLine")
+                        .WithMany("Recensements")
+                        .HasForeignKey("BudgetLineId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Collectivite.Models.Commune", "Commune")
+                        .WithMany("Recensements")
+                        .HasForeignKey("CommuneId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Collectivite.Models.Exercice", "Exercice")
+                        .WithMany("Recensements")
+                        .HasForeignKey("ExerciceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Collectivite.Models.Tiers", "Tiers")
+                        .WithMany("Recensements")
+                        .HasForeignKey("TiersId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BudgetLine");
+
+                    b.Navigation("Commune");
+
+                    b.Navigation("Exercice");
+
+                    b.Navigation("Tiers");
+>>>>>>> c9d73e0e493acd0c6b972fdafc7115f5663f9559
                 });
 
             modelBuilder.Entity("Collectivite.Models.User", b =>
@@ -454,9 +1245,22 @@ namespace Collectivite.Migrations
                     b.Navigation("Commune");
                 });
 
+<<<<<<< HEAD
             modelBuilder.Entity("Collectivite.Models.BudgetLine", b =>
                 {
                     b.Navigation("Remaniements");
+=======
+            modelBuilder.Entity("Collectivite.Models.BonCommande", b =>
+                {
+                    b.Navigation("Details");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.BudgetLine", b =>
+                {
+                    b.Navigation("Engagements");
+
+                    b.Navigation("Recensements");
+>>>>>>> c9d73e0e493acd0c6b972fdafc7115f5663f9559
                 });
 
             modelBuilder.Entity("Collectivite.Models.BudgetPrimitif", b =>
@@ -468,7 +1272,18 @@ namespace Collectivite.Migrations
                 {
                     b.Navigation("DetailCommunes");
 
+                    b.Navigation("Engagements");
+
+                    b.Navigation("Recensements");
+
                     b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.Contrats", b =>
+                {
+                    b.Navigation("Engagements");
+
+                    b.Navigation("Factures");
                 });
 
             modelBuilder.Entity("Collectivite.Models.DetailCommune", b =>
@@ -476,9 +1291,32 @@ namespace Collectivite.Migrations
                     b.Navigation("Exercice");
                 });
 
+            modelBuilder.Entity("Collectivite.Models.Engagement", b =>
+                {
+                    b.Navigation("Mandat");
+                });
+
             modelBuilder.Entity("Collectivite.Models.Exercice", b =>
                 {
                     b.Navigation("BudgetPrimitif");
+
+                    b.Navigation("Contrats");
+
+                    b.Navigation("Engagements");
+
+                    b.Navigation("Recensements");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.Facture", b =>
+                {
+                    b.Navigation("Details");
+
+                    b.Navigation("Engagements");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.Mandat", b =>
+                {
+                    b.Navigation("EcritureComptables");
                 });
 
             modelBuilder.Entity("Collectivite.Models.Nommenclature", b =>
@@ -486,9 +1324,28 @@ namespace Collectivite.Migrations
                     b.Navigation("Enfants");
                 });
 
+<<<<<<< HEAD
             modelBuilder.Entity("Collectivite.Models.Remaniement", b =>
                 {
                     b.Navigation("Remaniements");
+=======
+            modelBuilder.Entity("Collectivite.Models.OrdreRecette", b =>
+                {
+                    b.Navigation("EcritureComptables");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.Tiers", b =>
+                {
+                    b.Navigation("CompteBancaires");
+
+                    b.Navigation("Contrats");
+
+                    b.Navigation("Engagements");
+
+                    b.Navigation("Factures");
+
+                    b.Navigation("Recensements");
+>>>>>>> c9d73e0e493acd0c6b972fdafc7115f5663f9559
                 });
 #pragma warning restore 612, 618
         }

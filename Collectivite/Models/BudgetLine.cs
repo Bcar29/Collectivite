@@ -46,6 +46,7 @@ namespace Collectivite.Models
         [Range(0, int.MaxValue, ErrorMessage = "Le montant actuel doit être un nombre positif")]
         public int MontantActu { get; set; }
 
+
         #endregion
 
         #region Navigation
@@ -160,6 +161,12 @@ namespace Collectivite.Models
         /// <summary>
         /// Constructeur par défaut
         /// </summary>
+
+        public ICollection<Engagement>? Engagements { get; set; }
+        public ICollection<Recensement>? Recensements { get; set; }
+
+        // 🔹 Constructeur par défaut
+
         public BudgetLine()
         {
             // L'initialisation se fera après l'affectation de MontantPrevu

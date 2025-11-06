@@ -30,6 +30,14 @@ namespace Collectivite.Models
         // Propriété de navigation vers DetailCommune
         public DetailCommune DetailCommune { get; set; } = null!;
 
-        
+        public ICollection<Contrats>? Contrats { get; set; }
+
+        public ICollection<Engagement>? Engagements { get; set; }
+
+        public ICollection<Recensement>? Recensements { get; set; }
+        //public ICollection<Facture>? Factures { get; set; }
+
+
+
     }
 }
