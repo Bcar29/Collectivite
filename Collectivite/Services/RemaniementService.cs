@@ -19,17 +19,44 @@ namespace Collectivite.Services
         /// <summary>
         /// Récupère tous les remaniements avec leurs BudgetLines
         /// </summary>
-        public async Task<List<Remaniement>> GetAllRemaniementAsync()
+        /// <summary>
+        /// Récupère tous les remaniements avec leurs relations
+        /// </summary>
+        public async Task<List<Remaniement>> GetAllRemaniementsAsync()
         {
-            return await _context.Remaniements
+            // ✅ Étape 1: Charger les remaniements avec leur BudgetLine et Nomenclature
+            var remaniements = await _context.Remaniements
                 .Include(r => r.BudgetLine)
                     .ThenInclude(bl => bl.Nommenclature)
-                .Include(r => r.BudgetLine)
-                    .ThenInclude(bl => bl.BudgetPrimitif)
-                        .ThenInclude(bp => bp.Exercice)
+                // ❌ NE PAS inclure bl.Remaniements ici (cycle!)
                 .AsNoTracking()
                 .OrderByDescending(r => r.Date)
                 .ToListAsync();
+
+            // ✅ Étape 2: Charger tous les remaniements groupés par BudgetLine
+            var budgetLineIds = remaniements.Select(r => r.IdBudgetLine).Distinct().ToList();
+
+            var allRemaniementsByBudgetLine = await _context.Remaniements
+                .Where(r => budgetLineIds.Contains(r.IdBudgetLine))
+                .AsNoTracking()
+                .ToListAsync();
+
+            // ✅ Étape 3: Assigner manuellement les remaniements à chaque BudgetLine
+            var remaniementsGrouped = allRemaniementsByBudgetLine
+                .GroupBy(r => r.IdBudgetLine)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            foreach (var remaniement in remaniements)
+            {
+                if (remaniement.BudgetLine != null &&
+                    remaniementsGrouped.TryGetValue(remaniement.IdBudgetLine, out var relatedRemaniements))
+                {
+                    // Créer une nouvelle collection pour éviter les problèmes de tracking
+                    remaniement.BudgetLine.Remaniements = relatedRemaniements;
+                }
+            }
+
+            return remaniements;
         }
 
         /// <summary>
@@ -226,7 +253,7 @@ namespace Collectivite.Services
                 .Sum(r => r.Montant);
 
             var remaniementMoins = budgetLine.Remaniements
-                .Where(r => r.TypeRemaniement == TypeRemaniement.en_mois)
+                .Where(r => r.TypeRemaniement == TypeRemaniement.en_moins)
                 .Sum(r => r.Montant);
 
             return budgetLine.MontantPrevu + remaniementPlus - remaniementMoins;

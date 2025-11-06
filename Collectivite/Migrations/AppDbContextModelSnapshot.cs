@@ -33,6 +33,9 @@ namespace Collectivite.Migrations
                     b.Property<int>("BudgetPrimitifId")
                         .HasColumnType("int");
 
+                    b.Property<int>("MontantActu")
+                        .HasColumnType("int");
+
                     b.Property<int>("MontantPrevu")
                         .HasColumnType("int");
 
@@ -312,12 +315,17 @@ namespace Collectivite.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int?>("RemaniementParentId")
+                        .HasColumnType("int");
+
                     b.Property<int>("TypeRemaniement")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
                     b.HasIndex("IdBudgetLine");
+
+                    b.HasIndex("RemaniementParentId");
 
                     b.ToTable("Remaniements");
                 });
@@ -426,7 +434,13 @@ namespace Collectivite.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Collectivite.Models.Remaniement", "RemaniementParent")
+                        .WithMany("Remaniements")
+                        .HasForeignKey("RemaniementParentId");
+
                     b.Navigation("BudgetLine");
+
+                    b.Navigation("RemaniementParent");
                 });
 
             modelBuilder.Entity("Collectivite.Models.User", b =>
@@ -470,6 +484,11 @@ namespace Collectivite.Migrations
             modelBuilder.Entity("Collectivite.Models.Nommenclature", b =>
                 {
                     b.Navigation("Enfants");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.Remaniement", b =>
+                {
+                    b.Navigation("Remaniements");
                 });
 #pragma warning restore 612, 618
         }
