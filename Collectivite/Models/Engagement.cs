@@ -1,0 +1,83 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Collectivite.Models
+{
+    public class Engagement
+    {
+        [Key]
+        public int Id { get; set; }
+
+        [Required(ErrorMessage = "L'exercice est obligatoire.")]
+        public int ExerciceId { get; set; }
+
+        [ForeignKey(nameof(ExerciceId))]
+        public Exercice Exercice { get; set; } = null!;
+
+        [Required(ErrorMessage = "La commande est obligatoire.")]
+        public int BonCommandeId { get; set; }
+
+        [ForeignKey(nameof(BonCommandeId))]
+        public BonCommande BonCommande { get; set; } = null!;
+
+        [Required(ErrorMessage = "La commune est obligatoire.")]
+        public int CommuneId { get; set; }
+
+        [ForeignKey(nameof(CommuneId))]
+        public Commune Commune { get; set; } = null!;
+
+        [Required(ErrorMessage = "La ligne budgétaire est obligatoire.")]
+        public int BudgetLineId { get; set; }
+
+        [ForeignKey(nameof(BudgetLineId))]
+        public BudgetLine BudgetLine { get; set; } = null!;
+
+        [Required(ErrorMessage = "Le tiers est obligatoire.")]
+        public int TiersId { get; set; }
+
+        [ForeignKey(nameof(TiersId))]
+        public Tiers Tiers { get; set; } = null!;
+
+        [Required(ErrorMessage = "L'objet de l'engagement est obligatoire.")]
+        [Column(TypeName = "text")]
+        public string Objet { get; set; } = null!;
+
+        [Required(ErrorMessage = "La date de l'engagement est obligatoire.")]
+        [DataType(DataType.Date)]
+        public DateTime DateEngagement { get; set; } = DateTime.Now;
+
+        [Required(ErrorMessage = "Les crédits budgétaires sont obligatoires.")]
+        [Range(0, double.MaxValue, ErrorMessage = "Le montant doit être positif.")]
+        public double CreditsBudgetaires { get; set; }
+
+        [Range(0, double.MaxValue, ErrorMessage = "Le montant doit être positif.")]
+        public double EngagementsAnterieurs { get; set; }
+
+        [Required(ErrorMessage = "Le montant de l'engagement est obligatoire.")]
+        [Range(0, double.MaxValue, ErrorMessage = "Le montant doit être positif.")]
+        public double MontantEngagement { get; set; }
+
+        public byte[]? FichierJoin { get; set; }
+        public int? ContratId { get; set; }
+        public Contrats? Contrat { get; set; }
+
+        public int? FactureId { get; set; }
+        public Facture? Facture { get; set; }
+
+        public Mandat? Mandat { get; set; }
+
+        [NotMapped]
+        public double CumulEngagement => EngagementsAnterieurs + MontantEngagement;
+
+        // Constructeur par défaut
+        public Engagement()
+        {
+            DateEngagement = DateTime.Now;
+        }
+    }
+}

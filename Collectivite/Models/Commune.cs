@@ -23,5 +23,9 @@ namespace Collectivite.Models
         // Relations
         public ICollection<DetailCommune>? DetailCommunes { get; set; } = new List<DetailCommune>();
         public ICollection<User>? Users { get; set; } = [];
+
+        public ICollection<Engagement>? Engagements { get; set; }
+
+        public ICollection<Recensement>? Recensements { get;set; }
     }
 }

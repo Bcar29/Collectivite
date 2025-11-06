@@ -34,6 +34,9 @@ namespace Collectivite.Models
         [Range(0, int.MaxValue, ErrorMessage = "Le montant actuel doit être un nombre positif")]
         public int MontantActu { get; set; }
 
+        public ICollection<Engagement>? Engagements { get; set; }
+        public ICollection<Recensement>? Recensements { get; set; }
+
         // 🔹 Constructeur par défaut
         public BudgetLine()
         {
