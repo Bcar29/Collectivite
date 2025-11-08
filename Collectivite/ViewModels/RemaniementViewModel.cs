@@ -14,7 +14,6 @@ namespace Collectivite.ViewModels
     /// </summary>
     public class RemaniementViewModel : ViewModelBase
     {
-        private readonly RemaniementService _remaniementService;
         private bool _isLoading;
         private Remaniement? _selectedRemaniement;
         private bool _isDialogOpen;
@@ -25,9 +24,8 @@ namespace Collectivite.ViewModels
         // Collection principale non filtrée
         private ObservableCollection<Remaniement> _allRemaniements = new();
 
-        public RemaniementViewModel(RemaniementService remaniementService)
+        public RemaniementViewModel()
         {
-            _remaniementService = remaniementService;
             _dialogRemaniement = new Remaniement
             {
                 Date = DateTime.Now,
@@ -118,7 +116,11 @@ namespace Collectivite.ViewModels
         public string DialogTitle => "Nouveau Remaniement";
 
         /// <summary>
-        /// Index de l'onglet sélectionné (0 = En Plus, 1 = En Moins)
+        /// Index de l'onglet sélectionné
+        /// 0 = Recette - Fonctionnement
+        /// 1 = Recette - Investissement
+        /// 2 = Dépense - Fonctionnement
+        /// 3 = Dépense - Investissement
         /// </summary>
         public int SelectedTabIndex
         {
@@ -128,69 +130,19 @@ namespace Collectivite.ViewModels
                 if (SetProperty(ref _selectedTabIndex, value))
                 {
                     ApplyFilter(); // Rafraîchit la liste filtrée
-                    OnPropertyChanged(nameof(RemaniementsEnPlus));
-                    OnPropertyChanged(nameof(RemaniementsEnMoins));
                 }
             }
         }
 
         /// <summary>
-        /// Remaniements de type "en_plus" uniquement
+        /// Nombre total de remaniements dans l'onglet actuel
         /// </summary>
-        public ObservableCollection<Remaniement> RemaniementsEnPlus
-        {
-            get
-            {
-                return new ObservableCollection<Remaniement>(
-                    _allRemaniements.Where(r => r.TypeRemaniement == TypeRemaniement.en_plus)
-                );
-            }
-        }
+        public int TotalRemaniements => Remaniements.Count;
 
         /// <summary>
-        /// Remaniements de type "en_moins" uniquement
+        /// Montant total des remaniements dans l'onglet actuel
         /// </summary>
-        public ObservableCollection<Remaniement> RemaniementsEnMoins
-        {
-            get
-            {
-                return new ObservableCollection<Remaniement>(
-                    _allRemaniements.Where(r => r.TypeRemaniement == TypeRemaniement.en_moins)
-                );
-            }
-        }
-
-        /// <summary>
-        /// Nombre total de remaniements en plus
-        /// </summary>
-        public int CountRemaniementsEnPlus => RemaniementsEnPlus.Count;
-
-        /// <summary>
-        /// Nombre total de remaniements en moins
-        /// </summary>
-        public int CountRemaniementsEnMoins => RemaniementsEnMoins.Count;
-
-        /// <summary>
-        /// Montant total des remaniements en plus
-        /// </summary>
-        public decimal TotalRemaniementsEnPlus
-        {
-            get
-            {
-                return (decimal)RemaniementsEnPlus.Sum(r => r.Montant);
-            }
-        }
-
-        /// <summary>
-        /// Montant total des remaniements en moins
-        /// </summary>
-        public decimal TotalRemaniementsEnMoins
-        {
-            get
-            {
-                return (decimal)RemaniementsEnMoins.Sum(r => r.Montant);
-            }
-        }
+        public decimal TotalMontant => (decimal)Remaniements.Sum(r => r.Montant);
 
         #endregion
 
@@ -215,7 +167,8 @@ namespace Collectivite.ViewModels
 
             try
             {
-                var remaniements = await _remaniementService.GetAllRemaniementsAsync();
+                var remaniementService = new RemaniementService();
+                var remaniements = await remaniementService.GetAllRemaniementsAsync();
 
                 _allRemaniements.Clear();
                 foreach (var r in remaniements)
@@ -223,15 +176,11 @@ namespace Collectivite.ViewModels
                     _allRemaniements.Add(r);
                 }
 
-                // Rafraîchir toutes les propriétés calculées
-                OnPropertyChanged(nameof(RemaniementsEnPlus));
-                OnPropertyChanged(nameof(RemaniementsEnMoins));
-                OnPropertyChanged(nameof(CountRemaniementsEnPlus));
-                OnPropertyChanged(nameof(CountRemaniementsEnMoins));
-                OnPropertyChanged(nameof(TotalRemaniementsEnPlus));
-                OnPropertyChanged(nameof(TotalRemaniementsEnMoins));
-
                 ApplyFilter(); // Appliquer le filtre selon l'onglet actif
+
+                // Rafraîchir les propriétés calculées
+                OnPropertyChanged(nameof(TotalRemaniements));
+                OnPropertyChanged(nameof(TotalMontant));
             }
             catch (Exception ex)
             {
@@ -246,8 +195,10 @@ namespace Collectivite.ViewModels
 
         /// <summary>
         /// Applique un filtre sur la collection Remaniements selon l'onglet sélectionné
-        /// 0 = Remaniements en PLUS
-        /// 1 = Remaniements en MOINS
+        /// 0 = Recette - Fonctionnement
+        /// 1 = Recette - Investissement
+        /// 2 = Dépense - Fonctionnement
+        /// 3 = Dépense - Investissement
         /// </summary>
         private void ApplyFilter()
         {
@@ -258,14 +209,31 @@ namespace Collectivite.ViewModels
 
             var filtered = _allRemaniements.AsEnumerable();
 
+            // ✅ CORRECTION : Filtrer par Nature ET Section
             switch (SelectedTabIndex)
             {
-                case 0: // Onglet "Remaniements en PLUS"
-                    filtered = filtered.Where(r => r.TypeRemaniement == TypeRemaniement.en_plus);
+                case 0: // Recette - Fonctionnement
+                    filtered = filtered.Where(r => 
+                        r.BudgetLine?.Nommenclature?.Nature == NatureType.Recette &&
+                        r.BudgetLine?.Nommenclature?.Section == SectionType.Fonctionnement);
                     break;
 
-                case 1: // Onglet "Remaniements en MOINS"
-                    filtered = filtered.Where(r => r.TypeRemaniement == TypeRemaniement.en_moins);
+                case 1: // Recette - Investissement
+                    filtered = filtered.Where(r => 
+                        r.BudgetLine?.Nommenclature?.Nature == NatureType.Recette &&
+                        r.BudgetLine?.Nommenclature?.Section == SectionType.Investissement);
+                    break;
+
+                case 2: // Dépense - Fonctionnement
+                    filtered = filtered.Where(r => 
+                        r.BudgetLine?.Nommenclature?.Nature == NatureType.Depense &&
+                        r.BudgetLine?.Nommenclature?.Section == SectionType.Fonctionnement);
+                    break;
+
+                case 3: // Dépense - Investissement
+                    filtered = filtered.Where(r => 
+                        r.BudgetLine?.Nommenclature?.Nature == NatureType.Depense &&
+                        r.BudgetLine?.Nommenclature?.Section == SectionType.Investissement);
                     break;
 
                 default:
@@ -273,10 +241,15 @@ namespace Collectivite.ViewModels
                     break;
             }
 
+            // Trier par date décroissante
             foreach (var r in filtered.OrderByDescending(r => r.Date))
             {
                 Remaniements.Add(r);
             }
+
+            // Notifier les propriétés calculées
+            OnPropertyChanged(nameof(TotalRemaniements));
+            OnPropertyChanged(nameof(TotalMontant));
         }
 
         /// <summary>
@@ -288,8 +261,11 @@ namespace Collectivite.ViewModels
 
             try
             {
+                // ✅ CORRECTION : Créer le service ici
+                var remaniementService = new RemaniementService();
+                
                 // Charger les lignes budgétaires disponibles
-                var lines = await _remaniementService.GetBudgetLinesSansEnfantsAsync();
+                var lines = await remaniementService.GetBudgetLinesSansEnfantsAsync();
 
                 BudgetLinesSansEnfants.Clear();
                 foreach (var line in lines)
@@ -347,9 +323,18 @@ namespace Collectivite.ViewModels
                     ? "Augmentation (+)"
                     : "Diminution (-)";
 
+                var natureText = SelectedBudgetLine?.Nommenclature?.Nature == NatureType.Recette
+                    ? "Recette"
+                    : "Dépense";
+
+                var sectionText = SelectedBudgetLine?.Nommenclature?.Section == SectionType.Fonctionnement
+                    ? "Fonctionnement"
+                    : "Investissement";
+
                 var confirmation = MessageBox.Show(
                     $"Confirmer le remaniement ?\n\n" +
                     $"Type : {typeText}\n" +
+                    $"Catégorie : {natureText} - {sectionText}\n" +
                     $"Montant : {DialogRemaniement.Montant:N0} GNF\n" +
                     $"Ligne budgétaire : {SelectedBudgetLine?.Nommenclature?.Intitule}\n" +
                     $"Motif : {DialogRemaniement.Motif}",
@@ -363,8 +348,11 @@ namespace Collectivite.ViewModels
                     return;
                 }
 
+                // ✅ CORRECTION : Créer le service ici
+                var remaniementService = new RemaniementService();
+
                 // Créer le remaniement
-                var (success, message, remaniement) = await _remaniementService.CreateRemaniementAsync(
+                var (success, message, remaniement) = await remaniementService.CreateRemaniementAsync(
                     DialogRemaniement,
                     DialogRemaniement.TypeRemaniement
                 );
@@ -438,7 +426,10 @@ namespace Collectivite.ViewModels
 
             try
             {
-                var (success, message) = await _remaniementService.DeleteRemaniementAsync(remaniement.Id);
+                // ✅ CORRECTION : Créer le service ici
+                var remaniementService = new RemaniementService();
+                
+                var (success, message) = await remaniementService.DeleteRemaniementAsync(remaniement.Id);
 
                 MessageBox.Show(message,
                     success ? "Succès" : "Erreur",

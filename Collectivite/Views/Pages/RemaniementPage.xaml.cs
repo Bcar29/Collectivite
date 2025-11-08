@@ -1,20 +1,19 @@
-﻿using Collectivite.Services;
-using Collectivite.ViewModels;
+﻿using Collectivite.ViewModels;
 using System.Windows.Controls;
 
 namespace Collectivite.Views.Pages
 {
+    /// <summary>
+    /// Logique d'interaction pour RemaniementPage.xaml
+    /// </summary>
     public partial class RemaniementPage : Page
     {
         public RemaniementPage()
         {
             InitializeComponent();
 
-            // Initialiser le ViewModel
-            var context = new AppDbContext();
-            var remaniementService = new RemaniementService(context);
-            var viewModel = new RemaniementViewModel(remaniementService);
-
+            // ✅ CORRECTION : Créer le ViewModel sans passer de service
+            var viewModel = new RemaniementViewModel();
             DataContext = viewModel;
         }
     }
