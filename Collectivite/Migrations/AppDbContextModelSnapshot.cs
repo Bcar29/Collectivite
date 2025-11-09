@@ -140,7 +140,7 @@ namespace Collectivite.Migrations
 
                     b.Property<string>("BIC")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("varchar(255)");
 
                     b.Property<string>("Banque")
                         .IsRequired()
@@ -158,6 +158,9 @@ namespace Collectivite.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BIC")
+                        .IsUnique();
 
                     b.HasIndex("IBAN")
                         .IsUnique();
