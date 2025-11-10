@@ -96,6 +96,13 @@ namespace Collectivite
             NavigationService.Instance.NavigateTo(new Views.Pages.TiersPage());
             _viewModel.IsMenuOpen = false;
         }
+
+        private void FactureButton_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.UpdatePageTitle("CONFIGURATION - FACTURES ET DETAILS");
+            NavigationService.Instance.NavigateTo(new Views.Pages.FacturePage());
+            _viewModel.IsMenuOpen = false;
+        }
         private void NavigateToDashboard()
         {
             _viewModel.UpdatePageTitle("TABLEAU DE BORD");

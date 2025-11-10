@@ -216,6 +216,17 @@
                                 <TextBlock Text="Bon de Commande" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
+                        <!-- Ajout de fonctinnalité de facture et details -->
+                        <Button Style="{StaticResource MenuButtonStyle}" Click="FactureButton_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="ClipboardText" 
+                               VerticalAlignment="Center"
+                               Width="22"
+                               Height="22"
+                               Margin="0,0,15,0"/>
+                                <TextBlock Text="Facture et Détails" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
 
                         <Button Style="{StaticResource MenuButtonStyle}">
                             <StackPanel Orientation="Horizontal">
