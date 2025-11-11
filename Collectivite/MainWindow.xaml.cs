@@ -103,6 +103,13 @@ namespace Collectivite
             NavigationService.Instance.NavigateTo(new Views.Pages.FacturePage());
             _viewModel.IsMenuOpen = false;
         }
+
+        private void RecensementButton_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.UpdatePageTitle("CONFIGURATION - RECENSEMENTS");
+            NavigationService.Instance.NavigateTo(new Views.Pages.RecensementPage());
+            _viewModel.IsMenuOpen = false;
+        }
         private void NavigateToDashboard()
         {
             _viewModel.UpdatePageTitle("TABLEAU DE BORD");
