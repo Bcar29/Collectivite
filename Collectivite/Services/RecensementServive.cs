@@ -86,22 +86,77 @@ namespace Collectivite.Services
         }
 
         /// <summary>
-        /// Récupère les lignes budgétaires des recettes fiscales uniquement (71xx)
+        /// Méthode récursive pour trouver le chapitre racine d'une nomenclature
         /// </summary>
-        public async Task<List<BudgetLine>> GetRecettesFiscalesBudgetLinesAsync()
+        private string? GetChapitreRacine(Nommenclature nomenclature, List<Nommenclature> allNommenclatures)
+        {
+            // Si cette nomenclature a un chapitre, on le retourne
+            if (!string.IsNullOrEmpty(nomenclature.Chapitre))
+            {
+                return nomenclature.Chapitre;
+            }
+
+            // Sinon, on remonte au parent
+            if (nomenclature.ParentId.HasValue)
+            {
+                var parent = allNommenclatures.FirstOrDefault(n => n.Id == nomenclature.ParentId.Value);
+                if (parent != null)
+                {
+                    return GetChapitreRacine(parent, allNommenclatures);
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Récupère TOUTES les lignes budgétaires (recettes fiscales ET non fiscales) - derniers enfants uniquement
+        /// </summary>
+        public async Task<List<BudgetLine>> GetAllBudgetLinesAsync()
         {
             using var context = CreateContext();
 
-            return await context.BudgetLines
+            System.Diagnostics.Debug.WriteLine("🔍 Début GetAllBudgetLinesAsync");
+
+            // ✅ Charger toutes les lignes budgétaires avec leurs nomenclatures
+            var allLines = await context.BudgetLines
                 .Include(bl => bl.Nommenclature)
                 .Include(bl => bl.Remaniements)
-                .Where(bl => bl.Nommenclature.Chapitre != null &&
-                            bl.Nommenclature.Chapitre.StartsWith("71"))
                 .AsNoTracking()
-                .OrderBy(bl => bl.Nommenclature.Chapitre)
-                .ThenBy(bl => bl.Nommenclature.Article)
-                .ThenBy(bl => bl.Nommenclature.Paragraphe)
                 .ToListAsync();
+
+            System.Diagnostics.Debug.WriteLine($"   Total BudgetLines : {allLines.Count}");
+
+            // ✅ Charger toutes les nomenclatures avec relation parent-enfant
+            var allNommenclatures = await context.Nommenclatures
+                .Include(n => n.Enfants)
+                .AsNoTracking()
+                .ToListAsync();
+
+            System.Diagnostics.Debug.WriteLine($"   Total Nomenclatures : {allNommenclatures.Count}");
+
+            // ✅ Identifier les nomenclatures sans enfants (derniers niveaux)
+            var nommenclaturesSansEnfants = allNommenclatures
+                .Where(n => n.Enfants == null || !n.Enfants.Any())
+                .Select(n => n.Id)
+                .ToHashSet();
+
+            System.Diagnostics.Debug.WriteLine($"   Nomenclatures sans enfants : {nommenclaturesSansEnfants.Count}");
+
+            // ✅ Filtrer uniquement les derniers enfants
+            var budgetLines = allLines
+                .Where(bl => nommenclaturesSansEnfants.Contains(bl.NommenclatureId) && bl.Nommenclature != null)
+                .ToList();
+
+            System.Diagnostics.Debug.WriteLine($"✅ Total lignes budgétaires trouvées : {budgetLines.Count}");
+
+            // Trier par hiérarchie
+            return budgetLines
+                .OrderBy(bl => bl.Nommenclature.Chapitre ?? "")
+                .ThenBy(bl => bl.Nommenclature.Article ?? "")
+                .ThenBy(bl => bl.Nommenclature.Paragraphe ?? "")
+                .ThenBy(bl => bl.Nommenclature.SousParagraphe ?? "")
+                .ToList();
         }
 
         #endregion
@@ -134,21 +189,13 @@ namespace Collectivite.Services
                 if (recensement.MontantRecense <= 0)
                     return (false, "Le montant recensé doit être supérieur à zéro.", null);
 
-                // Vérifier que la ligne budgétaire est bien une recette fiscale (71xx)
+                // Vérifier que la ligne budgétaire existe
                 var budgetLine = await context.BudgetLines
                     .Include(bl => bl.Nommenclature)
                     .FirstOrDefaultAsync(bl => bl.Id == recensement.BudgetLineId);
 
                 if (budgetLine == null)
                     return (false, "Ligne budgétaire introuvable.", null);
-
-                if (!budgetLine.Nommenclature.Chapitre?.StartsWith("71") ?? true)
-                {
-                    return (false,
-                        "⚠️ Cette ligne budgétaire n'est pas une recette fiscale (71xx).\n" +
-                        "Seules les recettes fiscales peuvent être recensées.",
-                        null);
-                }
 
                 // Vérifier que l'exercice n'est pas clôturé
                 var exercice = await context.Exercices.FindAsync(recensement.ExerciceId);
@@ -204,18 +251,13 @@ namespace Collectivite.Services
                 if (existingRecensement == null)
                     return (false, "Recensement introuvable.");
 
-                // Vérifier que la ligne budgétaire est une recette fiscale
+                // Vérifier que la ligne budgétaire existe
                 var budgetLine = await context.BudgetLines
                     .Include(bl => bl.Nommenclature)
                     .FirstOrDefaultAsync(bl => bl.Id == recensement.BudgetLineId);
 
                 if (budgetLine == null)
                     return (false, "Ligne budgétaire introuvable.");
-
-                if (!budgetLine.Nommenclature.Chapitre?.StartsWith("71") ?? true)
-                {
-                    return (false, "Cette ligne budgétaire n'est pas une recette fiscale (71xx).");
-                }
 
                 // Vérifier que l'exercice n'est pas clôturé
                 var exercice = await context.Exercices.FindAsync(recensement.ExerciceId);

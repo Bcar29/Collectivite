@@ -4,13 +4,20 @@
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
       Language="fr-FR"
       Background="#F5F5F5"
-      Title="Gestion des Recensements">
+      Title="Gestion des Recensements"
+      x:Name="RecensementPageRoot">
 
     <Page.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+        <!-- Proxy pour le binding -->
+        <FrameworkElement x:Key="ProxyElement" DataContext="{Binding}"/>
     </Page.Resources>
 
     <Grid>
+        <!-- Proxy invisible pour le binding -->
+        <ContentControl Visibility="Collapsed" Content="{StaticResource ProxyElement}"/>
+
         <!-- Overlay de chargement -->
         <Grid Background="#80000000" 
               Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"
@@ -34,6 +41,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
@@ -45,7 +53,7 @@
                                              Height="32"
                                              Foreground="#1976D2"
                                              VerticalAlignment="Center"/>
-                    <TextBlock Text="Recensements des Recettes Fiscales" 
+                    <TextBlock Text="Recensements des Recettes" 
                                FontSize="24"
                                FontWeight="SemiBold"
                                Margin="10,0,0,0"
@@ -87,7 +95,7 @@
                                                Foreground="#1976D2"
                                                VerticalAlignment="Center"
                                                Margin="0,0,10,0"/>
-                        <TextBlock Text="Recensement des recettes fiscales (Chapitre 71xx uniquement)"
+                        <TextBlock Text="Recensement des recettes (fiscales et non fiscales)"
                                    FontSize="13"
                                    Foreground="#1976D2"
                                    FontWeight="Medium"
@@ -110,8 +118,77 @@
                 </DockPanel>
             </Border>
 
+            <!-- Panneau de configuration des colonnes -->
+            <materialDesign:Card Grid.Row="2" Padding="12" Margin="0,0,0,15">
+                <Expander Header="⚙️ Affichage des colonnes" 
+                         materialDesign:ExpanderAssist.HorizontalHeaderPadding="0"
+                         IsExpanded="False">
+                    <Grid Margin="0,10,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Colonne 1 -->
+                        <StackPanel Grid.Column="0">
+                            <CheckBox Content="Exercice" 
+                                     IsChecked="{Binding ShowExercice}"
+                                     Margin="0,0,0,8"
+                                     Style="{StaticResource MaterialDesignCheckBox}"/>
+
+                            <CheckBox Content="Commune" 
+                                     IsChecked="{Binding ShowCommune}"
+                                     Margin="0,0,0,8"
+                                     Style="{StaticResource MaterialDesignCheckBox}"/>
+
+                            <CheckBox Content="Chapitre" 
+                                     IsChecked="{Binding ShowChapitre}"
+                                     Margin="0,0,0,8"
+                                     Style="{StaticResource MaterialDesignCheckBox}"/>
+                        </StackPanel>
+
+                        <!-- Colonne 2 -->
+                        <StackPanel Grid.Column="1">
+                            <CheckBox Content="Article" 
+                                     IsChecked="{Binding ShowArticle}"
+                                     Margin="0,0,0,8"
+                                     Style="{StaticResource MaterialDesignCheckBox}"/>
+
+                            <CheckBox Content="Paragraphe" 
+                                     IsChecked="{Binding ShowParagraphe}"
+                                     Margin="0,0,0,8"
+                                     Style="{StaticResource MaterialDesignCheckBox}"/>
+
+                            <CheckBox Content="Sous-paragraphe" 
+                                     IsChecked="{Binding ShowSousParagraphe}"
+                                     Margin="0,0,0,8"
+                                     Style="{StaticResource MaterialDesignCheckBox}"/>
+                        </StackPanel>
+
+                        <!-- Colonne 3 -->
+                        <StackPanel Grid.Column="2">
+                            <CheckBox Content="Intitulé" 
+                                     IsChecked="{Binding ShowIntitule}"
+                                     Margin="0,0,0,8"
+                                     Style="{StaticResource MaterialDesignCheckBox}"/>
+
+                            <CheckBox Content="Tiers" 
+                                     IsChecked="{Binding ShowTiers}"
+                                     Margin="0,0,0,8"
+                                     Style="{StaticResource MaterialDesignCheckBox}"/>
+
+                            <CheckBox Content="Montant Recensé" 
+                                     IsChecked="{Binding ShowMontant}"
+                                     Margin="0,0,0,8"
+                                     Style="{StaticResource MaterialDesignCheckBox}"/>
+                        </StackPanel>
+                    </Grid>
+                </Expander>
+            </materialDesign:Card>
+
             <!-- DataGrid -->
-            <materialDesign:Card Grid.Row="2" Padding="0">
+            <materialDesign:Card Grid.Row="3" Padding="0">
                 <DataGrid ItemsSource="{Binding Recensements}"
                           SelectedItem="{Binding SelectedRecensement}"
                           AutoGenerateColumns="False"
@@ -124,36 +201,108 @@
                         <!-- Exercice -->
                         <DataGridTextColumn Header="Exercice" 
                                           Binding="{Binding Exercice.Libelle}" 
-                                          Width="120"/>
+                                          Width="110"
+                                          Visibility="{Binding DataContext.ShowExercice, Source={StaticResource ProxyElement}, Converter={StaticResource BoolToVis}}"/>
 
                         <!-- Commune -->
                         <DataGridTextColumn Header="Commune" 
                                           Binding="{Binding Commune.Nom}" 
-                                          Width="150"/>
+                                          Width="130"
+                                          Visibility="{Binding DataContext.ShowCommune, Source={StaticResource ProxyElement}, Converter={StaticResource BoolToVis}}"/>
 
                         <!-- Chapitre -->
-                        <DataGridTextColumn Header="Chapitre" 
-                                          Binding="{Binding BudgetLine.Nommenclature.Chapitre}" 
-                                          Width="80"/>
+                        <DataGridTemplateColumn Header="Chapitre" 
+                                              Width="90"
+                                              Visibility="{Binding DataContext.ShowChapitre, Source={StaticResource ProxyElement}, Converter={StaticResource BoolToVis}}">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="#E3F2FD" 
+                                           CornerRadius="3"
+                                           Padding="5,2">
+                                        <TextBlock Text="{Binding BudgetLine.Nommenclature.Chapitre}" 
+                                                  FontWeight="Bold"
+                                                  FontSize="10"
+                                                  Foreground="#1976D2"
+                                                  HorizontalAlignment="Center"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
 
                         <!-- Article -->
-                        <DataGridTextColumn Header="Article" 
-                                          Binding="{Binding BudgetLine.Nommenclature.Article}" 
-                                          Width="80"/>
+                        <DataGridTemplateColumn Header="Article" 
+                                              Width="90"
+                                              Visibility="{Binding DataContext.ShowArticle, Source={StaticResource ProxyElement}, Converter={StaticResource BoolToVis}}">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="#E8F5E9" 
+                                           CornerRadius="3"
+                                           Padding="5,2">
+                                        <TextBlock Text="{Binding BudgetLine.Nommenclature.Article}" 
+                                                  FontWeight="SemiBold"
+                                                  FontSize="10"
+                                                  Foreground="#388E3C"
+                                                  HorizontalAlignment="Center"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- Paragraphe -->
+                        <DataGridTemplateColumn Header="Paragraphe" 
+                                              Width="100"
+                                              Visibility="{Binding DataContext.ShowParagraphe, Source={StaticResource ProxyElement}, Converter={StaticResource BoolToVis}}">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="#FFF3E0" 
+                                           CornerRadius="3"
+                                           Padding="5,2">
+                                        <TextBlock Text="{Binding BudgetLine.Nommenclature.Paragraphe}" 
+                                                  FontWeight="SemiBold"
+                                                  FontSize="10"
+                                                  Foreground="#F57C00"
+                                                  HorizontalAlignment="Center"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- Sous-paragraphe -->
+                        <DataGridTemplateColumn Header="Sous-paragraphe" 
+                                              Width="120"
+                                              Visibility="{Binding DataContext.ShowSousParagraphe, Source={StaticResource ProxyElement}, Converter={StaticResource BoolToVis}}">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="#F3E5F5" 
+                                           CornerRadius="3"
+                                           Padding="5,2">
+                                        <TextBlock Text="{Binding BudgetLine.Nommenclature.SousParagraphe}" 
+                                                  FontWeight="SemiBold"
+                                                  FontSize="10"
+                                                  Foreground="#7B1FA2"
+                                                  HorizontalAlignment="Center"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
 
                         <!-- Intitulé ligne budgétaire -->
-                        <DataGridTextColumn Header="Ligne budgétaire" 
+                        <DataGridTextColumn Header="Intitulé" 
                                           Binding="{Binding BudgetLine.Nommenclature.Intitule}" 
                                           Width="*" 
-                                          MinWidth="200"/>
+                                          MinWidth="200"
+                                          Visibility="{Binding DataContext.ShowIntitule, Source={StaticResource ProxyElement}, Converter={StaticResource BoolToVis}}"/>
 
                         <!-- Tiers -->
                         <DataGridTextColumn Header="Tiers" 
                                           Binding="{Binding Tiers.Nom}" 
-                                          Width="180"/>
+                                          Width="150"
+                                          Visibility="{Binding DataContext.ShowTiers, Source={StaticResource ProxyElement}, Converter={StaticResource BoolToVis}}"/>
 
                         <!-- Montant recensé -->
-                        <DataGridTemplateColumn Header="Montant Recensé" Width="150">
+                        <DataGridTemplateColumn Header="Montant Recensé" 
+                                              Width="140"
+                                              Visibility="{Binding DataContext.ShowMontant, Source={StaticResource ProxyElement}, Converter={StaticResource BoolToVis}}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <Border Background="#E8F5E9" 
@@ -168,19 +317,19 @@
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
-                        <!-- Actions -->
+                        <!-- Actions (toujours visible) -->
                         <DataGridTemplateColumn Header="Actions" Width="100">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                         <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                Command="{Binding DataContext.OpenEditDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                Command="{Binding DataContext.OpenEditDialogCommand, ElementName=RecensementPageRoot}"
                                                 CommandParameter="{Binding}"
                                                 ToolTip="Modifier">
                                             <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2"/>
                                         </Button>
                                         <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                Command="{Binding DataContext.DeleteCommand, ElementName=RecensementPageRoot}"
                                                 CommandParameter="{Binding}"
                                                 ToolTip="Supprimer">
                                             <materialDesign:PackIcon Kind="Delete" Foreground="#F44336"/>
@@ -199,7 +348,7 @@
                                  CloseOnClickAway="False" 
                                  Panel.ZIndex="1000">
             <materialDesign:DialogHost.DialogContent>
-                <StackPanel Width="550" Margin="20">
+                <StackPanel Width="600" Margin="20">
 
                     <!-- Titre -->
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
@@ -215,28 +364,28 @@
                                  VerticalAlignment="Center"/>
                     </StackPanel>
 
-                    <!-- Info recettes fiscales -->
-                    <Border Background="#FFF3E0" 
-                            BorderBrush="#FF9800"
+                    <!-- Info recensement -->
+                    <Border Background="#E3F2FD" 
+                            BorderBrush="#1976D2"
                             BorderThickness="1"
                             CornerRadius="6"
                             Padding="12"
                             Margin="0,0,0,15">
                         <StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
-                                <materialDesign:PackIcon Kind="AlertCircleOutline" 
+                                <materialDesign:PackIcon Kind="InformationOutline" 
                                                        Width="18" 
                                                        Height="18"
-                                                       Foreground="#FF9800"
+                                                       Foreground="#1976D2"
                                                        VerticalAlignment="Center"
                                                        Margin="0,0,8,0"/>
-                                <TextBlock Text="Recettes fiscales uniquement" 
+                                <TextBlock Text="Recensement des recettes" 
                                          FontWeight="SemiBold"
                                          FontSize="13"
-                                         Foreground="#E65100"
+                                         Foreground="#1565C0"
                                          VerticalAlignment="Center"/>
                             </StackPanel>
-                            <TextBlock Text="Seules les lignes budgétaires du chapitre 71 (recettes fiscales) sont disponibles pour le recensement."
+                            <TextBlock Text="Sélectionnez une ligne budgétaire pour enregistrer le recensement des recettes (fiscales ou non fiscales)."
                                      TextWrapping="Wrap"
                                      FontSize="11"
                                      Foreground="#424242"
@@ -278,23 +427,34 @@
                                   DisplayMemberPath="Nom"
                                   Margin="0,0,0,15"/>
 
-                        <!-- Ligne budgétaire (recettes fiscales 71xx uniquement) -->
+                        <!-- Ligne budgétaire -->
                         <ComboBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
-                                  materialDesign:HintAssist.Hint="Recette fiscale (71xx) *"
+                                  materialDesign:HintAssist.Hint="Ligne budgétaire *"
                                   Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                                  ItemsSource="{Binding RecettesFiscales}"
+                                  ItemsSource="{Binding LignesBudgetaires}"
                                   SelectedValue="{Binding DialogRecensement.BudgetLineId}"
                                   SelectedValuePath="Id"
-                                 
                                   Margin="0,0,0,15">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
-                                    <StackPanel>
-                                        <TextBlock>
-                                            <Run Text="{Binding Nommenclature.Chapitre, Mode=OneWay}" FontWeight="SemiBold"/>
-                                            <Run Text=" - "/>
-                                            <Run Text="{Binding Nommenclature.Intitule, Mode=OneWay}"/>
-                                        </TextBlock>
+                                    <StackPanel Margin="0,5">
+                                        <!-- Codes -->
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                            <Border Background="#E3F2FD" CornerRadius="3" Padding="6,2" Margin="0,0,4,0">
+                                                <TextBlock Text="{Binding Nommenclature.Chapitre}" FontWeight="Bold" FontSize="11" Foreground="#1976D2"/>
+                                            </Border>
+                                            <Border Background="#E8F5E9" CornerRadius="3" Padding="6,2" Margin="0,0,4,0">
+                                                <TextBlock Text="{Binding Nommenclature.Article}" FontWeight="SemiBold" FontSize="11" Foreground="#388E3C"/>
+                                            </Border>
+                                            <Border Background="#FFF3E0" CornerRadius="3" Padding="6,2" Margin="0,0,4,0">
+                                                <TextBlock Text="{Binding Nommenclature.Paragraphe}" FontWeight="SemiBold" FontSize="11" Foreground="#F57C00"/>
+                                            </Border>
+                                            <Border Background="#F3E5F5" CornerRadius="3" Padding="6,2">
+                                                <TextBlock Text="{Binding Nommenclature.SousParagraphe}" FontWeight="SemiBold" FontSize="11" Foreground="#7B1FA2"/>
+                                            </Border>
+                                        </StackPanel>
+                                        <!-- Intitulé -->
+                                        <TextBlock Text="{Binding Nommenclature.Intitule}" FontSize="12" TextWrapping="Wrap" Foreground="#424242"/>
                                     </StackPanel>
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>

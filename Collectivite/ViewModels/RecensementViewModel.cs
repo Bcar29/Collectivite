@@ -17,6 +17,17 @@ namespace Collectivite.ViewModels
         private Recensement _dialogRecensement;
         private bool _isEditMode;
 
+        // Visibilité des colonnes
+        private bool _showExercice = true;
+        private bool _showCommune = true;
+        private bool _showChapitre = true;
+        private bool _showArticle = true;
+        private bool _showParagraphe = true;
+        private bool _showSousParagraphe = true;
+        private bool _showIntitule = true;
+        private bool _showTiers = true;
+        private bool _showMontant = true;
+
         public RecensementViewModel()
         {
             _dialogRecensement = new Recensement
@@ -26,7 +37,7 @@ namespace Collectivite.ViewModels
 
             // Commandes
             LoadDataCommand = new RelayCommand(async _ => await LoadDataAsync());
-            OpenAddDialogCommand = new RelayCommand(_ => OpenAddDialog());
+            OpenAddDialogCommand = new RelayCommand(async _ => await OpenAddDialogAsync());
             OpenEditDialogCommand = new RelayCommand<Recensement>(r => OpenEditDialog(r));
             SaveCommand = new RelayCommand(async _ => await SaveAsync(), _ => CanSave());
             CancelCommand = new RelayCommand(_ => CancelDialog());
@@ -39,7 +50,7 @@ namespace Collectivite.ViewModels
         #region Properties
 
         public ObservableCollection<Recensement> Recensements { get; } = new();
-        public ObservableCollection<BudgetLine> RecettesFiscales { get; } = new();
+        public ObservableCollection<BudgetLine> LignesBudgetaires { get; } = new();
         public ObservableCollection<Exercice> Exercices { get; } = new();
         public ObservableCollection<Commune> Communes { get; } = new();
         public ObservableCollection<Tiers> TiersList { get; } = new();
@@ -80,6 +91,64 @@ namespace Collectivite.ViewModels
 
         #endregion
 
+        #region Visibilité des colonnes
+
+        public bool ShowExercice
+        {
+            get => _showExercice;
+            set => SetProperty(ref _showExercice, value);
+        }
+
+        public bool ShowCommune
+        {
+            get => _showCommune;
+            set => SetProperty(ref _showCommune, value);
+        }
+
+        public bool ShowChapitre
+        {
+            get => _showChapitre;
+            set => SetProperty(ref _showChapitre, value);
+        }
+
+        public bool ShowArticle
+        {
+            get => _showArticle;
+            set => SetProperty(ref _showArticle, value);
+        }
+
+        public bool ShowParagraphe
+        {
+            get => _showParagraphe;
+            set => SetProperty(ref _showParagraphe, value);
+        }
+
+        public bool ShowSousParagraphe
+        {
+            get => _showSousParagraphe;
+            set => SetProperty(ref _showSousParagraphe, value);
+        }
+
+        public bool ShowIntitule
+        {
+            get => _showIntitule;
+            set => SetProperty(ref _showIntitule, value);
+        }
+
+        public bool ShowTiers
+        {
+            get => _showTiers;
+            set => SetProperty(ref _showTiers, value);
+        }
+
+        public bool ShowMontant
+        {
+            get => _showMontant;
+            set => SetProperty(ref _showMontant, value);
+        }
+
+        #endregion
+
         #region Commands
 
         public ICommand LoadDataCommand { get; }
@@ -100,6 +169,8 @@ namespace Collectivite.ViewModels
             try
             {
                 var recensementService = new RecensementService();
+
+                // Charger tous les recensements
                 var recensements = await recensementService.GetAllRecensementsAsync();
 
                 Recensements.Clear();
@@ -108,14 +179,16 @@ namespace Collectivite.ViewModels
                     Recensements.Add(r);
                 }
 
-                // ✅ Charger uniquement les recettes fiscales (71xx)
-                var recettesFiscales = await recensementService.GetRecettesFiscalesBudgetLinesAsync();
+                // ✅ Charger TOUTES les lignes budgétaires (fiscales ET non fiscales)
+                var lignesBudgetaires = await recensementService.GetAllBudgetLinesAsync();
 
-                RecettesFiscales.Clear();
-                foreach (var rf in recettesFiscales)
+                LignesBudgetaires.Clear();
+                foreach (var lb in lignesBudgetaires)
                 {
-                    RecettesFiscales.Add(rf);
+                    LignesBudgetaires.Add(lb);
                 }
+
+                System.Diagnostics.Debug.WriteLine($"✅ {LignesBudgetaires.Count} lignes budgétaires chargées");
 
                 // Charger les exercices
                 using (var context = new AppDbContext())
@@ -130,7 +203,7 @@ namespace Collectivite.ViewModels
                     }
                 }
 
-                // ✅ APRÈS (correct)
+                // Charger les communes
                 using (var context = new AppDbContext())
                 {
                     var communeService = new CommuneService(context);
@@ -157,6 +230,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"❌ ERREUR : {ex.Message}");
                 MessageBox.Show($"Erreur lors du chargement : {ex.Message}",
                     "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
@@ -166,7 +240,7 @@ namespace Collectivite.ViewModels
             }
         }
 
-        private void OpenAddDialog()
+        private async System.Threading.Tasks.Task OpenAddDialogAsync()
         {
             IsEditMode = false;
 
@@ -174,6 +248,46 @@ namespace Collectivite.ViewModels
             {
                 MontantRecense = 0
             };
+
+            // ✅ Recharger toutes les lignes budgétaires
+            IsLoading = true;
+            try
+            {
+                var recensementService = new RecensementService();
+                var lignesBudgetaires = await recensementService.GetAllBudgetLinesAsync();
+
+                LignesBudgetaires.Clear();
+                foreach (var lb in lignesBudgetaires)
+                {
+                    LignesBudgetaires.Add(lb);
+                }
+
+                System.Diagnostics.Debug.WriteLine($"✅ Modal : {LignesBudgetaires.Count} lignes budgétaires chargées");
+
+                if (LignesBudgetaires.Count == 0)
+                {
+                    MessageBox.Show(
+                        "⚠️ Aucune ligne budgétaire n'a été trouvée.\n\n" +
+                        "Veuillez d'abord créer des lignes budgétaires dans le module approprié.",
+                        "Attention",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    return;
+                }
+
+                OnPropertyChanged(nameof(LignesBudgetaires));
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"❌ ERREUR : {ex.Message}");
+                MessageBox.Show($"Erreur lors du chargement des lignes budgétaires : {ex.Message}",
+                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+            finally
+            {
+                IsLoading = false;
+            }
 
             IsDialogOpen = true;
         }
