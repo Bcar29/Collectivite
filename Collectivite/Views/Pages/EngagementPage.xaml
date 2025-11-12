@@ -1,0 +1,264 @@
+﻿<Page x:Class="Collectivite.Views.Pages.EngagementPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+      Language="fr-FR"
+      Background="#F5F5F5"
+      Title="Gestion des Engagements">
+
+    <Page.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </Page.Resources>
+
+    <Grid>
+        <!-- Overlay de chargement -->
+        <Grid Background="#80000000" 
+              Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"
+              Panel.ZIndex="999">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}"
+                           Value="0"
+                           IsIndeterminate="True"
+                           Width="60"
+                           Height="60"/>
+                <TextBlock Text="Chargement..." 
+                         Foreground="White"
+                         FontSize="16"
+                         Margin="0,20,0,0"
+                         HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Contenu principal -->
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Header -->
+            <Grid Grid.Row="0" Margin="0,0,0,20">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="FileDocument" 
+                                           Width="32" 
+                                           Height="32"
+                                           Foreground="#1976D2"
+                                           VerticalAlignment="Center"/>
+                    <TextBlock Text="Gestion des Engagements" 
+                             FontSize="24"
+                             FontWeight="SemiBold"
+                             Margin="15,0,0,0"
+                             VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                            Height="40"
+                            Click="BtnAdd_Click"
+                            Margin="0,0,10,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Plus" 
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,8,0"/>
+                            <TextBlock Text="Nouvel Engagement" 
+                                     VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                            Height="40"
+                            Command="{Binding ShowStatistiquesCommand}"
+                            Margin="0,0,10,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ChartBar" 
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,8,0"/>
+                            <TextBlock Text="Statistiques" 
+                                     VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                            Height="40"
+                            Command="{Binding LoadDataCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Refresh" 
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,8,0"/>
+                            <TextBlock Text="Actualiser" 
+                                     VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <!-- Barre de recherche -->
+            <materialDesign:Card Grid.Row="1" Padding="15" Margin="0,0,0,15">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="15"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBox Grid.Column="0"
+                           materialDesign:HintAssist.Hint="Rechercher un engagement (objet, tiers, ligne budgétaire...)"
+                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                           Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                           VerticalAlignment="Center"/>
+
+                    <Button Grid.Column="2"
+                          Style="{StaticResource MaterialDesignRaisedButton}"
+                          Command="{Binding SearchCommand}"
+                          Height="40"
+                          Padding="20,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Magnify" 
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,8,0"/>
+                            <TextBlock Text="Rechercher" 
+                                     VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </materialDesign:Card>
+
+            <!-- DataGrid -->
+            <materialDesign:Card Grid.Row="2" Padding="0">
+                <Grid>
+                    <DataGrid ItemsSource="{Binding Engagements}"
+                            SelectedItem="{Binding SelectedEngagement}"
+                            AutoGenerateColumns="False"
+                            CanUserAddRows="False"
+                            CanUserDeleteRows="False"
+                            IsReadOnly="True"
+                            SelectionMode="Single"
+                            materialDesign:DataGridAssist.CellPadding="13 8 8 8"
+                            materialDesign:DataGridAssist.ColumnHeaderPadding="8">
+
+                        <DataGrid.Columns>
+
+                            <!-- Date -->
+                            <DataGridTextColumn Header="Date" 
+                                              Binding="{Binding DateEngagement, StringFormat='dd/MM/yyyy'}"
+                                              Width="120"/>
+
+                            <!-- Exercice -->
+                            <DataGridTextColumn Header="Exercice" 
+                                              Binding="{Binding Exercice.Libelle}"
+                                              Width="120"/>
+
+                            <!-- Tiers -->
+                            <DataGridTextColumn Header="Tiers" 
+                                              Binding="{Binding Tiers.Nom}"
+                                              Width="200"/>
+
+                            <!-- Objet -->
+                            <DataGridTextColumn Header="Objet" 
+                                              Binding="{Binding Objet}"
+                                              Width="*"
+                                              MinWidth="250"/>
+
+                            <!-- Ligne budgétaire -->
+                            <DataGridTextColumn Header="Ligne budgétaire" 
+                                              Binding="{Binding BudgetLine.Nommenclature.Intitule}"
+                                              Width="200"/>
+
+                            <!-- Montant -->
+                            <DataGridTemplateColumn Header="Montant" Width="150">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding MontantEngagement, StringFormat={}{0:N0} GNF}"
+                                                 FontWeight="SemiBold"
+                                                 Foreground="#1976D2"
+                                                 HorizontalAlignment="Right"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Actions -->
+                            <DataGridTemplateColumn Header="Actions" Width="180">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+
+                                            <!-- Bouton Détails -->
+                                            <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                  ToolTip="Voir les détails"
+                                                  Click="BtnDetail_Click"
+                                                  Tag="{Binding Id}"
+                                                  Margin="4,0">
+                                                <materialDesign:PackIcon Kind="Eye" 
+                                                                       Foreground="#4CAF50"/>
+                                            </Button>
+
+                                            <!-- Bouton Modifier -->
+                                            <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                  ToolTip="Modifier"
+                                                  Click="BtnEdit_Click"
+                                                  Tag="{Binding Id}"
+                                                  Margin="4,0">
+                                                <materialDesign:PackIcon Kind="Pencil" 
+                                                                       Foreground="#1976D2"/>
+                                            </Button>
+
+                                            <!-- Bouton Supprimer -->
+                                            <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                  ToolTip="Supprimer"
+                                                  Command="{Binding DataContext.DeleteCommand, 
+                                                          RelativeSource={RelativeSource AncestorType=Page}}"
+                                                  CommandParameter="{Binding}"
+                                                  Margin="4,0">
+                                                <materialDesign:PackIcon Kind="Delete" 
+                                                                       Foreground="#F44336"/>
+                                            </Button>
+
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <!-- Message si vide -->
+                    <Border Background="#F5F5F5"
+                          CornerRadius="8"
+                          Padding="40"
+                          Visibility="{Binding Engagements.Count, Converter={StaticResource BoolToVis}}">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Engagements.Count}" Value="0">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <materialDesign:PackIcon Kind="FileDocumentOutline" 
+                                                   Width="64" 
+                                                   Height="64"
+                                                   Foreground="#BDBDBD"
+                                                   HorizontalAlignment="Center"/>
+                            <TextBlock Text="Aucun engagement" 
+                                     FontSize="16"
+                                     Foreground="#757575"
+                                     Margin="0,20,0,0"
+                                     HorizontalAlignment="Center"/>
+                            <TextBlock Text="Cliquez sur 'Nouvel Engagement' pour commencer" 
+                                     FontSize="13"
+                                     Foreground="#9E9E9E"
+                                     Margin="0,8,0,0"
+                                     HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </materialDesign:Card>
+
+        </Grid>
+    </Grid>
+</Page>

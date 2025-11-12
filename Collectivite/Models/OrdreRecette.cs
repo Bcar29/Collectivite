@@ -35,16 +35,19 @@ namespace Collectivite.Models
         public int CommuneId { get; set; }
         public Commune Commune { get; set; } = null!;
 
-        // 🔹 Comptable (champ texte long)
-        [Column(TypeName = "text")]
+        // 🔹 Comptable
+        
         [Required(ErrorMessage = "Le nom du comptable est obligatoire")]
-        public string Comptable { get; set; } = null!;
+        public string? Comptable { get; set; } = null!;
 
         // 🔹 Relation avec le tiers
         [ForeignKey("Tiers")]
-        [Required(ErrorMessage = "Le tiers est obligatoire")]
-        public int TiersId { get; set; }
-        public Tiers Tiers { get; set; } = null!;
+        //[Required(ErrorMessage = "Le tiers est obligatoire")]
+        public int? TiersId { get; set; }
+        public Tiers? Tiers { get; set; } = null!;
+
+        [Column(TypeName = "text")]
+        public string? Motifs { get; set; }
 
         // 🔹 Montant de l’ordre
         [Required(ErrorMessage = "Le montant de l'ordre est obligatoire")]

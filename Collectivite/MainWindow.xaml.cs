@@ -52,7 +52,7 @@ namespace Collectivite
 
         private void NommenclatureButton_Click(object sender, RoutedEventArgs e)
         {
-            _viewModel.UpdatePageTitle("CONFIGURATION - EXERCICE");
+            _viewModel.UpdatePageTitle("CONFIGURATION - NOMMENCLATURE");
             NavigationService.Instance.NavigateTo(new Views.Pages.NommenclaturePage());
             _viewModel.IsMenuOpen = false;
         }
@@ -68,6 +68,29 @@ namespace Collectivite
         {
             _viewModel.UpdatePageTitle("GESTION BUDGÉTAIRE - BUDGET LINE");
              NavigationService.Instance.NavigateTo(new Views.Pages.BudgetLinesPage());
+            _viewModel.IsMenuOpen = false;
+        }
+
+        //SAISIES DES PIECES 
+
+        private void BonCommande_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.UpdatePageTitle("GESTION BUDGÉTAIRE - BON-COMMANDE");
+            NavigationService.Instance.NavigateTo(new Views.Pages.BonCommandeListPage());
+            _viewModel.IsMenuOpen = false;
+        }
+        
+
+        private void OrdreRecette_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.UpdatePageTitle("GESTION BUDGÉTAIRE - ORDRE RECETTE");
+            NavigationService.Instance.NavigateTo(new Views.Pages.OrdreRecettePage());
+            _viewModel.IsMenuOpen = false;
+        }
+        private void FicheEngagement_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.UpdatePageTitle("GESTION BUDGÉTAIRE - FICHE D'ENGAGEMENT");
+            NavigationService.Instance.NavigateTo(new Views.Pages.EngagementPage());
             _viewModel.IsMenuOpen = false;
         }
 

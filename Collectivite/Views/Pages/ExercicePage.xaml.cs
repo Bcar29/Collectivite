@@ -11,8 +11,8 @@ namespace Collectivite.Views.Pages
             InitializeComponent();
 
             // Initialiser le ViewModel
-            var context = new AppDbContext();
-            var exerciceService = new ExerciceService(context);
+            //var context = new AppDbContext();
+            var exerciceService = new ExerciceService();
             var viewModel = new ExerciceViewModel(exerciceService);
 
             DataContext = viewModel;

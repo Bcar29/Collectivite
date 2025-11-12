@@ -16,7 +16,7 @@ namespace Collectivite.Models
         public DateTime DateEcheance { get; set; }
         public int TiersId { get; set; }
         public Tiers Tiers { get; set; } = null!;
-        [Required(ErrorMessage = " la nature de la depense est obligatoire")]
+        [Required(ErrorMessage = " l'objet de la depense est obligatoire")]
         public string Objet { get; set; } = null!;
 
         [Required(ErrorMessage = "Le montant du contrat est obligatoire.")]

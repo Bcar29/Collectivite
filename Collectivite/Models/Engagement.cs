@@ -19,12 +19,6 @@ namespace Collectivite.Models
         [ForeignKey(nameof(ExerciceId))]
         public Exercice Exercice { get; set; } = null!;
 
-        [Required(ErrorMessage = "La commande est obligatoire.")]
-        public int BonCommandeId { get; set; }
-
-        [ForeignKey(nameof(BonCommandeId))]
-        public BonCommande BonCommande { get; set; } = null!;
-
         [Required(ErrorMessage = "La commune est obligatoire.")]
         public int CommuneId { get; set; }
 
@@ -37,11 +31,11 @@ namespace Collectivite.Models
         [ForeignKey(nameof(BudgetLineId))]
         public BudgetLine BudgetLine { get; set; } = null!;
 
-        [Required(ErrorMessage = "Le tiers est obligatoire.")]
-        public int TiersId { get; set; }
+        //[Required(ErrorMessage = "Le tiers est obligatoire.")]
+        public int? TiersId { get; set; }
 
         [ForeignKey(nameof(TiersId))]
-        public Tiers Tiers { get; set; } = null!;
+        public Tiers? Tiers { get; set; } = null!;
 
         [Required(ErrorMessage = "L'objet de l'engagement est obligatoire.")]
         [Column(TypeName = "text")]
@@ -63,10 +57,13 @@ namespace Collectivite.Models
         public double MontantEngagement { get; set; }
 
         public byte[]? FichierJoin { get; set; }
+        public string? FichierName { get; set; }
         public int? ContratId { get; set; }
+        [ForeignKey(nameof(ContratId))]
         public Contrats? Contrat { get; set; }
 
         public int? FactureId { get; set; }
+        [ForeignKey(nameof(FactureId))]
         public Facture? Facture { get; set; }
 
         public Mandat? Mandat { get; set; }
@@ -79,5 +76,7 @@ namespace Collectivite.Models
         {
             DateEngagement = DateTime.Now;
         }
+
+        public ICollection<BonCommande>? BonCommandes { get; set; } = new List<BonCommande>();
     }
 }

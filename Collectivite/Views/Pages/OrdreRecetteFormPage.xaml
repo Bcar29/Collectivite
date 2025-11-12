@@ -1,0 +1,312 @@
+﻿<Page x:Class="Collectivite.Views.Pages.OrdreRecetteFormPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+      Language="fr-FR"
+      Background="#F5F5F5"
+      Title="Ordre de Recette">
+
+    <Page.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </Page.Resources>
+
+    <Grid>
+        <!-- Overlay de chargement -->
+        <Grid Background="#80000000" 
+              Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"
+              Panel.ZIndex="999">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}"
+                           Value="0"
+                           
+                           Width="60"
+                           Height="60"/>
+                <TextBlock Text="Chargement..." 
+                           Foreground="White"
+                           FontSize="16"
+                           Margin="0,20,0,0"
+                           HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Contenu principal -->
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <Grid Margin="40,20,40,40" MaxWidth="1000">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- En-tête avec navigation -->
+                <DockPanel Margin="0,0,0,20">
+                    <!-- Bouton retour -->
+                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                            Command="{Binding NavigateBackCommand}"
+                            DockPanel.Dock="Left"
+                            Width="40"
+                            Height="40"
+                            Margin="0,0,15,0"
+                            ToolTip="Retour à la liste">
+                        <materialDesign:PackIcon Kind="ArrowLeft" Width="24" Height="24"/>
+                    </Button>
+
+                    <!-- Titre -->
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="FileDocumentOutline" 
+                                               Width="28" 
+                                               Height="28"
+                                               Foreground="#1976D2"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,10,0"/>
+                        <TextBlock Text="{Binding PageTitle}"
+                                 FontSize="22"
+                                 FontWeight="SemiBold"
+                                 VerticalAlignment="Center"/>
+                    </StackPanel>
+                </DockPanel>
+
+                <!-- Formulaire -->
+                <materialDesign:Card Grid.Row="1" Padding="30">
+                    <StackPanel>
+
+                        <!-- Section Informations principales -->
+                        <TextBlock Text="INFORMATIONS PRINCIPALES"
+                                 FontSize="14"
+                                 FontWeight="SemiBold"
+                                 Foreground="#1976D2"
+                                 Margin="0,0,0,15"/>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="15"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Numéro d'ordre -->
+                            <TextBox Grid.Row="0" Grid.Column="0"
+                                     materialDesign:HintAssist.Hint="N° Ordre *"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     Text="{Binding OrdreRecette.NumeroOrdre, UpdateSourceTrigger=PropertyChanged}"
+                                     Margin="0,0,0,15"/>
+
+                            <!-- Date -->
+                            <DatePicker Grid.Row="0" Grid.Column="2"
+                                        materialDesign:HintAssist.Hint="Date *"
+                                        Style="{StaticResource MaterialDesignOutlinedDatePicker}"
+                                        SelectedDate="{Binding OrdreRecette.DateOrdre}"
+                                        Margin="0,0,0,15"/>
+
+                            <!-- Exercice -->
+                            <ComboBox Grid.Row="1" Grid.Column="0"
+                                      materialDesign:HintAssist.Hint="Exercice *"
+                                      Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                      ItemsSource="{Binding Exercices}"
+                                      SelectedValue="{Binding OrdreRecette.ExerciceId}"
+                                      SelectedValuePath="Id"
+                                      DisplayMemberPath="Libelle"
+                                      Margin="0,0,0,15"/>
+
+                            <!-- Commune -->
+                            <ComboBox Grid.Row="1" Grid.Column="2"
+                                      materialDesign:HintAssist.Hint="Commune *"
+                                      Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                      ItemsSource="{Binding Communes}"
+                                      SelectedValue="{Binding OrdreRecette.CommuneId}"
+                                      SelectedValuePath="Id"
+                                      DisplayMemberPath="Nom"
+                                      Margin="0,0,0,15"/>
+
+                            <!-- Ligne budgétaire -->
+                            <ComboBox Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3"
+                                      materialDesign:HintAssist.Hint="Ligne budgétaire *"
+                                      Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                      ItemsSource="{Binding BudgetLines}"
+                                      SelectedValue="{Binding OrdreRecette.BudgetLineId}"
+                                      SelectedValuePath="Id"
+                                      DisplayMemberPath="Nommenclature.Intitule"
+                                      Margin="0,0,0,15"/>
+
+                            <!-- Comptable -->
+                            <TextBox Grid.Row="3" Grid.Column="0"
+                                     materialDesign:HintAssist.Hint="Comptable *"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     Text="{Binding OrdreRecette.Comptable, UpdateSourceTrigger=PropertyChanged}"
+                                     Margin="0,0,0,15"/>
+
+                            <!-- Tiers (optionnel) -->
+                            <ComboBox Grid.Row="3" Grid.Column="2"
+                                      materialDesign:HintAssist.Hint="Tiers (optionnel)"
+                                      Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                      ItemsSource="{Binding TiersList}"
+                                      SelectedValue="{Binding OrdreRecette.TiersId}"
+                                      SelectedValuePath="Id"
+                                      DisplayMemberPath="Nom"
+                                      Margin="0,0,0,15"/>
+                        </Grid>
+
+                        <!-- Séparateur -->
+                        <Separator Margin="0,10,0,20"/>
+
+                        <!-- Section Montant -->
+                        <TextBlock Text="MONTANT"
+                                 FontSize="14"
+                                 FontWeight="SemiBold"
+                                 Foreground="#1976D2"
+                                 Margin="0,0,0,15"/>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="15"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Montant en chiffres -->
+                            <TextBox Grid.Column="0"
+                                     materialDesign:HintAssist.Hint="Montant (GNF) *"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     Text="{Binding OrdreRecette.MontantOrdre, UpdateSourceTrigger=PropertyChanged, StringFormat=N0}"
+                                     FontSize="16"
+                                     FontWeight="SemiBold">
+                                <TextBox.InputBindings>
+                                    <KeyBinding Key="Return" Command="{Binding ConvertMontantToLettresCommand}"/>
+                                </TextBox.InputBindings>
+                            </TextBox>
+
+                            <!-- Bouton convertir -->
+                            <Button Grid.Column="2"
+                                    Style="{StaticResource MaterialDesignRaisedButton}"
+                                    Command="{Binding ConvertMontantToLettresCommand}"
+                                    Height="56"
+                                    Padding="20,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="TextToSpeech" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Convertir en lettres"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+
+                        <!-- Montant en lettres -->
+                        <TextBox materialDesign:HintAssist.Hint="Montant en lettres *"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 Text="{Binding OrdreRecette.MontantOrdreLettre, UpdateSourceTrigger=PropertyChanged}"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 MinLines="2"
+                                 MaxLines="4"
+                                 VerticalScrollBarVisibility="Auto"
+                                 Margin="0,15,0,15"
+                                 FontStyle="Italic"
+                                 Foreground="#424242"/>
+
+                        <!-- Info montant -->
+                        <Border Background="#E8F5E9"
+                                BorderBrush="#4CAF50"
+                                BorderThickness="1"
+                                CornerRadius="6"
+                                Padding="12"
+                                Margin="0,0,0,15">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="InformationOutline" 
+                                                       Width="20" 
+                                                       Height="20"
+                                                       Foreground="#388E3C"
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,10,0"/>
+                                <TextBlock TextWrapping="Wrap" 
+                                         FontSize="12"
+                                         Foreground="#2E7D32">
+                                    <Run Text="Saisissez le montant en chiffres puis cliquez sur"/>
+                                    <Run Text="'Convertir en lettres'" FontWeight="SemiBold"/>
+                                    <Run Text="pour générer automatiquement le montant en toutes lettres."/>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Séparateur -->
+                        <Separator Margin="0,10,0,20"/>
+
+                        <!-- Section Motifs -->
+                        <TextBlock Text="MOTIFS"
+                                 FontSize="14"
+                                 FontWeight="SemiBold"
+                                 Foreground="#1976D2"
+                                 Margin="0,0,0,15"/>
+
+                        <TextBox materialDesign:HintAssist.Hint="Motifs / Observations (optionnel)"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 Text="{Binding OrdreRecette.Motifs, UpdateSourceTrigger=PropertyChanged}"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 MinLines="4"
+                                 MaxLines="8"
+                                 VerticalScrollBarVisibility="Auto"
+                                 Margin="0,0,0,30"/>
+
+                        <!-- Boutons d'action -->
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="15"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Message validation -->
+                            <Border Grid.Column="0"
+                                    Background="#FFF3E0"
+                                    BorderBrush="#FF9800"
+                                    BorderThickness="1"
+                                    CornerRadius="6"
+                                    Padding="10"
+                                    VerticalAlignment="Center"
+                                    Visibility="{Binding HasValidationErrors, Converter={StaticResource BoolToVis}}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="AlertCircleOutline" 
+                                                           Width="18" 
+                                                           Height="18"
+                                                           Foreground="#F57C00"
+                                                           VerticalAlignment="Center"
+                                                           Margin="0,0,8,0"/>
+                                    <TextBlock Text="Veuillez remplir tous les champs obligatoires (*)"
+                                             FontSize="12"
+                                             Foreground="#E65100"
+                                             VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Bouton Annuler -->
+                            <Button Grid.Column="2"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Content="Annuler"
+                                    Command="{Binding NavigateBackCommand}"
+                                    Width="120"
+                                    Height="42"/>
+
+                            <!-- Bouton Enregistrer -->
+                            <Button Grid.Column="4"
+                                    Style="{StaticResource MaterialDesignRaisedButton}"
+                                    Command="{Binding SaveCommand}"
+                                    Width="180"
+                                    Height="42">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="ContentSave" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Enregistrer"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+
+                    </StackPanel>
+                </materialDesign:Card>
+            </Grid>
+        </ScrollViewer>
+    </Grid>
+</Page>

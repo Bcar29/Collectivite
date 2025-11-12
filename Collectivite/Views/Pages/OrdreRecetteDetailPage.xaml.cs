@@ -1,6 +1,4 @@
-﻿using Collectivite.Models;
-using Collectivite.Services;
-using Collectivite.ViewModels;
+﻿using Collectivite.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,17 +17,14 @@ using System.Windows.Shapes;
 namespace Collectivite.Views.Pages
 {
     /// <summary>
-    /// Logique d'interaction pour BudgetLinesPage.xaml
+    /// Logique d'interaction pour OrdreRecetteDetailPage.xaml
     /// </summary>
-    public partial class BudgetLinesPage : Page
+    public partial class OrdreRecetteDetailPage : Page
     {
-        public BudgetLinesPage()
+        public OrdreRecetteDetailPage(int ordreRecetteId)
         {
             InitializeComponent();
-
-            // ⚙️ Ici tu injectes le service (ou via ton conteneur d’injection)
-            var service = new BudgetLineService();
-            this.DataContext = new BudgetLinesViewModel(service, 1);
+            DataContext = new OrdreRecetteDetailViewModel(ordreRecetteId);
         }
     }
 }

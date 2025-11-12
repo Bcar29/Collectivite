@@ -181,7 +181,8 @@
                         <!-- Section Saisie des Pièces -->
                         <TextBlock Text="Saisie des Pièces" Style="{StaticResource MenuHeaderStyle}"/>
 
-                        <Button Style="{StaticResource MenuButtonStyle}">
+                        <Button Style="{StaticResource MenuButtonStyle}"
+                                Click="BonCommande_Click">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="FileDocumentEdit" 
                                                        VerticalAlignment="Center"
@@ -203,7 +204,8 @@
                             </StackPanel>
                         </Button>
 
-                        <Button Style="{StaticResource MenuButtonStyle}">
+                        <Button Style="{StaticResource MenuButtonStyle}"
+                                Click="FicheEngagement_Click">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="ClipboardText" 
                                                        VerticalAlignment="Center"
@@ -225,7 +227,8 @@
                             </StackPanel>
                         </Button>
 
-                        <Button Style="{StaticResource MenuButtonStyle}">
+                        <Button Style="{StaticResource MenuButtonStyle}"
+                                Click="OrdreRecette_Click">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="Receipt" 
                                                        VerticalAlignment="Center"
