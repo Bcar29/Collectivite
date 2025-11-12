@@ -67,6 +67,9 @@ namespace Collectivite
         private void BudgetLineButton_Click(object sender, RoutedEventArgs e)
         {
             _viewModel.UpdatePageTitle("GESTION BUDGÉTAIRE - BUDGET LINE");
+
+            //NavigationService.Instance.NavigateTo(new Views.Pages.BudgetLinePage());
+
              NavigationService.Instance.NavigateTo(new Views.Pages.BudgetLinesPage());
             _viewModel.IsMenuOpen = false;
         }
@@ -91,6 +94,43 @@ namespace Collectivite
         {
             _viewModel.UpdatePageTitle("GESTION BUDGÉTAIRE - FICHE D'ENGAGEMENT");
             NavigationService.Instance.NavigateTo(new Views.Pages.EngagementPage());
+            _viewModel.IsMenuOpen = false;
+        }
+
+        private void RemaniementButton_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.UpdatePageTitle("CONFIGURATION - BUDGET REMANIE");
+            NavigationService.Instance.NavigateTo(new Views.Pages.RemaniementPage());
+            _viewModel.IsMenuOpen = false;
+        }
+
+        //AJOUT DES COMPTES BANCAIRES ET DES TIERS
+
+        private void CompteBancaireButton_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.UpdatePageTitle("CONFIGURATION - COMPTES BANCAIRES");
+            NavigationService.Instance.NavigateTo(new Views.Pages.CompteBancairePage());
+            _viewModel.IsMenuOpen = false;
+        }
+
+        private void TiersButton_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.UpdatePageTitle("CONFIGURATION - TIERS");
+            NavigationService.Instance.NavigateTo(new Views.Pages.TiersPage());
+            _viewModel.IsMenuOpen = false;
+        }
+
+        private void FactureButton_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.UpdatePageTitle("CONFIGURATION - FACTURES ET DETAILS");
+            NavigationService.Instance.NavigateTo(new Views.Pages.FacturePage());
+            _viewModel.IsMenuOpen = false;
+        }
+
+        private void RecensementButton_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.UpdatePageTitle("CONFIGURATION - RECENSEMENTS");
+            NavigationService.Instance.NavigateTo(new Views.Pages.RecensementPage());
             _viewModel.IsMenuOpen = false;
         }
 

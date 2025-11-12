@@ -1,3 +1,5 @@
+using Collectivite.Models;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
@@ -5,6 +7,9 @@ namespace Collectivite.Utils
 {
     public class ViewModelBase : INotifyPropertyChanged
     {
+
+        
+        public ObservableCollection<Tiers> Tiers { get; } = new();
         public event PropertyChangedEventHandler? PropertyChanged;
 
         protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)

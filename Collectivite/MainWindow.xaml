@@ -155,8 +155,8 @@
                                 <TextBlock Text="Ligne Budgetaire" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
-
-                        <Button Style="{StaticResource MenuButtonStyle}">
+                        <!-- Gestion des Remaniements -->
+                        <Button Style="{StaticResource MenuButtonStyle}" Click="RemaniementButton_Click">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="Refresh" 
                                                        VerticalAlignment="Center"
@@ -178,6 +178,43 @@
                             </StackPanel>
                         </Button>
 
+                        <!-- Section Gestion Compte Bancaire et Tiers -->
+                        <TextBlock Text="Compte Bancaire et Tiers" Style="{StaticResource MenuHeaderStyle}"/>
+
+                        <Button Style="{StaticResource MenuButtonStyle}" Click="CompteBancaireButton_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Bank" 
+                                VerticalAlignment="Center"
+                                Width="22"
+                                Height="22"
+                                Margin="0,0,15,0"/>
+                                <TextBlock Text="Compte Bancaire" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Style="{StaticResource MenuButtonStyle}" Click="TiersButton_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="AccountGroup" 
+                                VerticalAlignment="Center"
+                                Width="22"
+                                Height="22"
+                                Margin="0,0,15,0"/>
+                                <TextBlock Text="Gestion des Tiers" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+
+                        <Button Style="{StaticResource MenuButtonStyle}" Click="RecensementButton_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="CashMultiple" 
+                                VerticalAlignment="Center"
+                                Width="22"
+                                Height="22"
+                                Margin="0,0,15,0"/>
+                                <TextBlock Text="Gestion des Recensements" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
                         <!-- Section Saisie des Pièces -->
                         <TextBlock Text="Saisie des Pièces" Style="{StaticResource MenuHeaderStyle}"/>
 
@@ -190,6 +227,17 @@
                                                        Height="22"
                                                        Margin="0,0,15,0"/>
                                 <TextBlock Text="Bon de Commande" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <!-- Ajout de fonctinnalité de facture et details -->
+                        <Button Style="{StaticResource MenuButtonStyle}" Click="FactureButton_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="ClipboardText" 
+                               VerticalAlignment="Center"
+                               Width="22"
+                               Height="22"
+                               Margin="0,0,15,0"/>
+                                <TextBlock Text="Facture et Détails" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
 

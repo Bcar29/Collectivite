@@ -145,7 +145,7 @@ namespace Collectivite.Migrations
 
                     b.Property<string>("BIC")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("varchar(255)");
 
                     b.Property<string>("Banque")
                         .IsRequired()
@@ -164,8 +164,13 @@ namespace Collectivite.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TiersId", "IBAN")
+                    b.HasIndex("BIC")
                         .IsUnique();
+
+                    b.HasIndex("IBAN")
+                        .IsUnique();
+
+                    b.HasIndex("TiersId");
 
                     b.ToTable("CompteBancaires");
                 });
@@ -806,6 +811,38 @@ namespace Collectivite.Migrations
                     b.ToTable("Recensements");
                 });
 
+            modelBuilder.Entity("Collectivite.Models.Remaniement", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("IdBudgetLine")
+                        .HasColumnType("int");
+
+                    b.Property<double>("Montant")
+                        .HasColumnType("double");
+
+                    b.Property<string>("Motif")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("text");
+
+                    b.Property<int>("TypeRemaniement")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdBudgetLine");
+
+                    b.ToTable("Remaniements");
+                });
+
             modelBuilder.Entity("Collectivite.Models.Tiers", b =>
                 {
                     b.Property<int>("Id")
@@ -827,7 +864,7 @@ namespace Collectivite.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Nif")
-                        .HasColumnType("longtext");
+                        .HasColumnType("varchar(255)");
 
                     b.Property<string>("Nom")
                         .IsRequired()
@@ -843,6 +880,11 @@ namespace Collectivite.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.HasIndex("Nif");
 
                     b.ToTable("Tiers");
                 });
@@ -1191,6 +1233,17 @@ namespace Collectivite.Migrations
                     b.Navigation("Tiers");
                 });
 
+            modelBuilder.Entity("Collectivite.Models.Remaniement", b =>
+                {
+                    b.HasOne("Collectivite.Models.BudgetLine", "BudgetLine")
+                        .WithMany("Remaniements")
+                        .HasForeignKey("IdBudgetLine")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BudgetLine");
+                });
+
             modelBuilder.Entity("Collectivite.Models.User", b =>
                 {
                     b.HasOne("Collectivite.Models.Commune", "Commune")
@@ -1212,6 +1265,8 @@ namespace Collectivite.Migrations
                     b.Navigation("Engagements");
 
                     b.Navigation("Recensements");
+
+                    b.Navigation("Remaniements");
                 });
 
             modelBuilder.Entity("Collectivite.Models.BudgetPrimitif", b =>

@@ -20,8 +20,10 @@ namespace Collectivite.Services
         // Recuperer tous les exercices
         public async Task<List<Exercice>> GetAllExerciceAsync()
             {
+
             using var context = CreateContext();
             return await context.Exercices
+
                 
                 .OrderByDescending(e => e.DateDebut)
                 .ToListAsync();
