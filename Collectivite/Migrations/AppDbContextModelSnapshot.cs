@@ -711,11 +711,7 @@ namespace Collectivite.Migrations
                     b.ToTable("Nommenclatures");
                 });
 
-<<<<<<< HEAD
-            modelBuilder.Entity("Collectivite.Models.Remaniement", b =>
-=======
             modelBuilder.Entity("Collectivite.Models.OrdreRecette", b =>
->>>>>>> c9d73e0e493acd0c6b972fdafc7115f5663f9559
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -723,25 +719,6 @@ namespace Collectivite.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-<<<<<<< HEAD
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<int>("IdBudgetLine")
-                        .HasColumnType("int");
-
-                    b.Property<double>("Montant")
-                        .HasColumnType("double");
-
-                    b.Property<string>("Motif")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int?>("RemaniementParentId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TypeRemaniement")
-=======
                     b.Property<int>("BudgetLineId")
                         .HasColumnType("int");
 
@@ -772,18 +749,10 @@ namespace Collectivite.Migrations
                         .HasColumnType("varchar(50)");
 
                     b.Property<int>("TiersId")
->>>>>>> c9d73e0e493acd0c6b972fdafc7115f5663f9559
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-<<<<<<< HEAD
-                    b.HasIndex("IdBudgetLine");
-
-                    b.HasIndex("RemaniementParentId");
-
-                    b.ToTable("Remaniements");
-=======
                     b.HasIndex("BudgetLineId");
 
                     b.HasIndex("CommuneId");
@@ -831,6 +800,38 @@ namespace Collectivite.Migrations
                     b.ToTable("Recensements");
                 });
 
+            modelBuilder.Entity("Collectivite.Models.Remaniement", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("IdBudgetLine")
+                        .HasColumnType("int");
+
+                    b.Property<double>("Montant")
+                        .HasColumnType("double");
+
+                    b.Property<string>("Motif")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("text");
+
+                    b.Property<int>("TypeRemaniement")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdBudgetLine");
+
+                    b.ToTable("Remaniements");
+                });
+
             modelBuilder.Entity("Collectivite.Models.Tiers", b =>
                 {
                     b.Property<int>("Id")
@@ -870,7 +871,6 @@ namespace Collectivite.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Tiers");
->>>>>>> c9d73e0e493acd0c6b972fdafc7115f5663f9559
                 });
 
             modelBuilder.Entity("Collectivite.Models.User", b =>
@@ -1146,23 +1146,6 @@ namespace Collectivite.Migrations
                     b.Navigation("Parent");
                 });
 
-<<<<<<< HEAD
-            modelBuilder.Entity("Collectivite.Models.Remaniement", b =>
-                {
-                    b.HasOne("Collectivite.Models.BudgetLine", "BudgetLine")
-                        .WithMany("Remaniements")
-                        .HasForeignKey("IdBudgetLine")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Collectivite.Models.Remaniement", "RemaniementParent")
-                        .WithMany("Remaniements")
-                        .HasForeignKey("RemaniementParentId");
-
-                    b.Navigation("BudgetLine");
-
-                    b.Navigation("RemaniementParent");
-=======
             modelBuilder.Entity("Collectivite.Models.OrdreRecette", b =>
                 {
                     b.HasOne("Collectivite.Models.BudgetLine", "BudgetLine")
@@ -1231,7 +1214,17 @@ namespace Collectivite.Migrations
                     b.Navigation("Exercice");
 
                     b.Navigation("Tiers");
->>>>>>> c9d73e0e493acd0c6b972fdafc7115f5663f9559
+                });
+
+            modelBuilder.Entity("Collectivite.Models.Remaniement", b =>
+                {
+                    b.HasOne("Collectivite.Models.BudgetLine", "BudgetLine")
+                        .WithMany("Remaniements")
+                        .HasForeignKey("IdBudgetLine")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BudgetLine");
                 });
 
             modelBuilder.Entity("Collectivite.Models.User", b =>
@@ -1245,11 +1238,6 @@ namespace Collectivite.Migrations
                     b.Navigation("Commune");
                 });
 
-<<<<<<< HEAD
-            modelBuilder.Entity("Collectivite.Models.BudgetLine", b =>
-                {
-                    b.Navigation("Remaniements");
-=======
             modelBuilder.Entity("Collectivite.Models.BonCommande", b =>
                 {
                     b.Navigation("Details");
@@ -1260,7 +1248,8 @@ namespace Collectivite.Migrations
                     b.Navigation("Engagements");
 
                     b.Navigation("Recensements");
->>>>>>> c9d73e0e493acd0c6b972fdafc7115f5663f9559
+
+                    b.Navigation("Remaniements");
                 });
 
             modelBuilder.Entity("Collectivite.Models.BudgetPrimitif", b =>
@@ -1324,11 +1313,6 @@ namespace Collectivite.Migrations
                     b.Navigation("Enfants");
                 });
 
-<<<<<<< HEAD
-            modelBuilder.Entity("Collectivite.Models.Remaniement", b =>
-                {
-                    b.Navigation("Remaniements");
-=======
             modelBuilder.Entity("Collectivite.Models.OrdreRecette", b =>
                 {
                     b.Navigation("EcritureComptables");
@@ -1345,7 +1329,6 @@ namespace Collectivite.Migrations
                     b.Navigation("Factures");
 
                     b.Navigation("Recensements");
->>>>>>> c9d73e0e493acd0c6b972fdafc7115f5663f9559
                 });
 #pragma warning restore 612, 618
         }

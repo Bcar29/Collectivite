@@ -12,11 +12,11 @@ namespace Collectivite.Models
         [Key]
         public int Id { get; set; }
         public string NumeroContrat { get; set; } = null!;
-        public DateTime DateSignature { get; set; }
-        public DateTime DateEcheance { get; set; }
+        public DateOnly DateSignature { get; set; }
+        public DateOnly DateEcheance { get; set; }
         public int TiersId { get; set; }
         public Tiers Tiers { get; set; } = null!;
-        [Required(ErrorMessage = " la nature de la depense est obligatoire")]
+        [Required(ErrorMessage = " l'objet du contrat est obligatoire")]
         public string Objet { get; set; } = null!;
 
         [Required(ErrorMessage = "Le montant du contrat est obligatoire.")]
@@ -26,8 +26,8 @@ namespace Collectivite.Models
         public int ExerciceId { get; set; }
         public Exercice Exercice { get; set; } = null!;
 
-        public ICollection<Engagement>? Engagements { get; set; }
+        public ICollection<Engagement>? Engagements { get; set; } = new List<Engagement>();
 
-        public ICollection<Facture>? Factures { get; set; }
+        public ICollection<Facture>? Factures { get; set; } = new List<Facture>();
     }
 }
