@@ -134,14 +134,14 @@ namespace Collectivite.ViewModels
                 }
 
                 // Charger les tiers
-                //var tiersService = new TiersService();
-                //var tiers = await tiersService.GetTiersActifsAsync();
+                var tiersService = new TiersService();
+                var tiers = await tiersService.GetTiersActifsAsync();
 
-                //TiersList.Clear();
-                //foreach (var t in tiers)
-                //{
-                //    TiersList.Add(t);
-                //}
+                TiersList.Clear();
+                foreach (var t in tiers)
+                {
+                    TiersList.Add(t);
+                }
             }
             catch (Exception ex)
             {

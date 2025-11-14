@@ -17,7 +17,7 @@ namespace Collectivite.Services
         {
             using var context = CreateContext();
             return await context.Communes
-                .AsNoTracking()  // ✅ Ne pas tracker
+                .AsNoTracking()  
                 .OrderBy(c => c.Nom)
                 .ToListAsync();
         }

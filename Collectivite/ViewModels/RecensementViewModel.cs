@@ -193,7 +193,7 @@ namespace Collectivite.ViewModels
                 // Charger les exercices
                 using (var context = new AppDbContext())
                 {
-                    var exerciceService = new ExerciceService(context);
+                    var exerciceService = new ExerciceService();
                     var exercices = await exerciceService.GetAllExerciceAsync();
 
                     Exercices.Clear();
@@ -206,7 +206,7 @@ namespace Collectivite.ViewModels
                 // Charger les communes
                 using (var context = new AppDbContext())
                 {
-                    var communeService = new CommuneService(context);
+                    var communeService = new CommuneService();
                     var communes = await communeService.GetAllCommuneAsync();
 
                     Communes.Clear();
