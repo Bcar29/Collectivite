@@ -40,37 +40,12 @@ namespace Collectivite.Models
         [Required(ErrorMessage = "Le mois du mandat est obligatoire")]
         public TypeMois Mois { get; set; }
 
-        // 🔹 Relation avec Commune
-        //[ForeignKey("Commune")]
-        //[Required(ErrorMessage = "La commune est obligatoire")]
-        //public int CommunneId { get; set; }
-        //public Commune Commune { get; set; } = null!;
-
-        //// 🔹 Relation avec Exercice
-        //[ForeignKey("Exercice")]
-        //[Required(ErrorMessage = "L'exercice est obligatoire")]
-        //public int ExerciceId { get; set; }
-        //public Exercice Exercice { get; set; } = null!;
-
-        //// 🔹 Relation avec Tiers
-        //[ForeignKey("Tiers")]
-        //[Required(ErrorMessage = "Le tiers est obligatoire")]
-        //public int TiersId { get; set; }
-        //public Tiers Tiers { get; set; } = null!;
-
         // 🔹 Relation avec Engagement
         [ForeignKey("Engagement")]
         [Required(ErrorMessage = "L'engagement est obligatoire")]
         public int EngagementId { get; set; }
         public Engagement Engagement { get; set; } = null!;
 
-        // 🔹 Relation avec Ligne Budgétaire
-        //[ForeignKey("BudgetLine")]
-        //[Required(ErrorMessage = "La ligne budgétaire est obligatoire")]
-        //public int BudgetLineId { get; set; }
-        //public BudgetLine BudgetLine { get; set; } = null!;
-
-        // 🔹 Montants
         [Required(ErrorMessage = "Le montant brut est obligatoire")]
         [Range(0, double.MaxValue, ErrorMessage = "Le montant brut doit être positif")]
         public double MontantBrut { get; set; }
@@ -96,12 +71,13 @@ namespace Collectivite.Models
         [MaxLength(255, ErrorMessage = "L'objet ne doit pas dépasser 255 caractères")]
         public string Objet { get; set; } = null!;
 
+        [Required(ErrorMessage = "donner l'objet de la depense")]
+        [Column(TypeName = "text")]
+        public string? Motif { get; set; }
+
         // 🔹 Fichier joint (facultatif)
         public byte[]? FichierJoin { get; set; }
-
-        // 🔹 Motif de paiement (facultatif)
-        [MaxLength(255, ErrorMessage = "Le motif ne doit pas dépasser 255 caractères")]
-        public string? Motif { get; set; }
+        public sbyte? FichierName { get; set; }
 
         // 🔹 Date de paiement (facultatif)
         public DateTime? DatePaiement { get; set; }

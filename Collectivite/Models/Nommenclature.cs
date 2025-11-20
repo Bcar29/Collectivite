@@ -54,5 +54,19 @@ namespace Collectivite.Models
         public Nommenclature? Parent { get; set; }
 
         public List<Nommenclature>? Enfants { get; set; } = new List<Nommenclature>();
+
+        public string code()
+        {
+            if (!string.IsNullOrWhiteSpace(SousParagraphe))
+                return SousParagraphe!;
+            else if (!string.IsNullOrWhiteSpace(Paragraphe))
+                return Paragraphe!;
+            else if (!string.IsNullOrWhiteSpace(Article))
+                return Article!;
+            else if (!string.IsNullOrWhiteSpace(Chapitre))
+                return Chapitre!;
+            else
+                return "Aucun code disponible";
+        }
     }
 }

@@ -1,0 +1,472 @@
+﻿<Page x:Class="Collectivite.Views.Pages.MandatListPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+      xmlns:local="clr-namespace:Collectivite.Models"
+      Language="fr-FR"
+      Background="#F5F5F5"
+      Title="Gestion des Mandats"
+      x:Name="MandatListPageRoot">
+
+    <Page.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </Page.Resources>
+
+    <Grid>
+        <!-- Overlay de chargement -->
+        <Grid Background="#80000000" 
+              Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"
+              Panel.ZIndex="999">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}"
+                           Value="0"
+                           IsIndeterminate="True"
+                           Width="60"
+                           Height="60"/>
+                <TextBlock Text="Chargement..." 
+                           Foreground="White"
+                           FontSize="16"
+                           Margin="0,20,0,0"
+                           HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Contenu principal -->
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- En-tête -->
+            <DockPanel Margin="0,0,0,15">
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+                    <materialDesign:PackIcon Kind="FileDocument" 
+                                             Width="32" 
+                                             Height="32"
+                                             Foreground="#1976D2"
+                                             VerticalAlignment="Center"/>
+                    <TextBlock Text="Gestion des Mandats" 
+                               FontSize="24"
+                               FontWeight="SemiBold"
+                               Margin="10,0,0,0"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                    <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                            Command="{Binding OpenAddPageCommand}"
+                            Height="36"
+                            Margin="0,0,10,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Plus" Margin="0,0,5,0"/>
+                            <TextBlock Text="Nouveau Mandat"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                            Command="{Binding LoadDataCommand}"
+                            Height="36">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Refresh" Margin="0,0,5,0"/>
+                            <TextBlock Text="Rafraîchir"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </DockPanel>
+
+            <!-- Statistiques -->
+            <Grid Grid.Row="1" Margin="0,0,0,15">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Total des mandats -->
+                <materialDesign:Card Grid.Column="0" Padding="15">
+                    <StackPanel>
+                        <DockPanel>
+                            <materialDesign:PackIcon Kind="FileMultiple" 
+                                                   Width="24" 
+                                                   Height="24"
+                                                   Foreground="#1976D2"
+                                                   DockPanel.Dock="Left"
+                                                   VerticalAlignment="Center"/>
+                            <TextBlock Text="Total Mandats"
+                                     FontSize="13"
+                                     Foreground="#757575"
+                                     Margin="10,0,0,0"
+                                     VerticalAlignment="Center"/>
+                        </DockPanel>
+                        <TextBlock Text="{Binding TotalMandats, StringFormat={}{0:N0} GNF}"
+                                 FontSize="20"
+                                 FontWeight="Bold"
+                                 Foreground="#1976D2"
+                                 Margin="0,8,0,0"/>
+                        <TextBlock Margin="0,4,0,0">
+                            <Run Text="{Binding NombreMandats, Mode=OneWay}" FontWeight="SemiBold"/>
+                            <Run Text="mandat(s)" Foreground="#757575"/>
+                        </TextBlock>
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <!-- Mandats payés -->
+                <materialDesign:Card Grid.Column="2" Padding="15">
+                    <StackPanel>
+                        <DockPanel>
+                            <materialDesign:PackIcon Kind="CheckCircle" 
+                                                   Width="24" 
+                                                   Height="24"
+                                                   Foreground="#4CAF50"
+                                                   DockPanel.Dock="Left"
+                                                   VerticalAlignment="Center"/>
+                            <TextBlock Text="Mandats Payés"
+                                     FontSize="13"
+                                     Foreground="#757575"
+                                     Margin="10,0,0,0"
+                                     VerticalAlignment="Center"/>
+                        </DockPanel>
+                        <TextBlock Text="{Binding TotalPayes, StringFormat={}{0:N0} GNF}"
+                                 FontSize="20"
+                                 FontWeight="Bold"
+                                 Foreground="#4CAF50"
+                                 Margin="0,8,0,0"/>
+                        <TextBlock Margin="0,4,0,0">
+                            <Run Text="{Binding NombrePayes, Mode=OneWay}" FontWeight="SemiBold"/>
+                            <Run Text="mandat(s)" Foreground="#757575"/>
+                        </TextBlock>
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <!-- Mandats non payés -->
+                <materialDesign:Card Grid.Column="4" Padding="15">
+                    <StackPanel>
+                        <DockPanel>
+                            <materialDesign:PackIcon Kind="ClockAlert" 
+                                                   Width="24" 
+                                                   Height="24"
+                                                   Foreground="#FF9800"
+                                                   DockPanel.Dock="Left"
+                                                   VerticalAlignment="Center"/>
+                            <TextBlock Text="Mandats Non Payés"
+                                     FontSize="13"
+                                     Foreground="#757575"
+                                     Margin="10,0,0,0"
+                                     VerticalAlignment="Center"/>
+                        </DockPanel>
+                        <TextBlock Text="{Binding TotalNonPayes, StringFormat={}{0:N0} GNF}"
+                                 FontSize="20"
+                                 FontWeight="Bold"
+                                 Foreground="#FF9800"
+                                 Margin="0,8,0,0"/>
+                        <TextBlock Margin="0,4,0,0">
+                            <Run Text="{Binding NombreNonPayes, Mode=OneWay}" FontWeight="SemiBold"/>
+                            <Run Text="mandat(s)" Foreground="#757575"/>
+                        </TextBlock>
+                    </StackPanel>
+                </materialDesign:Card>
+            </Grid>
+
+            <!-- Panneau de filtres -->
+            <materialDesign:Card Grid.Row="2" Padding="15" Margin="0,0,0,15">
+                <Expander Header="🔍 Filtres de recherche" IsExpanded="False">
+                    <Grid Margin="0,15,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="15"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="15"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Ligne 1 -->
+                        <!-- Numéro de mandat -->
+                        <TextBox Grid.Row="0" Grid.Column="0"
+                                 materialDesign:HintAssist.Hint="Numéro de mandat"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 Text="{Binding FiltreNumeroMandat, UpdateSourceTrigger=PropertyChanged}"
+                                 Margin="0,0,0,15"/>
+
+                        <!-- Bordereau -->
+                        <TextBox Grid.Row="0" Grid.Column="2"
+                                 materialDesign:HintAssist.Hint="Bordereau"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 Text="{Binding FiltreBordereau, UpdateSourceTrigger=PropertyChanged}"
+                                 Margin="0,0,0,15"/>
+
+                        <!-- Mois -->
+                        <ComboBox Grid.Row="0" Grid.Column="4"
+                                  materialDesign:HintAssist.Hint="Mois"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                  ItemsSource="{Binding MoisList}"
+                                  SelectedItem="{Binding FiltreMois}"
+                                  Margin="0,0,0,15">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
+                        <!-- Ligne 2 -->
+                        <!-- Engagement -->
+                        <ComboBox Grid.Row="1" Grid.Column="0"
+                                  materialDesign:HintAssist.Hint="Engagement"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                  ItemsSource="{Binding Engagements}"
+                                  SelectedValue="{Binding FiltreEngagementId}"
+                                  SelectedValuePath="Id"
+                                  DisplayMemberPath="NumeroEngagement"
+                                  Margin="0,0,0,15"/>
+
+                        <!-- Montant minimum -->
+                        <TextBox Grid.Row="1" Grid.Column="2"
+                                 materialDesign:HintAssist.Hint="Montant minimum (GNF)"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 Text="{Binding FiltreMontantMin, UpdateSourceTrigger=PropertyChanged}"
+                                 Margin="0,0,0,15"/>
+
+                        <!-- Montant maximum -->
+                        <TextBox Grid.Row="1" Grid.Column="4"
+                                 materialDesign:HintAssist.Hint="Montant maximum (GNF)"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 Text="{Binding FiltreMontantMax, UpdateSourceTrigger=PropertyChanged}"
+                                 Margin="0,0,0,15"/>
+
+                        <!-- Ligne 3 -->
+                        <!-- Date d'émission début -->
+                        <DatePicker Grid.Row="2" Grid.Column="0"
+                                    materialDesign:HintAssist.Hint="Date d'émission (début)"
+                                    Style="{StaticResource MaterialDesignOutlinedDatePicker}"
+                                    SelectedDate="{Binding FiltreDateEmissionDebut}"
+                                    Margin="0,0,0,15"/>
+
+                        <!-- Date d'émission fin -->
+                        <DatePicker Grid.Row="2" Grid.Column="2"
+                                    materialDesign:HintAssist.Hint="Date d'émission (fin)"
+                                    Style="{StaticResource MaterialDesignOutlinedDatePicker}"
+                                    SelectedDate="{Binding FiltreDateEmissionFin}"
+                                    Margin="0,0,0,15"/>
+
+                        <!-- Statut de paiement -->
+                        <ComboBox Grid.Row="2" Grid.Column="4"
+                                  materialDesign:HintAssist.Hint="Statut de paiement"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                  SelectedValue="{Binding FiltreEstPaye}"
+                                  Margin="0,0,0,15">
+                            <ComboBoxItem Content="Tous" Tag="{x:Null}"/>
+                            <ComboBoxItem Content="Payés" Tag="True"/>
+                            <ComboBoxItem Content="Non payés" Tag="False"/>
+                        </ComboBox>
+
+                        <!-- Ligne 4 : Boutons -->
+                        <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="5" 
+                                   Orientation="Horizontal" 
+                                   HorizontalAlignment="Right">
+                            <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Content="Réinitialiser"
+                                    Command="{Binding ClearFiltersCommand}"
+                                    Margin="0,0,10,0"
+                                    Width="130"/>
+                            <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                                    Content="Appliquer les filtres"
+                                    Command="{Binding ApplyFiltersCommand}"
+                                    Width="150"/>
+                        </StackPanel>
+                    </Grid>
+                </Expander>
+            </materialDesign:Card>
+
+            <!-- DataGrid -->
+            <materialDesign:Card Grid.Row="3" Padding="0">
+                <DataGrid ItemsSource="{Binding Mandats}"
+                          SelectedItem="{Binding SelectedMandat}"
+                          AutoGenerateColumns="False"
+                          CanUserAddRows="False"
+                          IsReadOnly="True"
+                          SelectionMode="Single"
+                          materialDesign:DataGridAssist.CellPadding="13 8 8 8">
+
+                    <DataGrid.Columns>
+                        <!-- Numéro de mandat -->
+                        <DataGridTextColumn Header="N° Mandat" 
+                                          Binding="{Binding NumeroMandat}" 
+                                          Width="120"/>
+
+                        <!-- Bordereau -->
+                        <DataGridTextColumn Header="Bordereau" 
+                                          Binding="{Binding Bordereau}" 
+                                          Width="110"/>
+
+                        <!-- Mois -->
+                        <DataGridTextColumn Header="Mois" 
+                                          Binding="{Binding Mois}" 
+                                          Width="100"/>
+
+                        <!-- Engagement -->
+                        <DataGridTextColumn Header="N° Engagement" 
+                                          Binding="{Binding Engagement.NumeroEngagement}" 
+                                          Width="130"/>
+
+                        <!-- Tiers -->
+                        <DataGridTextColumn Header="Tiers" 
+                                          Binding="{Binding Engagement.Tiers.Nom}" 
+                                          Width="150"/>
+
+                        <!-- Objet -->
+                        <DataGridTextColumn Header="Objet" 
+                                          Binding="{Binding Objet}" 
+                                          Width="*"
+                                          MinWidth="200"/>
+
+                        <!-- Montant brut -->
+                        <DataGridTemplateColumn Header="Montant Brut" Width="130">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding MontantBrut, StringFormat={}{0:N0} GNF}"
+                                             HorizontalAlignment="Right"
+                                             FontWeight="SemiBold"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- Montant net -->
+                        <DataGridTemplateColumn Header="Montant Net" Width="140">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="#E8F5E9" 
+                                            CornerRadius="4" 
+                                            Padding="8,4">
+                                        <TextBlock Text="{Binding MontantNet, StringFormat={}{0:N0} GNF}"
+                                                 FontWeight="Bold"
+                                                 Foreground="#388E3C"
+                                                 HorizontalAlignment="Right"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- Date d'émission -->
+                        <DataGridTextColumn Header="Date Émission" 
+                                          Binding="{Binding DateEmission, StringFormat=dd/MM/yyyy}" 
+                                          Width="120"/>
+
+                        <!-- Statut paiement -->
+                        <DataGridTemplateColumn Header="Statut" Width="100">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border CornerRadius="12" 
+                                            Padding="8,4"
+                                            HorizontalAlignment="Center">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding DatePaiement, Converter={StaticResource NullToBooleanConverter}}" Value="True">
+                                                        <Setter Property="Background" Value="#E8F5E9"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding DatePaiement, Converter={StaticResource NullToBooleanConverter}}" Value="False">
+                                                        <Setter Property="Background" Value="#FFF3E0"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <TextBlock FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding DatePaiement, Converter={StaticResource NullToBooleanConverter}}" Value="True">
+                                                            <Setter Property="Text" Value="Payé"/>
+                                                            <Setter Property="Foreground" Value="#388E3C"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding DatePaiement, Converter={StaticResource NullToBooleanConverter}}" Value="False">
+                                                            <Setter Property="Text" Value="Non payé"/>
+                                                            <Setter Property="Foreground" Value="#F57C00"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- Actions -->
+                        <DataGridTemplateColumn Header="Actions" Width="180">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <!-- Détail -->
+                                        <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                Command="{Binding DataContext.OpenDetailPageCommand, ElementName=MandatListPageRoot}"
+                                                CommandParameter="{Binding}"
+                                                ToolTip="Détails">
+                                            <materialDesign:PackIcon Kind="Eye" Foreground="#1976D2"/>
+                                        </Button>
+
+                                        <!-- Modifier -->
+                                        <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                Command="{Binding DataContext.OpenEditPageCommand, ElementName=MandatListPageRoot}"
+                                                CommandParameter="{Binding}"
+                                                ToolTip="Modifier">
+                                            <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2"/>
+                                        </Button>
+
+                                        <!-- Marquer payé / Annuler paiement -->
+                                        <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                ToolTip="{Binding DatePaiement, Converter={StaticResource PaymentTooltipConverter}}">
+                                            <Button.Command>
+                                                <MultiBinding Converter="{StaticResource PaymentCommandConverter}">
+                                                    <Binding Path="DataContext.MarquerPayeCommand" ElementName="MandatListPageRoot"/>
+                                                    <Binding Path="DataContext.AnnulerPaiementCommand" ElementName="MandatListPageRoot"/>
+                                                    <Binding Path="DatePaiement"/>
+                                                </MultiBinding>
+                                            </Button.Command>
+                                            <Button.CommandParameter>
+                                                <Binding/>
+                                            </Button.CommandParameter>
+                                            <materialDesign:PackIcon>
+                                                <materialDesign:PackIcon.Style>
+                                                    <Style TargetType="materialDesign:PackIcon">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding DatePaiement, Converter={StaticResource NullToBooleanConverter}}" Value="False">
+                                                                <Setter Property="Kind" Value="CheckCircle"/>
+                                                                <Setter Property="Foreground" Value="#4CAF50"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding DatePaiement, Converter={StaticResource NullToBooleanConverter}}" Value="True">
+                                                                <Setter Property="Kind" Value="CloseCircle"/>
+                                                                <Setter Property="Foreground" Value="#FF9800"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </materialDesign:PackIcon.Style>
+                                            </materialDesign:PackIcon>
+                                        </Button>
+
+                                        <!-- Supprimer -->
+                                        <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                Command="{Binding DataContext.DeleteCommand, ElementName=MandatListPageRoot}"
+                                                CommandParameter="{Binding}"
+                                                ToolTip="Supprimer">
+                                            <materialDesign:PackIcon Kind="Delete" Foreground="#F44336"/>
+                                        </Button>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </materialDesign:Card>
+        </Grid>
+    </Grid>
+</Page>

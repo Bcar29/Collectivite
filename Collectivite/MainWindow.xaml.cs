@@ -97,6 +97,13 @@ namespace Collectivite
             _viewModel.IsMenuOpen = false;
         }
 
+        private void Mandat_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.UpdatePageTitle("GESTION BUDGÉTAIRE - FICHE D'ENGAGEMENT");
+            NavigationService.Instance.NavigateTo(new Views.Pages.MandatListPage());
+            _viewModel.IsMenuOpen = false;
+        }
+
         private void RemaniementButton_Click(object sender, RoutedEventArgs e)
         {
             _viewModel.UpdatePageTitle("CONFIGURATION - BUDGET REMANIE");

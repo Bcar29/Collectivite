@@ -1,3 +1,4 @@
+using Collectivite.Services;
 using Collectivite.ViewModels;
 using System.Windows;
 using System.Windows.Controls;
@@ -15,8 +16,9 @@ namespace Collectivite.Views.Pages
         public DashboardPage()
         {
             InitializeComponent();
+            AuditService auditService = new AuditService();
             
-            _viewModel = new DashboardViewModel();
+            _viewModel = new DashboardViewModel(auditService);
             DataContext = _viewModel;
 
             Loaded += DashboardPage_Loaded;

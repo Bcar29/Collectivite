@@ -112,8 +112,8 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn> -->
 
-                            <!-- Montant -->
-                            <DataGridTemplateColumn Header="Montant" Width="200">
+                            <!-- Montant Total -->
+                            <DataGridTemplateColumn Header="Montant total" Width="200">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal">
@@ -128,7 +128,55 @@
                                                      Foreground="#388E3C">
                                                 <TextBlock.Text>
                                                     <MultiBinding StringFormat="{}{0:N0} GNF">
-                                                        <Binding Path="Montant"/>
+                                                        <Binding Path="MontantTotal"/>
+                                                    </MultiBinding>
+                                                </TextBlock.Text>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <!-- Montant Recette -->
+                            <DataGridTemplateColumn Header="Montant des recettes" Width="200">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="CurrencyUsd" 
+                                                                   Width="18" 
+                                                                   Height="18"
+                                                                   Foreground="#388E3C"
+                                                                   VerticalAlignment="Center"
+                                                                   Margin="0,0,8,0"/>
+                                            <TextBlock VerticalAlignment="Center"
+                                                     FontWeight="SemiBold"
+                                                     Foreground="#388E3C">
+                                                <TextBlock.Text>
+                                                    <MultiBinding StringFormat="{}{0:N0} GNF">
+                                                        <Binding Path="MontantRecette"/>
+                                                    </MultiBinding>
+                                                </TextBlock.Text>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <!-- Montant Depense -->
+                            <DataGridTemplateColumn Header="Montant des depense" Width="200">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="CurrencyUsd" 
+                                                                   Width="18" 
+                                                                   Height="18"
+                                                                   Foreground="#388E3C"
+                                                                   VerticalAlignment="Center"
+                                                                   Margin="0,0,8,0"/>
+                                            <TextBlock VerticalAlignment="Center"
+                                                     FontWeight="SemiBold"
+                                                     Foreground="#388E3C">
+                                                <TextBlock.Text>
+                                                    <MultiBinding StringFormat="{}{0:N0} GNF">
+                                                        <Binding Path="MontantDepense"/>
                                                     </MultiBinding>
                                                 </TextBlock.Text>
                                             </TextBlock>
@@ -137,8 +185,8 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <!-- Date de vote -->
-                            <DataGridTemplateColumn Header="Date de Vote" Width="180">
+                            <!-- Date d'approbation -->
+                            <DataGridTemplateColumn Header="Date d'approbation" Width="180">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal">
@@ -148,14 +196,31 @@
                                                                    Foreground="#F57C00"
                                                                    VerticalAlignment="Center"
                                                                    Margin="0,0,8,0"/>
-                                            <TextBlock Text="{Binding DateVote, StringFormat='dd/MM/yyyy'}"
+                                            <TextBlock Text="{Binding DateApprobation, StringFormat='dd/MM/yyyy'}"
+                                                     VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <!-- Date de validation -->
+                            <DataGridTemplateColumn Header="Date de validation" Width="180">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="CalendarCheck" 
+                                                                   Width="16" 
+                                                                   Height="16"
+                                                                   Foreground="#F57C00"
+                                                                   VerticalAlignment="Center"
+                                                                   Margin="0,0,8,0"/>
+                                            <TextBlock Text="{Binding DateValidation, StringFormat='dd/MM/yyyy'}"
                                                      VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <!-- Statut (optionnel) -->
+                            <!-- Statut (optionnel) 
                             <DataGridTemplateColumn Header="Statut" Width="150">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -170,7 +235,7 @@
                                         </Border>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
+                            </DataGridTemplateColumn> -->
 
                             <!-- Actions -->
                             <DataGridTemplateColumn Header="Actions" Width="150">
@@ -264,21 +329,49 @@
                         </ComboBox.ItemTemplate>-->
                     </ComboBox>
 
-                    <!-- Montant -->
+                    <!-- Montant Total-->
                     <TextBox materialDesign:HintAssist.Hint="Montant du budget (GNF) *"
                            Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                           Text="{Binding DialogBudgetPrimitif.Montant, UpdateSourceTrigger=PropertyChanged, StringFormat=N0}"
+                           Text="{Binding DialogBudgetPrimitif.MontantTotal, UpdateSourceTrigger=PropertyChanged, StringFormat=N0}"
+                           IsEnabled="False"
+                           Margin="0,0,0,15">
+                        <TextBox.InputBindings>
+                            <KeyBinding Key="Enter" Command="{Binding SaveBudgetPrimitifCommand}"/>
+                        </TextBox.InputBindings>
+                    </TextBox>
+                    <!-- Montant Recette-->
+                    <TextBox materialDesign:HintAssist.Hint="Montant Total recette (GNF) *"
+                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                           Text="{Binding DialogBudgetPrimitif.MontantRecette, UpdateSourceTrigger=PropertyChanged, StringFormat=N0}"
+                           IsEnabled="False"
+                           Margin="0,0,0,15">
+                        <TextBox.InputBindings>
+                            <KeyBinding Key="Enter" Command="{Binding SaveBudgetPrimitifCommand}"/>
+                        </TextBox.InputBindings>
+                    </TextBox>
+                    <!-- Montant Depense-->
+                    <TextBox materialDesign:HintAssist.Hint="Montant Total depense (GNF) *"
+                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                           Text="{Binding DialogBudgetPrimitif.MontantDepense, UpdateSourceTrigger=PropertyChanged, StringFormat=N0}"
+                           IsEnabled="False"
                            Margin="0,0,0,15">
                         <TextBox.InputBindings>
                             <KeyBinding Key="Enter" Command="{Binding SaveBudgetPrimitifCommand}"/>
                         </TextBox.InputBindings>
                     </TextBox>
 
-                    <!-- Date de vote -->
-                    <DatePicker materialDesign:HintAssist.Hint="Date de vote *"
+                    <!-- Date d'approbation -->
+                    <DatePicker materialDesign:HintAssist.Hint="Date d'approbation *"
                               Style="{StaticResource MaterialDesignOutlinedDatePicker}"
-                              SelectedDate="{Binding DilogBudgetPrimitifDateVote}"
+                              SelectedDate="{Binding DilogBudgetPrimitifDateApprobation}"
+                              Language="fr-FR"
                               Margin="0,0,0,15"/>
+                    <!-- Date de validation 
+                    <DatePicker materialDesign:HintAssist.Hint="Date de validation *"
+                              Style="{StaticResource MaterialDesignOutlinedDatePicker}"
+                              SelectedDate="{Binding DilogBudgetPrimitifDateValidation}"
+                              Language="fr-FR"
+                              Margin="0,0,0,15"/> -->
 
                     <!-- Section d'information -->
                     <Border Background="#FFF3E0"

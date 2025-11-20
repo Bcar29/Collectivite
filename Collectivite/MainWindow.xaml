@@ -264,7 +264,8 @@
                             </StackPanel>
                         </Button>
 
-                        <Button Style="{StaticResource MenuButtonStyle}">
+                        <Button Style="{StaticResource MenuButtonStyle}"
+                                 Click="Mandat_Click">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="CashCheck" 
                                                        VerticalAlignment="Center"

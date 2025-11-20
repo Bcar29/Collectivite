@@ -91,24 +91,28 @@ namespace Collectivite.Services
                 }
 
                 // validation de la liaison avec details de la commune
-                if (exercice.DetailCommune == null)
-                {
-                    DetailCommune? dt = await LastDetailCommune();
-                    if (dt != null)
-                    {
-                        exercice.IdDetailCommune = dt.Id;
-                    }
-                    else
-                    {
-                    return (false, "La liaison au details de la commune .", null);
-                    }
+                //if (exercice.DetailCommune == null)
+                //{
+                //    DetailCommune? dt = await LastDetailCommune();
+                //    if (dt != null)
+                //    {
+                //        exercice.IdDetailCommune = dt.Id;
+                //    }
+                //    else
+                //    {
+                //    return (false, "La liaison au details de la commune .", null);
+                //    }
                     
-                }
+                //}
 
                 context.Exercices.Add(exercice);
                 await context.SaveChangesAsync();
 
+
+                
+
                 return (true, "Exercice créé avec succès.", exercice);
+
             }
             catch (Exception ex)
             {

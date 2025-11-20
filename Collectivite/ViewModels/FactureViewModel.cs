@@ -564,7 +564,7 @@ private void Imprimer(Facture? facture)
                 // ✅ Nouveau code (créer le contexte et le passer)
                 using (var context = new AppDbContext())
                 {
-                    var exerciceService = new ExerciceService(context);
+                    var exerciceService = new ExerciceService();
                     var exercices = await exerciceService.GetAllExerciceAsync();
 
                     Exercices.Clear();

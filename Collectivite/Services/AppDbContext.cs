@@ -32,6 +32,7 @@ namespace Collectivite.Services
         public DbSet<CompteComptable> CompteComptables { get; set; }
         public DbSet<EcritureComptable> EcritureComptables { get; set; }
 
+        public DbSet<AuditLog> AuditLogs { get; set; }
 
         // Constructeur par défaut pour les migrations
         public AppDbContext() { }
@@ -77,7 +78,7 @@ namespace Collectivite.Services
                 .HasOne(b => b.Exercice)
                 .WithOne(e => e.BudgetPrimitif)
                 .HasForeignKey<BudgetPrimitif>(b => b.ExerciceId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<BudgetPrimitif>()
                 .HasIndex(b => b.ExerciceId)
@@ -102,7 +103,7 @@ namespace Collectivite.Services
                 .HasOne(n => n.Parent)
                 .WithMany(n => n.Enfants)
                 .HasForeignKey(n => n.ParentId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
             // ════════════════════════════════════════════════════════
             // 5️⃣ Relation BudgetLine ↔ Nomenclature (1 → N)
