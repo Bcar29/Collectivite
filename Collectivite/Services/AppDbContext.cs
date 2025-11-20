@@ -147,22 +147,38 @@ namespace Collectivite.Services
                 .HasOne(r => r.BudgetLine)
                 .WithMany(bl => bl.Remaniements)
                 .HasForeignKey(bl => bl.IdBudgetLine);
-        
+
             // ════════════════════════════════════════════════════════
             // 8️⃣ Tiers ↔ CompteBancaire / Contrats / Factures (1 → N)
             // Un Tiers peut avoir plusieurs comptes, contrats et factures.
             // ════════════════════════════════════════════════════════
-            modelBuilder.Entity<CompteBancaire>()
-                .HasOne(cb => cb.Tiers)
-                .WithMany(t => t.CompteBancaires)
-                .HasForeignKey(cb => cb.TiersId)
-                .OnDelete(DeleteBehavior.Cascade);
+            // Configuration Tiers
+            modelBuilder.Entity<Tiers>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.Email).IsUnique();
+                entity.HasIndex(e => e.Nif);
 
-            modelBuilder.Entity<CompteBancaire>()
-                .HasIndex(cb => new { cb.TiersId, cb.IBAN })
-                .IsUnique();
+                entity.HasMany(e => e.CompteBancaires)
+                    .WithOne(e => e.Tiers)
+                    .HasForeignKey(e => e.TiersId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
 
-            modelBuilder.Entity<Contrats>()
+            // Configuration CompteBancaire
+            modelBuilder.Entity<CompteBancaire>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.IBAN).IsUnique();
+
+                entity.HasOne(e => e.Tiers)
+                    .WithMany(e => e.CompteBancaires)
+                    .HasForeignKey(e => e.TiersId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+        
+
+        modelBuilder.Entity<Contrats>()
                 .HasOne(c => c.Tiers)
                 .WithMany(t => t.Contrats)
                 .HasForeignKey(c => c.TiersId)
@@ -315,6 +331,13 @@ namespace Collectivite.Services
                 .WithMany(m => m.EcritureComptables)
                 .HasForeignKey(ec => ec.MandatId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // COMPTE COMPTABLE
+            modelBuilder.Entity<CompteComptable>()
+                .HasOne(c => c.CompteParent)
+                .WithMany(c => c.SousComptes)
+                .HasForeignKey(c => c.CompteParentId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
 
     }

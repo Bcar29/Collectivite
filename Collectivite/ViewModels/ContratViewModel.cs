@@ -49,7 +49,7 @@ namespace Collectivite.ViewModels
         #region Properties
         public ObservableCollection<Contrats> Contrats { get; } = new();
         public ObservableCollection<Exercice> Exercices { get; } = new();
-
+        public ObservableCollection<Tiers> TiersList { get; } = new();
         public bool IsLoading
         {
             get => _isLoading;
@@ -83,22 +83,30 @@ namespace Collectivite.ViewModels
         // ✅ CORRECTION : Propriétés pour les dates avec conversion DateTime <-> DateOnly
         public DateTime DialogContratDateSignature
         {
-            get => DialogContrat.DateSignature.ToDateTime(TimeOnly.MinValue);
+            get => DialogContrat.DateSignature == default
+                   ? DateTime.Now
+                   : DialogContrat.DateSignature.ToDateTime(TimeOnly.MinValue);
+
             set
             {
                 DialogContrat.DateSignature = DateOnly.FromDateTime(value);
                 OnPropertyChanged();
             }
         }
+
         public DateTime DialogContratDateEcheance
         {
-            get => DialogContrat.DateEcheance.ToDateTime(TimeOnly.MinValue);
+            get => DialogContrat.DateEcheance == default
+                   ? DateTime.Now
+                   : DialogContrat.DateEcheance.ToDateTime(TimeOnly.MinValue);
+
             set
             {
                 DialogContrat.DateEcheance = DateOnly.FromDateTime(value);
                 OnPropertyChanged();
             }
         }
+
         public string DialogTitle => IsEditMode ? "Modifier contrat" : "Ajouter un contrat";
 
         #endregion
@@ -123,6 +131,30 @@ namespace Collectivite.ViewModels
                 foreach (var _contrat in contrat)
                 {
                     Contrats.Add(_contrat);
+                }
+
+                // Charger les tiers
+                var tiersService = new TiersService();
+                var tiers = await tiersService.GetTiersActifsAsync();
+
+                TiersList.Clear();
+
+                foreach (var t in tiers)
+                {
+                    TiersList.Add(t);
+                }
+
+                // Charger les exercices
+                using (var context = new AppDbContext())
+                {
+                    var exerciceService = new ExerciceService(context);
+                    var exercices = await exerciceService.GetAllExerciceAsync();
+
+                    Exercices.Clear();
+                    foreach (var ex in exercices.Where(e => !e.EstCloture))
+                    {
+                        Exercices.Add(ex);
+                    }
                 }
             }
             catch (Exception ex)
@@ -204,6 +236,13 @@ namespace Collectivite.ViewModels
                 }
                 else
                 {
+                    // 1. Mettre à jour les vraies valeurs du modèle :
+                    DialogContrat.DateSignature = DateOnly.FromDateTime(DialogContratDateSignature);
+                    DialogContrat.DateEcheance = DateOnly.FromDateTime(DialogContratDateEcheance);
+
+                    // 2. Affichage
+                          //MessageBox.Show($"{DialogContrat.NumeroContrat} {DialogContrat.MontantContrat} {DialogContratDateEcheance} {DialogContrat.ExerciceId} {DialogContratDateSignature} {DialogContrat.Objet}", "info");
+
                     //creation
                     var (success, message, _) = await _contratService.CreateContratAsync(DialogContrat);
                     if (success)

@@ -140,7 +140,7 @@ namespace Collectivite.Migrations
 
                     b.Property<string>("BIC")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("varchar(255)");
 
                     b.Property<string>("Banque")
                         .IsRequired()
@@ -159,8 +159,13 @@ namespace Collectivite.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TiersId", "IBAN")
+                    b.HasIndex("BIC")
                         .IsUnique();
+
+                    b.HasIndex("IBAN")
+                        .IsUnique();
+
+                    b.HasIndex("TiersId");
 
                     b.ToTable("CompteBancaires");
                 });
@@ -172,6 +177,9 @@ namespace Collectivite.Migrations
                         .HasColumnType("int");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("CompteParentId")
+                        .HasColumnType("int");
 
                     b.Property<string>("IntituleCompte")
                         .IsRequired()
@@ -185,6 +193,8 @@ namespace Collectivite.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CompteParentId");
+
                     b.ToTable("CompteComptables");
                 });
 
@@ -196,11 +206,11 @@ namespace Collectivite.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("DateEcheance")
-                        .HasColumnType("datetime(6)");
+                    b.Property<DateOnly>("DateEcheance")
+                        .HasColumnType("date");
 
-                    b.Property<DateTime>("DateSignature")
-                        .HasColumnType("datetime(6)");
+                    b.Property<DateOnly>("DateSignature")
+                        .HasColumnType("date");
 
                     b.Property<int>("ExerciceId")
                         .HasColumnType("int");
@@ -853,7 +863,7 @@ namespace Collectivite.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Nif")
-                        .HasColumnType("longtext");
+                        .HasColumnType("varchar(255)");
 
                     b.Property<string>("Nom")
                         .IsRequired()
@@ -869,6 +879,11 @@ namespace Collectivite.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.HasIndex("Nif");
 
                     b.ToTable("Tiers");
                 });
@@ -946,6 +961,16 @@ namespace Collectivite.Migrations
                         .IsRequired();
 
                     b.Navigation("Tiers");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.CompteComptable", b =>
+                {
+                    b.HasOne("Collectivite.Models.CompteComptable", "CompteParent")
+                        .WithMany("SousComptes")
+                        .HasForeignKey("CompteParentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CompteParent");
                 });
 
             modelBuilder.Entity("Collectivite.Models.Contrats", b =>
@@ -1266,6 +1291,11 @@ namespace Collectivite.Migrations
                     b.Navigation("Recensements");
 
                     b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.CompteComptable", b =>
+                {
+                    b.Navigation("SousComptes");
                 });
 
             modelBuilder.Entity("Collectivite.Models.Contrats", b =>

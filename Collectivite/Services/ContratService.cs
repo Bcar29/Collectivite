@@ -31,6 +31,7 @@ namespace Collectivite.Services
         // ajouter un contrat
         public async Task<(bool Succes, string Message, Contrats? contrats)> CreateContratAsync(Contrats contrats)
         {
+
             try
             {
                 var existe = await _appDbContext.Contrats
@@ -96,11 +97,11 @@ namespace Collectivite.Services
                 existingContrat.DateSignature = contrats.DateSignature;
                 existingContrat.DateEcheance = contrats.DateEcheance;
                 existingContrat.TiersId = contrats.TiersId;
-                existingContrat.Tiers = contrats.Tiers;
+                existingContrat.Objet = contrats.Objet;
                 existingContrat.MontantContrat = contrats.MontantContrat;
                 existingContrat.FichierJoin = contrats.FichierJoin;
                 existingContrat.ExerciceId = contrats.ExerciceId;
-                existingContrat.Exercice = contrats.Exercice;
+                
 
 
                 // ══════════════════════════════════════════════════════════

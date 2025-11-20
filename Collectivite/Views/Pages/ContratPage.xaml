@@ -102,20 +102,44 @@
                                 FontWeight="Medium"/>
 
                             <!-- Date signature -->
-                            <DataGridTextColumn Header="Date signature" 
-                                  Binding="{Binding DateSignature}"
-                                  Width="230"
-                                  FontWeight="Medium"/>
-                            
+                            <DataGridTemplateColumn Header="Date Signature" Width="180">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="CalendarCheck" 
+                                        Width="16" 
+                                        Height="16"
+                                        Foreground="#F57C00"
+                                        VerticalAlignment="Center"
+                                        Margin="0,0,8,0"/>
+                                            <TextBlock Text="{Binding DateSignature, StringFormat='dd/MM/yyyy'}"
+                                                 VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
                             <!-- Date Echeance -->
-                            <DataGridTextColumn Header="Date écheance" 
-                                  Binding="{Binding DateEcheance}"
-                                  Width="230"
-                                  FontWeight="Medium"/>
-                            
+                            <DataGridTemplateColumn Header="Date Echéance" Width="180">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="CalendarCheck" 
+                                        Width="16" 
+                                        Height="16"
+                                        Foreground="#F57C00"
+                                        VerticalAlignment="Center"
+                                        Margin="0,0,8,0"/>
+                                            <TextBlock Text="{Binding DateEcheance, StringFormat='dd/MM/yyyy'}"
+                                                VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
                             <!-- Le Tiers -->
                             <DataGridTextColumn Header="Tiers" 
-                                  Binding="{Binding Tiers}"
+                                  Binding="{Binding TiersId}"
                                   Width="230"
                                   FontWeight="Medium"/>
                             
@@ -126,11 +150,30 @@
                                   FontWeight="Medium"/>
                             
                             <!-- Montant Contrat -->
-                            <DataGridTextColumn Header="Montant" 
-                                  Binding="{Binding MontantContrat}"
-                                  Width="230"
-                                  FontWeight="Medium"/>
-                                
+                            <DataGridTemplateColumn Header="Montant" Width="200">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="CurrencyUsd" 
+                                       Width="18" 
+                                       Height="18"
+                                       Foreground="#388E3C"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,8,0"/>
+                                            <TextBlock VerticalAlignment="Center"
+                                                 FontWeight="SemiBold"
+                                                 Foreground="#388E3C">
+                                                <TextBlock.Text>
+                                                    <MultiBinding StringFormat="{}{0:N0} GNF">
+                                                        <Binding Path="MontantContrat"/>
+                                                    </MultiBinding>
+                                                </TextBlock.Text>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
                             <!-- Actions -->
                             <DataGridTemplateColumn Header="Actions" Width="190">
                                 <DataGridTemplateColumn.CellTemplate>
@@ -160,7 +203,7 @@
                                                                Foreground="#F44336"/>
                                             </Button>
 
-                                            <!-- ✅ Bouton Détail (NOUVEAU) -->
+                                            <!-- ✅ Bouton Détail (NOUVEAU) 
                                             <Button Style="{StaticResource MaterialDesignIconButton}"
                                                    ToolTip="Voir les détails"
                                                    Command="{Binding DataContext.OpenDetailCommuneCommand, 
@@ -170,7 +213,7 @@
                                                     <materialDesign:PackIcon Kind="InformationOutline" 
                                                      Foreground="#009688"/>
                                             </Button>
-
+                                                        -->
                                         </StackPanel>
 
                                     </DataTemplate>
@@ -211,7 +254,7 @@
                     <ComboBox materialDesign:HintAssist.Hint="Exercice *"
                         Style="{StaticResource MaterialDesignOutlinedComboBox}"
                         ItemsSource="{Binding Exercices}"
-                        SelectedValue="{Binding DialogContrat.Exercices, UpdateSourceTrigger=PropertyChanged}"
+                        SelectedValue="{Binding DialogContrat.ExerciceId, UpdateSourceTrigger=PropertyChanged}"
                         SelectedValuePath="Id"
                         DisplayMemberPath="Libelle"
                         Margin="0,0,0,15"/>
@@ -225,26 +268,26 @@
 
                     <!-- Date signature -->
                     <DatePicker materialDesign:HintAssist.Hint="Date signature *"
-                       Style="{StaticResource MaterialDesignOutlinedDatePicker}"
-                       SelectedDate="{Binding DialogContratDateSignature}"
-                       Language="fr-FR"
-                       Margin="0,0,0,15"/>
-                    
+                          Style="{StaticResource MaterialDesignOutlinedDatePicker}"
+                          SelectedDate="{Binding DialogContratDateSignature, Mode=TwoWay}"
+                          Margin="0,0,0,15"/>
+
                     <!-- Date echeance -->
-                    <DatePicker materialDesign:HintAssist.Hint="Date écheance *"
-                       Style="{StaticResource MaterialDesignOutlinedDatePicker}"
-                       SelectedDate="{Binding DialogContratDateEcheance}"
-                       Language="fr-FR"
-                       Margin="0,0,0,8"/>
+                    <DatePicker materialDesign:HintAssist.Hint="Date d'écheance *"
+                          Style="{StaticResource MaterialDesignOutlinedDatePicker}"
+                          SelectedDate="{Binding DialogContratDateEcheance, Mode=TwoWay}"
+                          Margin="0,0,0,15"/>
 
                     <!-- Sélection du tiers -->
-                    <ComboBox materialDesign:HintAssist.Hint="Tiers *"
-                        Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                        ItemsSource="{Binding Tiers}"
-                        SelectedValue="{Binding DialogContrat.TiersId, UpdateSourceTrigger=PropertyChanged}"
-                        SelectedValuePath="TiersId"
-                        DisplayMemberPath="Tiers"
-                        Margin="0,0,0,15"/>
+                    <!-- Tiers -->
+                    <ComboBox Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3"
+                          materialDesign:HintAssist.Hint="Tiers *"
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                          ItemsSource="{Binding TiersList}"
+                          SelectedValue="{Binding DialogContrat.TiersId}"
+                          SelectedValuePath="Id"
+                          DisplayMemberPath="Nom"
+                          Margin="0,0,0,15"/>
 
                     <!-- Objet du contrat  -->
                     <TextBox materialDesign:HintAssist.Hint="Objet du contrat *"
@@ -254,11 +297,16 @@
                         MaxLength="200"/>
 
                     <!-- Montant du contrat  -->
-                    <TextBox materialDesign:HintAssist.Hint="Montant du contrat *"
-                        Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                        Text="{Binding DialogContrat.MontantContrat, UpdateSourceTrigger=PropertyChanged, StringFormat=N0}"
-                        Margin="0,0,0,15"/>
                     
+                    <TextBox materialDesign:HintAssist.Hint="Montant du contrat (GNF) *"
+                       Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                       Text="{Binding DialogContrat.MontantContrat, UpdateSourceTrigger=PropertyChanged, StringFormat=N0}"
+                       Margin="0,0,0,15">
+                        <TextBox.InputBindings>
+                            <KeyBinding Key="Enter" Command="{Binding SaveContratCommand}"/>
+                        </TextBox.InputBindings>
+                    </TextBox>
+
                     <!-- Note explicative -->
                     <TextBlock Text="* Champs obligatoires"
                       FontSize="11"
