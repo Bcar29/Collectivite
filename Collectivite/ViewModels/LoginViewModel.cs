@@ -89,7 +89,7 @@ namespace Collectivite.ViewModels
                 // Fermer la fenêtre de connexion et ouvrir la fenêtre principale
                 Application.Current.Dispatcher.Invoke(() =>
                 {
-                    var mainWindow = new Collectivite.MainWindow();
+                    var mainWindow = new Collectivite.MainWindow(_authService);
                     mainWindow.Show();
 
                     // Fermer la fenêtre de connexion

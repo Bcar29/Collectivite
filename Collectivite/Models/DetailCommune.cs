@@ -1,105 +1,85 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Collectivite.Models
 {
     public class DetailCommune
     {
-
         // Informations générales
         [Key]
         public int Id { get; set; }
-        [Required]
-        public int NombreConseillers { get; set; }
-        [Required]
-        public int NombreDelegationSpeciale { get; set; }
+
+        public int NombreConseillers { get; set; } = 0;
+        public int NombreDelegationSpeciale { get; set; } = 0;
 
         // Effectif du personnel
-        [Required]
-        public int EffectifTotalPersonnel { get; set; }
-        [Required]
-        public int EffectifPermanent { get; set; }
-        [Required]
-        public int EffectifTemporaire { get; set; }
-
+        public int EffectifTotalPersonnel { get; set; } = 0;
+        public int EffectifPermanent { get; set; } = 0;
+        public int EffectifTemporaire { get; set; } = 0;
 
         // Données administratives
-        [Required]
-        public int NombreQuartiers { get; set; }
-        [Required]
-        public int NombreDistricts { get; set; }
-        [Required]
-        public int NombreSecteurs { get; set; }
+        public int NombreQuartiers { get; set; } = 0;
+        public int NombreDistricts { get; set; } = 0;
+        public int NombreSecteurs { get; set; } = 0;
 
         // Données démographiques
-        [Required]
-        public int PopulationTotale { get; set; }
-        [Required]
-        public int PopulationFemmes { get; set; }
-        [Required]
-        public int PopulationHommes { get; set; }
-        [Required]
-        public double Superficie { get; set; } // km²
-        [Required]
-        public double Densite { get; set; }    // hab/km²
+        public int PopulationTotale { get; set; } = 0;
+        public int PopulationFemmes { get; set; } = 0;
+        public int PopulationHommes { get; set; } = 0;
 
-        // Infrastructures
         [Required]
-        public int NombreCentresSante { get; set; }
-        [Required]
-        public int NombreEcoles { get; set; }
-        [Required]
-        public int NombreEcolesPrimaires { get; set; }
-        [Required]
-        public int NombreEcolesSecondaires { get; set; }
-        [Required]
-        public int NombreClassesPrimaires { get; set; }
-        [Required]
-        public int NombreClassesSecondaires { get; set; }
-        [Required]
-        public int NombreElevesPrimaires { get; set; }
-        [Required]
-        public int NombreElevesSecondaires { get; set; }
+        public double Superficie { get; set; }
+
+        public double Densite { get; set; } = 0;
+
+        // Infrastructures sanitaires
+        public int NombreCentresSante { get; set; } = 0;
+        public int NombrePostesSante { get; set; } = 0;
+        public int NombreSanteAmelioree { get; set; } = 0;
+
+        // Éducation
+        public int NombreEcoles { get; set; } = 0;
+        public int NombreEcolesCollege { get; set; } = 0;
+        public int NombreEcolesLycee { get; set; } = 0;
+        public int NombreEcolesPrimaire { get; set; } = 0;
+        public int NombreEcolesPrescolaire { get; set; } = 0;
+
+        public int NombreClassesCollege { get; set; } = 0;
+        public int NombreClassesLycee { get; set; } = 0;
+        public int NombreClassesPrimaire { get; set; } = 0;
+        public int NombreClassesPrescolaire { get; set; } = 0;
+
+        public int NombreElevesCollege { get; set; } = 0;
+        public int NombreElevesLycee { get; set; } = 0;
+        public int NombreElevesPrimaire { get; set; } = 0;
+        public int NombreElevesPrescolaire { get; set; } = 0;
 
         // Ressources et associations
-        [Required]
-        public int NombreForages { get; set; }
-        [Required]
-        public int NombreOng { get; set; }
-        [Required]
-        public int NombreOngNationales { get; set; }
-        [Required]
-        public int NombreOngEtrangeres { get; set; }
-        [Required]
-        public int NombreGroupements { get; set; }
-        [Required]
-        public int NombreCooperatives { get; set; }
+        public int NombreForages { get; set; } = 0;
+        public int NombreAssociation { get; set; } = 0;
+        public int NombrePointsEau { get; set; } = 0;
+
+        public int NombreOng { get; set; } = 0;
+        public int NombreOngNationales { get; set; } = 0;
+        public int NombreOngEtrangeres { get; set; } = 0;
+
+        public int NombreGroupements { get; set; } = 0;
+        public int NombreCooperatives { get; set; } = 0;
 
         // Sécurité et économie
-        [Required]
-        public int NombreDetenteursArmesFeu { get; set; }
-        [Required]
-        public int NombreMarches { get; set; }
-        [Required]
-        public int NombreMarchesJournaliers { get; set; }
-        [Required]
-        public int NombreMarchesHebdomadaires { get; set; }
+        public int NombreDetenteursArmesFeu { get; set; } = 0;
 
+        public int NombreMarches { get; set; } = 0;
+        public int NombreMarchesJournaliers { get; set; } = 0;
+        public int NombreMarchesHebdomadaires { get; set; } = 0;
+
+        // Relations
         [ForeignKey("Commune")]
         [Required]
         public int IdCommune { get; set; }
 
         public Commune Commune { get; set; } = null!;
-
         public Exercice? Exercice { get; set; }
-
-
-
     }
 }

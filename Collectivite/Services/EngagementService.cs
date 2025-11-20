@@ -168,8 +168,8 @@ namespace Collectivite.Services
                 if (engagement.BudgetLineId <= 0)
                     return (false, "La ligne budgétaire est obligatoire.", null);
 
-                //if (engagement.TiersId <= 0)
-                //    return (false, "Le tiers est obligatoire.", null);
+                if (engagement.TiersId <= 0)
+                    return (false, "Le tiers est obligatoire.", null);
 
                 if (string.IsNullOrWhiteSpace(engagement.Objet))
                     return (false, "L'objet de l'engagement est obligatoire.", null);
@@ -186,9 +186,9 @@ namespace Collectivite.Services
                     return (false, "Impossible de créer un engagement sur un exercice clôturé.", null);
 
                 // Vérifier que le tiers existe
-                //var tiersExists = await context.Tiers.AnyAsync(t => t.Id == engagement.TiersId);
-                //if (!tiersExists)
-                //    return (false, "Le tiers spécifié n'existe pas.", null);
+                var tiersExists = await context.Tiers.AnyAsync(t => t.Id == engagement.TiersId);
+                if (!tiersExists)
+                    return (false, "Le tiers spécifié n'existe pas.", null);
 
                 // Vérifier que la ligne budgétaire existe
                 var budgetLineExists = await context.BudgetLines.AnyAsync(bl => bl.Id == engagement.BudgetLineId);

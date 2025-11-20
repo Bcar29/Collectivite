@@ -446,39 +446,43 @@
                                            Height="40"
                                            CornerRadius="20"
                                            Margin="0,0,10,0">
-                                        <TextBlock Text="{Binding UserInitials}"
-                                                 Foreground="White"
+                                        <!--<TextBlock Text="{Binding UserInitials}"
+                                                 Foreground="Blue"
                                                  FontWeight="SemiBold"
                                                  FontSize="16"
                                                  HorizontalAlignment="Center"
-                                                 VerticalAlignment="Center"/>
+                                                 VerticalAlignment="Center"/> -->
                                     </Border>
                                     <TextBlock Text="{Binding UserFullName}"
-                                             FontSize="14"
-                                             FontWeight="Medium"
-                                             VerticalAlignment="Center"/>
+                                                    Foreground="Blue"
+                                                     FontWeight="SemiBold"
+                                                     FontSize="16"
+                                                     HorizontalAlignment="Center"
+                                                     VerticalAlignment="Center"/>
                                 </StackPanel>
                             </materialDesign:PopupBox.ToggleContent>
 
-                            <StackPanel Width="200">
+                            <StackPanel Width="240" Margin="0">
                                 <Button Style="{StaticResource MaterialDesignFlatButton}"
                                        HorizontalContentAlignment="Left"
-                                       Padding="15,10">
+                                       Padding="15,10"
+                                       Command="{Binding OpenProfileCommand}">
                                     <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="Account" 
-                                                               VerticalAlignment="Center"
-                                                               Margin="0,0,10,0"/>
-                                        <TextBlock Text="Mon profil" VerticalAlignment="Center"/>
+                                        <materialDesign:PackIcon Kind="AccountCircle"
+                                                                 VerticalAlignment="Center"
+                                                                 Margin="0,0,10,0"/>
+                                        <TextBlock Text="Profil" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
 
                                 <Button Style="{StaticResource MaterialDesignFlatButton}"
                                        HorizontalContentAlignment="Left"
-                                       Padding="15,10">
+                                       Padding="15,10"
+                                       Command="{Binding OpenSettingsCommand}">
                                     <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="Cog" 
-                                                               VerticalAlignment="Center"
-                                                               Margin="0,0,10,0"/>
+                                        <materialDesign:PackIcon Kind="Cog"
+                                                                 VerticalAlignment="Center"
+                                                                 Margin="0,0,10,0"/>
                                         <TextBlock Text="Paramètres" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>

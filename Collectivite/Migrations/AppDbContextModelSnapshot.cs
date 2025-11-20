@@ -332,13 +332,22 @@ namespace Collectivite.Migrations
                     b.Property<int>("IdCommune")
                         .HasColumnType("int");
 
+                    b.Property<int>("NombreAssociation")
+                        .HasColumnType("int");
+
                     b.Property<int>("NombreCentresSante")
                         .HasColumnType("int");
 
-                    b.Property<int>("NombreClassesPrimaires")
+                    b.Property<int>("NombreClassesCollege")
                         .HasColumnType("int");
 
-                    b.Property<int>("NombreClassesSecondaires")
+                    b.Property<int>("NombreClassesLycee")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NombreClassesPrescolaire")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NombreClassesPrimaire")
                         .HasColumnType("int");
 
                     b.Property<int>("NombreConseillers")
@@ -359,16 +368,28 @@ namespace Collectivite.Migrations
                     b.Property<int>("NombreEcoles")
                         .HasColumnType("int");
 
-                    b.Property<int>("NombreEcolesPrimaires")
+                    b.Property<int>("NombreEcolesCollege")
                         .HasColumnType("int");
 
-                    b.Property<int>("NombreEcolesSecondaires")
+                    b.Property<int>("NombreEcolesLycee")
                         .HasColumnType("int");
 
-                    b.Property<int>("NombreElevesPrimaires")
+                    b.Property<int>("NombreEcolesPrescolaire")
                         .HasColumnType("int");
 
-                    b.Property<int>("NombreElevesSecondaires")
+                    b.Property<int>("NombreEcolesPrimaire")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NombreElevesCollege")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NombreElevesLycee")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NombreElevesPrescolaire")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NombreElevesPrimaire")
                         .HasColumnType("int");
 
                     b.Property<int>("NombreForages")
@@ -395,7 +416,16 @@ namespace Collectivite.Migrations
                     b.Property<int>("NombreOngNationales")
                         .HasColumnType("int");
 
+                    b.Property<int>("NombrePointsEau")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NombrePostesSante")
+                        .HasColumnType("int");
+
                     b.Property<int>("NombreQuartiers")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NombreSanteAmelioree")
                         .HasColumnType("int");
 
                     b.Property<int>("NombreSecteurs")
