@@ -72,8 +72,9 @@ namespace Collectivite.Services
                 }
                 existingBudgetPrimitif.ExerciceId = budgetPrimitif.ExerciceId;
                 existingBudgetPrimitif.Exercice = budgetPrimitif.Exercice;
-                existingBudgetPrimitif.DateVote = budgetPrimitif.DateVote;
-                existingBudgetPrimitif.Montant = budgetPrimitif.Montant;
+                existingBudgetPrimitif.DateApprobation = budgetPrimitif.DateApprobation;
+                existingBudgetPrimitif.DateValidation = budgetPrimitif.DateValidation;
+                //existingBudgetPrimitif.Montant = budgetPrimitif.Montant;
                 
                 await _context.SaveChangesAsync();
                 return (true, "budget mise à jour avec succès.");

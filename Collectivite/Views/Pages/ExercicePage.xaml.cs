@@ -13,7 +13,8 @@ namespace Collectivite.Views.Pages
             // Initialiser le ViewModel
             //var context = new AppDbContext();
             var exerciceService = new ExerciceService();
-            var viewModel = new ExerciceViewModel(exerciceService);
+            var auditorService = new AuditService();
+            var viewModel = new ExerciceViewModel(exerciceService, auditorService);
 
             DataContext = viewModel;
         }

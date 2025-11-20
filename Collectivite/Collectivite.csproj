@@ -41,9 +41,14 @@
   </ItemGroup>
 
   <ItemGroup>
+
     <Page Update="MainWindow.xaml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Page>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Migrations\" />
   </ItemGroup>
 
 </Project>

@@ -27,7 +27,8 @@ namespace Collectivite.ViewModels
             _budgetPrimitifService = budgetPrimitifService;
             _dialogBudgetPrimitif = new BudgetPrimitif
             {
-                DateVote = DateOnly.FromDateTime(DateTime.Now)
+                DateApprobation = DateOnly.FromDateTime(DateTime.Now),
+                //DateValidation = DateOnly.FromDateTime(DateTime.Now)
             };
 
             //Commandes
@@ -82,12 +83,21 @@ namespace Collectivite.ViewModels
         //    get => _exercice;
         //    set => SetProperty(ref _exercice, value);
         //}
-        public DateTime DilogBudgetPrimitifDateVote
+        public DateTime DilogBudgetPrimitifDateApprobation
         {
-            get => DialogBudgetPrimitif.DateVote.ToDateTime(TimeOnly.MinValue);
+            get => DialogBudgetPrimitif.DateApprobation.ToDateTime(TimeOnly.MinValue);
             set
             {
-                DialogBudgetPrimitif.DateVote = DateOnly.FromDateTime(value);
+                DialogBudgetPrimitif.DateApprobation = DateOnly.FromDateTime(value);
+                OnPropertyChanged();
+            }
+        }
+        public DateTime DilogBudgetPrimitifDateValidation
+        {
+            get => DialogBudgetPrimitif.DateValidation.HasValue ? DialogBudgetPrimitif.DateValidation.Value.ToDateTime(TimeOnly.MinValue) : DateTime.Now;
+            set
+            {
+                DialogBudgetPrimitif.DateValidation = DateOnly.FromDateTime(value);
                 OnPropertyChanged();
             }
         }
@@ -154,8 +164,11 @@ namespace Collectivite.ViewModels
             DialogBudgetPrimitif= new BudgetPrimitif
             {
                 Id = budgetPrimitif.Id,
-                DateVote = budgetPrimitif.DateVote,
-                Montant = budgetPrimitif.Montant,
+                DateApprobation = budgetPrimitif.DateApprobation,
+                DateValidation = budgetPrimitif.DateValidation,
+                MontantTotal = budgetPrimitif.MontantTotal,
+                MontantDepense = budgetPrimitif.MontantDepense,
+                MontantRecette = budgetPrimitif.MontantRecette,
                 Exercice = budgetPrimitif.Exercice,
                 ExerciceId = budgetPrimitif.ExerciceId,
                 
@@ -166,7 +179,7 @@ namespace Collectivite.ViewModels
 
         private bool CanSaveBudgetPrimitif()
         {
-            return !string.IsNullOrWhiteSpace(DialogBudgetPrimitif.Montant.ToString());
+            return !string.IsNullOrWhiteSpace(DialogBudgetPrimitif.MontantTotal.ToString());
         }
 
         private async System.Threading.Tasks.Task SaveBudgetPrimitifAsync()

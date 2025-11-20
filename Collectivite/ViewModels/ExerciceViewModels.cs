@@ -17,10 +17,14 @@ namespace Collectivite.ViewModels
         private bool _isDialogOpen;
         private Exercice _dialogExercice;
         private bool _isEditMode;
+        private AuditService _auditService;
+         
 
-        public ExerciceViewModel(ExerciceService exerciceService)
+
+        public ExerciceViewModel(ExerciceService exerciceService, AuditService auditService)
         {
             _exerciceService = exerciceService;
+            _auditService = auditService;
             _dialogExercice = new Exercice
             {
                 Libelle = "",
@@ -158,6 +162,8 @@ namespace Collectivite.ViewModels
             OnPropertyChanged(nameof(DialogExerciceDateFin));
 
             IsDialogOpen = true;
+
+            
         }
 
         private void OpenEditDialog(Exercice? exercice)
@@ -214,12 +220,18 @@ namespace Collectivite.ViewModels
                             MessageBoxButton.OK, MessageBoxImage.Information);
                         IsDialogOpen = false;
                         await LoadDataAsync();
+
+                        string titre = "modification d'exercice";
+                        string description = $"{DialogExercice.Libelle} par {"alfa"} le {DateTime.Now:dd/MM/yyyy HH:mm}";
+
+                        await _auditService.LogAsync(titre, description, "alfa");
                     }
                     else
                     {
                         MessageBox.Show(message, "Erreur",
                             MessageBoxButton.OK, MessageBoxImage.Warning);
                     }
+                    
                 }
                 else
                 {
@@ -232,6 +244,11 @@ namespace Collectivite.ViewModels
                             MessageBoxButton.OK, MessageBoxImage.Information);
                         IsDialogOpen = false;
                         await LoadDataAsync();
+
+                        string titre = "Exercice crée";
+                        string description = $"{DialogExercice.Libelle} par {"alfa"} le {DateTime.Now:dd/MM/yyyy HH:mm}";
+
+                        await _auditService.LogAsync(titre, description, "alfa");
                     }
                     else
                     {
@@ -280,6 +297,10 @@ namespace Collectivite.ViewModels
 
                 if (success)
                 {
+                    string titre = "Exercice supprimer";
+                    string description = $"{exercice.Libelle} supprimé par {"alfa"} ";
+
+                    await _auditService.LogAsync(titre, description, "alfa");
                     await LoadDataAsync();
                 }
 
@@ -321,6 +342,10 @@ namespace Collectivite.ViewModels
 
                 if (success)
                 {
+                    string titre = "Exercice cloturer";
+                    string description = $"{exercice.Libelle} cloturé par {"alfa"} ";
+
+                    await _auditService.LogAsync(titre, description, "alfa");
                     await LoadDataAsync();
                 }
 

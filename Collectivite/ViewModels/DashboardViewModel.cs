@@ -1,6 +1,8 @@
 using Collectivite.Models;
+using Collectivite.Services;
 using Collectivite.Utils;
 using System.Collections.ObjectModel;
+using System.Windows;
 using System.Windows.Input;
 
 namespace Collectivite.ViewModels
@@ -8,9 +10,11 @@ namespace Collectivite.ViewModels
     public class DashboardViewModel : ViewModelBase
     {
         private BudgetStatistics _statistics;
+        AuditService _auditService;
 
-        public DashboardViewModel()
+        public DashboardViewModel(AuditService auditService)
         {
+            _auditService = auditService;
             _statistics = new BudgetStatistics();
 
             // Initialiser les données
@@ -21,6 +25,7 @@ namespace Collectivite.ViewModels
             NewBonCommandeCommand = new RelayCommand(_ => ExecuteQuickAction("Nouveau Bon de Commande"));
             NewOrdreRecetteCommand = new RelayCommand(_ => ExecuteQuickAction("Nouvel Ordre de Recette"));
             NewEngagementCommand = new RelayCommand(_ => ExecuteQuickAction("Nouvel Engagement"));
+            _auditService = auditService;
         }
 
         #region Properties
@@ -28,7 +33,7 @@ namespace Collectivite.ViewModels
         public ObservableCollection<DashboardIndicator> Indicators { get; } = new();
         public ObservableCollection<ChartDataPoint> BarChartData { get; } = new();
         public ObservableCollection<ChartDataPoint> LineChartData { get; } = new();
-        public ObservableCollection<RecentActivity> RecentActivities { get; } = new();
+        public ObservableCollection<AuditLog> RecentActivities { get; } = new();
         public ObservableCollection<QuickAction> QuickActions { get; } = new();
 
         public BudgetStatistics Statistics
@@ -148,64 +153,25 @@ namespace Collectivite.ViewModels
             }
         }
 
-        private void LoadRecentActivities()
+        private async void LoadRecentActivities()
         {
-            RecentActivities.Clear();
-
-            RecentActivities.Add(new RecentActivity
+            try
             {
-                Id = 1,
-                Type = "Mandat",
-                Description = "Mandat de paiement #2024-158 créé",
-                Icon = "CashCheck",
-                IconColor = "#4CAF50",
-                Date = DateTime.Now.AddMinutes(-15),
-                Amount = 2_500_000
-            });
+                RecentActivities.Clear();
 
-            RecentActivities.Add(new RecentActivity
-            {
-                Id = 2,
-                Type = "Bon de Commande",
-                Description = "Bon de commande #BC-2024-089 validé",
-                Icon = "FileDocumentEdit",
-                IconColor = "#2196F3",
-                Date = DateTime.Now.AddHours(-2),
-                Amount = 1_750_000
-            });
+                var logs = await _auditService.GetAllLogsAsync();
 
-            RecentActivities.Add(new RecentActivity
+                foreach (var log in logs.Take(20)) // charger les 20 dernières
+                {
+                    RecentActivities.Add(log);
+                }
+            }
+            catch (Exception ex)
             {
-                Id = 3,
-                Type = "Ordre de Recette",
-                Description = "Ordre de recette #OR-2024-234 enregistré",
-                Icon = "Receipt",
-                IconColor = "#FF9800",
-                Date = DateTime.Now.AddHours(-4),
-                Amount = 5_000_000
-            });
-
-            RecentActivities.Add(new RecentActivity
-            {
-                Id = 4,
-                Type = "Engagement",
-                Description = "Fiche d'engagement #FE-2024-067 approuvée",
-                Icon = "ClipboardText",
-                IconColor = "#9C27B0",
-                Date = DateTime.Now.AddDays(-1),
-                Amount = 3_200_000
-            });
-
-            RecentActivities.Add(new RecentActivity
-            {
-                Id = 5,
-                Type = "Budget",
-                Description = "Budget primitif 2025 mis à jour",
-                Icon = "FileChart",
-                IconColor = "#607D8B",
-                Date = DateTime.Now.AddDays(-2)
-            });
+                MessageBox.Show($"Erreur lors du chargement des activités : {ex.Message}");
+            }
         }
+
 
         private void LoadQuickActions()
         {

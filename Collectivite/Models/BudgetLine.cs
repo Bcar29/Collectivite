@@ -6,6 +6,9 @@ using System.Linq;
 
 namespace Collectivite.Models
 {
+
+    
+    
     /// <summary>
     /// Représente une ligne budgétaire avec ses remaniements
     /// </summary>

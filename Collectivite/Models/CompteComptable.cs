@@ -18,9 +18,17 @@ namespace Collectivite.Models
         [Column(TypeName = "varchar(20)")]
         public string NumeroCompte { get; set; } = null!;
 
-        [Required(ErrorMessage = "L’intitulé du compte est obligatoire.")]
-        [StringLength(255, ErrorMessage = "L’intitulé du compte ne doit pas dépasser 255 caractères.")]
+        [Required(ErrorMessage = "L'intitulé du compte est obligatoire.")]
+        [StringLength(255, ErrorMessage = "L'intitulé du compte ne doit pas dépasser 255 caractères.")]
         [Column(TypeName = "varchar(255)")]
         public string IntituleCompte { get; set; } = null!;
+
+        // Relation réflexive
+        public int? CompteParentId { get; set; }
+
+        [ForeignKey("CompteParentId")]
+        public virtual CompteComptable? CompteParent { get; set; }
+
+        public virtual ICollection<CompteComptable> SousComptes { get; set; } = new List<CompteComptable>();
     }
 }

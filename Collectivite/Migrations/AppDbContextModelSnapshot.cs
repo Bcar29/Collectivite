@@ -22,6 +22,34 @@ namespace Collectivite.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
+            modelBuilder.Entity("Collectivite.Models.AuditLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ActionTitle")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("PerformedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("PerformedBy")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AuditLogs");
+                });
+
             modelBuilder.Entity("Collectivite.Models.BonCommande", b =>
                 {
                     b.Property<int>("Id")
@@ -89,13 +117,25 @@ namespace Collectivite.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateOnly>("DateVote")
+                    b.Property<DateOnly>("DateApprobation")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("DateValidation")
                         .HasColumnType("date");
 
                     b.Property<int>("ExerciceId")
                         .HasColumnType("int");
 
-                    b.Property<int>("Montant")
+                    b.Property<int>("MontantDepense")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MontantRecette")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MontantTotal")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -183,6 +223,9 @@ namespace Collectivite.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("CompteParentId")
+                        .HasColumnType("int");
+
                     b.Property<string>("IntituleCompte")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -195,6 +238,8 @@ namespace Collectivite.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CompteParentId");
+
                     b.ToTable("CompteComptables");
                 });
 
@@ -206,11 +251,11 @@ namespace Collectivite.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("DateEcheance")
-                        .HasColumnType("datetime(6)");
+                    b.Property<DateOnly>("DateEcheance")
+                        .HasColumnType("date");
 
-                    b.Property<DateTime>("DateSignature")
-                        .HasColumnType("datetime(6)");
+                    b.Property<DateOnly>("DateSignature")
+                        .HasColumnType("date");
 
                     b.Property<int>("ExerciceId")
                         .HasColumnType("int");
@@ -614,7 +659,7 @@ namespace Collectivite.Migrations
                     b.Property<bool>("EstCloture")
                         .HasColumnType("tinyint(1)");
 
-                    b.Property<int>("IdDetailCommune")
+                    b.Property<int?>("IdDetailCommune")
                         .HasColumnType("int");
 
                     b.Property<string>("Libelle")
@@ -716,6 +761,9 @@ namespace Collectivite.Migrations
                     b.Property<byte[]>("FichierJoin")
                         .HasColumnType("longblob");
 
+                    b.Property<sbyte?>("FichierName")
+                        .HasColumnType("tinyint");
+
                     b.Property<int>("Mois")
                         .HasColumnType("int");
 
@@ -731,8 +779,8 @@ namespace Collectivite.Migrations
                         .HasColumnType("double");
 
                     b.Property<string>("Motif")
-                        .HasMaxLength(255)
-                        .HasColumnType("varchar(255)");
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("NumeroMandat")
                         .IsRequired()
@@ -1072,7 +1120,7 @@ namespace Collectivite.Migrations
                     b.HasOne("Collectivite.Models.Exercice", "Exercice")
                         .WithOne("BudgetPrimitif")
                         .HasForeignKey("Collectivite.Models.BudgetPrimitif", "ExerciceId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Exercice");
@@ -1087,6 +1135,16 @@ namespace Collectivite.Migrations
                         .IsRequired();
 
                     b.Navigation("Tiers");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.CompteComptable", b =>
+                {
+                    b.HasOne("Collectivite.Models.CompteComptable", "CompteParent")
+                        .WithMany("SousComptes")
+                        .HasForeignKey("CompteParentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CompteParent");
                 });
 
             modelBuilder.Entity("Collectivite.Models.Contrats", b =>
@@ -1236,8 +1294,7 @@ namespace Collectivite.Migrations
                     b.HasOne("Collectivite.Models.DetailCommune", "DetailCommune")
                         .WithOne("Exercice")
                         .HasForeignKey("Collectivite.Models.Exercice", "IdDetailCommune")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("DetailCommune");
                 });
@@ -1284,7 +1341,7 @@ namespace Collectivite.Migrations
                     b.HasOne("Collectivite.Models.Nommenclature", "Parent")
                         .WithMany("Enfants")
                         .HasForeignKey("ParentId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Parent");
                 });
@@ -1408,6 +1465,11 @@ namespace Collectivite.Migrations
                     b.Navigation("Recensements");
 
                     b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.CompteComptable", b =>
+                {
+                    b.Navigation("SousComptes");
                 });
 
             modelBuilder.Entity("Collectivite.Models.Contrats", b =>

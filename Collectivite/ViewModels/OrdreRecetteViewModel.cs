@@ -261,24 +261,24 @@ namespace Collectivite.ViewModels
             }
         }
 
-        //private async System.Threading.Tasks.Task OpenAddDialogAsync()
-        //{
-        //    IsEditMode = false;
+        private void OpenAddDialogAsync()
+        {
+            IsEditMode = false;
 
-        //    // Générer le prochain numéro d'ordre si une commune et un exercice sont sélectionnés
-        //    string numeroOrdre = $"OR-{DateTime.Now:yyyyMMdd}-{OrdresRecette.Count + 1:D4}";
+            // Générer le prochain numéro d'ordre si une commune et un exercice sont sélectionnés
+            string numeroOrdre = $"OR-{DateTime.Now:yyyyMMdd}-{OrdresRecette.Count + 1:D4}";
 
-        //    DialogOrdreRecette = new OrdreRecette
-        //    {
-        //        DateOrdre = DateTime.Now,
-        //        NumeroOrdre = numeroOrdre,
-        //        MontantOrdre = 0,
-        //        MontantOrdreLettre = "",
-        //        Comptable = ""
-        //    };
+            DialogOrdreRecette = new OrdreRecette
+            {
+                DateOrdre = DateTime.Now,
+                NumeroOrdre = numeroOrdre,
+                MontantOrdre = 0,
+                MontantOrdreLettre = "",
+                Comptable = ""
+            };
 
-        //    IsDialogOpen = true;
-        //}
+            IsDialogOpen = true;
+        }
 
         private void OpenEditDialog(OrdreRecette? ordreRecette)
         {
