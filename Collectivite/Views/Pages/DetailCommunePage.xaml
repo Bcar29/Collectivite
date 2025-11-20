@@ -1,6 +1,7 @@
 ﻿<Page x:Class="Collectivite.Views.Pages.DetailCommunePage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:utils="clr-namespace:Collectivite.Utils"
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
       Language="fr-FR"
       Background="#F5F5F5"
@@ -8,6 +9,7 @@
 
     <Page.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <utils:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
     </Page.Resources>
 
     <Grid>
@@ -62,87 +64,54 @@
                     </Button>
                 </Grid>
 
+                <!-- DATAGRID -->
                 <DataGrid ItemsSource="{Binding DetailCommunes}"
-                  SelectedItem="{Binding SelectedDetailCommune}"
-                  AutoGenerateColumns="False"
-                  CanUserAddRows="False"
-                  CanUserDeleteRows="False"
-                  IsReadOnly="True"
-                  SelectionMode="Single"
-                  materialDesign:DataGridAssist.CellPadding="13 8 8 8"
-                  materialDesign:DataGridAssist.ColumnHeaderPadding="8">
+                          SelectedItem="{Binding SelectedDetailCommune}"
+                          AutoGenerateColumns="False"
+                          CanUserAddRows="False"
+                          CanUserDeleteRows="False"
+                          IsReadOnly="True"
+                          SelectionMode="Single"
+                          materialDesign:DataGridAssist.CellPadding="13 8 8 8"
+                          materialDesign:DataGridAssist.ColumnHeaderPadding="8">
 
                     <DataGrid.Columns>
 
                         <!-- Commune -->
                         <DataGridTextColumn Header="Commune" 
-                          Binding="{Binding Commune.Nom}"
-                          Width="150"
-                          FontWeight="Medium"/>
+                                          Binding="{Binding Commune.Nom}"
+                                          Width="150"
+                                          FontWeight="Medium"/>
 
                         <!-- Population -->
                         <DataGridTextColumn Header="Population" 
-                          Binding="{Binding PopulationTotale, StringFormat=N0, ConverterCulture='fr-FR'}"
-                          Width="100"/>
+                                          Binding="{Binding PopulationTotale, StringFormat=N0, ConverterCulture='fr-FR'}"
+                                          Width="100"/>
 
                         <!-- Superficie -->
                         <DataGridTextColumn Header="Superficie (km²)" 
-                          Binding="{Binding Superficie, StringFormat=N2, ConverterCulture='fr-FR'}"
-                          Width="110"/>
+                                          Binding="{Binding Superficie, StringFormat=N2, ConverterCulture='fr-FR'}"
+                                          Width="110"/>
 
                         <!-- Densité -->
                         <DataGridTextColumn Header="Densité" 
-                          Binding="{Binding Densite, StringFormat=N2, ConverterCulture='fr-FR'}"
-                          Width="100"/>
+                                          Binding="{Binding Densite, StringFormat=N2, ConverterCulture='fr-FR'}"
+                                          Width="100"/>
 
                         <!-- Conseillers -->
                         <DataGridTextColumn Header="Conseillers" 
-                          Binding="{Binding NombreConseillers}"
-                          Width="100"/>
+                                          Binding="{Binding NombreConseillers}"
+                                          Width="100"/>
 
-                        <!-- ═══════════════════════════════════════════════════════════
-                                         SECTION ADMINISTRATION
-                         ═══════════════════════════════════════════════════════════ -->
+                        <!-- Écoles -->
+                        <DataGridTextColumn Header="Écoles" 
+                                          Binding="{Binding NombreEcoles}"
+                                          Width="80"/>
 
-                        <!-- Délégations -->
-                        <DataGridTemplateColumn Header="Nbre de Délég.">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding NombreDelegationSpeciale}"
-                                     Foreground="#666" Width="100"/>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-
-                        <!-- Quartiers -->
-                        <DataGridTemplateColumn Header="Quartiers">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding NombreQuartiers}"
-                                 Foreground="#388E3C" Width="100"/>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-
-                        <!-- Districts -->
-                        <DataGridTemplateColumn Header="Districts">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding NombreDistricts}"
-                                     Foreground="#F57C00" Width="100"/>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-
-                        <!-- Secteurs -->
-                        <DataGridTemplateColumn Header="Secteurs">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding NombreSecteurs}"
-                                    Foreground="#7B1FA2" Width="100"/>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
+                        <!-- Centres de santé -->
+                        <DataGridTextColumn Header="Centres Santé" 
+                                          Binding="{Binding NombreCentresSante}"
+                                          Width="110"/>
 
                         <!-- Actions -->
                         <DataGridTemplateColumn Header="Actions" Width="150">
@@ -150,20 +119,20 @@
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                         <Button Style="{StaticResource MaterialDesignIconButton}"
-                              ToolTip="Modifier"
-                              Command="{Binding DataContext.OpenEditDetailCommuneCommand, 
-                                      RelativeSource={RelativeSource AncestorType=Page}}"
-                              CommandParameter="{Binding}"
-                              Margin="4,0">
+                                              ToolTip="Modifier"
+                                              Command="{Binding DataContext.OpenEditDetailCommuneCommand, 
+                                                      RelativeSource={RelativeSource AncestorType=Page}}"
+                                              CommandParameter="{Binding}"
+                                              Margin="4,0">
                                             <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2"/>
                                         </Button>
 
                                         <Button Style="{StaticResource MaterialDesignIconButton}"
-                              ToolTip="Supprimer"
-                              Command="{Binding DataContext.DeleteDetailCommuneCommand, 
-                                      RelativeSource={RelativeSource AncestorType=Page}}"
-                              CommandParameter="{Binding}"
-                              Margin="4,0">
+                                              ToolTip="Supprimer"
+                                              Command="{Binding DataContext.DeleteDetailCommuneCommand, 
+                                                      RelativeSource={RelativeSource AncestorType=Page}}"
+                                              CommandParameter="{Binding}"
+                                              Margin="4,0">
                                             <materialDesign:PackIcon Kind="Delete" Foreground="#F44336"/>
                                         </Button>
                                     </StackPanel>
@@ -177,12 +146,12 @@
             </StackPanel>
         </ScrollViewer>
 
-        <!-- DIALOG MODAL OPTIMISÉ -->
+        <!-- DIALOG MODAL -->
         <materialDesign:DialogHost IsOpen="{Binding IsDialogOpen}"
-                         CloseOnClickAway="False"
-                         Panel.ZIndex="900">
+                                 CloseOnClickAway="False"
+                                 Panel.ZIndex="900">
             <materialDesign:DialogHost.DialogContent>
-                <materialDesign:Card Width="750" MaxHeight="500">
+                <materialDesign:Card Width="850" MaxHeight="600">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -190,71 +159,59 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <!-- ═══════════════════════════════════════════════════════════
-                     HEADER
-                     ═══════════════════════════════════════════════════════════ -->
+                        <!-- HEADER -->
                         <Border Grid.Row="0" 
-                      Background="#009688" 
-                      Padding="20">
+                              Background="#009688" 
+                              Padding="20">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="InformationOutline" 
-                                               Width="28" 
-                                               Height="28"
-                                               Foreground="White"
-                                               VerticalAlignment="Center"
-                                               Margin="0,0,15,0"/>
+                                                       Width="28" 
+                                                       Height="28"
+                                                       Foreground="White"
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,15,0"/>
                                 <TextBlock Text="{Binding DialogTitle}"
-                                 FontSize="22"
-                                 FontWeight="SemiBold"
-                                 Foreground="White"
-                                 VerticalAlignment="Center"/>
+                                         FontSize="22"
+                                         FontWeight="SemiBold"
+                                         Foreground="White"
+                                         VerticalAlignment="Center"/>
                             </StackPanel>
                         </Border>
 
-                        <!-- ═══════════════════════════════════════════════════════════
-                     CONTENU SCROLLABLE
-                     ═══════════════════════════════════════════════════════════ -->
+                        <!-- CONTENU SCROLLABLE -->
                         <ScrollViewer Grid.Row="1" 
-                            VerticalScrollBarVisibility="Auto"
-                            Padding="20">
+                                    VerticalScrollBarVisibility="Auto"
+                                    Padding="20">
                             <StackPanel>
 
                                 <!-- Commune (TOUJOURS VISIBLE) -->
                                 <materialDesign:Card Padding="15" Margin="0,0,0,10"
-                                           Background="#E0F2F1">
+                                                   Background="#E0F2F1">
                                     <ComboBox materialDesign:HintAssist.Hint="Commune *"
-                                    Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                                    ItemsSource="{Binding Communes}"
-                                    SelectedValue="{Binding DialogDetailCommune.IdCommune}"
-                                    SelectedValuePath="Id"
-                                    IsEnabled="False"
-                                    DisplayMemberPath="Nom"/>
-
-                                    <!--   <TextBlock Text="{Binding }" 
-                                         FontSize="24"
-                                         FontWeight="SemiBold"
-                                         
-                                         Margin="15,0,0,0"
-                                         VerticalAlignment="Center"/> -->
+                                            Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                            ItemsSource="{Binding Communes}"
+                                            SelectedValue="{Binding DialogDetailCommune.IdCommune}"
+                                            SelectedValuePath="Id"
+                                            IsEnabled="{Binding IsEditMode, Converter={StaticResource InverseBooleanConverter}}"
+                                            DisplayMemberPath="Nom"/>
                                 </materialDesign:Card>
 
-
-                                <!-- ═══════════════════════════════════════════════════════════
-                             SECTION 1 : DÉMOGRAPHIE
-                             ═══════════════════════════════════════════════════════════ -->
+                                <!-- ══════════════════════════════════════════════════════════════
+                                     SECTION 1 : DÉMOGRAPHIE
+                                     ══════════════════════════════════════════════════════════════ -->
                                 <Expander IsExpanded="True" Margin="0,0,0,10">
                                     <Expander.Header>
                                         <StackPanel Orientation="Horizontal">
                                             <materialDesign:PackIcon Kind="AccountGroup" 
-                                                           Width="24" 
-                                                           Height="24"
-                                                           Foreground="#009688"
-                                                           VerticalAlignment="Center"
-                                                           Margin="0,0,10,0"/>
+                                                                   Width="24" 
+                                                                   Height="24"
+                                                                   Foreground="#009688"
+                                                                   VerticalAlignment="Center"
+                                                                   Margin="0,0,10,0"/>
                                             <TextBlock Text="Démographie" 
-                                             FontSize="16" 
-                                             FontWeight="SemiBold"
-                                             VerticalAlignment="Center"/>
+                                                     FontSize="16" 
+                                                     FontWeight="SemiBold"
+                                                     VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </Expander.Header>
                                     <materialDesign:Card Padding="15" Margin="10,10,0,0">
@@ -275,42 +232,42 @@
                                             </Grid.RowDefinitions>
 
                                             <TextBox Grid.Row="0" Grid.Column="0"
-                                           materialDesign:HintAssist.Hint="👨 Population hommes"
-                                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                           Text="{Binding DialogDetailCommune.PopulationHommes}"/>
+                                                   materialDesign:HintAssist.Hint="👨 Population hommes"
+                                                   Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                   Text="{Binding DialogDetailCommune.PopulationHommes}"/>
 
                                             <TextBox Grid.Row="0" Grid.Column="2"
-                                           materialDesign:HintAssist.Hint="👩 Population femmes"
-                                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                           Text="{Binding DialogDetailCommune.PopulationFemmes}"/>
+                                                   materialDesign:HintAssist.Hint="👩 Population femmes"
+                                                   Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                   Text="{Binding DialogDetailCommune.PopulationFemmes}"/>
 
                                             <TextBox Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3"
-                                           materialDesign:HintAssist.Hint="👥 Population totale (calculée automatiquement)"
-                                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                           Text="{Binding DialogDetailCommune.PopulationTotale}"
-                                           IsReadOnly="True"
-                                           Background="#F5F5F5"/>
+                                                   materialDesign:HintAssist.Hint="👥 Population totale (calculée automatiquement)"
+                                                   Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                   Text="{Binding DialogDetailCommune.PopulationTotale}"
+                                                   IsReadOnly="True"
+                                                   Background="#F5F5F5"/>
 
                                             <TextBox Grid.Row="4" Grid.Column="0"
-                                           materialDesign:HintAssist.Hint="📐 Superficie (km²) *"
-                                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                           Text="{Binding DialogDetailCommune.Superficie}"/>
+                                                   materialDesign:HintAssist.Hint="📐 Superficie (km²) *"
+                                                   Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                   Text="{Binding DialogDetailCommune.Superficie}"/>
 
                                             <TextBox Grid.Row="4" Grid.Column="2"
-                                           materialDesign:HintAssist.Hint="📊 Densité (hab/km²)"
-                                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                           Text="{Binding DialogDetailCommune.Densite}"
-                                           IsReadOnly="True"
-                                           Background="#F5F5F5"/>
+                                                   materialDesign:HintAssist.Hint="📊 Densité (hab/km²)"
+                                                   Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                   Text="{Binding DialogDetailCommune.Densite}"
+                                                   IsReadOnly="True"
+                                                   Background="#F5F5F5"/>
 
                                             <Button Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="3"
-                                          Style="{StaticResource MaterialDesignOutlinedButton}"
-                                          Command="{Binding CalculerDensiteCommand}"
-                                          Height="36">
+                                                  Style="{StaticResource MaterialDesignOutlinedButton}"
+                                                  Command="{Binding CalculerDensiteCommand}"
+                                                  Height="36">
                                                 <StackPanel Orientation="Horizontal">
                                                     <materialDesign:PackIcon Kind="Calculator" 
-                                                                   VerticalAlignment="Center"
-                                                                   Margin="0,0,8,0"/>
+                                                                           VerticalAlignment="Center"
+                                                                           Margin="0,0,8,0"/>
                                                     <TextBlock Text="Calculer la densité" VerticalAlignment="Center"/>
                                                 </StackPanel>
                                             </Button>
@@ -318,22 +275,22 @@
                                     </materialDesign:Card>
                                 </Expander>
 
-                                <!-- ═══════════════════════════════════════════════════════════
-                             SECTION 2 : ADMINISTRATION
-                             ═══════════════════════════════════════════════════════════ -->
+                                <!-- ══════════════════════════════════════════════════════════════
+                                     SECTION 2 : ADMINISTRATION
+                                     ══════════════════════════════════════════════════════════════ -->
                                 <Expander Margin="0,0,0,10">
                                     <Expander.Header>
                                         <StackPanel Orientation="Horizontal">
                                             <materialDesign:PackIcon Kind="OfficeBuilding" 
-                                                           Width="24" 
-                                                           Height="24"
-                                                           Foreground="#1976D2"
-                                                           VerticalAlignment="Center"
-                                                           Margin="0,0,10,0"/>
+                                                                   Width="24" 
+                                                                   Height="24"
+                                                                   Foreground="#1976D2"
+                                                                   VerticalAlignment="Center"
+                                                                   Margin="0,0,10,0"/>
                                             <TextBlock Text="Administration" 
-                                             FontSize="16" 
-                                             FontWeight="SemiBold"
-                                             VerticalAlignment="Center"/>
+                                                     FontSize="16" 
+                                                     FontWeight="SemiBold"
+                                                     VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </Expander.Header>
                                     <materialDesign:Card Padding="15" Margin="10,10,0,0">
@@ -347,22 +304,22 @@
                                                 </Grid.ColumnDefinitions>
 
                                                 <TextBox Grid.Column="0"
-                                               materialDesign:HintAssist.Hint="👔 Nombre de conseillers"
-                                               Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                               Text="{Binding DialogDetailCommune.NombreConseillers}"/>
+                                                       materialDesign:HintAssist.Hint="👔 Nombre de conseillers"
+                                                       Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                       Text="{Binding DialogDetailCommune.NombreConseillers}"/>
 
                                                 <TextBox Grid.Column="2"
-                                               materialDesign:HintAssist.Hint="🏛️ Délégations spéciales"
-                                               Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                               Text="{Binding DialogDetailCommune.NombreDelegationSpeciale}"/>
+                                                       materialDesign:HintAssist.Hint="🏛️ Délégations spéciales"
+                                                       Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                       Text="{Binding DialogDetailCommune.NombreDelegationSpeciale}"/>
                                             </Grid>
 
                                             <!-- Divisions territoriales -->
                                             <TextBlock Text="Divisions territoriales" 
-                                             FontSize="12" 
-                                             FontWeight="SemiBold"
-                                             Foreground="#666"
-                                             Margin="0,5,0,10"/>
+                                                     FontSize="12" 
+                                                     FontWeight="SemiBold"
+                                                     Foreground="#666"
+                                                     Margin="0,5,0,10"/>
 
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
@@ -374,40 +331,40 @@
                                                 </Grid.ColumnDefinitions>
 
                                                 <TextBox Grid.Column="0"
-                                               materialDesign:HintAssist.Hint="🏘️ Quartiers"
-                                               Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                               Text="{Binding DialogDetailCommune.NombreQuartiers}"/>
+                                                       materialDesign:HintAssist.Hint="🏘️ Quartiers"
+                                                       Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                       Text="{Binding DialogDetailCommune.NombreQuartiers}"/>
 
                                                 <TextBox Grid.Column="2"
-                                               materialDesign:HintAssist.Hint="🗺️ Districts"
-                                               Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                               Text="{Binding DialogDetailCommune.NombreDistricts}"/>
+                                                       materialDesign:HintAssist.Hint="🗺️ Districts"
+                                                       Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                       Text="{Binding DialogDetailCommune.NombreDistricts}"/>
 
                                                 <TextBox Grid.Column="4"
-                                               materialDesign:HintAssist.Hint="📍 Secteurs"
-                                               Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                               Text="{Binding DialogDetailCommune.NombreSecteurs}"/>
+                                                       materialDesign:HintAssist.Hint="📍 Secteurs"
+                                                       Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                       Text="{Binding DialogDetailCommune.NombreSecteurs}"/>
                                             </Grid>
                                         </StackPanel>
                                     </materialDesign:Card>
                                 </Expander>
 
-                                <!-- ═══════════════════════════════════════════════════════════
-                             SECTION 3 : PERSONNEL
-                             ═══════════════════════════════════════════════════════════ -->
+                                <!-- ══════════════════════════════════════════════════════════════
+                                     SECTION 3 : PERSONNEL
+                                     ══════════════════════════════════════════════════════════════ -->
                                 <Expander Margin="0,0,0,10">
                                     <Expander.Header>
                                         <StackPanel Orientation="Horizontal">
                                             <materialDesign:PackIcon Kind="AccountTie" 
-                                                           Width="24" 
-                                                           Height="24"
-                                                           Foreground="#7B1FA2"
-                                                           VerticalAlignment="Center"
-                                                           Margin="0,0,10,0"/>
+                                                                   Width="24" 
+                                                                   Height="24"
+                                                                   Foreground="#7B1FA2"
+                                                                   VerticalAlignment="Center"
+                                                                   Margin="0,0,10,0"/>
                                             <TextBlock Text="Personnel" 
-                                             FontSize="16" 
-                                             FontWeight="SemiBold"
-                                             VerticalAlignment="Center"/>
+                                                     FontSize="16" 
+                                                     FontWeight="SemiBold"
+                                                     VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </Expander.Header>
                                     <materialDesign:Card Padding="15" Margin="10,10,0,0">
@@ -421,75 +378,57 @@
                                             </Grid.ColumnDefinitions>
 
                                             <TextBox Grid.Column="0"
-                                           materialDesign:HintAssist.Hint="👥 Total"
-                                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                           Text="{Binding DialogDetailCommune.EffectifTotalPersonnel}"/>
+                                                   materialDesign:HintAssist.Hint="👥 Total"
+                                                   Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                   Text="{Binding DialogDetailCommune.EffectifTotalPersonnel}"/>
 
                                             <TextBox Grid.Column="2"
-                                           materialDesign:HintAssist.Hint="✅ Permanent"
-                                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                           Text="{Binding DialogDetailCommune.EffectifPermanent}"/>
+                                                   materialDesign:HintAssist.Hint="✅ Permanent"
+                                                   Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                   Text="{Binding DialogDetailCommune.EffectifPermanent}"/>
 
                                             <TextBox Grid.Column="4"
-                                           materialDesign:HintAssist.Hint="⏱️ Temporaire"
-                                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                           Text="{Binding DialogDetailCommune.EffectifTemporaire}"/>
+                                                   materialDesign:HintAssist.Hint="⏱️ Temporaire"
+                                                   Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                   Text="{Binding DialogDetailCommune.EffectifTemporaire}"/>
                                         </Grid>
                                     </materialDesign:Card>
                                 </Expander>
 
-                                <!-- ═══════════════════════════════════════════════════════════
-                             SECTION 4 : ÉDUCATION
-                             ═══════════════════════════════════════════════════════════ -->
+                                <!-- ══════════════════════════════════════════════════════════════
+                                     SECTION 4 : ÉDUCATION (MIS À JOUR)
+                                     ══════════════════════════════════════════════════════════════ -->
                                 <Expander Margin="0,0,0,10">
                                     <Expander.Header>
                                         <StackPanel Orientation="Horizontal">
                                             <materialDesign:PackIcon Kind="School" 
-                                                           Width="24" 
-                                                           Height="24"
-                                                           Foreground="#F57C00"
-                                                           VerticalAlignment="Center"
-                                                           Margin="0,0,10,0"/>
+                                                                   Width="24" 
+                                                                   Height="24"
+                                                                   Foreground="#F57C00"
+                                                                   VerticalAlignment="Center"
+                                                                   Margin="0,0,10,0"/>
                                             <TextBlock Text="Éducation" 
-                                             FontSize="16" 
-                                             FontWeight="SemiBold"
-                                             VerticalAlignment="Center"/>
+                                                     FontSize="16" 
+                                                     FontWeight="SemiBold"
+                                                     VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </Expander.Header>
                                     <materialDesign:Card Padding="15" Margin="10,10,0,0">
                                         <StackPanel>
-                                            <!-- Écoles -->
-                                            <Grid Margin="0,0,0,10">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="10"/>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="10"/>
-                                                    <ColumnDefinition Width="*"/>
-                                                </Grid.ColumnDefinitions>
+                                            <!-- Total écoles (calculé) -->
+                                            <TextBox materialDesign:HintAssist.Hint="🏫 Total écoles (calculé automatiquement)"
+                                                   Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                   Text="{Binding DialogDetailCommune.NombreEcoles}"
+                                                   IsReadOnly="True"
+                                                   Background="#F5F5F5"
+                                                   Margin="0,0,0,10"/>
 
-                                                <TextBox Grid.Column="0"
-                                               materialDesign:HintAssist.Hint="🏫 Total écoles"
-                                               Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                               Text="{Binding DialogDetailCommune.NombreEcoles}"/>
-
-                                                <TextBox Grid.Column="2"
-                                               materialDesign:HintAssist.Hint="📚 Primaires"
-                                               Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                               Text="{Binding DialogDetailCommune.NombreEcolesPrimaires}"/>
-
-                                                <TextBox Grid.Column="4"
-                                               materialDesign:HintAssist.Hint="🎓 Secondaires"
-                                               Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                               Text="{Binding DialogDetailCommune.NombreEcolesSecondaires}"/>
-                                            </Grid>
-
-                                            <!-- Classes -->
-                                            <TextBlock Text="Classes" 
-                                             FontSize="12" 
-                                             FontWeight="SemiBold"
-                                             Foreground="#666"
-                                             Margin="0,5,0,10"/>
+                                            <!-- Écoles par niveau -->
+                                            <TextBlock Text="Écoles par niveau" 
+                                                     FontSize="12" 
+                                                     FontWeight="SemiBold"
+                                                     Foreground="#666"
+                                                     Margin="0,5,0,10"/>
 
                                             <Grid Margin="0,0,0,10">
                                                 <Grid.ColumnDefinitions>
@@ -497,62 +436,144 @@
                                                     <ColumnDefinition Width="10"/>
                                                     <ColumnDefinition Width="*"/>
                                                 </Grid.ColumnDefinitions>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="10"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
 
-                                                <TextBox Grid.Column="0"
-                                               materialDesign:HintAssist.Hint="Classes primaires"
-                                               Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                               Text="{Binding DialogDetailCommune.NombreClassesPrimaires}"/>
+                                                <TextBox Grid.Row="0" Grid.Column="0"
+                                                       materialDesign:HintAssist.Hint="🎨 Préscolaire"
+                                                       Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                       Text="{Binding DialogDetailCommune.NombreEcolesPrescolaire}"/>
 
-                                                <TextBox Grid.Column="2"
-                                               materialDesign:HintAssist.Hint="Classes secondaires"
-                                               Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                               Text="{Binding DialogDetailCommune.NombreClassesSecondaires}"/>
+                                                <TextBox Grid.Row="0" Grid.Column="2"
+                                                       materialDesign:HintAssist.Hint="📚 Primaire"
+                                                       Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                       Text="{Binding DialogDetailCommune.NombreEcolesPrimaire}"/>
+
+                                                <TextBox Grid.Row="2" Grid.Column="0"
+                                                       materialDesign:HintAssist.Hint="📖 Collège"
+                                                       Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                       Text="{Binding DialogDetailCommune.NombreEcolesCollege}"/>
+
+                                                <TextBox Grid.Row="2" Grid.Column="2"
+                                                       materialDesign:HintAssist.Hint="🎓 Lycée"
+                                                       Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                       Text="{Binding DialogDetailCommune.NombreEcolesLycee}"/>
                                             </Grid>
 
-                                            <!-- Élèves -->
-                                            <TextBlock Text="Élèves" 
-                                             FontSize="12" 
-                                             FontWeight="SemiBold"
-                                             Foreground="#666"
-                                             Margin="0,5,0,10"/>
+                                            <!-- Classes par niveau -->
+                                            <TextBlock Text="Classes par niveau" 
+                                                     FontSize="12" 
+                                                     FontWeight="SemiBold"
+                                                     Foreground="#666"
+                                                     Margin="0,5,0,10"/>
 
-                                            <Grid>
+                                            <Grid Margin="0,0,0,10">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="*"/>
                                                     <ColumnDefinition Width="10"/>
                                                     <ColumnDefinition Width="*"/>
                                                 </Grid.ColumnDefinitions>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="10"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
 
-                                                <TextBox Grid.Column="0"
-                                               materialDesign:HintAssist.Hint="👦 Élèves primaires"
-                                               Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                               Text="{Binding DialogDetailCommune.NombreElevesPrimaires}"/>
+                                                <TextBox Grid.Row="0" Grid.Column="0"
+                                                       materialDesign:HintAssist.Hint="Classes préscolaire"
+                                                       Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                       Text="{Binding DialogDetailCommune.NombreClassesPrescolaire}"/>
 
-                                                <TextBox Grid.Column="2"
-                                               materialDesign:HintAssist.Hint="🧑‍🎓 Élèves secondaires"
-                                               Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                               Text="{Binding DialogDetailCommune.NombreElevesSecondaires}"/>
+                                                <TextBox Grid.Row="0" Grid.Column="2"
+                                                       materialDesign:HintAssist.Hint="Classes primaire"
+                                                       Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                       Text="{Binding DialogDetailCommune.NombreClassesPrimaire}"/>
+
+                                                <TextBox Grid.Row="2" Grid.Column="0"
+                                                       materialDesign:HintAssist.Hint="Classes collège"
+                                                       Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                       Text="{Binding DialogDetailCommune.NombreClassesCollege}"/>
+
+                                                <TextBox Grid.Row="2" Grid.Column="2"
+                                                       materialDesign:HintAssist.Hint="Classes lycée"
+                                                       Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                       Text="{Binding DialogDetailCommune.NombreClassesLycee}"/>
                                             </Grid>
+
+                                            <!-- Élèves par niveau -->
+                                            <TextBlock Text="Élèves par niveau" 
+                                                     FontSize="12" 
+                                                     FontWeight="SemiBold"
+                                                     Foreground="#666"
+                                                     Margin="0,5,0,10"/>
+
+                                            <Grid Margin="0,0,0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="10"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="10"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+
+                                                <TextBox Grid.Row="0" Grid.Column="0"
+                                                       materialDesign:HintAssist.Hint="👶 Élèves préscolaire"
+                                                       Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                       Text="{Binding DialogDetailCommune.NombreElevesPrescolaire}"/>
+
+                                                <TextBox Grid.Row="0" Grid.Column="2"
+                                                       materialDesign:HintAssist.Hint="👦 Élèves primaire"
+                                                       Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                       Text="{Binding DialogDetailCommune.NombreElevesPrimaire}"/>
+
+                                                <TextBox Grid.Row="2" Grid.Column="0"
+                                                       materialDesign:HintAssist.Hint="👨‍🎓 Élèves collège"
+                                                       Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                       Text="{Binding DialogDetailCommune.NombreElevesCollege}"/>
+
+                                                <TextBox Grid.Row="2" Grid.Column="2"
+                                                       materialDesign:HintAssist.Hint="🧑‍🎓 Élèves lycée"
+                                                       Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                       Text="{Binding DialogDetailCommune.NombreElevesLycee}"/>
+                                            </Grid>
+
+                                            <!-- Bouton calculer -->
+                                            <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                                                  Command="{Binding CalculerTotalEcolesCommand}"
+                                                  Height="36">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <materialDesign:PackIcon Kind="Calculator" 
+                                                                           VerticalAlignment="Center"
+                                                                           Margin="0,0,8,0"/>
+                                                    <TextBlock Text="Calculer le total des écoles" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Button>
                                         </StackPanel>
                                     </materialDesign:Card>
                                 </Expander>
 
-                                <!-- ═══════════════════════════════════════════════════════════
-                             SECTION 5 : SANTÉ & INFRASTRUCTURES
-                             ═══════════════════════════════════════════════════════════ -->
+                                <!-- ══════════════════════════════════════════════════════════════
+                                     SECTION 5 : SANTÉ & INFRASTRUCTURES (MIS À JOUR)
+                                     ══════════════════════════════════════════════════════════════ -->
                                 <Expander Margin="0,0,0,10">
                                     <Expander.Header>
                                         <StackPanel Orientation="Horizontal">
                                             <materialDesign:PackIcon Kind="Hospital" 
-                                                           Width="24" 
-                                                           Height="24"
-                                                           Foreground="#D32F2F"
-                                                           VerticalAlignment="Center"
-                                                           Margin="0,0,10,0"/>
+                                                                   Width="24" 
+                                                                   Height="24"
+                                                                   Foreground="#D32F2F"
+                                                                   VerticalAlignment="Center"
+                                                                   Margin="0,0,10,0"/>
                                             <TextBlock Text="Santé &amp; Infrastructures" 
-                                             FontSize="16" 
-                                             FontWeight="SemiBold"
-                                             VerticalAlignment="Center"/>
+                                                     FontSize="16" 
+                                                     FontWeight="SemiBold"
+                                                     VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </Expander.Header>
                                     <materialDesign:Card Padding="15" Margin="10,10,0,0">
@@ -561,37 +582,61 @@
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="10"/>
                                                 <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="10"/>
+                                                <ColumnDefinition Width="*"/>
                                             </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="10"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
 
-                                            <TextBox Grid.Column="0"
-                                           materialDesign:HintAssist.Hint="🏥 Centres de santé"
-                                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                           Text="{Binding DialogDetailCommune.NombreCentresSante}"/>
+                                            <!-- Santé -->
+                                            <TextBox Grid.Row="0" Grid.Column="0"
+                                                   materialDesign:HintAssist.Hint="🏥 Centres de santé"
+                                                   Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                   Text="{Binding DialogDetailCommune.NombreCentresSante}"/>
 
-                                            <TextBox Grid.Column="2"
-                                           materialDesign:HintAssist.Hint="💧 Forages"
-                                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                           Text="{Binding DialogDetailCommune.NombreForages}"/>
+                                            <TextBox Grid.Row="0" Grid.Column="2"
+                                                   materialDesign:HintAssist.Hint="⚕️ Postes de santé"
+                                                   Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                   Text="{Binding DialogDetailCommune.NombrePostesSante}"/>
+
+                                            <TextBox Grid.Row="0" Grid.Column="4"
+                                                   materialDesign:HintAssist.Hint="🏥 Santé améliorée"
+                                                   Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                   Text="{Binding DialogDetailCommune.NombreSanteAmelioree}"/>
+
+                                            <!-- Eau -->
+                                            <TextBox Grid.Row="2" Grid.Column="0"
+                                                   materialDesign:HintAssist.Hint="💧 Forages"
+                                                   Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                   Text="{Binding DialogDetailCommune.NombreForages}"/>
+
+                                            <TextBox Grid.Row="2" Grid.Column="2"
+                                                   materialDesign:HintAssist.Hint="🚰 Points d'eau"
+                                                   Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                   Text="{Binding DialogDetailCommune.NombrePointsEau}"/>
                                         </Grid>
                                     </materialDesign:Card>
                                 </Expander>
 
-                                <!-- ═══════════════════════════════════════════════════════════
-                             SECTION 6 : ONG & ORGANISATIONS
-                             ═══════════════════════════════════════════════════════════ -->
+                                <!-- ══════════════════════════════════════════════════════════════
+                                     SECTION 6 : ONG & ORGANISATIONS (MIS À JOUR)
+                                     ══════════════════════════════════════════════════════════════ -->
                                 <Expander Margin="0,0,0,10">
                                     <Expander.Header>
                                         <StackPanel Orientation="Horizontal">
                                             <materialDesign:PackIcon Kind="HandshakeOutline" 
-                                                           Width="24" 
-                                                           Height="24"
-                                                           Foreground="#388E3C"
-                                                           VerticalAlignment="Center"
-                                                           Margin="0,0,10,0"/>
+                                                                   Width="24" 
+                                                                   Height="24"
+                                                                   Foreground="#388E3C"
+                                                                   VerticalAlignment="Center"
+                                                                   Margin="0,0,10,0"/>
                                             <TextBlock Text="ONG &amp; Organisations" 
-                                             FontSize="16" 
-                                             FontWeight="SemiBold"
-                                             VerticalAlignment="Center"/>
+                                                     FontSize="16" 
+                                                     FontWeight="SemiBold"
+                                                     VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </Expander.Header>
                                     <materialDesign:Card Padding="15" Margin="10,10,0,0">
@@ -607,19 +652,19 @@
                                                 </Grid.ColumnDefinitions>
 
                                                 <TextBox Grid.Column="0"
-                                               materialDesign:HintAssist.Hint="🌍 Total ONG"
-                                               Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                               Text="{Binding DialogDetailCommune.NombreOng}"/>
+                                                       materialDesign:HintAssist.Hint="🌍 Total ONG"
+                                                       Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                       Text="{Binding DialogDetailCommune.NombreOng}"/>
 
                                                 <TextBox Grid.Column="2"
-                                               materialDesign:HintAssist.Hint="🇬🇳 Nationales"
-                                               Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                               Text="{Binding DialogDetailCommune.NombreOngNationales}"/>
+                                                       materialDesign:HintAssist.Hint="🇬🇳 Nationales"
+                                                       Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                       Text="{Binding DialogDetailCommune.NombreOngNationales}"/>
 
                                                 <TextBox Grid.Column="4"
-                                               materialDesign:HintAssist.Hint="🌐 Étrangères"
-                                               Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                               Text="{Binding DialogDetailCommune.NombreOngEtrangeres}"/>
+                                                       materialDesign:HintAssist.Hint="🌐 Étrangères"
+                                                       Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                       Text="{Binding DialogDetailCommune.NombreOngEtrangeres}"/>
                                             </Grid>
 
                                             <!-- Associations -->
@@ -628,38 +673,45 @@
                                                     <ColumnDefinition Width="*"/>
                                                     <ColumnDefinition Width="10"/>
                                                     <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="10"/>
+                                                    <ColumnDefinition Width="*"/>
                                                 </Grid.ColumnDefinitions>
 
                                                 <TextBox Grid.Column="0"
-                                               materialDesign:HintAssist.Hint="👥 Groupements"
-                                               Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                               Text="{Binding DialogDetailCommune.NombreGroupements}"/>
+                                                       materialDesign:HintAssist.Hint="🤝 Associations"
+                                                       Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                       Text="{Binding DialogDetailCommune.NombreAssociation}"/>
 
                                                 <TextBox Grid.Column="2"
-                                               materialDesign:HintAssist.Hint="🤝 Coopératives"
-                                               Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                               Text="{Binding DialogDetailCommune.NombreCooperatives}"/>
+                                                       materialDesign:HintAssist.Hint="👥 Groupements"
+                                                       Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                       Text="{Binding DialogDetailCommune.NombreGroupements}"/>
+
+                                                <TextBox Grid.Column="4"
+                                                       materialDesign:HintAssist.Hint="🤝 Coopératives"
+                                                       Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                       Text="{Binding DialogDetailCommune.NombreCooperatives}"/>
                                             </Grid>
                                         </StackPanel>
                                     </materialDesign:Card>
                                 </Expander>
 
-                                <!-- ═══════════════════════════════════════════════════════════
-                             SECTION 7 : ÉCONOMIE & SÉCURITÉ
-                             ═══════════════════════════════════════════════════════════ -->
+                                <!-- ══════════════════════════════════════════════════════════════
+                                     SECTION 7 : ÉCONOMIE & SÉCURITÉ
+                                     ══════════════════════════════════════════════════════════════ -->
                                 <Expander Margin="0,0,0,10">
                                     <Expander.Header>
                                         <StackPanel Orientation="Horizontal">
                                             <materialDesign:PackIcon Kind="ShoppingOutline" 
-                                                           Width="24" 
-                                                           Height="24"
-                                                           Foreground="#FF6F00"
-                                                           VerticalAlignment="Center"
-                                                           Margin="0,0,10,0"/>
-                                            <TextBlock Text="Économie&amp; Sécurité" 
-                                             FontSize="16" 
-                                             FontWeight="SemiBold"
-                                             VerticalAlignment="Center"/>
+                                                                   Width="24" 
+                                                                   Height="24"
+                                                                   Foreground="#FF6F00"
+                                                                   VerticalAlignment="Center"
+                                                                   Margin="0,0,10,0"/>
+                                            <TextBlock Text="Économie &amp; Sécurité" 
+                                                     FontSize="16" 
+                                                     FontWeight="SemiBold"
+                                                     VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </Expander.Header>
                                     <materialDesign:Card Padding="15" Margin="10,10,0,0">
@@ -675,25 +727,25 @@
                                                 </Grid.ColumnDefinitions>
 
                                                 <TextBox Grid.Column="0"
-                                               materialDesign:HintAssist.Hint="🏪 Total marchés"
-                                               Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                               Text="{Binding DialogDetailCommune.NombreMarches}"/>
+                                                       materialDesign:HintAssist.Hint="🏪 Total marchés"
+                                                       Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                       Text="{Binding DialogDetailCommune.NombreMarches}"/>
 
                                                 <TextBox Grid.Column="2"
-                                               materialDesign:HintAssist.Hint="📅 Journaliers"
-                                               Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                               Text="{Binding DialogDetailCommune.NombreMarchesJournaliers}"/>
+                                                       materialDesign:HintAssist.Hint="📅 Journaliers"
+                                                       Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                       Text="{Binding DialogDetailCommune.NombreMarchesJournaliers}"/>
 
                                                 <TextBox Grid.Column="4"
-                                               materialDesign:HintAssist.Hint="📆 Hebdomadaires"
-                                               Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                               Text="{Binding DialogDetailCommune.NombreMarchesHebdomadaires}"/>
+                                                       materialDesign:HintAssist.Hint="📆 Hebdomadaires"
+                                                       Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                       Text="{Binding DialogDetailCommune.NombreMarchesHebdomadaires}"/>
                                             </Grid>
 
                                             <!-- Sécurité -->
                                             <TextBox materialDesign:HintAssist.Hint="🔫 Détenteurs d'armes à feu"
-                                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                           Text="{Binding DialogDetailCommune.NombreDetenteursArmesFeu}"/>
+                                                   Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                   Text="{Binding DialogDetailCommune.NombreDetenteursArmesFeu}"/>
                                         </StackPanel>
                                     </materialDesign:Card>
                                 </Expander>
@@ -701,37 +753,35 @@
                             </StackPanel>
                         </ScrollViewer>
 
-                        <!-- ═══════════════════════════════════════════════════════════
-                     FOOTER (BOUTONS)
-                     ═══════════════════════════════════════════════════════════ -->
+                        <!-- FOOTER (BOUTONS) -->
                         <Border Grid.Row="2" 
-                      Background="#F5F5F5" 
-                      BorderBrush="#E0E0E0" 
-                      BorderThickness="0,1,0,0"
-                      Padding="20">
+                              Background="#F5F5F5" 
+                              BorderBrush="#E0E0E0" 
+                              BorderThickness="0,1,0,0"
+                              Padding="20">
                             <Grid>
                                 <TextBlock Text="* Champs obligatoires"
-                                 FontSize="11"
-                                 Foreground="#666"
-                                 FontStyle="Italic"
-                                 VerticalAlignment="Center"/>
+                                         FontSize="11"
+                                         Foreground="#666"
+                                         FontStyle="Italic"
+                                         VerticalAlignment="Center"/>
 
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                                     <Button Style="{StaticResource MaterialDesignFlatButton}"
-                                  Content="Annuler"
-                                  Command="{Binding CancelDetailCommuneCommand}"
-                                  Margin="0,0,10,0"
-                                  Width="100"
-                                  Height="40"/>
+                                          Content="Annuler"
+                                          Command="{Binding CancelDetailCommuneCommand}"
+                                          Margin="0,0,10,0"
+                                          Width="100"
+                                          Height="40"/>
 
                                     <Button Style="{StaticResource MaterialDesignRaisedButton}"
-                                  Command="{Binding SaveDetailCommuneCommand}"
-                                  Width="140"
-                                  Height="40">
+                                          Command="{Binding SaveDetailCommuneCommand}"
+                                          Width="140"
+                                          Height="40">
                                         <StackPanel Orientation="Horizontal">
                                             <materialDesign:PackIcon Kind="ContentSave" 
-                                                           VerticalAlignment="Center"
-                                                           Margin="0,0,8,0"/>
+                                                                   VerticalAlignment="Center"
+                                                                   Margin="0,0,8,0"/>
                                             <TextBlock Text="Enregistrer" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </Button>

@@ -3,6 +3,7 @@ using Collectivite.Services;
 using Collectivite.Utils;
 using System.Windows;
 using System.Windows.Input;
+using System.Linq;
 
 namespace Collectivite.ViewModels
 {
@@ -10,23 +11,32 @@ namespace Collectivite.ViewModels
     {
         private readonly AuthService _authService;
         private readonly NavigationService _navigationService;
+        private readonly RelayCommand _openProfileCommand;
+        private readonly RelayCommand _openSettingsCommand;
         private string _currentPageTitle = "TABLEAU DE BORD";
         private string _exerciceText = "Exercice 2025";
         private string _communeName = string.Empty;
         private bool _isMenuOpen;
+        private string _userIdentifier = "Utilisateur";
+        private string _userEmail = "Email non défini";
+        private string _userPhone = "Téléphone non défini";
 
         public MainViewModel(AuthService authService)
         {
             _authService = authService;
             _navigationService = NavigationService.Instance;
 
-            // Initialiser les données utilisateur
-            InitializeUserData();
-
-            // Commandes
+            // Initialiser les commandes en premier
             LogoutCommand = new RelayCommand(_ => Logout());
+            _openProfileCommand = new RelayCommand(_ => ShowProfile(), _ => _authService.CurrentUser != null);
+            _openSettingsCommand = new RelayCommand(_ => ShowSettings());
+            OpenProfileCommand = _openProfileCommand;
+            OpenSettingsCommand = _openSettingsCommand;
             OpenMenuCommand = new RelayCommand(_ => IsMenuOpen = true);
             CloseMenuCommand = new RelayCommand(_ => IsMenuOpen = false);
+
+            // Initialiser les données utilisateur après les commandes
+            InitializeUserData();
         }
 
         public string CurrentPageTitle
@@ -45,6 +55,24 @@ namespace Collectivite.ViewModels
         {
             get => _communeName;
             set => SetProperty(ref _communeName, value);
+        }
+
+        public string UserIdentifier
+        {
+            get => _userIdentifier;
+            set => SetProperty(ref _userIdentifier, value);
+        }
+
+        public string UserEmail
+        {
+            get => _userEmail;
+            set => SetProperty(ref _userEmail, value);
+        }
+
+        public string UserPhone
+        {
+            get => _userPhone;
+            set => SetProperty(ref _userPhone, value);
         }
 
         public string UserFullName => _authService.CurrentUser?.Username ?? "Utilisateur";
@@ -72,6 +100,8 @@ namespace Collectivite.ViewModels
         }
 
         public ICommand LogoutCommand { get; }
+        public ICommand OpenProfileCommand { get; }
+        public ICommand OpenSettingsCommand { get; }
         public ICommand OpenMenuCommand { get; }
         public ICommand CloseMenuCommand { get; }
 
@@ -80,8 +110,24 @@ namespace Collectivite.ViewModels
             if (_authService.CurrentUser != null)
             {
                 CommuneName = _authService.CurrentUser.Commune?.Nom ?? "Commune";
-                // Vous pouvez charger l'exercice actif depuis la base de données
+                UserIdentifier = _authService.CurrentUser.Username;
+                UserEmail = _authService.CurrentUser.Email;
+                UserPhone = string.IsNullOrWhiteSpace(_authService.CurrentUser.Tel)
+                    ? "Téléphone non renseigné"
+                    : _authService.CurrentUser.Tel;
                 ExerciceText = "Exercice 2025";
+
+                OnPropertyChanged(nameof(UserFullName));
+                OnPropertyChanged(nameof(UserInitials));
+                _openProfileCommand.RaiseCanExecuteChanged();
+            }
+            else
+            {
+                CommuneName = "Commune";
+                UserIdentifier = "Non connecté";
+                UserEmail = "Email non disponible";
+                UserPhone = "Téléphone non disponible";
+                _openProfileCommand.RaiseCanExecuteChanged();
             }
         }
 
@@ -96,6 +142,7 @@ namespace Collectivite.ViewModels
             if (result == MessageBoxResult.Yes)
             {
                 _authService.Logout();
+                _openProfileCommand.RaiseCanExecuteChanged();
 
                 // Ouvrir la fenêtre de connexion
                 var loginWindow = new Views.LoginWindow();
@@ -105,6 +152,35 @@ namespace Collectivite.ViewModels
                 Application.Current.Windows.OfType<Window>()
                     .FirstOrDefault(w => w is MainWindow)?.Close();
             }
+        }
+
+        private void ShowProfile()
+        {
+            if (_authService.CurrentUser == null)
+                return;
+
+            var profileWindow = new Views.ProfileWindow(_authService.CurrentUser);
+            profileWindow.Owner = Application.Current.Windows
+                .OfType<Window>()
+                .FirstOrDefault(w => w is MainWindow);
+
+            var result = profileWindow.ShowDialog();
+
+            // Rafraîchir les données si sauvegardées
+            if (result == true)
+            {
+                OnPropertyChanged(nameof(UserFullName));
+                OnPropertyChanged(nameof(UserInitials));
+                OnPropertyChanged(nameof(UserEmail));
+            }
+        }
+        private void ShowSettings()
+        {
+            var settingsWindow = new Views.SettingsWindow();
+            settingsWindow.Owner = Application.Current.Windows
+                .OfType<Window>()
+                .FirstOrDefault(w => w is MainWindow);
+            settingsWindow.ShowDialog();
         }
 
         public void UpdatePageTitle(string title)

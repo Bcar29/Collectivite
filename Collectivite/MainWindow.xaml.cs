@@ -11,18 +11,24 @@ namespace Collectivite
     public partial class MainWindow : Window
     {
         private readonly MainViewModel _viewModel;
+        private readonly AuthService _authService;
 
-        public MainWindow()
+        public MainWindow() : this(null)
+        {
+        }
+
+        public MainWindow(AuthService? authService)
         {
             InitializeComponent();
 
             // Initialiser le service de navigation
             NavigationService.Instance.MainFrame = MainContentFrame;
 
+            // Initialiser le Service d'authentification partagé si fourni
+            _authService = authService ?? SessionManager.AuthService;
+
             // Initialiser le ViewModel
-            var context = new AppDbContext();
-            var authService = new AuthService(context);
-            _viewModel = new MainViewModel(authService);
+            _viewModel = new MainViewModel(_authService);
             DataContext = _viewModel;
 
             // Naviguer vers le tableau de bord par défaut
