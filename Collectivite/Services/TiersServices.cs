@@ -8,14 +8,10 @@ using System.Threading.Tasks;
 namespace Collectivite.Services
 {
     /// <summary>
-    /// Service pour la gestion des tiers (fournisseurs, entreprises, etc.)
+    /// Service pour la gestion des tiers (Contribuables, Fournisseurs, Salariés)
     /// </summary>
     public class TiersService
     {
-        // ✅ CORRECTION : NE PAS stocker le DbContext
-        // private readonly AppDbContext _context; ❌ SUPPRIMÉ
-
-        // ✅ Créer un nouveau DbContext pour chaque opération
         private AppDbContext CreateContext()
         {
             return new AppDbContext();
@@ -24,16 +20,17 @@ namespace Collectivite.Services
         #region Récupération des données
 
         /// <summary>
-        /// Récupère tous les tiers avec leurs comptes bancaires
+        /// Récupère tous les tiers avec leurs documents
         /// </summary>
         public async Task<List<Tiers>> GetAllTiersAsync()
         {
             using var context = CreateContext();
 
             return await context.Tiers
+                .Include(t => t.Documents)
                 .Include(t => t.CompteBancaires)
                 .AsNoTracking()
-                .OrderBy(t => t.Nom)
+                .OrderBy(t => t.Nom ?? t.RaisonSociale)
                 .ToListAsync();
         }
 
@@ -45,6 +42,7 @@ namespace Collectivite.Services
             using var context = CreateContext();
 
             return await context.Tiers
+                .Include(t => t.Documents)
                 .Include(t => t.CompteBancaires)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(t => t.Id == id);
@@ -58,10 +56,11 @@ namespace Collectivite.Services
             using var context = CreateContext();
 
             return await context.Tiers
+                .Include(t => t.Documents)
                 .Include(t => t.CompteBancaires)
                 .Where(t => t.IsActif)
                 .AsNoTracking()
-                .OrderBy(t => t.Nom)
+                .OrderBy(t => t.Nom ?? t.RaisonSociale)
                 .ToListAsync();
         }
 
@@ -73,15 +72,31 @@ namespace Collectivite.Services
             using var context = CreateContext();
 
             return await context.Tiers
+                .Include(t => t.Documents)
                 .Include(t => t.CompteBancaires)
                 .Where(t => t.Type == type)
                 .AsNoTracking()
-                .OrderBy(t => t.Nom)
+                .OrderBy(t => t.Nom ?? t.RaisonSociale)
                 .ToListAsync();
         }
 
         /// <summary>
-        /// Recherche des tiers par nom
+        /// Récupère les tiers par catégorie juridique
+        /// </summary>
+        public async Task<List<Tiers>> GetTiersByCategorieAsync(CategorieJuridique categorie)
+        {
+            using var context = CreateContext();
+
+            return await context.Tiers
+                .Include(t => t.Documents)
+                .Where(t => t.Categorie == categorie)
+                .AsNoTracking()
+                .OrderBy(t => t.Nom ?? t.RaisonSociale)
+                .ToListAsync();
+        }
+
+        /// <summary>
+        /// Recherche des tiers par nom, raison sociale ou email
         /// </summary>
         public async Task<List<Tiers>> SearchTiersAsync(string searchTerm)
         {
@@ -90,13 +105,20 @@ namespace Collectivite.Services
             if (string.IsNullOrWhiteSpace(searchTerm))
                 return await GetAllTiersAsync();
 
+            searchTerm = searchTerm.ToLower();
+
             return await context.Tiers
+                .Include(t => t.Documents)
                 .Include(t => t.CompteBancaires)
-                .Where(t => t.Nom.Contains(searchTerm) ||
-                           (t.Prenom != null && t.Prenom.Contains(searchTerm)) ||
-                           (t.Email != null && t.Email.Contains(searchTerm)))
+                .Where(t =>
+                    (t.Nom != null && t.Nom.ToLower().Contains(searchTerm)) ||
+                    (t.Prenom != null && t.Prenom.ToLower().Contains(searchTerm)) ||
+                    (t.RaisonSociale != null && t.RaisonSociale.ToLower().Contains(searchTerm)) ||
+                    (t.Email != null && t.Email.ToLower().Contains(searchTerm)) ||
+                    (t.Nif != null && t.Nif.Contains(searchTerm)) ||
+                    (t.Rccm != null && t.Rccm.Contains(searchTerm)))
                 .AsNoTracking()
-                .OrderBy(t => t.Nom)
+                .OrderBy(t => t.Nom ?? t.RaisonSociale)
                 .ToListAsync();
         }
 
@@ -105,7 +127,7 @@ namespace Collectivite.Services
         #region Création
 
         /// <summary>
-        /// Crée un nouveau tiers
+        /// Crée un nouveau tiers avec validation conditionnelle
         /// </summary>
         public async Task<(bool Success, string Message, Tiers? Tiers)> CreateTiersAsync(Tiers tiers)
         {
@@ -113,15 +135,12 @@ namespace Collectivite.Services
 
             try
             {
-                // Validation
-                if (string.IsNullOrWhiteSpace(tiers.Nom))
-                    return (false, "Le nom est obligatoire.", null);
+                // ═══════════════════════════════════════════════════════════
+                // VALIDATIONS COMMUNES
+                // ═══════════════════════════════════════════════════════════
 
                 if (string.IsNullOrWhiteSpace(tiers.Email))
                     return (false, "L'email est obligatoire.", null);
-
-                if (string.IsNullOrWhiteSpace(tiers.Adresse))
-                    return (false, "L'adresse est obligatoire.", null);
 
                 // Vérifier si l'email existe déjà
                 var emailExists = await context.Tiers
@@ -130,27 +149,87 @@ namespace Collectivite.Services
                 if (emailExists)
                     return (false, "Cet email est déjà utilisé par un autre tiers.", null);
 
-                // Vérifier le NIF s'il est fourni
-                if (!string.IsNullOrWhiteSpace(tiers.Nif))
+                // ═══════════════════════════════════════════════════════════
+                // VALIDATIONS CONDITIONNELLES - PERSONNE PHYSIQUE
+                // ═══════════════════════════════════════════════════════════
+
+                if (tiers.Categorie == CategorieJuridique.PersonnePhysique)
                 {
+                    if (string.IsNullOrWhiteSpace(tiers.Nom))
+                        return (false, "Le nom est obligatoire pour une personne physique.", null);
+
+                    if (string.IsNullOrWhiteSpace(tiers.Prenom))
+                        return (false, "Le prénom est obligatoire pour une personne physique.", null);
+
+                    // Nettoyer les champs de personne morale
+                    tiers.RaisonSociale = null;
+                    tiers.Rccm = null;
+                    tiers.Nif = null;
+                    tiers.NumeroTva = null;
+                }
+
+                // ═══════════════════════════════════════════════════════════
+                // VALIDATIONS CONDITIONNELLES - PERSONNE MORALE
+                // ═══════════════════════════════════════════════════════════
+
+                if (tiers.Categorie == CategorieJuridique.PersonneMorale)
+                {
+                    if (string.IsNullOrWhiteSpace(tiers.RaisonSociale))
+                        return (false, "La raison sociale est obligatoire pour une personne morale.", null);
+
+                    if (string.IsNullOrWhiteSpace(tiers.Rccm))
+                        return (false, "Le RCCM est obligatoire pour une personne morale.", null);
+
+                    if (string.IsNullOrWhiteSpace(tiers.Nif))
+                        return (false, "Le NIF est obligatoire pour une personne morale.", null);
+
+                    // Vérifier l'unicité du RCCM
+                    var rccmExists = await context.Tiers
+                        .AnyAsync(t => t.Rccm == tiers.Rccm);
+
+                    if (rccmExists)
+                        return (false, "Ce RCCM est déjà utilisé par un autre tiers.", null);
+
+                    // Vérifier l'unicité du NIF
                     var nifExists = await context.Tiers
                         .AnyAsync(t => t.Nif == tiers.Nif);
 
                     if (nifExists)
                         return (false, "Ce NIF est déjà utilisé par un autre tiers.", null);
+
+                    // Nettoyer les champs de personne physique
+                    tiers.Nom = null;
+                    tiers.Prenom = null;
+                    tiers.NumeroPieceIdentite = null;
+                    tiers.TypePieceIdentite = null;
                 }
 
-                // ✅ CORRECTION : Créer un nouvel objet sans navigation
+                // ═══════════════════════════════════════════════════════════
+                // CRÉATION DU TIERS
+                // ═══════════════════════════════════════════════════════════
+
                 var newTiers = new Tiers
                 {
                     Type = tiers.Type,
-                    Rccm = tiers.Rccm?.Trim(),
-                    Nom = tiers.Nom.Trim(),
-                    Prenom = tiers.Prenom?.Trim(),
-                    Adresse = tiers.Adresse.Trim(),
-                    Nif = tiers.Nif?.Trim(),
+                    Categorie = tiers.Categorie,
                     Email = tiers.Email.Trim().ToLower(),
-                    IsActif = tiers.IsActif
+                    Telephone = tiers.Telephone?.Trim(),
+                    Adresse = tiers.Adresse?.Trim(),
+                    IsActif = tiers.IsActif,
+                    DateCreation = DateTime.Now,
+
+                    // Personne Physique
+                    Nom = tiers.Nom?.Trim(),
+                    Prenom = tiers.Prenom?.Trim(),
+                    NumeroPieceIdentite = tiers.NumeroPieceIdentite?.Trim(),
+                    TypePieceIdentite = tiers.TypePieceIdentite?.Trim(),
+
+                    // Personne Morale
+                    RaisonSociale = tiers.RaisonSociale?.Trim(),
+                    Rccm = tiers.Rccm?.Trim(),
+                    Nif = tiers.Nif?.Trim(),
+                    NumeroTva = tiers.NumeroTva?.Trim(),
+                    SecteurActivite = tiers.SecteurActivite?.Trim()
                 };
 
                 context.Tiers.Add(newTiers);
@@ -159,7 +238,8 @@ namespace Collectivite.Services
                 // Recharger avec les relations
                 var savedTiers = await GetTiersByIdAsync(newTiers.Id);
 
-                return (true, $"Tiers '{newTiers.Nom}' créé avec succès.", savedTiers);
+                var nomComplet = savedTiers?.NomComplet ?? "Tiers";
+                return (true, $"Tiers '{nomComplet}' créé avec succès.", savedTiers);
             }
             catch (DbUpdateException dbEx)
             {
@@ -167,7 +247,7 @@ namespace Collectivite.Services
 
                 if (innerMessage.Contains("UNIQUE") || innerMessage.Contains("duplicate"))
                 {
-                    return (false, "Ce tiers existe déjà (email, NIF ou contrainte unique).", null);
+                    return (false, "Ce tiers existe déjà (contrainte d'unicité violée).", null);
                 }
 
                 return (false, $"Erreur de base de données : {innerMessage}", null);
@@ -183,7 +263,7 @@ namespace Collectivite.Services
         #region Modification
 
         /// <summary>
-        /// Met à jour un tiers existant
+        /// Met à jour un tiers existant avec validation conditionnelle
         /// </summary>
         public async Task<(bool Success, string Message)> UpdateTiersAsync(Tiers tiers)
         {
@@ -196,15 +276,12 @@ namespace Collectivite.Services
                 if (existingTiers == null)
                     return (false, "Tiers introuvable.");
 
-                // Validation
-                if (string.IsNullOrWhiteSpace(tiers.Nom))
-                    return (false, "Le nom est obligatoire.");
+                // ═══════════════════════════════════════════════════════════
+                // VALIDATIONS COMMUNES
+                // ═══════════════════════════════════════════════════════════
 
                 if (string.IsNullOrWhiteSpace(tiers.Email))
                     return (false, "L'email est obligatoire.");
-
-                if (string.IsNullOrWhiteSpace(tiers.Adresse))
-                    return (false, "L'adresse est obligatoire.");
 
                 // Vérifier l'unicité de l'email
                 var emailExists = await context.Tiers
@@ -213,9 +290,38 @@ namespace Collectivite.Services
                 if (emailExists)
                     return (false, "Cet email est déjà utilisé par un autre tiers.");
 
-                // Vérifier l'unicité du NIF
-                if (!string.IsNullOrWhiteSpace(tiers.Nif))
+                // ═══════════════════════════════════════════════════════════
+                // VALIDATIONS CONDITIONNELLES
+                // ═══════════════════════════════════════════════════════════
+
+                if (tiers.Categorie == CategorieJuridique.PersonnePhysique)
                 {
+                    if (string.IsNullOrWhiteSpace(tiers.Nom))
+                        return (false, "Le nom est obligatoire pour une personne physique.");
+
+                    if (string.IsNullOrWhiteSpace(tiers.Prenom))
+                        return (false, "Le prénom est obligatoire pour une personne physique.");
+                }
+
+                if (tiers.Categorie == CategorieJuridique.PersonneMorale)
+                {
+                    if (string.IsNullOrWhiteSpace(tiers.RaisonSociale))
+                        return (false, "La raison sociale est obligatoire pour une personne morale.");
+
+                    if (string.IsNullOrWhiteSpace(tiers.Rccm))
+                        return (false, "Le RCCM est obligatoire pour une personne morale.");
+
+                    if (string.IsNullOrWhiteSpace(tiers.Nif))
+                        return (false, "Le NIF est obligatoire pour une personne morale.");
+
+                    // Vérifier l'unicité du RCCM
+                    var rccmExists = await context.Tiers
+                        .AnyAsync(t => t.Rccm == tiers.Rccm && t.Id != tiers.Id);
+
+                    if (rccmExists)
+                        return (false, "Ce RCCM est déjà utilisé par un autre tiers.");
+
+                    // Vérifier l'unicité du NIF
                     var nifExists = await context.Tiers
                         .AnyAsync(t => t.Nif == tiers.Nif && t.Id != tiers.Id);
 
@@ -223,19 +329,33 @@ namespace Collectivite.Services
                         return (false, "Ce NIF est déjà utilisé par un autre tiers.");
                 }
 
-                // Mettre à jour
+                // ═══════════════════════════════════════════════════════════
+                // MISE À JOUR
+                // ═══════════════════════════════════════════════════════════
+
                 existingTiers.Type = tiers.Type;
-                existingTiers.Rccm = tiers.Rccm?.Trim();
-                existingTiers.Nom = tiers.Nom.Trim();
-                existingTiers.Prenom = tiers.Prenom?.Trim();
-                existingTiers.Adresse = tiers.Adresse.Trim();
-                existingTiers.Nif = tiers.Nif?.Trim();
+                existingTiers.Categorie = tiers.Categorie;
                 existingTiers.Email = tiers.Email.Trim().ToLower();
+                existingTiers.Telephone = tiers.Telephone?.Trim();
+                existingTiers.Adresse = tiers.Adresse?.Trim();
                 existingTiers.IsActif = tiers.IsActif;
+
+                // Personne Physique
+                existingTiers.Nom = tiers.Nom?.Trim();
+                existingTiers.Prenom = tiers.Prenom?.Trim();
+                existingTiers.NumeroPieceIdentite = tiers.NumeroPieceIdentite?.Trim();
+                existingTiers.TypePieceIdentite = tiers.TypePieceIdentite?.Trim();
+
+                // Personne Morale
+                existingTiers.RaisonSociale = tiers.RaisonSociale?.Trim();
+                existingTiers.Rccm = tiers.Rccm?.Trim();
+                existingTiers.Nif = tiers.Nif?.Trim();
+                existingTiers.NumeroTva = tiers.NumeroTva?.Trim();
+                existingTiers.SecteurActivite = tiers.SecteurActivite?.Trim();
 
                 await context.SaveChangesAsync();
 
-                return (true, $"Tiers '{tiers.Nom}' modifié avec succès.");
+                return (true, $"Tiers '{tiers.NomComplet}' modifié avec succès.");
             }
             catch (Exception ex)
             {
@@ -261,7 +381,7 @@ namespace Collectivite.Services
                 await context.SaveChangesAsync();
 
                 var status = tiers.IsActif ? "activé" : "désactivé";
-                return (true, $"Tiers '{tiers.Nom}' {status} avec succès.");
+                return (true, $"Tiers '{tiers.NomComplet}' {status} avec succès.");
             }
             catch (Exception ex)
             {
@@ -274,7 +394,7 @@ namespace Collectivite.Services
         #region Suppression
 
         /// <summary>
-        /// Supprime un tiers
+        /// Supprime un tiers et ses documents associés
         /// </summary>
         public async Task<(bool Success, string Message)> DeleteTiersAsync(int id)
         {
@@ -283,6 +403,7 @@ namespace Collectivite.Services
             try
             {
                 var tiers = await context.Tiers
+                    .Include(t => t.Documents)
                     .Include(t => t.CompteBancaires)
                     .Include(t => t.Contrats)
                     .Include(t => t.Engagements)
@@ -306,6 +427,27 @@ namespace Collectivite.Services
                         "Vous pouvez le désactiver à la place.");
                 }
 
+                // Supprimer les documents associés (fichiers physiques)
+                if (tiers.Documents?.Any() ?? false)
+                {
+                    foreach (var doc in tiers.Documents)
+                    {
+                        try
+                        {
+                            if (System.IO.File.Exists(doc.CheminFichier))
+                            {
+                                System.IO.File.Delete(doc.CheminFichier);
+                            }
+                        }
+                        catch
+                        {
+                            // Ignorer les erreurs de suppression de fichiers
+                        }
+                    }
+
+                    context.DocumentTiers.RemoveRange(tiers.Documents);
+                }
+
                 // Supprimer les comptes bancaires associés
                 if (tiers.CompteBancaires?.Any() ?? false)
                 {
@@ -315,7 +457,7 @@ namespace Collectivite.Services
                 context.Tiers.Remove(tiers);
                 await context.SaveChangesAsync();
 
-                return (true, $"Tiers '{tiers.Nom}' supprimé avec succès.");
+                return (true, $"Tiers '{tiers.NomComplet}' supprimé avec succès.");
             }
             catch (Exception ex)
             {
@@ -340,6 +482,21 @@ namespace Collectivite.Services
                 .ToListAsync();
 
             return counts.ToDictionary(x => x.Type, x => x.Count);
+        }
+
+        /// <summary>
+        /// Obtient le nombre de tiers par catégorie juridique
+        /// </summary>
+        public async Task<Dictionary<CategorieJuridique, int>> GetTiersCountByCategorieAsync()
+        {
+            using var context = CreateContext();
+
+            var counts = await context.Tiers
+                .GroupBy(t => t.Categorie)
+                .Select(g => new { Categorie = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            return counts.ToDictionary(x => x.Categorie, x => x.Count);
         }
 
         /// <summary>

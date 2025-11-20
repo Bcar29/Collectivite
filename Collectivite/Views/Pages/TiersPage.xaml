@@ -3,21 +3,41 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
       xmlns:models="clr-namespace:Collectivite.Models"
+      xmlns:utils="clr-namespace:Collectivite.Utils"
       Language="fr-FR"
       Background="#F5F5F5"
       Title="Gestion des Tiers">
 
     <Page.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <utils:InverseBooleanConverter x:Key="InverseBoolConverter"/>
 
         <!-- Enum TiersType -->
         <ObjectDataProvider x:Key="TiersTypeValues" 
-                            MethodName="GetValues" 
-                            ObjectType="{x:Type models:TiersType}">
+                        MethodName="GetValues" 
+                        ObjectType="{x:Type models:TiersType}">
             <ObjectDataProvider.MethodParameters>
                 <x:Type TypeName="models:TiersType"/>
             </ObjectDataProvider.MethodParameters>
         </ObjectDataProvider>
+
+        <!-- Enum CategorieJuridique -->
+        <ObjectDataProvider x:Key="CategorieJuridiqueValues" 
+                        MethodName="GetValues" 
+                        ObjectType="{x:Type models:CategorieJuridique}">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="models:CategorieJuridique"/>
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider> 
+
+        <!-- Enum TypeDocument -->
+        <ObjectDataProvider x:Key="TypeDocumentValues" 
+                        MethodName="GetValues" 
+                        ObjectType="{x:Type models:TypeDocument}">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="models:TypeDocument"/>
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider> 
 
         <!-- Style pour les badges de statut -->
         <Style x:Key="StatusBadgeStyle" TargetType="Border">
@@ -36,7 +56,6 @@
             <Setter Property="materialDesign:DataGridAssist.ColumnHeaderPadding" Value="8"/>
         </Style>
     </Page.Resources>
-
     <Grid>
         <!-- Overlay de chargement -->
         <Grid Background="#80000000" 
@@ -108,7 +127,7 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <TextBox materialDesign:HintAssist.Hint="Rechercher par nom, prénom ou email..."
+                    <TextBox materialDesign:HintAssist.Hint="Rechercher par nom, prénom, raison sociale ou email..."
                              Style="{StaticResource MaterialDesignOutlinedTextBox}"
                              Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                              VerticalAlignment="Center">
@@ -133,25 +152,25 @@
             <!-- TabControl pour filtrer par type -->
             <TabControl Grid.Row="2" SelectedIndex="{Binding SelectedTabIndex}">
 
-                <!-- TOUS LES TIERS -->
+                <!-- CONTRIBUABLES -->
                 <TabItem>
                     <TabItem.Header>
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="FormatListBulleted" 
+                            <materialDesign:PackIcon Kind="AccountCash" 
                                                    Width="20" Height="20"
                                                    VerticalAlignment="Center"
                                                    Margin="0,0,8,0"/>
-                            <TextBlock Text="Tous" VerticalAlignment="Center" FontWeight="Medium"/>
+                            <TextBlock Text="Contribuables" VerticalAlignment="Center" FontWeight="Medium"/>
                         </StackPanel>
                     </TabItem.Header>
                     <materialDesign:Card Padding="0" Margin="0,10,0,0">
-                        <DataGrid ItemsSource="{Binding Tiers}"
+                        <DataGrid ItemsSource="{Binding TiersContribuables}"
                                   SelectedItem="{Binding SelectedTiers}"
                                   Style="{StaticResource TiersDataGridStyle}">
                             <DataGrid.Columns>
 
-                                <!-- Type -->
-                                <DataGridTemplateColumn Header="Type" Width="120">
+                                <!-- Catégorie -->
+                                <DataGridTemplateColumn Header="Catégorie" Width="130">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Border>
@@ -159,50 +178,30 @@
                                                     <Style TargetType="Border" BasedOn="{StaticResource StatusBadgeStyle}">
                                                         <Setter Property="Background" Value="#E3F2FD"/>
                                                         <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding Type}" Value="Fournisseur">
-                                                                <Setter Property="Background" Value="#E8F5E9"/>
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding Type}" Value="Entreprise">
-                                                                <Setter Property="Background" Value="#FFF3E0"/>
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding Type}" Value="Redevable">
-                                                                <Setter Property="Background" Value="#FCE4EC"/>
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding Type}" Value="Contribuable">
+                                                            <DataTrigger Binding="{Binding Categorie}" Value="PersonneMorale">
                                                                 <Setter Property="Background" Value="#F3E5F5"/>
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding Type}" Value="Association">
-                                                                <Setter Property="Background" Value="#E0F2F1"/>
                                                             </DataTrigger>
                                                         </Style.Triggers>
                                                     </Style>
                                                 </Border.Style>
-                                                <TextBlock Text="{Binding Type}" FontSize="11" FontWeight="Medium"/>
+                                                <TextBlock Text="{Binding CategorieDisplay}" FontSize="11" FontWeight="Medium"/>
                                             </Border>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
                                 <!-- Nom complet -->
-                                <DataGridTemplateColumn Header="Nom complet" Width="*" MinWidth="200">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <StackPanel>
-                                                <TextBlock Text="{Binding Nom}" FontWeight="SemiBold"/>
-                                                <TextBlock Text="{Binding Prenom}" FontSize="11" Foreground="#666"/>
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="Nom complet" 
+                                                  Binding="{Binding NomComplet}" 
+                                                  Width="*" 
+                                                  MinWidth="200"
+                                                  FontWeight="SemiBold"/>
 
                                 <!-- Email -->
                                 <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="200"/>
 
-                                <!-- RCCM -->
-                                <DataGridTextColumn Header="RCCM" Binding="{Binding Rccm}" Width="120"/>
-
-                                <!-- NIF -->
-                                <DataGridTextColumn Header="NIF" Binding="{Binding Nif}" Width="120"/>
+                                <!-- Téléphone -->
+                                <DataGridTextColumn Header="Téléphone" Binding="{Binding Telephone}" Width="120"/>
 
                                 <!-- Adresse -->
                                 <DataGridTextColumn Header="Adresse" Binding="{Binding Adresse}" Width="180"/>
@@ -262,16 +261,12 @@
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-
-                                                <!-- Modifier -->
                                                 <Button Style="{StaticResource MaterialDesignIconButton}"
                                                         Command="{Binding DataContext.OpenEditTiersDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                                         CommandParameter="{Binding}"
                                                         ToolTip="Modifier">
                                                     <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2"/>
                                                 </Button>
-
-                                                <!-- Activer/Désactiver -->
                                                 <Button Style="{StaticResource MaterialDesignIconButton}"
                                                         Command="{Binding DataContext.ToggleActifCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                                         CommandParameter="{Binding}"
@@ -303,15 +298,12 @@
                                                         </materialDesign:PackIcon.Style>
                                                     </materialDesign:PackIcon>
                                                 </Button>
-
-                                                <!-- Supprimer -->
                                                 <Button Style="{StaticResource MaterialDesignIconButton}"
                                                         Command="{Binding DataContext.DeleteTiersCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                                         CommandParameter="{Binding}"
                                                         ToolTip="Supprimer">
                                                     <materialDesign:PackIcon Kind="Delete" Foreground="#F44336"/>
                                                 </Button>
-
                                             </StackPanel>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
@@ -338,605 +330,163 @@
                                   SelectedItem="{Binding SelectedTiers}"
                                   Style="{StaticResource TiersDataGridStyle}">
                             <DataGrid.Columns>
+                                <!-- Mêmes colonnes que Contribuables -->
+                                <DataGridTemplateColumn Header="Catégorie" Width="130">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border>
+                                                <Border.Style>
+                                                    <Style TargetType="Border" BasedOn="{StaticResource StatusBadgeStyle}">
+                                                        <Setter Property="Background" Value="#E3F2FD"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Categorie}" Value="PersonneMorale">
+                                                                <Setter Property="Background" Value="#F3E5F5"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <TextBlock Text="{Binding CategorieDisplay}" FontSize="11" FontWeight="Medium"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="Nom complet" Binding="{Binding NomComplet}" Width="*" MinWidth="200" FontWeight="SemiBold"/>
+                                <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="200"/>
+                                <DataGridTextColumn Header="Téléphone" Binding="{Binding Telephone}" Width="120"/>
+                                <DataGridTextColumn Header="Adresse" Binding="{Binding Adresse}" Width="180"/>
+                                <DataGridTemplateColumn Header="Statut" Width="100">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border>
+                                                <Border.Style>
+                                                    <Style TargetType="Border" BasedOn="{StaticResource StatusBadgeStyle}">
+                                                        <Setter Property="Background" Value="#E8F5E9"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsActif}" Value="False">
+                                                                <Setter Property="Background" Value="#FFEBEE"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <materialDesign:PackIcon Width="14" Height="14" VerticalAlignment="Center" Margin="0,0,4,0">
+                                                        <materialDesign:PackIcon.Style>
+                                                            <Style TargetType="materialDesign:PackIcon">
+                                                                <Setter Property="Kind" Value="CheckCircle"/>
+                                                                <Setter Property="Foreground" Value="#388E3C"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsActif}" Value="False">
+                                                                        <Setter Property="Kind" Value="Cancel"/>
+                                                                        <Setter Property="Foreground" Value="#F44336"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </materialDesign:PackIcon.Style>
+                                                    </materialDesign:PackIcon>
+                                                    <TextBlock FontSize="11" FontWeight="Medium">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Text" Value="Actif"/>
+                                                                <Setter Property="Foreground" Value="#388E3C"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsActif}" Value="False">
+                                                                        <Setter Property="Text" Value="Inactif"/>
+                                                                        <Setter Property="Foreground" Value="#F44336"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="Actions" Width="150">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                        Command="{Binding DataContext.OpenEditTiersDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                        CommandParameter="{Binding}"
+                                                        ToolTip="Modifier">
+                                                    <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2"/>
+                                                </Button>
+                                                <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                        Command="{Binding DataContext.ToggleActifCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                        CommandParameter="{Binding}"
+                                                        Margin="4,0">
+                                                    <Button.ToolTip>
+                                                        <TextBlock>
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Setter Property="Text" Value="Désactiver"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsActif}" Value="False">
+                                                                            <Setter Property="Text" Value="Activer"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                    </Button.ToolTip>
+                                                    <materialDesign:PackIcon Foreground="#FF9800">
+                                                        <materialDesign:PackIcon.Style>
+                                                            <Style TargetType="materialDesign:PackIcon">
+                                                                <Setter Property="Kind" Value="EyeOff"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsActif}" Value="False">
+                                                                        <Setter Property="Kind" Value="Eye"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </materialDesign:PackIcon.Style>
+                                                    </materialDesign:PackIcon>
+                                                </Button>
+                                                <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                        Command="{Binding DataContext.DeleteTiersCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                        CommandParameter="{Binding}"
+                                                        ToolTip="Supprimer">
+                                                    <materialDesign:PackIcon Kind="Delete" Foreground="#F44336"/>
+                                                </Button>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </materialDesign:Card>
+                </TabItem>
+
+                <!-- SALARIÉS -->
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="AccountTie" 
+                                                   Width="20" Height="20"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,8,0"/>
+                            <TextBlock Text="Salariés" VerticalAlignment="Center" FontWeight="Medium"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <materialDesign:Card Padding="0" Margin="0,10,0,0">
+                        <DataGrid ItemsSource="{Binding TiersSalaries}"
+                                  SelectedItem="{Binding SelectedTiers}"
+                                  Style="{StaticResource TiersDataGridStyle}">
+                            <DataGrid.Columns>
                                 <!-- Mêmes colonnes -->
-                                <DataGridTemplateColumn Header="Type" Width="120">
+                                <DataGridTemplateColumn Header="Catégorie" Width="130">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Border Background="#E8F5E9" Style="{StaticResource StatusBadgeStyle}">
-                                                <TextBlock Text="{Binding Type}" FontSize="11" FontWeight="Medium"/>
+                                            <Border Background="#E3F2FD" Style="{StaticResource StatusBadgeStyle}">
+                                                <TextBlock Text="{Binding CategorieDisplay}" FontSize="11" FontWeight="Medium"/>
                                             </Border>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="Nom complet" Width="*" MinWidth="200">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <StackPanel>
-                                                <TextBlock Text="{Binding Nom}" FontWeight="SemiBold"/>
-                                                <TextBlock Text="{Binding Prenom}" FontSize="11" Foreground="#666"/>
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="Nom complet" Binding="{Binding NomComplet}" Width="*" MinWidth="200" FontWeight="SemiBold"/>
                                 <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="200"/>
-                                <DataGridTextColumn Header="RCCM" Binding="{Binding Rccm}" Width="120"/>
-                                <DataGridTextColumn Header="NIF" Binding="{Binding Nif}" Width="120"/>
-                                <DataGridTextColumn Header="Adresse" Binding="{Binding Adresse}" Width="180"/>
-                                <DataGridTemplateColumn Header="Statut" Width="100">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Border>
-                                                <Border.Style>
-                                                    <Style TargetType="Border" BasedOn="{StaticResource StatusBadgeStyle}">
-                                                        <Setter Property="Background" Value="#E8F5E9"/>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding IsActif}" Value="False">
-                                                                <Setter Property="Background" Value="#FFEBEE"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </Border.Style>
-                                                <StackPanel Orientation="Horizontal">
-                                                    <materialDesign:PackIcon Width="14" Height="14" VerticalAlignment="Center" Margin="0,0,4,0">
-                                                        <materialDesign:PackIcon.Style>
-                                                            <Style TargetType="materialDesign:PackIcon">
-                                                                <Setter Property="Kind" Value="CheckCircle"/>
-                                                                <Setter Property="Foreground" Value="#388E3C"/>
-                                                                <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding IsActif}" Value="False">
-                                                                        <Setter Property="Kind" Value="Cancel"/>
-                                                                        <Setter Property="Foreground" Value="#F44336"/>
-                                                                    </DataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </materialDesign:PackIcon.Style>
-                                                    </materialDesign:PackIcon>
-                                                    <TextBlock FontSize="11" FontWeight="Medium">
-                                                        <TextBlock.Style>
-                                                            <Style TargetType="TextBlock">
-                                                                <Setter Property="Text" Value="Actif"/>
-                                                                <Setter Property="Foreground" Value="#388E3C"/>
-                                                                <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding IsActif}" Value="False">
-                                                                        <Setter Property="Text" Value="Inactif"/>
-                                                                        <Setter Property="Foreground" Value="#F44336"/>
-                                                                    </DataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </TextBlock.Style>
-                                                    </TextBlock>
-                                                </StackPanel>
-                                            </Border>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="Actions" Width="150">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                        Command="{Binding DataContext.OpenEditTiersDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                        CommandParameter="{Binding}"
-                                                        ToolTip="Modifier">
-                                                    <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2"/>
-                                                </Button>
-                                                <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                        Command="{Binding DataContext.ToggleActifCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                        CommandParameter="{Binding}"
-                                                        Margin="4,0">
-                                                    <Button.ToolTip>
-                                                        <TextBlock>
-                                                            <TextBlock.Style>
-                                                                <Style TargetType="TextBlock">
-                                                                    <Setter Property="Text" Value="Désactiver"/>
-                                                                    <Style.Triggers>
-                                                                        <DataTrigger Binding="{Binding IsActif}" Value="False">
-                                                                            <Setter Property="Text" Value="Activer"/>
-                                                                        </DataTrigger>
-                                                                    </Style.Triggers>
-                                                                </Style>
-                                                            </TextBlock.Style>
-                                                        </TextBlock>
-                                                    </Button.ToolTip>
-                                                    <materialDesign:PackIcon Foreground="#FF9800">
-                                                        <materialDesign:PackIcon.Style>
-                                                            <Style TargetType="materialDesign:PackIcon">
-                                                                <Setter Property="Kind" Value="EyeOff"/>
-                                                                <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding IsActif}" Value="False">
-                                                                        <Setter Property="Kind" Value="Eye"/>
-                                                                    </DataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </materialDesign:PackIcon.Style>
-                                                    </materialDesign:PackIcon>
-                                                </Button>
-                                                <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                        Command="{Binding DataContext.DeleteTiersCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                        CommandParameter="{Binding}"
-                                                        ToolTip="Supprimer">
-                                                    <materialDesign:PackIcon Kind="Delete" Foreground="#F44336"/>
-                                                </Button>
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                            </DataGrid.Columns>
-                        </DataGrid>
-                    </materialDesign:Card>
-                </TabItem>
-
-                <!-- ENTREPRISES -->
-                <TabItem>
-                    <TabItem.Header>
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="Domain" 
-                                                   Width="20" Height="20"
-                                                   VerticalAlignment="Center"
-                                                   Margin="0,0,8,0"/>
-                            <TextBlock Text="Entreprises" VerticalAlignment="Center" FontWeight="Medium"/>
-                        </StackPanel>
-                    </TabItem.Header>
-                    <materialDesign:Card Padding="0" Margin="0,10,0,0">
-                        <DataGrid ItemsSource="{Binding TiersEntreprises}"
-                                  SelectedItem="{Binding SelectedTiers}"
-                                  Style="{StaticResource TiersDataGridStyle}">
-                            <DataGrid.Columns>
-                                <!-- Colonnes identiques à Fournisseurs -->
-                                <DataGridTemplateColumn Header="Type" Width="120">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Border Background="#FFF3E0" Style="{StaticResource StatusBadgeStyle}">
-                                                <TextBlock Text="{Binding Type}" FontSize="11" FontWeight="Medium"/>
-                                            </Border>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="Nom complet" Width="*" MinWidth="200">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <StackPanel>
-                                                <TextBlock Text="{Binding Nom}" FontWeight="SemiBold"/>
-                                                <TextBlock Text="{Binding Prenom}" FontSize="11" Foreground="#666"/>
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="200"/>
-                                <DataGridTextColumn Header="RCCM" Binding="{Binding Rccm}" Width="120"/>
-                                <DataGridTextColumn Header="NIF" Binding="{Binding Nif}" Width="120"/>
-                                <DataGridTextColumn Header="Adresse" Binding="{Binding Adresse}" Width="180"/>
-                                <DataGridTemplateColumn Header="Statut" Width="100">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Border>
-                                                <Border.Style>
-                                                    <Style TargetType="Border" BasedOn="{StaticResource StatusBadgeStyle}">
-                                                        <Setter Property="Background" Value="#E8F5E9"/>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding IsActif}" Value="False">
-                                                                <Setter Property="Background" Value="#FFEBEE"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </Border.Style>
-                                                <StackPanel Orientation="Horizontal">
-                                                    <materialDesign:PackIcon Width="14" Height="14" VerticalAlignment="Center" Margin="0,0,4,0">
-                                                        <materialDesign:PackIcon.Style>
-                                                            <Style TargetType="materialDesign:PackIcon">
-                                                                <Setter Property="Kind" Value="CheckCircle"/>
-                                                                <Setter Property="Foreground" Value="#388E3C"/>
-                                                                <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding IsActif}" Value="False">
-                                                                        <Setter Property="Kind" Value="Cancel"/>
-                                                                        <Setter Property="Foreground" Value="#F44336"/>
-                                                                    </DataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </materialDesign:PackIcon.Style>
-                                                    </materialDesign:PackIcon>
-                                                    <TextBlock FontSize="11" FontWeight="Medium">
-                                                        <TextBlock.Style>
-                                                            <Style TargetType="TextBlock">
-                                                                <Setter Property="Text" Value="Actif"/>
-                                                                <Setter Property="Foreground" Value="#388E3C"/>
-                                                                <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding IsActif}" Value="False">
-                                                                        <Setter Property="Text" Value="Inactif"/>
-                                                                        <Setter Property="Foreground" Value="#F44336"/>
-                                                                    </DataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </TextBlock.Style>
-                                                    </TextBlock>
-                                                </StackPanel>
-                                            </Border>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="Actions" Width="150">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                        Command="{Binding DataContext.OpenEditTiersDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                        CommandParameter="{Binding}"
-                                                        ToolTip="Modifier">
-                                                    <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2"/>
-                                                </Button>
-                                                <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                        Command="{Binding DataContext.ToggleActifCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                        CommandParameter="{Binding}"
-                                                        Margin="4,0">
-                                                    <Button.ToolTip>
-                                                        <TextBlock>
-                                                            <TextBlock.Style>
-                                                                <Style TargetType="TextBlock">
-                                                                    <Setter Property="Text" Value="Désactiver"/>
-                                                                    <Style.Triggers>
-                                                                        <DataTrigger Binding="{Binding IsActif}" Value="False">
-                                                                            <Setter Property="Text" Value="Activer"/>
-                                                                        </DataTrigger>
-                                                                    </Style.Triggers>
-                                                                </Style>
-                                                            </TextBlock.Style>
-                                                        </TextBlock>
-                                                    </Button.ToolTip>
-                                                    <materialDesign:PackIcon Foreground="#FF9800">
-                                                        <materialDesign:PackIcon.Style>
-                                                            <Style TargetType="materialDesign:PackIcon">
-                                                                <Setter Property="Kind" Value="EyeOff"/>
-                                                                <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding IsActif}" Value="False">
-                                                                        <Setter Property="Kind" Value="Eye"/>
-                                                                    </DataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </materialDesign:PackIcon.Style>
-                                                    </materialDesign:PackIcon>
-                                                </Button>
-                                                <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                        Command="{Binding DataContext.DeleteTiersCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                        CommandParameter="{Binding}"
-                                                        ToolTip="Supprimer">
-                                                    <materialDesign:PackIcon Kind="Delete" Foreground="#F44336"/>
-                                                </Button>
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                            </DataGrid.Columns>
-                        </DataGrid>
-                    </materialDesign:Card>
-                </TabItem>
-
-                <!-- REDEVABLES -->
-                <TabItem>
-                    <TabItem.Header>
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="CurrencyUsd" 
-                                                   Width="20" Height="20"
-                                                   VerticalAlignment="Center"
-                                                   Margin="0,0,8,0"/>
-                            <TextBlock Text="Redevables" VerticalAlignment="Center" FontWeight="Medium"/>
-                        </StackPanel>
-                    </TabItem.Header>
-                    <materialDesign:Card Padding="0" Margin="0,10,0,0">
-                        <DataGrid ItemsSource="{Binding TiersRedevables}"
-                                  SelectedItem="{Binding SelectedTiers}"
-                                  Style="{StaticResource TiersDataGridStyle}">
-                            <!-- Même structure de colonnes -->
-                            <DataGrid.Columns>
-                                <DataGridTemplateColumn Header="Type" Width="120">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Border Background="#FCE4EC" Style="{StaticResource StatusBadgeStyle}">
-                                                <TextBlock Text="{Binding Type}" FontSize="11" FontWeight="Medium"/>
-                                            </Border>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="Nom complet" Width="*" MinWidth="200">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <StackPanel>
-                                                <TextBlock Text="{Binding Nom}" FontWeight="SemiBold"/>
-                                                <TextBlock Text="{Binding Prenom}" FontSize="11" Foreground="#666"/>
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="200"/>
-                                <DataGridTextColumn Header="RCCM" Binding="{Binding Rccm}" Width="120"/>
-                                <DataGridTextColumn Header="NIF" Binding="{Binding Nif}" Width="120"/>
-                                <DataGridTextColumn Header="Adresse" Binding="{Binding Adresse}" Width="180"/>
-                                <DataGridTemplateColumn Header="Statut" Width="100">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Border>
-                                                <Border.Style>
-                                                    <Style TargetType="Border" BasedOn="{StaticResource StatusBadgeStyle}">
-                                                        <Setter Property="Background" Value="#E8F5E9"/>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding IsActif}" Value="False">
-                                                                <Setter Property="Background" Value="#FFEBEE"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </Border.Style>
-                                                <StackPanel Orientation="Horizontal">
-                                                    <materialDesign:PackIcon Width="14" Height="14" VerticalAlignment="Center" Margin="0,0,4,0">
-                                                        <materialDesign:PackIcon.Style>
-                                                            <Style TargetType="materialDesign:PackIcon">
-                                                                <Setter Property="Kind" Value="CheckCircle"/>
-                                                                <Setter Property="Foreground" Value="#388E3C"/>
-                                                                <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding IsActif}" Value="False">
-                                                                        <Setter Property="Kind" Value="Cancel"/>
-                                                                        <Setter Property="Foreground" Value="#F44336"/>
-                                                                    </DataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </materialDesign:PackIcon.Style>
-                                                    </materialDesign:PackIcon>
-                                                    <TextBlock FontSize="11" FontWeight="Medium">
-                                                        <TextBlock.Style>
-                                                            <Style TargetType="TextBlock">
-                                                                <Setter Property="Text" Value="Actif"/>
-                                                                <Setter Property="Foreground" Value="#388E3C"/>
-                                                                <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding IsActif}" Value="False">
-                                                                        <Setter Property="Text" Value="Inactif"/>
-                                                                        <Setter Property="Foreground" Value="#F44336"/>
-                                                                    </DataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </TextBlock.Style>
-                                                    </TextBlock>
-                                                </StackPanel>
-                                            </Border>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="Actions" Width="150">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                        Command="{Binding DataContext.OpenEditTiersDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                        CommandParameter="{Binding}"
-                                                        ToolTip="Modifier">
-                                                    <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2"/>
-                                                </Button>
-                                                <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                        Command="{Binding DataContext.ToggleActifCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                        CommandParameter="{Binding}"
-                                                        Margin="4,0">
-                                                    <Button.ToolTip>
-                                                        <TextBlock>
-                                                            <TextBlock.Style>
-                                                                <Style TargetType="TextBlock">
-                                                                    <Setter Property="Text" Value="Désactiver"/>
-                                                                    <Style.Triggers>
-                                                                        <DataTrigger Binding="{Binding IsActif}" Value="False">
-                                                                            <Setter Property="Text" Value="Activer"/>
-                                                                        </DataTrigger>
-                                                                    </Style.Triggers>
-                                                                </Style>
-                                                            </TextBlock.Style>
-                                                        </TextBlock>
-                                                    </Button.ToolTip>
-                                                    <materialDesign:PackIcon Foreground="#FF9800">
-                                                        <materialDesign:PackIcon.Style>
-                                                            <Style TargetType="materialDesign:PackIcon">
-                                                                <Setter Property="Kind" Value="EyeOff"/>
-                                                                <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding IsActif}" Value="False">
-                                                                        <Setter Property="Kind" Value="Eye"/>
-                                                                    </DataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </materialDesign:PackIcon.Style>
-                                                    </materialDesign:PackIcon>
-                                                </Button>
-                                                <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                        Command="{Binding DataContext.DeleteTiersCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                        CommandParameter="{Binding}"
-                                                        ToolTip="Supprimer">
-                                                    <materialDesign:PackIcon Kind="Delete" Foreground="#F44336"/>
-                                                </Button>
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                            </DataGrid.Columns>
-                        </DataGrid>
-                    </materialDesign:Card>
-                </TabItem>
-
-                <!-- CONTRIBUABLES -->
-                <TabItem>
-                    <TabItem.Header>
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="Cash" 
-                                                   Width="20" Height="20"
-                                                   VerticalAlignment="Center"
-                                                   Margin="0,0,8,0"/>
-                            <TextBlock Text="Contribuables" VerticalAlignment="Center" FontWeight="Medium"/>
-                        </StackPanel>
-                    </TabItem.Header>
-                    <materialDesign:Card Padding="0" Margin="0,10,0,0">
-                        <DataGrid ItemsSource="{Binding TiersContribuables}"
-                                  SelectedItem="{Binding SelectedTiers}"
-                                  Style="{StaticResource TiersDataGridStyle}">
-                            <!-- Même structure -->
-                            <DataGrid.Columns>
-                                <DataGridTemplateColumn Header="Type" Width="120">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Border Background="#F3E5F5" Style="{StaticResource StatusBadgeStyle}">
-                                                <TextBlock Text="{Binding Type}" FontSize="11" FontWeight="Medium"/>
-                                            </Border>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="Nom complet" Width="*" MinWidth="200">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <StackPanel>
-                                                <TextBlock Text="{Binding Nom}" FontWeight="SemiBold"/>
-                                                <TextBlock Text="{Binding Prenom}" FontSize="11" Foreground="#666"/>
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="200"/>
-                                <DataGridTextColumn Header="RCCM" Binding="{Binding Rccm}" Width="120"/>
-                                <DataGridTextColumn Header="NIF" Binding="{Binding Nif}" Width="120"/>
-                                <DataGridTextColumn Header="Adresse" Binding="{Binding Adresse}" Width="180"/>
-                                <DataGridTemplateColumn Header="Statut" Width="100">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Border>
-                                                <Border.Style>
-                                                    <Style TargetType="Border" BasedOn="{StaticResource StatusBadgeStyle}">
-                                                        <Setter Property="Background" Value="#E8F5E9"/>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding IsActif}" Value="False">
-                                                                <Setter Property="Background" Value="#FFEBEE"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </Border.Style>
-                                                <StackPanel Orientation="Horizontal">
-                                                    <materialDesign:PackIcon Width="14" Height="14" VerticalAlignment="Center" Margin="0,0,4,0">
-                                                        <materialDesign:PackIcon.Style>
-                                                            <Style TargetType="materialDesign:PackIcon">
-                                                                <Setter Property="Kind" Value="CheckCircle"/>
-                                                                <Setter Property="Foreground" Value="#388E3C"/>
-                                                                <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding IsActif}" Value="False">
-                                                                        <Setter Property="Kind" Value="Cancel"/>
-                                                                        <Setter Property="Foreground" Value="#F44336"/>
-                                                                    </DataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </materialDesign:PackIcon.Style>
-                                                    </materialDesign:PackIcon>
-                                                    <TextBlock FontSize="11" FontWeight="Medium">
-                                                        <TextBlock.Style>
-                                                            <Style TargetType="TextBlock">
-                                                                <Setter Property="Text" Value="Actif"/>
-                                                                <Setter Property="Foreground" Value="#388E3C"/>
-                                                                <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding IsActif}" Value="False">
-                                                                        <Setter Property="Text" Value="Inactif"/>
-                                                                        <Setter Property="Foreground" Value="#F44336"/>
-                                                                    </DataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </TextBlock.Style>
-                                                    </TextBlock>
-                                                </StackPanel>
-                                            </Border>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="Actions" Width="150">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                        Command="{Binding DataContext.OpenEditTiersDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                        CommandParameter="{Binding}"
-                                                        ToolTip="Modifier">
-                                                    <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2"/>
-                                                </Button>
-                                                <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                        Command="{Binding DataContext.ToggleActifCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                        CommandParameter="{Binding}"
-                                                        Margin="4,0">
-                                                    <Button.ToolTip>
-                                                        <TextBlock>
-                                                            <TextBlock.Style>
-                                                                <Style TargetType="TextBlock">
-                                                                    <Setter Property="Text" Value="Désactiver"/>
-                                                                    <Style.Triggers>
-                                                                        <DataTrigger Binding="{Binding IsActif}" Value="False">
-                                                                            <Setter Property="Text" Value="Activer"/>
-                                                                        </DataTrigger>
-                                                                    </Style.Triggers>
-                                                                </Style>
-                                                            </TextBlock.Style>
-                                                        </TextBlock>
-                                                    </Button.ToolTip>
-                                                    <materialDesign:PackIcon Foreground="#FF9800">
-                                                        <materialDesign:PackIcon.Style>
-                                                            <Style TargetType="materialDesign:PackIcon">
-                                                                <Setter Property="Kind" Value="EyeOff"/>
-                                                                <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding IsActif}" Value="False">
-                                                                        <Setter Property="Kind" Value="Eye"/>
-                                                                    </DataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </materialDesign:PackIcon.Style>
-                                                    </materialDesign:PackIcon>
-                                                </Button>
-                                                <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                        Command="{Binding DataContext.DeleteTiersCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                        CommandParameter="{Binding}"
-                                                        ToolTip="Supprimer">
-                                                    <materialDesign:PackIcon Kind="Delete" Foreground="#F44336"/>
-                                                </Button>
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                            </DataGrid.Columns>
-                        </DataGrid>
-                    </materialDesign:Card>
-                </TabItem>
-
-                <!-- ASSOCIATIONS -->
-                <TabItem>
-                    <TabItem.Header>
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="AccountGroup" 
-                                                   Width="20" Height="20"
-                                                   VerticalAlignment="Center"
-                                                   Margin="0,0,8,0"/>
-                            <TextBlock Text="Associations" VerticalAlignment="Center" FontWeight="Medium"/>
-                        </StackPanel>
-                    </TabItem.Header>
-                    <materialDesign:Card Padding="0" Margin="0,10,0,0">
-                        <DataGrid ItemsSource="{Binding TiersAssociations}"
-                                  SelectedItem="{Binding SelectedTiers}"
-                                  Style="{StaticResource TiersDataGridStyle}">
-                            <!-- Même structure -->
-                            <DataGrid.Columns>
-                                <DataGridTemplateColumn Header="Type" Width="120">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Border Background="#E0F2F1" Style="{StaticResource StatusBadgeStyle}">
-                                                <TextBlock Text="{Binding Type}" FontSize="11" FontWeight="Medium"/>
-                                            </Border>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="Nom complet" Width="*" MinWidth="200">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <StackPanel>
-                                                <TextBlock Text="{Binding Nom}" FontWeight="SemiBold"/>
-                                                <TextBlock Text="{Binding Prenom}" FontSize="11" Foreground="#666"/>
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="200"/>
-                                <DataGridTextColumn Header="RCCM" Binding="{Binding Rccm}" Width="120"/>
-                                <DataGridTextColumn Header="NIF" Binding="{Binding Nif}" Width="120"/>
+                                <DataGridTextColumn Header="Téléphone" Binding="{Binding Telephone}" Width="120"/>
                                 <DataGridTextColumn Header="Adresse" Binding="{Binding Adresse}" Width="180"/>
                                 <DataGridTemplateColumn Header="Statut" Width="100">
                                     <DataGridTemplateColumn.CellTemplate>
@@ -1047,128 +597,283 @@
 
         <!-- Dialog Modal pour Tiers -->
         <materialDesign:DialogHost IsOpen="{Binding IsTiersDialogOpen}" 
-                                 CloseOnClickAway="False" 
-                                 Panel.ZIndex="1000">
+                         CloseOnClickAway="False" 
+                         Panel.ZIndex="1000">
             <materialDesign:DialogHost.DialogContent>
-                <StackPanel Width="600" Margin="20">
-
-                    <!-- Titre -->
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
-                        <materialDesign:PackIcon Kind="Account" 
-                                               Width="24" Height="24"
-                                               Foreground="#1976D2"
-                                               VerticalAlignment="Center"
-                                               Margin="0,0,10,0"/>
-                        <TextBlock Text="{Binding TiersDialogTitle}"
-                                 FontSize="20"
-                                 FontWeight="SemiBold"
-                                 VerticalAlignment="Center"/>
-                    </StackPanel>
-
+                <materialDesign:Card Width="800" MaxHeight="750">
                     <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <!-- Type -->
-                        <ComboBox Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
-                                  materialDesign:HintAssist.Hint="Type de tiers *"
-                                  Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                                  ItemsSource="{Binding Source={StaticResource TiersTypeValues}}"
-                                  SelectedItem="{Binding DialogTiers.Type}"
-                                  Margin="0,0,0,15"/>
+                        <!-- Header -->
+                        <Border Grid.Row="0" Background="#1976D2" Padding="20">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Account" 
+                                               Width="28" Height="28"
+                                               Foreground="White"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,15,0"/>
+                                <TextBlock Text="{Binding TiersDialogTitle}"
+                                 FontSize="22"
+                                 FontWeight="SemiBold"
+                                 Foreground="White"
+                                 VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
 
-                        <!-- Nom -->
-                        <TextBox Grid.Row="1" Grid.Column="0"
-                                 materialDesign:HintAssist.Hint="Nom *"
-                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                 Text="{Binding DialogTiers.Nom, UpdateSourceTrigger=PropertyChanged}"
-                                 Margin="0,0,10,15"/>
+                        <!-- Contenu Scrollable -->
+                        <ScrollViewer Grid.Row="1" 
+                            VerticalScrollBarVisibility="Auto" 
+                            Padding="20"
+                            MaxHeight="550">
+                            <StackPanel>
 
-                        <!-- Prénom -->
-                        <TextBox Grid.Row="1" Grid.Column="1"
-                                 materialDesign:HintAssist.Hint="Prénom"
-                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                 Text="{Binding DialogTiers.Prenom, UpdateSourceTrigger=PropertyChanged}"
-                                 Margin="0,0,0,15"/>
+                                <!-- ═══════════════════════════════════════════════════════════
+                             SECTION : INFORMATIONS GÉNÉRALES
+                             ═══════════════════════════════════════════════════════════ -->
+                                <Expander IsExpanded="True" Margin="0,0,0,10">
+                                    <Expander.Header>
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="InformationOutline" 
+                                                           Width="24" Height="24"
+                                                           Foreground="#1976D2"
+                                                           VerticalAlignment="Center"
+                                                           Margin="0,0,10,0"/>
+                                            <TextBlock Text="Informations Générales" 
+                                             FontSize="16" 
+                                             FontWeight="SemiBold"
+                                             VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Expander.Header>
+                                    <materialDesign:Card Padding="15" Margin="10,10,0,0">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="10"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="10"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="10"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="10"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
 
-                        <!-- Email -->
-                        <TextBox Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
-                                 materialDesign:HintAssist.Hint="Email *"
-                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                 Text="{Binding DialogTiers.Email, UpdateSourceTrigger=PropertyChanged}"
-                                 Margin="0,0,0,15"/>
+                                            <!-- Type -->
+                                            <ComboBox Grid.Row="0" Grid.Column="0"
+                                            materialDesign:HintAssist.Hint="Type de tiers *"
+                                            Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                            ItemsSource="{Binding Source={StaticResource TiersTypeValues}}"
+                                            SelectedItem="{Binding DialogTiers.Type, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
-                        <!-- Adresse -->
-                        <TextBox Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2"
-                                 materialDesign:HintAssist.Hint="Adresse *"
-                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                 Text="{Binding DialogTiers.Adresse, UpdateSourceTrigger=PropertyChanged}"
-                                 Margin="0,0,0,15"/>
+                                            <!-- Catégorie Juridique -->
+                                            <ComboBox Grid.Row="0" Grid.Column="2"
+                                            materialDesign:HintAssist.Hint="Catégorie juridique *"
+                                            Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                            ItemsSource="{Binding Source={StaticResource CategorieJuridiqueValues}}"
+                                            SelectedItem="{Binding DialogTiers.Categorie, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
-                        <!-- RCCM -->
-                        <TextBox Grid.Row="4" Grid.Column="0"
-                                 materialDesign:HintAssist.Hint="RCCM"
-                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                 Text="{Binding DialogTiers.Rccm, UpdateSourceTrigger=PropertyChanged}"
-                                 Margin="0,0,10,15"/>
+                                            <!-- Email -->
+                                            <TextBox Grid.Row="2" Grid.Column="0"
+                                           materialDesign:HintAssist.Hint="Email *"
+                                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                           Text="{Binding DialogTiers.Email, UpdateSourceTrigger=PropertyChanged}"/>
 
-                        <!-- NIF -->
-                        <TextBox Grid.Row="4" Grid.Column="1"
-                                 materialDesign:HintAssist.Hint="NIF"
-                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                 Text="{Binding DialogTiers.Nif, UpdateSourceTrigger=PropertyChanged}"
-                                 Margin="0,0,0,15"/>
+                                            <!-- Téléphone -->
+                                            <TextBox Grid.Row="2" Grid.Column="2"
+                                           materialDesign:HintAssist.Hint="Téléphone"
+                                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                           Text="{Binding DialogTiers.Telephone, UpdateSourceTrigger=PropertyChanged}"/>
 
-                        <!-- Statut Actif -->
-                        <CheckBox Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2"
-                                  Content="Tiers actif"
-                                  IsChecked="{Binding DialogTiers.IsActif}"
-                                  Margin="0,0,0,15"/>
+                                            <!-- Adresse -->
+                                            <TextBox Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3"
+                                           materialDesign:HintAssist.Hint="Adresse"
+                                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                           Text="{Binding DialogTiers.Adresse, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                            <!-- Statut Actif -->
+                                            <CheckBox Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="3"
+                                            Content="Tiers actif"
+                                            IsChecked="{Binding DialogTiers.IsActif}"/>
+                                        </Grid>
+                                    </materialDesign:Card>
+                                </Expander>
+
+                                <!-- ═══════════════════════════════════════════════════════════
+                             SECTION : PERSONNE PHYSIQUE
+                             ═══════════════════════════════════════════════════════════ -->
+                                <Expander IsExpanded="True" 
+                                Margin="0,0,0,10"
+                                Visibility="{Binding IsPersonnePhysique, Converter={StaticResource BoolToVis}}">
+                                    <Expander.Header>
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="AccountCircle" 
+                                                           Width="24" Height="24"
+                                                           Foreground="#388E3C"
+                                                           VerticalAlignment="Center"
+                                                           Margin="0,0,10,0"/>
+                                            <TextBlock Text="Personne Physique" 
+                                             FontSize="16" 
+                                             FontWeight="SemiBold"
+                                             VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Expander.Header>
+                                    <materialDesign:Card Padding="15" Margin="10,10,0,0">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="10"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="10"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+
+                                            <!-- Nom -->
+                                            <TextBox Grid.Row="0" Grid.Column="0"
+                                           materialDesign:HintAssist.Hint="Nom *"
+                                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                           Text="{Binding DialogTiers.Nom, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                            <!-- Prénom -->
+                                            <TextBox Grid.Row="0" Grid.Column="2"
+                                           materialDesign:HintAssist.Hint="Prénom *"
+                                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                           Text="{Binding DialogTiers.Prenom, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                            <!-- Type Pièce -->
+                                            <TextBox Grid.Row="2" Grid.Column="0"
+                                           materialDesign:HintAssist.Hint="Type de pièce (CNI, Passeport...)"
+                                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                           Text="{Binding DialogTiers.TypePieceIdentite, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                            <!-- Numéro Pièce -->
+                                            <TextBox Grid.Row="2" Grid.Column="2"
+                                           materialDesign:HintAssist.Hint="Numéro de pièce"
+                                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                           Text="{Binding DialogTiers.NumeroPieceIdentite, UpdateSourceTrigger=PropertyChanged}"/>
+                                        </Grid>
+                                    </materialDesign:Card>
+                                </Expander>
+
+                             <!-- ═══════════════════════════════════════════════════════════
+                             SECTION : PERSONNE MORALE
+                             ═══════════════════════════════════════════════════════════ -->
+                                <Expander IsExpanded="True" 
+                                Margin="0,0,0,10"
+                                Visibility="{Binding IsPersonneMorale, Converter={StaticResource BoolToVis}}">
+                                    <Expander.Header>
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="Domain" 
+                                                           Width="24" Height="24"
+                                                           Foreground="#7B1FA2"
+                                                           VerticalAlignment="Center"
+                                                           Margin="0,0,10,0"/>
+                                            <TextBlock Text="Personne Morale" 
+                                             FontSize="16" 
+                                             FontWeight="SemiBold"
+                                             VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Expander.Header>
+                                    <materialDesign:Card Padding="15" Margin="10,10,0,0">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="10"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="10"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="10"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+
+                                            <!-- Raison Sociale -->
+                                            <TextBox Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3"
+                                           materialDesign:HintAssist.Hint="Raison sociale *"
+                                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                           Text="{Binding DialogTiers.RaisonSociale, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                            <!-- RCCM -->
+                                            <TextBox Grid.Row="2" Grid.Column="0"
+                                           materialDesign:HintAssist.Hint="RCCM *"
+                                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                           Text="{Binding DialogTiers.Rccm, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                            <!-- NIF -->
+                                            <TextBox Grid.Row="2" Grid.Column="2"
+                                           materialDesign:HintAssist.Hint="NIF *"
+                                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                           Text="{Binding DialogTiers.Nif, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                            <!-- Numéro TVA -->
+                                            <TextBox Grid.Row="4" Grid.Column="0"
+                                           materialDesign:HintAssist.Hint="Numéro TVA"
+                                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                           Text="{Binding DialogTiers.NumeroTva, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                            <!-- Secteur d'activité -->
+                                            <TextBox Grid.Row="4" Grid.Column="2"
+                                           materialDesign:HintAssist.Hint="Secteur d'activité"
+                                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                           Text="{Binding DialogTiers.SecteurActivite, UpdateSourceTrigger=PropertyChanged}"/>
+                                        </Grid>
+                                    </materialDesign:Card>
+                                </Expander>
+
+                            </StackPanel>
+                        </ScrollViewer>
+
+                        <!-- Footer (Boutons) -->
+                        <Border Grid.Row="2" 
+                      Background="#F5F5F5" 
+                      BorderBrush="#E0E0E0" 
+                      BorderThickness="0,1,0,0"
+                      Padding="20">
+                            <Grid>
+                                <TextBlock Text="* Champs obligatoires"
+                                 FontSize="11"
+                                 Foreground="#666"
+                                 FontStyle="Italic"
+                                 VerticalAlignment="Center"/>
+
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                  Content="Annuler"
+                                  Command="{Binding CancelTiersCommand}"
+                                  Margin="0,0,10,0"
+                                  Width="100"
+                                  Height="40"/>
+
+                                    <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                                  Command="{Binding SaveTiersCommand}"
+                                  Width="140"
+                                  Height="40">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="ContentSave" 
+                                                           VerticalAlignment="Center"
+                                                           Margin="0,0,8,0"/>
+                                            <TextBlock Text="Enregistrer" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
                     </Grid>
-
-                    <!-- Info -->
-                    <Border Background="#E3F2FD"
-                            CornerRadius="8"
-                            Padding="12"
-                            Margin="0,0,0,15">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="InformationOutline" 
-                                                   Width="20" Height="20"
-                                                   Foreground="#1976D2"
-                                                   VerticalAlignment="Center"
-                                                   Margin="0,0,8,0"/>
-                            <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="#424242">
-                                Les champs marqués d'un astérisque (*) sont obligatoires.
-                            </TextBlock>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- Boutons -->
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button Style="{StaticResource MaterialDesignFlatButton}"
-                                Content="Annuler"
-                                Command="{Binding CancelTiersCommand}"
-                                Margin="0,0,10,0"
-                                Width="100"/>
-                        <Button Style="{StaticResource MaterialDesignRaisedButton}"
-                                Content="Enregistrer"
-                                Command="{Binding SaveTiersCommand}"
-                                Width="120"/>
-                    </StackPanel>
-
-                </StackPanel>
+                </materialDesign:Card>
             </materialDesign:DialogHost.DialogContent>
         </materialDesign:DialogHost>
-
     </Grid>
+    
 </Page>

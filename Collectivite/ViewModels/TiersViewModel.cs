@@ -10,7 +10,7 @@ using System.Windows.Input;
 namespace Collectivite.ViewModels
 {
     /// <summary>
-    /// ViewModel pour la gestion des tiers et de leurs comptes bancaires
+    /// ViewModel pour la gestion des tiers (Contribuables, Fournisseurs, Salariés)
     /// </summary>
     public class TiersViewModel : ViewModelBase
     {
@@ -20,7 +20,6 @@ namespace Collectivite.ViewModels
         private Tiers _dialogTiers;
         private bool _isEditMode;
         private string _searchText;
-        private TiersType? _selectedTypeFilter;
         private int _selectedTabIndex;
 
         // Comptes bancaires
@@ -29,12 +28,23 @@ namespace Collectivite.ViewModels
         private CompteBancaire _dialogCompte;
         private bool _isCompteEditMode;
 
+        // Documents
+        private DocumentTiers? _selectedDocument;
+        private bool _isDocumentDialogOpen;
+        private DocumentTiers _dialogDocument;
+
         public TiersViewModel()
         {
             try
             {
-                _dialogTiers = new Tiers { IsActif = true };
+                _dialogTiers = new Tiers
+                {
+                    IsActif = true,
+                    Type = TiersType.Contribuable,
+                    Categorie = CategorieJuridique.PersonnePhysique
+                };
                 _dialogCompte = new CompteBancaire();
+                _dialogDocument = new DocumentTiers();
                 _searchText = string.Empty;
 
                 // Commandes Tiers
@@ -54,6 +64,13 @@ namespace Collectivite.ViewModels
                 CancelCompteCommand = new RelayCommand(_ => CancelCompteDialog());
                 DeleteCompteCommand = new RelayCommand<CompteBancaire>(async compte => await DeleteCompteAsync(compte));
 
+                // Commandes Documents
+                OpenAddDocumentDialogCommand = new RelayCommand(_ => OpenAddDocumentDialog());
+                AddDocumentCommand = new RelayCommand<TypeDocument>(async type => await AddDocumentAsync(type));
+                DeleteDocumentCommand = new RelayCommand<DocumentTiers>(async doc => await DeleteDocumentAsync(doc));
+                OpenDocumentCommand = new RelayCommand<DocumentTiers>(doc => OpenDocument(doc));
+                ToggleDocumentValiditeCommand = new RelayCommand<DocumentTiers>(async doc => await ToggleDocumentValiditeAsync(doc));
+
                 // Charger les données
                 System.Threading.Tasks.Task.Run(async () => await LoadDataAsync()).Wait();
             }
@@ -68,14 +85,13 @@ namespace Collectivite.ViewModels
 
         public ObservableCollection<Tiers> Tiers { get; } = new();
 
-        // ✅ Collections filtrées par type
-        public ObservableCollection<Tiers> TiersFournisseurs { get; } = new();
-        public ObservableCollection<Tiers> TiersEntreprises { get; } = new();
-        public ObservableCollection<Tiers> TiersRedevables { get; } = new();
+        // Collections filtrées par type
         public ObservableCollection<Tiers> TiersContribuables { get; } = new();
-        public ObservableCollection<Tiers> TiersAssociations { get; } = new();
+        public ObservableCollection<Tiers> TiersFournisseurs { get; } = new();
+        public ObservableCollection<Tiers> TiersSalaries { get; } = new();
 
         public ObservableCollection<CompteBancaire> ComptesOfSelectedTiers { get; } = new();
+        public ObservableCollection<DocumentTiers> DocumentsOfSelectedTiers { get; } = new();
 
         public bool IsLoading
         {
@@ -91,6 +107,7 @@ namespace Collectivite.ViewModels
                 if (SetProperty(ref _selectedTiers, value))
                 {
                     LoadComptesOfSelectedTiers();
+                    LoadDocumentsOfSelectedTiers();
                 }
             }
         }
@@ -98,17 +115,34 @@ namespace Collectivite.ViewModels
         public bool IsTiersDialogOpen
         {
             get => _isTiersDialogOpen;
-            set
-            {
-                SetProperty(ref _isTiersDialogOpen, value);
-                System.Diagnostics.Debug.WriteLine($"IsTiersDialogOpen = {value}");
-            }
+            set => SetProperty(ref _isTiersDialogOpen, value);
         }
 
         public Tiers DialogTiers
         {
             get => _dialogTiers;
-            set => SetProperty(ref _dialogTiers, value);
+            set
+            {
+                if (SetProperty(ref _dialogTiers, value))
+                {
+                    // S'abonner aux changements de propriété
+                    if (_dialogTiers != null)
+                    {
+                        _dialogTiers.PropertyChanged += (s, e) =>
+                        {
+                            if (e.PropertyName == nameof(DialogTiers.Categorie))
+                            {
+                                OnPropertyChanged(nameof(IsPersonnePhysique));
+                                OnPropertyChanged(nameof(IsPersonneMorale));
+                            }
+                        };
+                    }
+
+                    // Notifier les changements de visibilité
+                    OnPropertyChanged(nameof(IsPersonnePhysique));
+                    OnPropertyChanged(nameof(IsPersonneMorale));
+                }
+            }
         }
 
         public bool IsEditMode
@@ -121,18 +155,6 @@ namespace Collectivite.ViewModels
         {
             get => _searchText;
             set => SetProperty(ref _searchText, value);
-        }
-
-        public TiersType? SelectedTypeFilter
-        {
-            get => _selectedTypeFilter;
-            set
-            {
-                if (SetProperty(ref _selectedTypeFilter, value))
-                {
-                    ApplyFilter();
-                }
-            }
         }
 
         public int SelectedTabIndex
@@ -148,6 +170,13 @@ namespace Collectivite.ViewModels
         }
 
         public string TiersDialogTitle => IsEditMode ? "Modifier le tiers" : "Nouveau tiers";
+
+        // ═══════════════════════════════════════════════════════════
+        // PROPRIÉTÉS POUR L'AFFICHAGE CONDITIONNEL
+        // ═══════════════════════════════════════════════════════════
+
+        public bool IsPersonnePhysique => DialogTiers?.Categorie == CategorieJuridique.PersonnePhysique;
+        public bool IsPersonneMorale => DialogTiers?.Categorie == CategorieJuridique.PersonneMorale;
 
         #endregion
 
@@ -181,6 +210,28 @@ namespace Collectivite.ViewModels
 
         #endregion
 
+        #region Properties - Documents
+
+        public DocumentTiers? SelectedDocument
+        {
+            get => _selectedDocument;
+            set => SetProperty(ref _selectedDocument, value);
+        }
+
+        public bool IsDocumentDialogOpen
+        {
+            get => _isDocumentDialogOpen;
+            set => SetProperty(ref _isDocumentDialogOpen, value);
+        }
+
+        public DocumentTiers DialogDocument
+        {
+            get => _dialogDocument;
+            set => SetProperty(ref _dialogDocument, value);
+        }
+
+        #endregion
+
         #region Commands
 
         // Commandes Tiers
@@ -200,6 +251,13 @@ namespace Collectivite.ViewModels
         public ICommand CancelCompteCommand { get; }
         public ICommand DeleteCompteCommand { get; }
 
+        // Commandes Documents
+        public ICommand OpenAddDocumentDialogCommand { get; }
+        public ICommand AddDocumentCommand { get; }
+        public ICommand DeleteDocumentCommand { get; }
+        public ICommand OpenDocumentCommand { get; }
+        public ICommand ToggleDocumentValiditeCommand { get; }
+
         #endregion
 
         #region Methods - Tiers
@@ -210,12 +268,8 @@ namespace Collectivite.ViewModels
 
             try
             {
-                System.Diagnostics.Debug.WriteLine("🔄 Début du chargement des tiers...");
-
                 var tiersService = new TiersService();
                 var tiers = await tiersService.GetAllTiersAsync();
-
-                System.Diagnostics.Debug.WriteLine($"✅ {tiers.Count} tiers chargés");
 
                 Tiers.Clear();
                 foreach (var t in tiers)
@@ -224,19 +278,11 @@ namespace Collectivite.ViewModels
                 }
 
                 ApplyFilter();
-
-                System.Diagnostics.Debug.WriteLine($"📊 Total dans ObservableCollection : {Tiers.Count}");
             }
             catch (Exception ex)
             {
-                var errorMsg = $"❌ ERREUR CHARGEMENT :\n\n{ex.Message}";
-                if (ex.InnerException != null)
-                {
-                    errorMsg += $"\n\nDétails : {ex.InnerException.Message}";
-                }
-
-                MessageBox.Show(errorMsg, "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
-                System.Diagnostics.Debug.WriteLine($"❌ {errorMsg}\n{ex.StackTrace}");
+                MessageBox.Show($"❌ Erreur lors du chargement :\n\n{ex.Message}",
+                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -246,42 +292,25 @@ namespace Collectivite.ViewModels
 
         private void ApplyFilter()
         {
-            // Vider les collections filtrées
-            TiersFournisseurs.Clear();
-            TiersEntreprises.Clear();
-            TiersRedevables.Clear();
             TiersContribuables.Clear();
-            TiersAssociations.Clear();
+            TiersFournisseurs.Clear();
+            TiersSalaries.Clear();
 
-            // Remplir les collections filtrées
             foreach (var tiers in Tiers)
             {
                 switch (tiers.Type)
                 {
-                    case TiersType.Fournisseur:
-                        TiersFournisseurs.Add(tiers);
-                        break;
-                    case TiersType.Entreprise:
-                        TiersEntreprises.Add(tiers);
-                        break;
-                    case TiersType.Redevable:
-                        TiersRedevables.Add(tiers);
-                        break;
                     case TiersType.Contribuable:
                         TiersContribuables.Add(tiers);
                         break;
-                    case TiersType.Association:
-                        TiersAssociations.Add(tiers);
+                    case TiersType.Fournisseur:
+                        TiersFournisseurs.Add(tiers);
+                        break;
+                    case TiersType.Salarie:
+                        TiersSalaries.Add(tiers);
                         break;
                 }
             }
-
-            System.Diagnostics.Debug.WriteLine($"📊 Filtre appliqué : " +
-                $"Fournisseurs={TiersFournisseurs.Count}, " +
-                $"Entreprises={TiersEntreprises.Count}, " +
-                $"Redevables={TiersRedevables.Count}, " +
-                $"Contribuables={TiersContribuables.Count}, " +
-                $"Associations={TiersAssociations.Count}");
         }
 
         private async System.Threading.Tasks.Task SearchAsync()
@@ -316,23 +345,18 @@ namespace Collectivite.ViewModels
         {
             try
             {
-                System.Diagnostics.Debug.WriteLine("🔓 OpenAddTiersDialog appelé");
-
                 IsEditMode = false;
                 DialogTiers = new Tiers
                 {
-                    Type = TiersType.Fournisseur,
+                    Type = TiersType.Contribuable,
+                    Categorie = CategorieJuridique.PersonnePhysique,
                     IsActif = true,
-                    Nom = "",
                     Email = "",
+                    Telephone = "",
                     Adresse = ""
                 };
 
-                System.Diagnostics.Debug.WriteLine($"📝 DialogTiers créé : {DialogTiers != null}");
-
                 IsTiersDialogOpen = true;
-
-                System.Diagnostics.Debug.WriteLine($"✅ IsTiersDialogOpen = {IsTiersDialogOpen}");
             }
             catch (Exception ex)
             {
@@ -352,13 +376,24 @@ namespace Collectivite.ViewModels
                 {
                     Id = tiers.Id,
                     Type = tiers.Type,
-                    Rccm = tiers.Rccm,
+                    Categorie = tiers.Categorie,
+                    Email = tiers.Email,
+                    Telephone = tiers.Telephone,
+                    Adresse = tiers.Adresse,
+                    IsActif = tiers.IsActif,
+
+                    // Personne Physique
                     Nom = tiers.Nom,
                     Prenom = tiers.Prenom,
-                    Adresse = tiers.Adresse,
+                    NumeroPieceIdentite = tiers.NumeroPieceIdentite,
+                    TypePieceIdentite = tiers.TypePieceIdentite,
+
+                    // Personne Morale
+                    RaisonSociale = tiers.RaisonSociale,
+                    Rccm = tiers.Rccm,
                     Nif = tiers.Nif,
-                    Email = tiers.Email,
-                    IsActif = tiers.IsActif
+                    NumeroTva = tiers.NumeroTva,
+                    SecteurActivite = tiers.SecteurActivite
                 };
                 IsTiersDialogOpen = true;
             }
@@ -371,10 +406,21 @@ namespace Collectivite.ViewModels
 
         private bool CanSaveTiers()
         {
-            return DialogTiers != null &&
-                   !string.IsNullOrWhiteSpace(DialogTiers.Nom) &&
-                   !string.IsNullOrWhiteSpace(DialogTiers.Email) &&
-                   !string.IsNullOrWhiteSpace(DialogTiers.Adresse);
+            if (DialogTiers == null || string.IsNullOrWhiteSpace(DialogTiers.Email))
+                return false;
+
+            // Validation conditionnelle selon la catégorie
+            if (DialogTiers.Categorie == CategorieJuridique.PersonnePhysique)
+            {
+                return !string.IsNullOrWhiteSpace(DialogTiers.Nom) &&
+                       !string.IsNullOrWhiteSpace(DialogTiers.Prenom);
+            }
+            else // Personne Morale
+            {
+                return !string.IsNullOrWhiteSpace(DialogTiers.RaisonSociale) &&
+                       !string.IsNullOrWhiteSpace(DialogTiers.Rccm) &&
+                       !string.IsNullOrWhiteSpace(DialogTiers.Nif);
+            }
         }
 
         private async System.Threading.Tasks.Task SaveTiersAsync()
@@ -441,8 +487,8 @@ namespace Collectivite.ViewModels
             if (tiers == null) return;
 
             var result = MessageBox.Show(
-                $"Êtes-vous sûr de vouloir supprimer le tiers '{tiers.Nom}' ?\n\n" +
-                "⚠️ Cette action supprimera également tous les comptes bancaires associés.",
+                $"Êtes-vous sûr de vouloir supprimer le tiers '{tiers.NomComplet}' ?\n\n" +
+                "⚠️ Cette action supprimera également tous les documents et comptes bancaires associés.",
                 "Confirmation",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Warning);
@@ -474,7 +520,7 @@ namespace Collectivite.ViewModels
 
             var action = tiers.IsActif ? "désactiver" : "activer";
             var result = MessageBox.Show(
-                $"Voulez-vous {action} le tiers '{tiers.Nom}' ?",
+                $"Voulez-vous {action} le tiers '{tiers.NomComplet}' ?",
                 "Confirmation",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question);
@@ -663,6 +709,151 @@ namespace Collectivite.ViewModels
 
                 IsLoading = false;
             }
+        }
+
+        #endregion
+
+        #region Methods - Documents
+
+        private async void LoadDocumentsOfSelectedTiers()
+        {
+            DocumentsOfSelectedTiers.Clear();
+
+            if (SelectedTiers == null) return;
+
+            try
+            {
+                var documentService = new DocumentTiersService();
+                var documents = await documentService.GetDocumentsByTiersAsync(SelectedTiers.Id);
+
+                foreach (var doc in documents)
+                {
+                    DocumentsOfSelectedTiers.Add(doc);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors du chargement des documents : {ex.Message}",
+                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void OpenAddDocumentDialog()
+        {
+            if (SelectedTiers == null)
+            {
+                MessageBox.Show("Veuillez sélectionner un tiers d'abord.",
+                    "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            IsDocumentDialogOpen = true;
+        }
+
+        private async System.Threading.Tasks.Task AddDocumentAsync(TypeDocument? type)
+        {
+            if (SelectedTiers == null || type == null) return;
+
+            IsLoading = true;
+            IsDocumentDialogOpen = false;
+
+            try
+            {
+                var documentService = new DocumentTiersService();
+                var (success, message, document) = await documentService.AddDocumentAsync(
+                    SelectedTiers.Id,
+                    type.Value);
+
+                if (success)
+                {
+                    MessageBox.Show(message, "Succès",
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    LoadDocumentsOfSelectedTiers();
+                }
+                else
+                {
+                    MessageBox.Show(message, "Information",
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        private async System.Threading.Tasks.Task DeleteDocumentAsync(DocumentTiers? document)
+        {
+            if (document == null) return;
+
+            var result = MessageBox.Show(
+                $"Êtes-vous sûr de vouloir supprimer ce document ?\n\n" +
+                $"Type : {document.TypeDisplay}\n" +
+                $"Fichier : {document.NomFichier}",
+                "Confirmation",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                IsLoading = true;
+
+                var documentService = new DocumentTiersService();
+                var (success, message) = await documentService.DeleteDocumentAsync(document.Id);
+
+                MessageBox.Show(message,
+                    success ? "Succès" : "Erreur",
+                    MessageBoxButton.OK,
+                    success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+
+                if (success)
+                {
+                    LoadDocumentsOfSelectedTiers();
+                }
+
+                IsLoading = false;
+            }
+        }
+
+        private void OpenDocument(DocumentTiers? document)
+        {
+            if (document == null) return;
+
+            var documentService = new DocumentTiersService();
+            var (success, message) = documentService.OpenDocument(document);
+
+            if (!success)
+            {
+                MessageBox.Show(message, "Erreur",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private async System.Threading.Tasks.Task ToggleDocumentValiditeAsync(DocumentTiers? document)
+        {
+            if (document == null) return;
+
+            IsLoading = true;
+
+            var documentService = new DocumentTiersService();
+            var (success, message) = await documentService.ToggleValiditeAsync(document.Id);
+
+            if (success)
+            {
+                LoadDocumentsOfSelectedTiers();
+            }
+            else
+            {
+                MessageBox.Show(message, "Erreur",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+
+            IsLoading = false;
         }
 
         #endregion

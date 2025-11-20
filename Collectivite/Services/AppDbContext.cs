@@ -23,6 +23,7 @@ namespace Collectivite.Services
         public DbSet<Facture> Factures { get; set; }
         public DbSet<DetailsFacture> DetailsFactures { get; set; }
         public DbSet<Tiers> Tiers { get; set; }
+        public DbSet<DocumentTiers> DocumentTiers { get; set; }
         public DbSet<CompteBancaire> CompteBancaires { get; set; }
         public DbSet<BonCommande> BonCommandes { get; set; }
         public DbSet<DetailBonCommande> DetailsBonCommandes { get; set; }
