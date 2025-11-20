@@ -7,7 +7,9 @@ using System.Threading.Tasks;
 
 namespace Collectivite.Services
 {
-
+    /// <summary>
+    /// Service de gestion des détails des communes
+    /// </summary>
     /// <param name="context">Contexte de base de données</param>
     public class DetailCommuneService(AppDbContext context)
     {
@@ -16,27 +18,24 @@ namespace Collectivite.Services
         // ══════════════════════════════════════════════════════════
         // RÉCUPÉRER TOUS LES DÉTAILS
         // ══════════════════════════════════════════════════════════
-        // ✅ CORRECTION : Ajouter AsNoTracking() pour éviter les conflits de threading
         public async Task<List<DetailCommune>> GetAllAsync()
         {
-            // Utiliser AsNoTracking pour éviter de laisser EF Core suivre ces instances
-            // (on n'a pas besoin de suivi pour l'affichage en lecture seule)
             return await _context.DetailCommunes
                 .Include(d => d.Commune)
+                .Include(d => d.Exercice)
                 .AsNoTracking()
                 .OrderBy(d => d.Commune.Nom)
                 .ToListAsync();
         }
-
 
         // ══════════════════════════════════════════════════════════
         // RÉCUPÉRER LES DÉTAILS D'UNE COMMUNE SPÉCIFIQUE
         // ══════════════════════════════════════════════════════════
         public async Task<List<DetailCommune>> GetByCommuneAsync(int communeId)
         {
-            // Lecture seule — éviter le tracking pour réduire les risques de conflits
             return await _context.DetailCommunes
                 .Include(d => d.Commune)
+                .Include(d => d.Exercice)
                 .AsNoTracking()
                 .Where(d => d.IdCommune == communeId)
                 .ToListAsync();
@@ -47,9 +46,9 @@ namespace Collectivite.Services
         // ══════════════════════════════════════════════════════════
         public async Task<DetailCommune?> GetByIdAsync(int id)
         {
-            // Lecture seule — utiliser AsNoTracking pour retourner une copie sans suivi
             return await _context.DetailCommunes
                 .Include(d => d.Commune)
+                .Include(d => d.Exercice)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(d => d.Id == id);
         }
@@ -78,7 +77,7 @@ namespace Collectivite.Services
                     return (false, "Un détail existe déjà pour cette commune.", null);
                 }
 
-                // Validation : Cohérence des données
+                // Validation : Cohérence des données démographiques
                 if (detailCommune.PopulationHommes + detailCommune.PopulationFemmes != detailCommune.PopulationTotale)
                 {
                     detailCommune.PopulationTotale = detailCommune.PopulationHommes + detailCommune.PopulationFemmes;
@@ -88,6 +87,17 @@ namespace Collectivite.Services
                 if (detailCommune.Superficie > 0)
                 {
                     detailCommune.Densite = Math.Round(detailCommune.PopulationTotale / detailCommune.Superficie, 2);
+                }
+
+                // Validation : Cohérence des écoles
+                var totalEcoles = detailCommune.NombreEcolesPrescolaire +
+                                  detailCommune.NombreEcolesPrimaire +
+                                  detailCommune.NombreEcolesCollege +
+                                  detailCommune.NombreEcolesLycee;
+
+                if (totalEcoles != detailCommune.NombreEcoles)
+                {
+                    detailCommune.NombreEcoles = totalEcoles;
                 }
 
                 _context.DetailCommunes.Add(detailCommune);
@@ -115,7 +125,7 @@ namespace Collectivite.Services
                     return (false, "Détail introuvable.");
                 }
 
-                // Validation : Cohérence des données
+                // Validation : Cohérence des données démographiques
                 if (detailCommune.PopulationHommes + detailCommune.PopulationFemmes != detailCommune.PopulationTotale)
                 {
                     detailCommune.PopulationTotale = detailCommune.PopulationHommes + detailCommune.PopulationFemmes;
@@ -140,9 +150,14 @@ namespace Collectivite.Services
                 }
 
                 // Validation : Écoles cohérentes
-                if (detailCommune.NombreEcolesPrimaires + detailCommune.NombreEcolesSecondaires > detailCommune.NombreEcoles)
+                var totalEcoles = detailCommune.NombreEcolesPrescolaire +
+                                  detailCommune.NombreEcolesPrimaire +
+                                  detailCommune.NombreEcolesCollege +
+                                  detailCommune.NombreEcolesLycee;
+
+                if (totalEcoles > detailCommune.NombreEcoles)
                 {
-                    return (false, "La somme des écoles primaires et secondaires ne peut pas dépasser le nombre total d'écoles.");
+                    return (false, "La somme des écoles par niveau ne peut pas dépasser le nombre total d'écoles.");
                 }
 
                 // Validation : Marchés cohérents
@@ -151,12 +166,8 @@ namespace Collectivite.Services
                     return (false, "La somme des marchés journaliers et hebdomadaires ne peut pas dépasser le nombre total de marchés.");
                 }
 
-                // Copier les valeurs du DTO / instance entrante dans l'entité suivie par le contexte
-                // Cela évite l'exception "cannot be tracked because another instance with the same key value is already being tracked"
+                // Copier les valeurs
                 _context.Entry(detailExistant).CurrentValues.SetValues(detailCommune);
-
-                // Si l'entité entrante contient une navigation 'Commune' distincte, ne pas essayer
-                // d'attacher automatiquement une autre instance. Mettre à jour l'IdCommune seulement.
                 detailExistant.IdCommune = detailCommune.IdCommune;
 
                 await _context.SaveChangesAsync();
@@ -165,7 +176,7 @@ namespace Collectivite.Services
             }
             catch (Exception ex)
             {
-                return (false, $"Erreur lors de la modification ser: {ex.Message}");
+                return (false, $"Erreur lors de la modification : {ex.Message}");
             }
         }
 
@@ -219,7 +230,6 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<double> GetDensiteMoyenneAsync()
         {
-            // Récupérer en lecture seule pour éviter le suivi inutile
             var details = await _context.DetailCommunes
                 .AsNoTracking()
                 .ToListAsync();
@@ -243,6 +253,18 @@ namespace Collectivite.Services
         public async Task<int> GetNombreCentresSanteTotalAsync()
         {
             return await _context.DetailCommunes.SumAsync(d => d.NombreCentresSante);
+        }
+
+        /// <summary>
+        /// Obtenir le nombre total d'élèves tous niveaux confondus
+        /// </summary>
+        public async Task<int> GetNombreElevesTotalAsync()
+        {
+            var details = await _context.DetailCommunes.AsNoTracking().ToListAsync();
+            return details.Sum(d => d.NombreElevesPrescolaire +
+                                   d.NombreElevesPrimaire +
+                                   d.NombreElevesCollege +
+                                   d.NombreElevesLycee);
         }
     }
 }

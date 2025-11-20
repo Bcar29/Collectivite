@@ -35,7 +35,7 @@ namespace Collectivite.ViewModels
                 IdCommune = communeId ?? 0
             };
 
-            // ✅ Initialisation des commandes
+            // Initialisation des commandes
             LoadDetailCommuneCommand = new RelayCommand(async _ => await LoadDetailCommuneAsync());
             OpenAddDetailCommuneCommand = new RelayCommand(_ => OpenAddDetailCommune());
             OpenEditDetailCommuneCommand = new RelayCommand<DetailCommune>(detail => OpenEditDetailCommune(detail));
@@ -43,9 +43,9 @@ namespace Collectivite.ViewModels
             CancelDetailCommuneCommand = new RelayCommand(_ => CancelDetailCommune());
             DeleteDetailCommuneCommand = new RelayCommand<DetailCommune>(async detail => await DeleteDetailCommuneAsync(detail));
             CalculerDensiteCommand = new RelayCommand(_ => CalculerDensite());
+            CalculerTotalEcolesCommand = new RelayCommand(_ => CalculerTotalEcoles());
             OpenDetailCommuneCommand = new RelayCommand<Commune>(commune => OpenDetailCommune(commune));
 
-            // ✅ CORRECTION : Appeler l'initialisation de manière asynchrone
             InitializeAsync();
         }
 
@@ -97,32 +97,24 @@ namespace Collectivite.ViewModels
         public ICommand CancelDetailCommuneCommand { get; }
         public ICommand DeleteDetailCommuneCommand { get; }
         public ICommand CalculerDensiteCommand { get; }
+        public ICommand CalculerTotalEcolesCommand { get; }
         public ICommand OpenDetailCommuneCommand { get; }
 
         #endregion
 
         #region Methods
 
-        // ✅ NOUVELLE MÉTHODE : Initialisation asynchrone
         private async void InitializeAsync()
         {
             try
             {
-                System.Diagnostics.Debug.WriteLine("Début de l'initialisation...");
-
-                // Charger les communes en premier (pour le ComboBox)
                 await LoadCommunesAsync();
-
-                // Ensuite charger les détails
                 await LoadDetailCommuneAsync();
-
-                System.Diagnostics.Debug.WriteLine("Initialisation terminée.");
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Erreur lors de l'initialisation : {ex.Message}",
                     "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
-                System.Diagnostics.Debug.WriteLine($"Erreur d'initialisation : {ex}");
             }
         }
 
@@ -137,31 +129,23 @@ namespace Collectivite.ViewModels
                 if (_communeIdFilter.HasValue)
                 {
                     details = await _detailCommuneService.GetByCommuneAsync(_communeIdFilter.Value);
-                    System.Diagnostics.Debug.WriteLine($"Chargement des détails pour la commune ID {_communeIdFilter.Value}");
                 }
                 else
                 {
                     details = await _detailCommuneService.GetAllAsync();
-                    System.Diagnostics.Debug.WriteLine("Chargement de tous les détails");
                 }
 
                 DetailCommunes.Clear();
 
-                if (details.Count > 0)
+                foreach (var detail in details)
                 {
-                    foreach (var detail in details)
-                    {
-                        DetailCommunes.Add(detail);
-                    }
+                    DetailCommunes.Add(detail);
                 }
-
-                System.Diagnostics.Debug.WriteLine($"✅ Détails chargés : {DetailCommunes.Count}");
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Erreur lors du chargement : {ex.Message}",
                     "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
-                System.Diagnostics.Debug.WriteLine($"❌ Erreur chargement détails : {ex}");
             }
             finally
             {
@@ -173,31 +157,19 @@ namespace Collectivite.ViewModels
         {
             try
             {
-                System.Diagnostics.Debug.WriteLine("Début du chargement des communes...");
-
                 var communes = await _communeService.GetAllCommuneAsync();
-
-                System.Diagnostics.Debug.WriteLine($"Communes récupérées du service : {communes.Count}");
 
                 Communes.Clear();
 
-                if (communes.Count > 0)
+                foreach (var commune in communes)
                 {
-                    foreach (var commune in communes)
-                    {
-                        Communes.Add(commune);
-                        System.Diagnostics.Debug.WriteLine($"  - Ajout : {commune.Nom}");
-                    }
+                    Communes.Add(commune);
                 }
-
-                System.Diagnostics.Debug.WriteLine($"✅ Communes chargées dans ObservableCollection : {Communes.Count}");
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Erreur lors du chargement des communes : {ex.Message}",
                     "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
-                System.Diagnostics.Debug.WriteLine($"❌ Erreur chargement communes : {ex}");
-                System.Diagnostics.Debug.WriteLine($"   Stack trace : {ex.StackTrace}");
             }
         }
 
@@ -208,8 +180,6 @@ namespace Collectivite.ViewModels
             {
                 IdCommune = _communeIdFilter ?? 0
             };
-
-            System.Diagnostics.Debug.WriteLine($"Ouverture dialog ajout. Communes disponibles : {Communes.Count}");
 
             IsDialogOpen = true;
         }
@@ -237,14 +207,24 @@ namespace Collectivite.ViewModels
                 Superficie = detail.Superficie,
                 Densite = detail.Densite,
                 NombreCentresSante = detail.NombreCentresSante,
+                NombrePostesSante = detail.NombrePostesSante,
+                NombreSanteAmelioree = detail.NombreSanteAmelioree,
                 NombreEcoles = detail.NombreEcoles,
-                NombreEcolesPrimaires = detail.NombreEcolesPrimaires,
-                NombreEcolesSecondaires = detail.NombreEcolesSecondaires,
-                NombreClassesPrimaires = detail.NombreClassesPrimaires,
-                NombreClassesSecondaires = detail.NombreClassesSecondaires,
-                NombreElevesPrimaires = detail.NombreElevesPrimaires,
-                NombreElevesSecondaires = detail.NombreElevesSecondaires,
+                NombreEcolesPrescolaire = detail.NombreEcolesPrescolaire,
+                NombreEcolesPrimaire = detail.NombreEcolesPrimaire,
+                NombreEcolesCollege = detail.NombreEcolesCollege,
+                NombreEcolesLycee = detail.NombreEcolesLycee,
+                NombreClassesPrescolaire = detail.NombreClassesPrescolaire,
+                NombreClassesPrimaire = detail.NombreClassesPrimaire,
+                NombreClassesCollege = detail.NombreClassesCollege,
+                NombreClassesLycee = detail.NombreClassesLycee,
+                NombreElevesPrescolaire = detail.NombreElevesPrescolaire,
+                NombreElevesPrimaire = detail.NombreElevesPrimaire,
+                NombreElevesCollege = detail.NombreElevesCollege,
+                NombreElevesLycee = detail.NombreElevesLycee,
                 NombreForages = detail.NombreForages,
+                NombrePointsEau = detail.NombrePointsEau,
+                NombreAssociation = detail.NombreAssociation,
                 NombreOng = detail.NombreOng,
                 NombreOngNationales = detail.NombreOngNationales,
                 NombreOngEtrangeres = detail.NombreOngEtrangeres,
@@ -294,12 +274,19 @@ namespace Collectivite.ViewModels
 
             try
             {
+                // Calculs automatiques
                 DialogDetailCommune.PopulationTotale = DialogDetailCommune.PopulationHommes + DialogDetailCommune.PopulationFemmes;
 
                 if (DialogDetailCommune.Superficie > 0)
                 {
                     DialogDetailCommune.Densite = Math.Round(DialogDetailCommune.PopulationTotale / DialogDetailCommune.Superficie, 2);
                 }
+
+                // Calcul total des écoles
+                DialogDetailCommune.NombreEcoles = DialogDetailCommune.NombreEcolesPrescolaire +
+                                                    DialogDetailCommune.NombreEcolesPrimaire +
+                                                    DialogDetailCommune.NombreEcolesCollege +
+                                                    DialogDetailCommune.NombreEcolesLycee;
 
                 if (IsEditMode)
                 {
@@ -381,6 +368,7 @@ namespace Collectivite.ViewModels
         {
             if (DialogDetailCommune.Superficie > 0)
             {
+                DialogDetailCommune.PopulationTotale = DialogDetailCommune.PopulationHommes + DialogDetailCommune.PopulationFemmes;
                 DialogDetailCommune.Densite = Math.Round(DialogDetailCommune.PopulationTotale / DialogDetailCommune.Superficie, 2);
                 OnPropertyChanged(nameof(DialogDetailCommune));
             }
@@ -389,6 +377,15 @@ namespace Collectivite.ViewModels
                 MessageBox.Show("La superficie doit être supérieure à 0 pour calculer la densité.",
                     "Attention", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
+        }
+
+        private void CalculerTotalEcoles()
+        {
+            DialogDetailCommune.NombreEcoles = DialogDetailCommune.NombreEcolesPrescolaire +
+                                                DialogDetailCommune.NombreEcolesPrimaire +
+                                                DialogDetailCommune.NombreEcolesCollege +
+                                                DialogDetailCommune.NombreEcolesLycee;
+            OnPropertyChanged(nameof(DialogDetailCommune));
         }
 
         #endregion

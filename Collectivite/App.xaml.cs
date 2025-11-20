@@ -1,4 +1,5 @@
-﻿using System.Configuration;
+﻿using Collectivite.Services;
+using System.Configuration;
 using System.Data;
 using System.Windows;
 
@@ -9,6 +10,15 @@ namespace Collectivite
     /// </summary>
     public partial class App : Application
     {
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            base.OnStartup(e);
+
+            using (var db = new AppDbContext())
+            {
+                SeedNomenclature.Seed(db);
+            }
+        }
     }
 
 }

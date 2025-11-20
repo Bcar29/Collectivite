@@ -24,11 +24,11 @@ namespace Collectivite.Models
         // RELATION AVEC DETAILCOMMUNE (One-to-One)
         // ══════════════════════════════════════════════════
         [ForeignKey("DetailCommune")]
-        [Required]
-        public int IdDetailCommune { get; set; }
+        //[Required]
+        public int? IdDetailCommune { get; set; }
 
         // Propriété de navigation vers DetailCommune
-        public DetailCommune DetailCommune { get; set; } = null!;
+        public DetailCommune? DetailCommune { get; set; } = null!;
 
         public ICollection<Contrats>? Contrats { get; set; }
 

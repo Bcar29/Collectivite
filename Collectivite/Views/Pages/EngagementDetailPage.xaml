@@ -1,0 +1,262 @@
+﻿<Page x:Class="Collectivite.Views.Pages.EngagementDetailPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+      Language="fr-FR"
+      Background="#F5F5F5"
+      Title="Détails de l'Engagement">
+
+    <Page.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </Page.Resources>
+
+    <Grid>
+        <!-- Overlay de chargement -->
+        <Grid Background="#80000000" 
+              Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"
+              Panel.ZIndex="999">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}"
+                           Value="0"
+                           IsIndeterminate="True"
+                           Width="60"
+                           Height="60"/>
+                <TextBlock Text="Chargement..." 
+                         Foreground="White"
+                         FontSize="16"
+                         Margin="0,20,0,0"
+                         HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Contenu principal -->
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20">
+            <StackPanel MaxWidth="1000">
+
+                <!-- Header -->
+                <Grid Margin="0,0,0,20">
+                    <StackPanel Orientation="Horizontal">
+                        <Button Style="{StaticResource MaterialDesignIconButton}"
+                              Command="{Binding BackCommand}"
+                              ToolTip="Retour"
+                              Margin="0,0,10,0">
+                            <materialDesign:PackIcon Kind="ArrowLeft" 
+                                                   Width="24" 
+                                                   Height="24"/>
+                        </Button>
+
+                        <materialDesign:PackIcon Kind="FileDocument" 
+                                               Width="32" 
+                                               Height="32"
+                                               Foreground="#1976D2"
+                                               VerticalAlignment="Center"/>
+                        <TextBlock Text="Détails de l'Engagement" 
+                                 FontSize="24"
+                                 FontWeight="SemiBold"
+                                 Margin="15,0,0,0"
+                                 VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                              Command="{Binding EditCommand}"
+                              Height="40"
+                              Margin="0,0,10,0">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Pencil" 
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,8,0"/>
+                                <TextBlock Text="Modifier" 
+                                         VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                              Command="{Binding DeleteCommand}"
+                              Height="40"
+                              Foreground="#F44336"
+                              BorderBrush="#F44336">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Delete" 
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,8,0"/>
+                                <TextBlock Text="Supprimer" 
+                                         VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Contenu -->
+                <materialDesign:Card Padding="30">
+                    <StackPanel>
+
+                        <!-- Informations générales -->
+                        <TextBlock Text="📋 Informations générales"
+                                 FontSize="18"
+                                 FontWeight="SemiBold"
+                                 Foreground="#1976D2"
+                                 Margin="0,0,0,15"/>
+
+                        <Grid Margin="0,0,0,20">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="200"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="10"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="10"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="10"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="10"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="10"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Exercice :" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Engagement.Exercice.Libelle}"/>
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Date :" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Engagement.DateEngagement, StringFormat='dd/MM/yyyy'}"/>
+
+                            <TextBlock Grid.Row="4" Grid.Column="0" Text="Commune :" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding Engagement.Commune.Nom}"/>
+
+                            <TextBlock Grid.Row="6" Grid.Column="0" Text="Tiers :" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding Engagement.Tiers.Nom}"/>
+
+                            <TextBlock Grid.Row="8" Grid.Column="0" Text="Ligne budgétaire :" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Row="8" Grid.Column="1" Text="{Binding Engagement.BudgetLine.Nommenclature.Intitule}" TextWrapping="Wrap"/>
+
+                            <TextBlock Grid.Row="10" Grid.Column="0" Text="Objet :" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Row="10" Grid.Column="1" Text="{Binding Engagement.Objet}" TextWrapping="Wrap"/>
+                        </Grid>
+
+                        <Separator Margin="0,10,0,20"/>
+
+                        <!-- Montants -->
+                        <TextBlock Text="💰 Montants"
+                                 FontSize="18"
+                                 FontWeight="SemiBold"
+                                 Foreground="#1976D2"
+                                 Margin="0,0,0,15"/>
+
+                        <Grid Margin="0,0,0,20">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Crédits budgétaires -->
+                            <Border Grid.Column="0" Background="#E3F2FD" CornerRadius="8" Padding="15">
+                                <StackPanel>
+                                    <TextBlock Text="Crédits budgétaires" FontSize="12" Foreground="#666"/>
+                                    <TextBlock Text="{Binding Engagement.CreditsBudgetaires, StringFormat={}{0:N0} GNF}" 
+                                             FontSize="20" 
+                                             FontWeight="Bold" 
+                                             Foreground="#1976D2"
+                                             Margin="0,5,0,0"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Engagements antérieurs -->
+                            <Border Grid.Column="2" Background="#FFF3E0" CornerRadius="8" Padding="15">
+                                <StackPanel>
+                                    <TextBlock Text="Engagements antérieurs" FontSize="12" Foreground="#666"/>
+                                    <TextBlock Text="{Binding Engagement.EngagementsAnterieurs, StringFormat={}{0:N0} GNF}" 
+                                             FontSize="20" 
+                                             FontWeight="Bold" 
+                                             Foreground="#F57C00"
+                                             Margin="0,5,0,0"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Montant de l'engagement -->
+                            <Border Grid.Column="4" Background="#E8F5E9" CornerRadius="8" Padding="15">
+                                <StackPanel>
+                                    <TextBlock Text="Montant de l'engagement" FontSize="12" Foreground="#666"/>
+                                    <TextBlock Text="{Binding Engagement.MontantEngagement, StringFormat={}{0:N0} GNF}" 
+                                             FontSize="20" 
+                                             FontWeight="Bold" 
+                                             Foreground="#388E3C"
+                                             Margin="0,5,0,0"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <!-- Cumul -->
+                        <Border Background="#F5F5F5" CornerRadius="8" Padding="15" Margin="0,0,0,20">
+                            <Grid>
+                                <TextBlock Text="Cumul des engagements :" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding Engagement.CumulEngagement, StringFormat={}{0:N0} GNF}" 
+                                         FontSize="24" 
+                                         FontWeight="Bold" 
+                                         Foreground="#1976D2"
+                                         HorizontalAlignment="Right"
+                                         VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <Separator Margin="0,10,0,20"/>
+
+                        <!-- Fichier joint -->
+                        <TextBlock Text="📎 Fichier joint"
+                                 FontSize="18"
+                                 FontWeight="SemiBold"
+                                 Foreground="#1976D2"
+                                 Margin="0,0,0,15"/>
+
+                        <Border Background="#F5F5F5" 
+                              CornerRadius="8" 
+                              Padding="20"
+                              Visibility="{Binding HasFile, Converter={StaticResource BoolToVis}}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="FileDocument" 
+                                                       Width="40" 
+                                                       Height="40"
+                                                       Foreground="#1976D2"
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,15,0"/>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="Fichier joint disponible" 
+                                             FontWeight="SemiBold"
+                                             FontSize="14"/>
+                                    <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                          Command="{Binding DownloadFileCommand}"
+                                          Content="Télécharger le fichier"
+                                          Margin="0,5,0,0"
+                                          Padding="0"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock Text="Aucun fichier joint"
+                                 FontStyle="Italic"
+                                 Foreground="#999"
+                                 Visibility="{Binding HasFile, Converter={StaticResource BoolToVis}}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding HasFile}" Value="False">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+
+                    </StackPanel>
+                </materialDesign:Card>
+
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Page>

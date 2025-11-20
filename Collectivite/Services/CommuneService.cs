@@ -7,17 +7,17 @@ namespace Collectivite.Services
 {
     public class CommuneService
     {
-        private readonly AppDbContext _appDbContext;
-        public CommuneService(AppDbContext appDbContext)
+        private AppDbContext CreateContext()
         {
-            _appDbContext = appDbContext;
+            return new AppDbContext();
         }
 
         // Recuperer toutes les communes 
         public async Task<List<Commune>> GetAllCommuneAsync()
         {
-            return await _appDbContext.Communes
-                .AsNoTracking()  // ✅ Ne pas tracker
+            using var context = CreateContext();
+            return await context.Communes
+                .AsNoTracking()  
                 .OrderBy(c => c.Nom)
                 .ToListAsync();
         }
@@ -27,14 +27,15 @@ namespace Collectivite.Services
         {
             try
             {
-                var existe = await _appDbContext.Communes
+                using var context = CreateContext();
+                var existe = await context.Communes
                     .AnyAsync(c => c.Nom == commune.Nom);
                 if (existe)
                 {
                     return (false, $"{commune.Nom} existe déjà ", null);
                 }
-                _appDbContext.Communes.Add(commune);
-                await _appDbContext.SaveChangesAsync();
+                context.Communes.Add(commune);
+                await context.SaveChangesAsync();
                 return (true, $"la commune {commune.Nom} ajoute avec succes", commune);
             }
             catch (Exception ex)
@@ -52,7 +53,8 @@ namespace Collectivite.Services
                 // ══════════════════════════════════════════════════════════
                 // ✅ ÉTAPE 1 : DÉTACHER TOUTES LES ENTITÉS TRACKÉES
                 // ══════════════════════════════════════════════════════════
-                var trackedEntries = _appDbContext.ChangeTracker.Entries()
+                using var context = CreateContext();
+                var trackedEntries = context.ChangeTracker.Entries()
                     .Where(e => e.State != EntityState.Detached)
                     .ToList();
 
@@ -64,7 +66,7 @@ namespace Collectivite.Services
                 // ══════════════════════════════════════════════════════════
                 // ✅ ÉTAPE 2 : CHARGER L'ENTITÉ EXISTANTE
                 // ══════════════════════════════════════════════════════════
-                var existingCommune = await _appDbContext.Communes
+                var existingCommune = await context.Communes
                     .FirstOrDefaultAsync(c => c.Id == commune.Id);
 
                 if (existingCommune == null)
@@ -75,7 +77,7 @@ namespace Collectivite.Services
                 // ══════════════════════════════════════════════════════════
                 // ✅ ÉTAPE 3 : VÉRIFIER L'UNICITÉ DU NOM
                 // ══════════════════════════════════════════════════════════
-                var existe = await _appDbContext.Communes
+                var existe = await context.Communes
                     .AnyAsync(c => c.Nom == commune.Nom && c.Id != commune.Id);
 
                 if (existe)
@@ -95,7 +97,7 @@ namespace Collectivite.Services
                 // ══════════════════════════════════════════════════════════
                 // ✅ ÉTAPE 5 : SAUVEGARDER
                 // ══════════════════════════════════════════════════════════
-                await _appDbContext.SaveChangesAsync();
+                await context.SaveChangesAsync();
 
                 return (true, "Commune mise à jour avec succès");
             }
@@ -110,14 +112,15 @@ namespace Collectivite.Services
         {
             try
             {
-                var existingCommune = await _appDbContext.Communes
+                using var context = CreateContext();
+                var existingCommune = await context.Communes
                     .FirstOrDefaultAsync(c => c.Id == communeId);
                 if (existingCommune == null)
                 {
                     return (false, "Commune non trouvée .");
                 }
-                _appDbContext.Communes.Remove(existingCommune);
-                await _appDbContext.SaveChangesAsync();
+                context.Communes.Remove(existingCommune);
+                await context.SaveChangesAsync();
                 return (true, "Commune supprimée avec succès");
             }
             catch (Exception ex)

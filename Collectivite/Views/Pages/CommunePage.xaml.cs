@@ -14,8 +14,8 @@ namespace Collectivite.Views.Pages
             InitializeComponent();
 
             // Initialisation du ViewModel
-            var context = new AppDbContext();
-            var communeService = new CommuneService(context);
+            //var context = new AppDbContext();
+            var communeService = new CommuneService();
             var viewModel = new CommuneViewModel(communeService);
 
             // ⚠️ IMPORTANT : Définir le DataContext pour le binding

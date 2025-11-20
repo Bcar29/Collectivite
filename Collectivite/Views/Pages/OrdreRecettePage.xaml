@@ -1,0 +1,373 @@
+﻿<Page x:Class="Collectivite.Views.Pages.OrdreRecettePage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+      Language="fr-FR"
+      Background="#F5F5F5"
+      Title="Gestion des Ordres de Recette">
+
+    <Page.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </Page.Resources>
+
+    <Grid>
+        <!-- Overlay de chargement -->
+        <Grid Background="#80000000" 
+              Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"
+              Panel.ZIndex="999">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}"
+                           Value="0"
+                           IsIndeterminate="True"
+                           Width="60"
+                           Height="60"/>
+                <TextBlock Text="Chargement..." 
+                           Foreground="White"
+                           FontSize="16"
+                           Margin="0,20,0,0"
+                           HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Contenu principal -->
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- En-tête -->
+            <DockPanel Margin="0,0,0,15">
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+                    <materialDesign:PackIcon Kind="FileDocumentOutline" 
+                                             Width="32" 
+                                             Height="32"
+                                             Foreground="#1976D2"
+                                             VerticalAlignment="Center"/>
+                    <TextBlock Text="Ordres de Recette" 
+                               FontSize="24"
+                               FontWeight="SemiBold"
+                               Margin="10,0,0,0"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                    <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                            Command="{Binding NavigateToAddCommand}"
+                            Height="36"
+                            Margin="0,0,10,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Plus" Margin="0,0,5,0"/>
+                            <TextBlock Text="Nouvel Ordre"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                            Command="{Binding LoadDataCommand}"
+                            Height="36">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Refresh" Margin="0,0,5,0"/>
+                            <TextBlock Text="Rafraîchir"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </DockPanel>
+
+            <!-- Statistiques -->
+            <Grid Grid.Row="1" Margin="0,0,0,15">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="15"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Total montant -->
+                <Border Grid.Column="0"
+                        Background="#E3F2FD" 
+                        CornerRadius="8"
+                        Padding="15">
+                    <DockPanel>
+                        <materialDesign:PackIcon Kind="CurrencyUsd" 
+                                               Width="24" 
+                                               Height="24"
+                                               Foreground="#1976D2"
+                                               VerticalAlignment="Center"
+                                               DockPanel.Dock="Left"
+                                               Margin="0,0,15,0"/>
+                        <StackPanel>
+                            <TextBlock Text="Montant Total"
+                                       FontSize="12"
+                                       Foreground="#666"/>
+                            <TextBlock Text="{Binding TotalOrdres, StringFormat={}{0:N0} GNF}"
+                                       FontSize="20"
+                                       FontWeight="Bold"
+                                       Foreground="#1976D2"/>
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+
+                <!-- Nombre d'ordres -->
+                <Border Grid.Column="2"
+                        Background="#E8F5E9" 
+                        CornerRadius="8"
+                        Padding="15">
+                    <DockPanel>
+                        <materialDesign:PackIcon Kind="FileDocumentMultiple" 
+                                               Width="24" 
+                                               Height="24"
+                                               Foreground="#388E3C"
+                                               VerticalAlignment="Center"
+                                               DockPanel.Dock="Left"
+                                               Margin="0,0,15,0"/>
+                        <StackPanel>
+                            <TextBlock Text="Nombre d'Ordres"
+                                       FontSize="12"
+                                       Foreground="#666"/>
+                            <TextBlock Text="{Binding CountOrdres}"
+                                       FontSize="20"
+                                       FontWeight="Bold"
+                                       Foreground="#388E3C"/>
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+            </Grid>
+
+            <!-- Barre de recherche et filtres -->
+            <materialDesign:Card Grid.Row="2" Padding="15" Margin="0,0,0,15">
+                <StackPanel>
+                    <!-- Barre de recherche -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Recherche par numéro -->
+                        <TextBox Grid.Column="0"
+                                 materialDesign:HintAssist.Hint="Rechercher par numéro d'ordre..."
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 Text="{Binding SearchNumeroOrdre, UpdateSourceTrigger=PropertyChanged}">
+                            <TextBox.InputBindings>
+                                <KeyBinding Key="Return" Command="{Binding SearchCommand}"/>
+                            </TextBox.InputBindings>
+                        </TextBox>
+
+                        <!-- Bouton rechercher -->
+                        <Button Grid.Column="2"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                Command="{Binding SearchCommand}"
+                                Height="40">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Magnify" Margin="0,0,5,0"/>
+                                <TextBlock Text="Rechercher"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Bouton filtres -->
+                        <Button Grid.Column="4"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Command="{Binding ToggleFilterPanelCommand}"
+                                Height="40">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="FilterOutline" Margin="0,0,5,0"/>
+                                <TextBlock Text="Filtres avancés"/>
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+
+                    <!-- Panel des filtres (collapsible) -->
+                    <Border BorderBrush="#E0E0E0"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="15"
+                            Margin="0,15,0,0"
+                            Visibility="{Binding IsFilterPanelOpen, Converter={StaticResource BoolToVis}}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="10"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="10"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Exercice -->
+                            <ComboBox Grid.Row="0" Grid.Column="0"
+                                      materialDesign:HintAssist.Hint="Exercice"
+                                      Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                      ItemsSource="{Binding Exercices}"
+                                      SelectedValue="{Binding FilterExerciceId}"
+                                      SelectedValuePath="Id"
+                                      DisplayMemberPath="Libelle"/>
+
+                            <!-- Commune -->
+                            <ComboBox Grid.Row="0" Grid.Column="2"
+                                      materialDesign:HintAssist.Hint="Commune"
+                                      Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                      ItemsSource="{Binding Communes}"
+                                      SelectedValue="{Binding FilterCommuneId}"
+                                      SelectedValuePath="Id"
+                                      DisplayMemberPath="Nom"/>
+
+                            <!-- Tiers -->
+                            <ComboBox Grid.Row="0" Grid.Column="4"
+                                      materialDesign:HintAssist.Hint="Tiers"
+                                      Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                      ItemsSource="{Binding TiersList}"
+                                      SelectedValue="{Binding FilterTiersId}"
+                                      SelectedValuePath="Id"
+                                      DisplayMemberPath="Nom"/>
+
+                            <!-- Date début -->
+                            <DatePicker Grid.Row="2" Grid.Column="0"
+                                        materialDesign:HintAssist.Hint="Date début"
+                                        Style="{StaticResource MaterialDesignOutlinedDatePicker}"
+                                        SelectedDate="{Binding FilterDateDebut}"/>
+
+                            <!-- Date fin -->
+                            <DatePicker Grid.Row="2" Grid.Column="2"
+                                        materialDesign:HintAssist.Hint="Date fin"
+                                        Style="{StaticResource MaterialDesignOutlinedDatePicker}"
+                                        SelectedDate="{Binding FilterDateFin}"/>
+
+                            <!-- Montant min -->
+                            <TextBox Grid.Row="4" Grid.Column="0"
+                                     materialDesign:HintAssist.Hint="Montant minimum"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     Text="{Binding FilterMontantMin, UpdateSourceTrigger=PropertyChanged}"/>
+
+                            <!-- Montant max -->
+                            <TextBox Grid.Row="4" Grid.Column="2"
+                                     materialDesign:HintAssist.Hint="Montant maximum"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     Text="{Binding FilterMontantMax, UpdateSourceTrigger=PropertyChanged}"/>
+
+                            <!-- Bouton réinitialiser -->
+                            <Button Grid.Row="4" Grid.Column="4"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Command="{Binding ClearFiltersCommand}"
+                                    Height="40">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="FilterRemove" Margin="0,0,5,0"/>
+                                    <TextBlock Text="Réinitialiser"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </materialDesign:Card>
+
+            <!-- DataGrid -->
+            <!-- DataGrid avec scroll horizontal -->
+            <materialDesign:Card Grid.Row="3" Padding="0">
+                <ScrollViewer HorizontalScrollBarVisibility="Auto" 
+                  VerticalScrollBarVisibility="Disabled">
+                    <DataGrid ItemsSource="{Binding OrdresRecette}"
+                  SelectedItem="{Binding SelectedOrdreRecette}"
+                  AutoGenerateColumns="False"
+                  CanUserAddRows="False"
+                  IsReadOnly="True"
+                  SelectionMode="Single"
+                  HorizontalScrollBarVisibility="Disabled"
+                  VerticalScrollBarVisibility="Auto"
+                  materialDesign:DataGridAssist.CellPadding="13 8 8 8"
+                  MinWidth="1400">
+
+                        <DataGrid.Columns>
+                            <!-- Numéro -->
+                            <DataGridTextColumn Header="N° Ordre" 
+                                  Binding="{Binding NumeroOrdre}" 
+                                  Width="150"
+                                  FontWeight="SemiBold"/>
+
+                            <!-- Date -->
+                            <DataGridTextColumn Header="Date" 
+                                  Binding="{Binding DateOrdre, StringFormat='dd/MM/yyyy'}" 
+                                  Width="100"/>
+
+                            <!-- Exercice -->
+                            <DataGridTextColumn Header="Exercice" 
+                                  Binding="{Binding Exercice.Libelle}" 
+                                  Width="110"/>
+
+                            <!-- Commune -->
+                            <DataGridTextColumn Header="Commune" 
+                                  Binding="{Binding Commune.Nom}" 
+                                  Width="140"/>
+
+                            <!-- Ligne budgétaire -->
+                            <DataGridTextColumn Header="Ligne budgétaire" 
+                                  Binding="{Binding BudgetLine.Nommenclature.Intitule}" 
+                                  Width="300"/>
+
+                            <!-- Tiers -->
+                            <DataGridTextColumn Header="Tiers" 
+                                  Binding="{Binding Tiers.Nom}" 
+                                  Width="150"/>
+
+                            <!-- Comptable -->
+                            <DataGridTextColumn Header="Comptable" 
+                                  Binding="{Binding Comptable}" 
+                                  Width="130"/>
+
+                            <!-- Montant -->
+                            <DataGridTemplateColumn Header="Montant" Width="150">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Background="#E3F2FD" 
+                                    CornerRadius="4" 
+                                    Padding="8,4">
+                                            <TextBlock Text="{Binding MontantOrdre, StringFormat={}{0:N0} GNF}"
+                                           FontWeight="Bold"
+                                           Foreground="#1976D2"
+                                           HorizontalAlignment="Right"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Actions -->
+                            <DataGridTemplateColumn Header="Actions" Width="140">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                            <Button Style="{StaticResource MaterialDesignIconButton}"
+                                        Command="{Binding DataContext.NavigateToDetailCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                        CommandParameter="{Binding}"
+                                        ToolTip="Voir détails">
+                                                <materialDesign:PackIcon Kind="Eye" Foreground="#4CAF50"/>
+                                            </Button>
+                                            <Button Style="{StaticResource MaterialDesignIconButton}"
+                                        Command="{Binding DataContext.NavigateToEditCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                        CommandParameter="{Binding}"
+                                        ToolTip="Modifier">
+                                                <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2"/>
+                                            </Button>
+                                            <Button Style="{StaticResource MaterialDesignIconButton}"
+                                        Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                        CommandParameter="{Binding}"
+                                        ToolTip="Supprimer">
+                                                <materialDesign:PackIcon Kind="Delete" Foreground="#F44336"/>
+                                            </Button>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </ScrollViewer>
+            </materialDesign:Card>
+        </Grid>
+    </Grid>
+</Page>

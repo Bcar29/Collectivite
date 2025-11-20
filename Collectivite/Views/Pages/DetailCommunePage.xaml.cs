@@ -27,7 +27,7 @@ namespace Collectivite.Views.Pages
             // Initialiser le contexte et les services
             var context = new AppDbContext();
             var detailCommuneService = new DetailCommuneService(context);
-            var communeService = new CommuneService(context);
+            var communeService = new CommuneService();
 
             // Créer le ViewModel avec le filtre de commune
             var viewModel = new DetailCommuneViewModel(

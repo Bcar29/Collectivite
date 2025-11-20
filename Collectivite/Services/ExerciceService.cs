@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -12,16 +13,17 @@ namespace Collectivite.Services
 {
     public class ExerciceService
     {
-        private readonly AppDbContext _context;
-        public ExerciceService(AppDbContext context)
+        private AppDbContext CreateContext()
         {
-            _context = context;
+            return new AppDbContext();
         }
         // Recuperer tous les exercices
         public async Task<List<Exercice>> GetAllExerciceAsync()
             {
 
-            return await _context.Exercices
+            using var context = CreateContext();
+            return await context.Exercices
+
                 
                 .OrderByDescending(e => e.DateDebut)
                 .ToListAsync();
@@ -43,14 +45,16 @@ namespace Collectivite.Services
         // Récupérer un exercice par son ID
         public async Task<Exercice?> GetExerciceByIdAsync(int exerciceId)
         {
-            return await _context.Exercices
+            using var context = CreateContext();
+            return await context.Exercices
                 .FirstOrDefaultAsync(e => e.Id == exerciceId);
         }
 
         // recuperer le dernier details commune qui n'est pas lie à un exercice
         public async Task<DetailCommune?> LastDetailCommune()
         {
-            return await _context.DetailCommunes
+            using var context = CreateContext();
+            return await context.DetailCommunes
                 .Where(e => e.Exercice == null)
                 .OrderByDescending(e => e.Id)
                 .FirstOrDefaultAsync();
@@ -63,7 +67,8 @@ namespace Collectivite.Services
             try
             {
                 // Validation : Vérifier qu'il n'existe pas déjà un exercice pour cette année
-                var existe = await _context.Exercices
+                using var context = CreateContext();
+                var existe = await context.Exercices
                     .AnyAsync(e => e.Libelle == exercice.Libelle);
 
                 if (existe)
@@ -72,7 +77,7 @@ namespace Collectivite.Services
                 }
 
                 // Validation : Vérifier qu'il n'existe pas déjà un exercice non clôturé pour cette commune
-                var notClosedExercice = await _context.Exercices
+                var notClosedExercice = await context.Exercices
                     .AnyAsync(e => e.EstCloture == false);
                 if (notClosedExercice)
                 {
@@ -86,24 +91,28 @@ namespace Collectivite.Services
                 }
 
                 // validation de la liaison avec details de la commune
-                if (exercice.DetailCommune == null)
-                {
-                    DetailCommune? dt = await LastDetailCommune();
-                    if (dt != null)
-                    {
-                        exercice.IdDetailCommune = dt.Id;
-                    }
-                    else
-                    {
-                    return (false, "La liaison au details de la commune .", null);
-                    }
+                //if (exercice.DetailCommune == null)
+                //{
+                //    DetailCommune? dt = await LastDetailCommune();
+                //    if (dt != null)
+                //    {
+                //        exercice.IdDetailCommune = dt.Id;
+                //    }
+                //    else
+                //    {
+                //    return (false, "La liaison au details de la commune .", null);
+                //    }
                     
-                }
+                //}
 
-                _context.Exercices.Add(exercice);
-                await _context.SaveChangesAsync();
+                context.Exercices.Add(exercice);
+                await context.SaveChangesAsync();
+
+
+                
 
                 return (true, "Exercice créé avec succès.", exercice);
+
             }
             catch (Exception ex)
             {
@@ -117,14 +126,15 @@ namespace Collectivite.Services
             try
             {
                 // verifier q'un autre exercice n'existe pas avec le meme libelle
-                var existe = await _context.Exercices
+                using var context = CreateContext();
+                var existe = await context.Exercices
                     .AnyAsync(e => e.Libelle == exercice.Libelle  && e.Id != exercice.Id);
                 if (existe)
                 {
                     return (false, $"{exercice.Libelle} existe déjà.");
                 }
 
-                var existingExercice = await _context.Exercices.FindAsync(exercice.Id);
+                var existingExercice = await context.Exercices.FindAsync(exercice.Id);
                 if (existingExercice == null)
                 {
                     return (false, "Exercice non trouvé.");
@@ -138,7 +148,7 @@ namespace Collectivite.Services
                 existingExercice.DateDebut = exercice.DateDebut;
                 existingExercice.DateFin = exercice.DateFin;
                 existingExercice.EstCloture = exercice.EstCloture;
-                await _context.SaveChangesAsync();
+                await context.SaveChangesAsync();
                 return (true, "Exercice mis à jour avec succès.");
             }
             catch (Exception ex)
@@ -152,20 +162,21 @@ namespace Collectivite.Services
         {
             try
             {
-                var exercice = await _context.Exercices.FindAsync(exerciceId);
+                using var context = CreateContext();
+                var exercice = await context.Exercices.FindAsync(exerciceId);
                 if (exercice == null)
                 {
                     return (false, "Exercice non trouvé.");
                 }
                 // Vérifier les dépendances (par exemple, BudgetsPrimitifs liés)
-                var hasDependencies = await _context.BudgetsPrimitifs
+                var hasDependencies = await context.BudgetsPrimitifs
                     .AnyAsync(bp => bp.ExerciceId == exerciceId);
                 if (hasDependencies)
                 {
                     return (false, "Impossible de supprimer l'exercice car il a des dépendances.");
                 }
-                _context.Exercices.Remove(exercice);
-                await _context.SaveChangesAsync();
+                context.Exercices.Remove(exercice);
+                await context.SaveChangesAsync();
                 return (true, "Exercice supprimé avec succès.");
             }
             catch (Exception ex)
@@ -178,7 +189,8 @@ namespace Collectivite.Services
         {
             try
             {
-                var exercice = await _context.Exercices.FindAsync(id);
+                using var context = CreateContext();
+                var exercice = await context.Exercices.FindAsync(id);
 
                 if (exercice == null)
                 {
@@ -191,7 +203,7 @@ namespace Collectivite.Services
                 }
 
                 exercice.EstCloture = true;
-                await _context.SaveChangesAsync();
+                await context.SaveChangesAsync();
 
                 return (true, $"L'exercice '{exercice.Libelle}' a été clôturé avec succès.");
             }

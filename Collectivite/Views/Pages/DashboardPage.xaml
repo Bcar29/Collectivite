@@ -421,7 +421,7 @@
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
 
-                                            <!-- Icône -->
+                                            <!-- Icône 
                                             <Border Grid.Column="0"
                                                   Background="{Binding IconColor, Converter={StaticResource ColorToBrushConverter}}"
                                                   Width="40"
@@ -435,7 +435,7 @@
                                                                        Foreground="{Binding IconColor, Converter={StaticResource ColorToBrushConverter}}"
                                                                        HorizontalAlignment="Center"
                                                                        VerticalAlignment="Center"/>
-                                            </Border>
+                                            </Border> -->
 
                                             <!-- Contenu -->
                                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
@@ -460,7 +460,7 @@
                                                 </StackPanel>
                                             </StackPanel>
 
-                                            <!-- Badge type -->
+                                            <!-- Badge type 
                                             <Border Grid.Column="2"
                                                   Background="#F5F5F5"
                                                   CornerRadius="4"
@@ -470,7 +470,7 @@
                                                          FontSize="11"
                                                          Foreground="#757575"
                                                          FontWeight="Medium"/>
-                                            </Border>
+                                            </Border> -->
                                         </Grid>
                                     </Border>
                                 </DataTemplate>

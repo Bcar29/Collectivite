@@ -37,20 +37,7 @@ namespace Collectivite.Models
         public string IconColor { get; set; } = string.Empty;
         public DateTime Date { get; set; }
         public string FormattedDate => Date.ToString("dd/MM/yyyy HH:mm");
-        public string RelativeTime
-        {
-            get
-            {
-                var span = DateTime.Now - Date;
-                if (span.TotalMinutes < 60)
-                    return $"Il y a {(int)span.TotalMinutes} min";
-                if (span.TotalHours < 24)
-                    return $"Il y a {(int)span.TotalHours}h";
-                if (span.TotalDays < 7)
-                    return $"Il y a {(int)span.TotalDays}j";
-                return FormattedDate;
-            }
-        }
+       
         public decimal? Amount { get; set; }
         public string FormattedAmount => Amount.HasValue ? $"{Amount.Value:N0} GNF" : "";
     }

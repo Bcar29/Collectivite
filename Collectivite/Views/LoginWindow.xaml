@@ -122,7 +122,7 @@
                     </Button>
 
                     <!-- Lien mot de passe oublié -->
-                    <TextBlock Text="Mot de passe oublié ?"
+                    <!-- <TextBlock Text="Mot de passe oublié ?"
                              HorizontalAlignment="Center"
                              Margin="0,20,0,0"
                              FontSize="13"
@@ -137,7 +137,7 @@
                                 </Style.Triggers>
                             </Style>
                         </TextBlock.Style>
-                    </TextBlock>
+                    </TextBlock> -->
                 </StackPanel>
 
                 <!-- Footer -->

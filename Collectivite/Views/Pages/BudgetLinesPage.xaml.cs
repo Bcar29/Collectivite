@@ -28,7 +28,7 @@ namespace Collectivite.Views.Pages
             InitializeComponent();
 
             // ⚙️ Ici tu injectes le service (ou via ton conteneur d’injection)
-            var service = new BudgetLineService(new AppDbContext());
+            var service = new BudgetLineService();
             this.DataContext = new BudgetLinesViewModel(service, 1);
         }
     }

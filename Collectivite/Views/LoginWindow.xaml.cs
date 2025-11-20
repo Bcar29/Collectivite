@@ -14,13 +14,8 @@ namespace Collectivite.Views
         {
             InitializeComponent();
 
-            // CRÉER LE CONTEXTE DE BASE DE DONNÉES
-            var context = new Services.AppDbContext();
+            var authService = SessionManager.AuthService;
 
-            // CRÉER LE SERVICE D'AUTHENTIFICATION
-            var authService = new AuthService(context);
-
-            // CRÉER LE VIEWMODEL
             _viewModel = new LoginViewModel(authService);
 
             // ⚠️ IMPORTANT : Définir le DataContext
