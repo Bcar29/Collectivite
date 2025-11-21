@@ -72,7 +72,7 @@ namespace Collectivite
         // COMPTE CONTRAT CLICK
         private void Contrat_Click(object sender, RoutedEventArgs e)
         {
-            _viewModel.UpdatePageTitle("SAISIE - DES CONTRATS ");
+            _viewModel.UpdatePageTitle("SAISIE - DES CONTRATS");
             NavigationService.Instance.NavigateTo(new Views.Pages.ContratPage());
             _viewModel.IsMenuOpen = false;
         }
