@@ -27,8 +27,7 @@ namespace Collectivite.Views.Pages
         {
             InitializeComponent();
 
-            var context = new AppDbContext();
-            var budgetPrimitifService = new BudgetPrimitifService(context);
+            var budgetPrimitifService = new BudgetPrimitifService();
             var viewModel = new BudgetPrimitifViewModel(budgetPrimitifService);
 
             // ⚠️ IMPORTANT : Définir le DataContext pour le binding

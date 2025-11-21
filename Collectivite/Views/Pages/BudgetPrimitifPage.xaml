@@ -4,11 +4,15 @@
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
       Language="fr-FR"
       Background="#F5F5F5"
+      xmlns:utils="clr-namespace:Collectivite.Utils"
       Title="Gestion des Budgets Primitifs">
 
     <Page.Resources>
-        <!-- Converters -->
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <utils:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
+        <utils:CollectionHasItemsToVisibilityConverter x:Key="CollectionHasItemsToVisibilityConverter"/>
+        <utils:EnumToVisibilityConverter x:Key="EnumToVisibilityConverter"/>
     </Page.Resources>
 
     <Grid>
@@ -238,34 +242,90 @@
                             </DataGridTemplateColumn> -->
 
                             <!-- Actions -->
-                            <DataGridTemplateColumn Header="Actions" Width="150">
+                            <DataGridTemplateColumn Header="Actions" Width="200">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal" 
-                                                  HorizontalAlignment="Center">
+                      HorizontalAlignment="Center">
 
-                                            <!-- Bouton Modifier -->
+                                            <!-- Bouton Valider (visible seulement si statut = APPROVED) -->
                                             <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                  ToolTip="Modifier"
-                                                  Command="{Binding DataContext.OppenEditBudgetPrimitifCommand, 
-                                                          RelativeSource={RelativeSource AncestorType=Page}}"
-                                                  CommandParameter="{Binding}"
-                                                  Margin="4,0">
+                      ToolTip="Valider le budget"
+                      Command="{Binding DataContext.OpenValidationDialogCommand, 
+                              RelativeSource={RelativeSource AncestorType=Page}}"
+                      CommandParameter="{Binding}"
+                      Margin="4,0">
+                                                <Button.Visibility>
+                                                    <Binding Path="Status" 
+                               Converter="{StaticResource EnumToVisibilityConverter}" 
+                               ConverterParameter="APPROVED"/>
+                                                </Button.Visibility>
+                                                <materialDesign:PackIcon Kind="CheckCircle" 
+                                           Foreground="#4CAF50"
+                                           Width="20"
+                                           Height="20"/>
+                                            </Button>
+
+                                            <!-- Badge Validé (visible seulement si statut = VALIDATED) -->
+                                            <Border Background="#E8F5E9"
+                      CornerRadius="12"
+                      Padding="8,4"
+                      Margin="4,0">
+                                                <Border.Visibility>
+                                                    <Binding Path="Status" 
+                               Converter="{StaticResource EnumToVisibilityConverter}" 
+                               ConverterParameter="VALIDATED"/>
+                                                </Border.Visibility>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <materialDesign:PackIcon Kind="CheckCircle" 
+                                               Width="16" 
+                                               Height="16"
+                                               Foreground="#4CAF50"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,4,0"/>
+                                                    <TextBlock Text="Validé" 
+                                 FontSize="11"
+                                 FontWeight="SemiBold"
+                                 Foreground="#4CAF50"
+                                 VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <!-- Bouton Modifier (visible seulement si statut = APPROVED) -->
+                                            <Button Style="{StaticResource MaterialDesignIconButton}"
+                      ToolTip="Modifier"
+                      Command="{Binding DataContext.OpenEditBudgetPrimitifCommand, 
+                              RelativeSource={RelativeSource AncestorType=Page}}"
+                      CommandParameter="{Binding}"
+                      Margin="4,0">
+                                                <Button.Visibility>
+                                                    <Binding Path="Status" 
+                               Converter="{StaticResource EnumToVisibilityConverter}" 
+                               ConverterParameter="APPROVED"/>
+                                                </Button.Visibility>
                                                 <materialDesign:PackIcon Kind="Pencil" 
-                                                                       Foreground="#1976D2"/>
+                                           Foreground="#1976D2"
+                                           Width="20"
+                                           Height="20"/>
                                             </Button>
 
-                                            <!-- Bouton Supprimer -->
-                                            <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                  ToolTip="Supprimer"
-                                                  Command="{Binding DataContext.DeleteBudgetPrimitifCommand, 
-                                                          RelativeSource={RelativeSource AncestorType=Page}}"
-                                                  CommandParameter="{Binding}"
-                                                  Margin="4,0">
-                                                <materialDesign:PackIcon Kind="Delete" 
-                                                                       Foreground="#F44336"/>
+                                            <!-- Bouton Supprimer (visible seulement si statut = APPROVED) -->
+                                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                                          ToolTip="Supprimer"
+                                          Command="{Binding DataContext.DeleteBudgetPrimitifCommand, 
+                                                  RelativeSource={RelativeSource AncestorType=Page}}"
+                                          CommandParameter="{Binding}"
+                                          Margin="4,0">
+                                    <Button.Visibility>
+                                        <Binding Path="Status" 
+                                               Converter="{StaticResource EnumToVisibilityConverter}" 
+                                               ConverterParameter="APPROVED"/>
+                                        </Button.Visibility>
+                                        <materialDesign:PackIcon Kind="Delete" 
+                                           Foreground="#F44336"
+                                           Width="20"
+                                           Height="20"/>
                                             </Button>
-
                                         </StackPanel>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
@@ -425,5 +485,124 @@
             </materialDesign:DialogHost.DialogContent>
         </materialDesign:DialogHost>
 
+
+        <!-- ═══════════════════════════════════════════════════════════
+             DIALOGHOST - VALIDATION DU BUDGET
+         ═══════════════════════════════════════════════════════════ -->
+        <materialDesign:DialogHost IsOpen="{Binding IsValidationDialogOpen}" 
+                           CloseOnClickAway="False"
+                           Panel.ZIndex="1001">
+            <materialDesign:DialogHost.DialogContent>
+                <materialDesign:Card Width="500">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Header -->
+                        <Border Grid.Row="0" Background="#4CAF50" Padding="20">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="CheckCircle" 
+                                               Width="32" 
+                                               Height="32"
+                                               Foreground="White"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,15,0"/>
+                                <StackPanel>
+                                    <TextBlock Text="Validation du Budget Primitif"
+                                     FontSize="20"
+                                     FontWeight="SemiBold"
+                                     Foreground="White"/>
+                                    <TextBlock Text="Cette action est irréversible"
+                                     FontSize="12"
+                                     Foreground="White"
+                                     Opacity="0.9"
+                                     Margin="0,5,0,0"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Contenu -->
+                        <StackPanel Grid.Row="1" Margin="20">
+
+                            <!-- Date de validation -->
+                            <DatePicker SelectedDate="{Binding DateValidationDateTime, Mode=TwoWay}"
+                              materialDesign:HintAssist.Hint="Date de validation *"
+                              Style="{StaticResource MaterialDesignOutlinedDatePicker}"
+                              Margin="0,0,0,20"/>
+
+                            <!-- Avertissement -->
+                            <Border Background="#FFF3E0"
+                          CornerRadius="8"
+                          Padding="15">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                        <materialDesign:PackIcon Kind="AlertCircle" 
+                                                       Width="24" 
+                                                       Height="24"
+                                                       Foreground="#FF9800"
+                                                       VerticalAlignment="Top"
+                                                       Margin="0,0,10,0"/>
+                                        <TextBlock TextWrapping="Wrap" 
+                                         FontSize="13" 
+                                         Foreground="#F57C00"
+                                         FontWeight="Medium">
+                                    <Run Text="⚠️ Attention : Action irréversible"/>
+                                        </TextBlock>
+                                    </StackPanel>
+
+                                    <TextBlock TextWrapping="Wrap" 
+                                     FontSize="12" 
+                                     Foreground="#666"
+                                     Margin="34,0,0,0">
+                                <Run Text="Une fois le budget validé, vous ne pourrez plus :"/>
+                                <LineBreak/>
+                                <Run Text="• Modifier les lignes budgétaires"/>
+                                <LineBreak/>
+                                <Run Text="• Ajouter ou supprimer des lignes"/>
+                                <LineBreak/>
+                                <Run Text="• Modifier le budget primitif"/>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+
+                        </StackPanel>
+
+                        <!-- Footer -->
+                        <Border Grid.Row="2" 
+                      Background="#FAFAFA" 
+                      BorderBrush="#E0E0E0" 
+                      BorderThickness="0,1,0,0"
+                      Padding="20">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                <Button Content="Annuler"
+                              Style="{StaticResource MaterialDesignFlatButton}"
+                              Command="{Binding CancelValidationCommand}"
+                              Width="100"
+                              Height="40"
+                              Margin="0,0,10,0"/>
+
+                                <Button Command="{Binding ConfirmValidationCommand}"
+                              Width="140"
+                              Height="40"
+                              Background="#4CAF50"
+                              BorderBrush="#4CAF50"
+                              Style="{StaticResource MaterialDesignRaisedButton}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="CheckCircle" 
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,8,0"/>
+                                        <TextBlock Text="Valider" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+
+                    </Grid>
+                </materialDesign:Card>
+            </materialDesign:DialogHost.DialogContent>
+        </materialDesign:DialogHost>
     </Grid>
 </Page>

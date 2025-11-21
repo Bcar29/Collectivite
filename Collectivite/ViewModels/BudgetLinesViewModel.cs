@@ -1,10 +1,12 @@
 ﻿using Collectivite.Models;
 using Collectivite.Services;
 using Collectivite.Utils;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 
 namespace Collectivite.ViewModels
@@ -13,41 +15,160 @@ namespace Collectivite.ViewModels
     {
         private readonly BudgetLineService _service;
         private readonly int _budgetPrimitifId;
+        private BudgetPrimitif? _budgetPrimitif;
+        private bool _isLoading;
+        private bool _isDialogOpen;
+        private bool _isEditMode;
+        private BudgetLine? _currentLine;
+        private Nommenclature? _selectedNomenclature;
+        private string _montantPrevu = "0";
 
-        public ObservableCollection<BudgetLine> DisplayedLines { get; } = new ObservableCollection<BudgetLine>();
+        // ═══════════════════════════════════════════════════════════
+        // PROPRIÉTÉS - GÉNÉRAL
+        // ═══════════════════════════════════════════════════════════
 
-        // onglet sélectionné (0..3)
+        public ObservableCollection<BudgetLine> DisplayedLines { get; } = new();
+
         private int _selectedTabIndex = 0;
         public int SelectedTabIndex
         {
             get => _selectedTabIndex;
             set
             {
-                SetProperty(ref _selectedTabIndex, value);
-                _ = LoadForSelectedTabAsync();
+                if (SetProperty(ref _selectedTabIndex, value))
+                {
+                    _ = LoadForSelectedTabAsync();
+                }
             }
         }
 
+        public bool IsLoading
+        {
+            get => _isLoading;
+            set => SetProperty(ref _isLoading, value);
+        }
+
+        public bool IsBudgetValidated => _budgetPrimitif?.Status == BudgetPrimitif.Statusbudget.VALIDATED;
+        public bool CanModifyBudget => !IsBudgetValidated;
+
+        // ═══════════════════════════════════════════════════════════
+        // PROPRIÉTÉS - DIALOG
+        // ═══════════════════════════════════════════════════════════
+
+        public bool IsDialogOpen
+        {
+            get => _isDialogOpen;
+            set => SetProperty(ref _isDialogOpen, value);
+        }
+
+        public bool IsEditMode
+        {
+            get => _isEditMode;
+            set
+            {
+                if (SetProperty(ref _isEditMode, value))
+                {
+                    OnPropertyChanged(nameof(IsAddMode));
+                    OnPropertyChanged(nameof(DialogTitle));
+                }
+            }
+        }
+
+        public bool IsAddMode => !IsEditMode;
+
+        public string DialogTitle => IsEditMode
+            ? "Modifier la ligne budgétaire"
+            : "Ajouter une ligne budgétaire";
+
+        public ObservableCollection<Nommenclature> AvailableNomenclatures { get; } = new();
+
+        public Nommenclature? SelectedNomenclature
+        {
+            get => _selectedNomenclature;
+            set => SetProperty(ref _selectedNomenclature, value);
+        }
+
+        public string MontantPrevu
+        {
+            get => _montantPrevu;
+            set => SetProperty(ref _montantPrevu, value);
+        }
+
+        public string NomenclatureLibelle => _currentLine?.Nommenclature?.Intitule ?? "N/A";
+
+        // ═══════════════════════════════════════════════════════════
+        // COMMANDES
+        // ═══════════════════════════════════════════════════════════
+
         public ICommand AddCommand { get; }
+        public ICommand OpenEditDialogCommand { get; }
+        public ICommand DeleteCommand { get; }
         public ICommand RefreshCommand { get; }
+        public ICommand SaveDialogCommand { get; }
+        public ICommand CancelDialogCommand { get; }
+
+        // ═══════════════════════════════════════════════════════════
+        // CONSTRUCTEUR
+        // ═══════════════════════════════════════════════════════════
 
         public BudgetLinesViewModel(BudgetLineService service, int budgetPrimitifId)
         {
             _service = service;
             _budgetPrimitifId = budgetPrimitifId;
 
-            AddCommand = new RelayCommand(async _ => await OpenAddDialogAsync());
+            // Commandes principales
+            AddCommand = new RelayCommand(async _ => await OpenAddDialogAsync(), _ => CanModifyBudget);
+            OpenEditDialogCommand = new RelayCommand<BudgetLine>(async line => await OpenEditDialogAsync(line));
+            DeleteCommand = new RelayCommand<BudgetLine>(async line => await DeleteLineAsync(line));
             RefreshCommand = new RelayCommand(async _ => await LoadForSelectedTabAsync());
 
-            _ = LoadForSelectedTabAsync();
+            // Commandes du dialog
+            SaveDialogCommand = new RelayCommand(async _ => await SaveDialogAsync(), _ => CanSaveDialog());
+            CancelDialogCommand = new RelayCommand(_ => CloseDialog());
+
+            // Charger les données initiales
+            _ = InitializeAsync();
         }
+
+        // ═══════════════════════════════════════════════════════════
+        // INITIALISATION
+        // ═══════════════════════════════════════════════════════════
+
+        private async Task InitializeAsync()
+        {
+            IsLoading = true;
+            try
+            {
+                await LoadBudgetPrimitifAsync();
+                await LoadForSelectedTabAsync();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'initialisation : {ex.Message}",
+                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        private async Task LoadBudgetPrimitifAsync()
+        {
+            using var context = new AppDbContext();
+            _budgetPrimitif = await context.BudgetsPrimitifs
+                .FirstOrDefaultAsync(b => b.Id == _budgetPrimitifId);
+
+            OnPropertyChanged(nameof(IsBudgetValidated));
+            OnPropertyChanged(nameof(CanModifyBudget));
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // CHARGEMENT DES DONNÉES
+        // ═══════════════════════════════════════════════════════════
 
         private (NatureType nature, SectionType section) TabToFilter(int tabIndex)
         {
-            // 0: Recette Fonctionnement
-            // 1: Recette Investissement
-            // 2: Depense Fonctionnement
-            // 3: Depense Investissement
             return tabIndex switch
             {
                 0 => (NatureType.Recette, SectionType.Fonctionnement),
@@ -60,32 +181,302 @@ namespace Collectivite.ViewModels
 
         public async Task LoadForSelectedTabAsync()
         {
-            var filter = TabToFilter(SelectedTabIndex);
+            IsLoading = true;
+            try
+            {
+                var filter = TabToFilter(SelectedTabIndex);
+                var all = await _service.GetBudgetLinesForBudgetPrimitifAsync(_budgetPrimitifId);
 
-            var all = await _service.GetBudgetLinesForBudgetPrimitifAsync(_budgetPrimitifId);
-            var filtered = all.Where(b => b.Nommenclature.Nature == filter.nature && b.Nommenclature.Section == filter.section).ToList();
+                var filtered = all
+                    .Where(b => b.Nommenclature != null &&
+                                b.Nommenclature.Nature == filter.nature &&
+                                b.Nommenclature.Section == filter.section)
+                    .OrderBy(b => b.Nommenclature.Chapitre)
+                    .ThenBy(b => b.Nommenclature.Article)
+                    .ThenBy(b => b.Nommenclature.Paragraphe)
+                    .ThenBy(b => b.Nommenclature.SousParagraphe)
+                    .ToList();
 
-            DisplayedLines.Clear();
-            foreach (var l in filtered.OrderBy(b => b.Nommenclature.Intitule))
-                DisplayedLines.Add(l);
+                DisplayedLines.Clear();
+                foreach (var line in filtered)
+                {
+                    DisplayedLines.Add(line);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors du chargement : {ex.Message}",
+                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
         }
 
-        // Ouvre le dialog d'ajout (ici on utilise un ViewModel de dialog simple)
+        // ═══════════════════════════════════════════════════════════
+        // DIALOG - AJOUT
+        // ═══════════════════════════════════════════════════════════
+
         private async Task OpenAddDialogAsync()
         {
-            var filter = TabToFilter(SelectedTabIndex);
-            var available = await _service.GetLeafNomenclaturesNotLinkedAsync(
-                _budgetPrimitifId,
-                filter.nature,
-                filter.section
-            );
+            if (!CanModifyBudget)
+            {
+                MessageBox.Show(
+                    "Ce budget est validé et ne peut plus être modifié.",
+                    "Information",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
+            }
 
-            //var addVm = new AddBudgetLineViewModel(_service, _budgetPrimitifId, available);
-            var dialog = new Views.AddBudgetLineWindow(_service, _budgetPrimitifId, available);
+            try
+            {
+                var filter = TabToFilter(SelectedTabIndex);
+                var available = await _service.GetLeafNomenclaturesNotLinkedAsync(
+                    _budgetPrimitifId,
+                    filter.nature,
+                    filter.section
+                );
 
-            if (dialog.ShowDialog() == true)
-                await LoadForSelectedTabAsync();
+                if (!available.Any())
+                {
+                    MessageBox.Show(
+                        "Toutes les nomenclatures disponibles sont déjà liées à ce budget.",
+                        "Information",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                    return;
+                }
+
+                // Préparer le dialog en mode ajout
+                IsEditMode = false;
+                _currentLine = null;
+                SelectedNomenclature = null;
+                MontantPrevu = "0";
+
+                AvailableNomenclatures.Clear();
+                foreach (var nom in available.OrderBy(n => n.Intitule))
+                {
+                    AvailableNomenclatures.Add(nom);
+                }
+
+                IsDialogOpen = true;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur : {ex.Message}",
+                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
+        // ═══════════════════════════════════════════════════════════
+        // DIALOG - MODIFICATION
+        // ═══════════════════════════════════════════════════════════
+
+        private async Task OpenEditDialogAsync(BudgetLine? line)
+        {
+            if (line == null) return;
+
+            if (!CanModifyBudget)
+            {
+                MessageBox.Show(
+                    "Ce budget est validé et ne peut plus être modifié.",
+                    "Information",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
+            }
+
+            try
+            {
+                // Préparer le dialog en mode édition
+                IsEditMode = true;
+                _currentLine = line;
+                SelectedNomenclature = null;
+                MontantPrevu = line.MontantPrevu.ToString();
+
+                OnPropertyChanged(nameof(NomenclatureLibelle));
+
+                IsDialogOpen = true;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur : {ex.Message}",
+                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // DIALOG - VALIDATION & SAUVEGARDE
+        // ═══════════════════════════════════════════════════════════
+
+        private bool CanSaveDialog()
+        {
+            if (IsEditMode)
+            {
+                return int.TryParse(MontantPrevu, out var montant) && montant >= 0;
+            }
+            else
+            {
+                return SelectedNomenclature != null &&
+                       int.TryParse(MontantPrevu, out var montant) &&
+                       montant >= 0;
+            }
+        }
+
+        private async Task SaveDialogAsync()
+        {
+            try
+            {
+                if (!int.TryParse(MontantPrevu, out var montant))
+                {
+                    MessageBox.Show(
+                        "Le montant doit être un nombre entier valide.",
+                        "Erreur de validation",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    return;
+                }
+
+                if (montant < 0)
+                {
+                    MessageBox.Show(
+                        "Le montant ne peut pas être négatif.",
+                        "Erreur de validation",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    return;
+                }
+
+                IsLoading = true;
+                IsDialogOpen = false;
+
+                if (IsEditMode)
+                {
+                    // Mode édition
+                    if (_currentLine == null) return;
+
+                    var (success, message, _) = await _service.UpdateBudgetLineAsync(
+                        _currentLine.Id,
+                        montant);
+
+                    MessageBox.Show(message,
+                        success ? "Succès" : "Erreur",
+                        MessageBoxButton.OK,
+                        success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+
+                    if (success)
+                    {
+                        await LoadForSelectedTabAsync();
+                    }
+                }
+                else
+                {
+                    // Mode ajout
+                    if (SelectedNomenclature == null)
+                    {
+                        MessageBox.Show(
+                            "Veuillez sélectionner une nomenclature.",
+                            "Erreur de validation",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Warning);
+                        IsLoading = false;
+                        IsDialogOpen = true;
+                        return;
+                    }
+
+                    var newLine = await _service.CreateBudgetLineAsync(
+                        _budgetPrimitifId,
+                        SelectedNomenclature.Id,
+                        montant);
+
+                    MessageBox.Show(
+                        $"✅ Ligne budgétaire créée avec succès.\n\n" +
+                        $"Nomenclature : {SelectedNomenclature.Intitule}\n" +
+                        $"Montant : {montant:N0} GNF\n\n" +
+                        $"Les montants des parents ont été recalculés.",
+                        "Succès",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+
+                    await LoadForSelectedTabAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"❌ Erreur : {ex.Message}",
+                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        private void CloseDialog()
+        {
+            IsDialogOpen = false;
+            SelectedNomenclature = null;
+            MontantPrevu = "0";
+            _currentLine = null;
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // SUPPRESSION
+        // ═══════════════════════════════════════════════════════════
+
+        private async Task DeleteLineAsync(BudgetLine? line)
+        {
+            if (line == null) return;
+
+            if (!CanModifyBudget)
+            {
+                MessageBox.Show(
+                    "Ce budget est validé et ne peut plus être modifié.",
+                    "Information",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
+            }
+
+            var result = MessageBox.Show(
+                $"Êtes-vous sûr de vouloir supprimer cette ligne ?\n\n" +
+                $"Nomenclature : {line.Nommenclature?.Intitule ?? "N/A"}\n" +
+                $"Montant : {line.MontantPrevu:N0} GNF\n\n" +
+                $"⚠️ Les montants des parents seront recalculés automatiquement.",
+                "Confirmation",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                IsLoading = true;
+
+                try
+                {
+                    var (success, message) = await _service.DeleteBudgetLineAsync(line.Id);
+
+                    MessageBox.Show(message,
+                        success ? "Succès" : "Erreur",
+                        MessageBoxButton.OK,
+                        success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+
+                    if (success)
+                    {
+                        await LoadForSelectedTabAsync();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Erreur : {ex.Message}",
+                        "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                finally
+                {
+                    IsLoading = false;
+                }
+            }
+        }
     }
 }

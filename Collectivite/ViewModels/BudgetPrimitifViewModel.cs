@@ -20,6 +20,10 @@ namespace Collectivite.ViewModels
         private bool _isDialogOpen;
         private BudgetPrimitif _dialogBudgetPrimitif;
         private bool _isEditMode;
+        private bool _isValidationDialogOpen;
+        private DateOnly _dateValidation = DateOnly.FromDateTime(DateTime.Now);
+        private BudgetPrimitif? _budgetToValidate;
+        private readonly AppDbContext _context;
         //private BudgetPrimitifService _exercice;
 
         public BudgetPrimitifViewModel(BudgetPrimitifService budgetPrimitifService)
@@ -39,6 +43,15 @@ namespace Collectivite.ViewModels
             SaveBudgetPrimitifCommand = new RelayCommand(async _ => await SaveBudgetPrimitifAsync(), _ => CanSaveBudgetPrimitif());
             CancelBudgetPrimitifCommand = new RelayCommand(_ => CancelBudgetPrimitif());
             DeleteBudgetPrimitifCommand = new RelayCommand<BudgetPrimitif>(async budgetPrimitif => await DeleteBudgetPrimitifAsync(budgetPrimitif));
+            OpenValidationDialogCommand = new RelayCommand<BudgetPrimitif>(
+            budget => OpenValidationDialog(budget));
+
+            ConfirmValidationCommand = new RelayCommand(
+                async _ => await ConfirmValidationAsync(),
+                _ => CanConfirmValidation());
+
+            CancelValidationCommand = new RelayCommand(
+                _ => CancelValidation());
 
             // Charger les données au démarrage3
             LoadBudgetPrimitifCommand.Execute(null);
@@ -101,6 +114,24 @@ namespace Collectivite.ViewModels
                 OnPropertyChanged();
             }
         }
+
+        public bool IsValidationDialogOpen
+        {
+            get => _isValidationDialogOpen;
+            set => SetProperty(ref _isValidationDialogOpen, value);
+        }
+
+        public DateOnly DateValidation
+        {
+            get => _dateValidation;
+            set => SetProperty(ref _dateValidation, value);
+        }
+
+        public DateTime DateValidationDateTime
+        {
+            get => DateValidation.ToDateTime(TimeOnly.MinValue);
+            set => DateValidation = DateOnly.FromDateTime(value);
+        }
         public string DialogTitle => IsEditMode ? "Modifier budget primitif" : "Ajouter budget primitif";
 
         #endregion
@@ -112,6 +143,9 @@ namespace Collectivite.ViewModels
         public ICommand SaveBudgetPrimitifCommand { get; }
         public ICommand CancelBudgetPrimitifCommand { get; }
         public ICommand DeleteBudgetPrimitifCommand { get; }
+        public ICommand OpenValidationDialogCommand { get; }
+        public ICommand ConfirmValidationCommand { get; }
+        public ICommand CancelValidationCommand { get; }
         #endregion
 
         #region Methods
@@ -253,6 +287,81 @@ namespace Collectivite.ViewModels
             }
         }
 
+        private void OpenValidationDialog(BudgetPrimitif? budget)
+        {
+            if (budget == null) return;
+
+            // Vérifier si le budget est déjà validé
+            if (budget.Status == BudgetPrimitif.Statusbudget.VALIDATED)
+            {
+                MessageBox.Show(
+                    $"Ce budget est déjà validé.\n\n" +
+                    $"Date de validation : {budget.DateValidation?.ToString("dd/MM/yyyy") ?? "N/A"}",
+                    "Information",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
+            }
+
+            _budgetToValidate = budget;
+
+            // Initialiser la date de validation avec la date du jour
+            // mais vérifier qu'elle est >= date d'approbation
+            var today = DateOnly.FromDateTime(DateTime.Now);
+            DateValidation = today >= budget.DateApprobation
+                ? today
+                : budget.DateApprobation;
+
+            IsValidationDialogOpen = true;
+        }
+
+        private bool CanConfirmValidation()
+        {
+            return _budgetToValidate != null;
+        }
+
+        private async Task ConfirmValidationAsync()
+        {
+            if (_budgetToValidate == null) return;
+
+            IsLoading = true;
+            IsValidationDialogOpen = false;
+
+            try
+            {
+                var service = new BudgetPrimitifService();
+                var (success, message) = await service.ValiderBudgetPrimitif(
+                    _budgetToValidate.Id,
+                    DateValidation);
+
+                MessageBox.Show(message,
+                    success ? "Succès" : "Erreur",
+                    MessageBoxButton.OK,
+                    success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+
+                //if (success)
+                //{
+                //    // Recharger les données
+                //    await LoadBudgetsPrimitivesAsync();
+                //}
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur : {ex.Message}",
+                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsLoading = false;
+                _budgetToValidate = null;
+            }
+        }
+
+        private void CancelValidation()
+        {
+            IsValidationDialogOpen = false;
+            _budgetToValidate = null;
+        }
         #endregion
     }
 }
