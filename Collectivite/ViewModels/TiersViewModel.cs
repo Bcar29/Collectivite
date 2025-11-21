@@ -32,6 +32,11 @@ namespace Collectivite.ViewModels
         private DocumentTiers? _selectedDocument;
         private bool _isDocumentDialogOpen;
         private DocumentTiers _dialogDocument;
+        private bool _isDocumentEditDialogOpen;
+        private string? _numeroDocument;
+        private DateTime? _dateExpiration;
+        private DateTime? _dateEmission;
+        private string? _descriptionDocument;
 
         public TiersViewModel()
         {
@@ -63,6 +68,7 @@ namespace Collectivite.ViewModels
                 SaveCompteCommand = new RelayCommand(async _ => await SaveCompteAsync(), _ => CanSaveCompte());
                 CancelCompteCommand = new RelayCommand(_ => CancelCompteDialog());
                 DeleteCompteCommand = new RelayCommand<CompteBancaire>(async compte => await DeleteCompteAsync(compte));
+                ValidateIBANCommand = new RelayCommand(_ => ValidateIBAN());
 
                 // Commandes Documents
                 OpenAddDocumentDialogCommand = new RelayCommand(_ => OpenAddDocumentDialog());
@@ -70,6 +76,14 @@ namespace Collectivite.ViewModels
                 DeleteDocumentCommand = new RelayCommand<DocumentTiers>(async doc => await DeleteDocumentAsync(doc));
                 OpenDocumentCommand = new RelayCommand<DocumentTiers>(doc => OpenDocument(doc));
                 ToggleDocumentValiditeCommand = new RelayCommand<DocumentTiers>(async doc => await ToggleDocumentValiditeAsync(doc));
+
+                // NOUVELLES COMMANDES
+                OpenEditDocumentDialogCommand = new RelayCommand<DocumentTiers>(doc => OpenEditDocumentDialog(doc));
+                SaveDocumentInfoCommand = new RelayCommand(async _ => await SaveDocumentInfoAsync(), _ => CanSaveDocumentInfo());
+                CancelDocumentEditCommand = new RelayCommand(_ => CancelDocumentEdit());
+                ReplaceDocumentCommand = new RelayCommand<DocumentTiers>(async doc => await ReplaceDocumentAsync(doc));
+                CheckDocumentsObligatoiresCommand = new RelayCommand(async _ => await CheckDocumentsObligatoiresAsync());
+                ViewDocumentsExpiresCommand = new RelayCommand(async _ => await ViewDocumentsExpiresAsync());
 
                 // Charger les données
                 System.Threading.Tasks.Task.Run(async () => await LoadDataAsync()).Wait();
@@ -108,6 +122,8 @@ namespace Collectivite.ViewModels
                 {
                     LoadComptesOfSelectedTiers();
                     LoadDocumentsOfSelectedTiers();
+                    OnPropertyChanged(nameof(DocumentsObligatoires));
+                    OnPropertyChanged(nameof(HasDocumentsManquants));
                 }
             }
         }
@@ -230,6 +246,71 @@ namespace Collectivite.ViewModels
             set => SetProperty(ref _dialogDocument, value);
         }
 
+        // NOUVELLES PROPRIÉTÉS POUR L'ÉDITION DES DOCUMENTS
+        public bool IsDocumentEditDialogOpen
+        {
+            get => _isDocumentEditDialogOpen;
+            set => SetProperty(ref _isDocumentEditDialogOpen, value);
+        }
+
+        public string? NumeroDocument
+        {
+            get => _numeroDocument;
+            set => SetProperty(ref _numeroDocument, value);
+        }
+
+        public DateTime? DateExpiration
+        {
+            get => _dateExpiration;
+            set => SetProperty(ref _dateExpiration, value);
+        }
+
+        public DateTime? DateEmission
+        {
+            get => _dateEmission;
+            set => SetProperty(ref _dateEmission, value);
+        }
+
+        public string? DescriptionDocument
+        {
+            get => _descriptionDocument;
+            set => SetProperty(ref _descriptionDocument, value);
+        }
+
+        // PROPRIÉTÉS CALCULÉES POUR LES DOCUMENTS OBLIGATOIRES
+        public ObservableCollection<TypeDocument> DocumentsObligatoires
+        {
+            get
+            {
+                var collection = new ObservableCollection<TypeDocument>();
+
+                if (SelectedTiers == null) return collection;
+
+                var documentService = new DocumentTiersService();
+                var obligatoires = documentService.GetDocumentsObligatoires(SelectedTiers);
+
+                foreach (var doc in obligatoires)
+                {
+                    collection.Add(doc);
+                }
+
+                return collection;
+            }
+        }
+
+        public bool HasDocumentsManquants
+        {
+            get
+            {
+                if (SelectedTiers == null) return false;
+
+                var documentsPresents = DocumentsOfSelectedTiers.Select(d => d.Type).ToList();
+                var documentsObligatoires = DocumentsObligatoires.ToList();
+
+                return documentsObligatoires.Any(obligatoire => !documentsPresents.Contains(obligatoire));
+            }
+        }
+
         #endregion
 
         #region Commands
@@ -250,6 +331,7 @@ namespace Collectivite.ViewModels
         public ICommand SaveCompteCommand { get; }
         public ICommand CancelCompteCommand { get; }
         public ICommand DeleteCompteCommand { get; }
+        public ICommand ValidateIBANCommand { get; }
 
         // Commandes Documents
         public ICommand OpenAddDocumentDialogCommand { get; }
@@ -257,6 +339,14 @@ namespace Collectivite.ViewModels
         public ICommand DeleteDocumentCommand { get; }
         public ICommand OpenDocumentCommand { get; }
         public ICommand ToggleDocumentValiditeCommand { get; }
+
+        // NOUVELLES COMMANDES
+        public ICommand OpenEditDocumentDialogCommand { get; }
+        public ICommand SaveDocumentInfoCommand { get; }
+        public ICommand CancelDocumentEditCommand { get; }
+        public ICommand ReplaceDocumentCommand { get; }
+        public ICommand CheckDocumentsObligatoiresCommand { get; }
+        public ICommand ViewDocumentsExpiresCommand { get; }
 
         #endregion
 
@@ -338,6 +428,34 @@ namespace Collectivite.ViewModels
             finally
             {
                 IsLoading = false;
+            }
+        }
+        private void ValidateIBAN()
+        {
+            if (DialogCompte == null || string.IsNullOrWhiteSpace(DialogCompte.IBAN))
+            {
+                MessageBox.Show("Veuillez saisir un IBAN.", "Information",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            string iban = DialogCompte.IBAN.Replace(" ", "").ToUpper();
+
+            // Validation basique du format
+            if (iban.Length >= 15 && iban.Length <= 34 &&
+                System.Text.RegularExpressions.Regex.IsMatch(iban, @"^[A-Z]{2}[0-9]{2}[A-Z0-9]+$"))
+            {
+                MessageBox.Show("✓ Format d'IBAN valide", "Validation",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            else
+            {
+                MessageBox.Show(
+                    "✗ Format d'IBAN invalide\n\n" +
+                    "Format attendu : 2 lettres (pays) + 2 chiffres + code banque et compte\n" +
+                    "Longueur : 15-34 caractères",
+                    "Validation",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -612,11 +730,19 @@ namespace Collectivite.ViewModels
 
         private bool CanSaveCompte()
         {
-            return DialogCompte != null &&
-                   DialogCompte.TiersId > 0 &&
-                   !string.IsNullOrWhiteSpace(DialogCompte.IBAN) &&
-                   !string.IsNullOrWhiteSpace(DialogCompte.Banque) &&
-                   !string.IsNullOrWhiteSpace(DialogCompte.Pays);
+            if (DialogCompte == null) return false;
+
+            // Vérification des champs obligatoires
+            if (DialogCompte.TiersId <= 0) return false;
+            if (string.IsNullOrWhiteSpace(DialogCompte.IBAN)) return false;
+            if (string.IsNullOrWhiteSpace(DialogCompte.Banque)) return false;
+            if (string.IsNullOrWhiteSpace(DialogCompte.Pays)) return false;
+
+            // Validation de la longueur de l'IBAN
+            string iban = DialogCompte.IBAN.Replace(" ", "");
+            if (iban.Length < 15 || iban.Length > 34) return false;
+
+            return true;
         }
 
         private async System.Threading.Tasks.Task SaveCompteAsync()
@@ -625,6 +751,33 @@ namespace Collectivite.ViewModels
 
             try
             {
+                // Normaliser l'IBAN (enlever les espaces et mettre en majuscules)
+                if (!string.IsNullOrWhiteSpace(DialogCompte.IBAN))
+                {
+                    DialogCompte.IBAN = DialogCompte.IBAN.Replace(" ", "").ToUpper();
+                }
+
+                // Validation supplémentaire
+                string iban = DialogCompte.IBAN;
+                if (iban.Length < 15 || iban.Length > 34)
+                {
+                    MessageBox.Show("L'IBAN doit contenir entre 15 et 34 caractères.", "Validation",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    IsLoading = false;
+                    return;
+                }
+
+                if (!System.Text.RegularExpressions.Regex.IsMatch(iban, @"^[A-Z]{2}[0-9]{2}[A-Z0-9]+$"))
+                {
+                    MessageBox.Show(
+                        "Format d'IBAN invalide.\n\n" +
+                        "Le format doit être : 2 lettres (pays) + 2 chiffres + code banque et compte.",
+                        "Validation",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    IsLoading = false;
+                    return;
+                }
+
                 var compteService = new CompteBancaireService();
 
                 if (IsCompteEditMode)
@@ -730,6 +883,9 @@ namespace Collectivite.ViewModels
                 {
                     DocumentsOfSelectedTiers.Add(doc);
                 }
+
+                OnPropertyChanged(nameof(DocumentsObligatoires));
+                OnPropertyChanged(nameof(HasDocumentsManquants));
             }
             catch (Exception ex)
             {
@@ -775,6 +931,201 @@ namespace Collectivite.ViewModels
                     MessageBox.Show(message, "Information",
                         MessageBoxButton.OK, MessageBoxImage.Information);
                 }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        // NOUVELLES MÉTHODES POUR L'ÉDITION DES DOCUMENTS
+
+        private void OpenEditDocumentDialog(DocumentTiers? document)
+        {
+            if (document == null) return;
+
+            SelectedDocument = document;
+            NumeroDocument = document.NumeroDocument;
+            DateExpiration = document.DateExpiration;
+            DateEmission = document.DateEmission;
+            DescriptionDocument = document.Description;
+
+            IsDocumentEditDialogOpen = true;
+        }
+
+        private bool CanSaveDocumentInfo()
+        {
+            return SelectedDocument != null;
+        }
+
+        private async System.Threading.Tasks.Task SaveDocumentInfoAsync()
+        {
+            if (SelectedDocument == null) return;
+
+            IsLoading = true;
+
+            try
+            {
+                var documentService = new DocumentTiersService();
+                var (success, message) = await documentService.UpdateDocumentInfoAsync(
+                    SelectedDocument.Id,
+                    NumeroDocument,
+                    DateExpiration,
+                    DateEmission,
+                    DescriptionDocument);
+
+                if (success)
+                {
+                    MessageBox.Show(message, "Succès",
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    IsDocumentEditDialogOpen = false;
+                    LoadDocumentsOfSelectedTiers();
+                }
+                else
+                {
+                    MessageBox.Show(message, "Erreur",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        private void CancelDocumentEdit()
+        {
+            IsDocumentEditDialogOpen = false;
+            SelectedDocument = null;
+            NumeroDocument = null;
+            DateExpiration = null;
+            DateEmission = null;
+            DescriptionDocument = null;
+        }
+
+        private async System.Threading.Tasks.Task ReplaceDocumentAsync(DocumentTiers? document)
+        {
+            if (document == null) return;
+
+            var result = MessageBox.Show(
+                $"Voulez-vous remplacer le fichier du document '{document.TypeDisplay}' ?",
+                "Confirmation",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                IsLoading = true;
+
+                var documentService = new DocumentTiersService();
+                var (success, message) = await documentService.ReplaceDocumentAsync(document.Id);
+
+                MessageBox.Show(message,
+                    success ? "Succès" : "Information",
+                    MessageBoxButton.OK,
+                    success ? MessageBoxImage.Information : MessageBoxImage.Information);
+
+                if (success)
+                {
+                    LoadDocumentsOfSelectedTiers();
+                }
+
+                IsLoading = false;
+            }
+        }
+
+        private async System.Threading.Tasks.Task CheckDocumentsObligatoiresAsync()
+        {
+            if (SelectedTiers == null) return;
+
+            IsLoading = true;
+
+            try
+            {
+                var documentService = new DocumentTiersService();
+                var (allPresent, missingDocuments) = await documentService.CheckDocumentsObligatoiresAsync(SelectedTiers.Id);
+
+                if (allPresent)
+                {
+                    MessageBox.Show(
+                        "✅ Tous les documents obligatoires sont présents !",
+                        "Documents complets",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                }
+                else
+                {
+                    var message = "⚠️ Documents obligatoires manquants :\n\n";
+                    foreach (var docType in missingDocuments)
+                    {
+                        message += $"• {GetDocumentTypeDisplay(docType)}\n";
+                    }
+
+                    MessageBox.Show(message, "Documents manquants",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        private async System.Threading.Tasks.Task ViewDocumentsExpiresAsync()
+        {
+            if (SelectedTiers == null) return;
+
+            IsLoading = true;
+
+            try
+            {
+                var documentService = new DocumentTiersService();
+                var documentsExpires = await documentService.GetDocumentsExpiresAsync(SelectedTiers.Id);
+                var documentsExpireBientot = await documentService.GetDocumentsExpireBientotAsync(SelectedTiers.Id);
+
+                var message = "";
+
+                if (documentsExpires.Any())
+                {
+                    message += "🔴 Documents expirés :\n\n";
+                    foreach (var doc in documentsExpires)
+                    {
+                        message += $"• {doc.TypeDisplay} - Expiré le {doc.DateExpiration:dd/MM/yyyy}\n";
+                    }
+                    message += "\n";
+                }
+
+                if (documentsExpireBientot.Any())
+                {
+                    message += "🟠 Documents qui expirent bientôt (30 jours) :\n\n";
+                    foreach (var doc in documentsExpireBientot)
+                    {
+                        message += $"• {doc.TypeDisplay} - Expire le {doc.DateExpiration:dd/MM/yyyy}\n";
+                    }
+                }
+
+                if (string.IsNullOrEmpty(message))
+                {
+                    message = "✅ Aucun document expiré ou proche de l'expiration.";
+                }
+
+                MessageBox.Show(message, "État des documents",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
@@ -854,6 +1205,23 @@ namespace Collectivite.ViewModels
             }
 
             IsLoading = false;
+        }
+
+        // Méthode utilitaire
+        private string GetDocumentTypeDisplay(TypeDocument type)
+        {
+            return type switch
+            {
+                TypeDocument.CarteIdentite => "CNI / Carte d'Identité",
+                TypeDocument.Passeport => "Passeport",
+                TypeDocument.RCCM => "RCCM",
+                TypeDocument.NIF => "NIF",
+                TypeDocument.QuitusFiscal => "Quitus Fiscal",
+                TypeDocument.AttestationTVA => "Attestation TVA",
+                TypeDocument.ContratTravail => "Contrat de travail",
+                TypeDocument.Autre => "Autre",
+                _ => "Inconnu"
+            };
         }
 
         #endregion

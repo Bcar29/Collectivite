@@ -134,12 +134,12 @@ namespace Collectivite
 
         //AJOUT DES COMPTES BANCAIRES ET DES TIERS
 
-        private void CompteBancaireButton_Click(object sender, RoutedEventArgs e)
-        {
-            _viewModel.UpdatePageTitle("CONFIGURATION - COMPTES BANCAIRES");
-            NavigationService.Instance.NavigateTo(new Views.Pages.CompteBancairePage());
-            _viewModel.IsMenuOpen = false;
-        }
+        //private void CompteBancaireButton_Click(object sender, RoutedEventArgs e)
+        //{
+        //    _viewModel.UpdatePageTitle("CONFIGURATION - COMPTES BANCAIRES");
+        //    NavigationService.Instance.NavigateTo(new Views.Pages.CompteBancairePage());
+        //    _viewModel.IsMenuOpen = false;
+        //}
 
         private void TiersButton_Click(object sender, RoutedEventArgs e)
         {

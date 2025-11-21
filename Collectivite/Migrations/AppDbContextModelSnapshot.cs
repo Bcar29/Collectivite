@@ -503,6 +503,9 @@ namespace Collectivite.Migrations
                     b.Property<DateTime>("DateAjout")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<DateTime?>("DateEmission")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<DateTime?>("DateExpiration")
                         .HasColumnType("datetime(6)");
 
@@ -521,6 +524,10 @@ namespace Collectivite.Migrations
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("varchar(255)");
+
+                    b.Property<string>("NumeroDocument")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
 
                     b.Property<long>("TailleFichier")
                         .HasColumnType("bigint");

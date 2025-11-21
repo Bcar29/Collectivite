@@ -27,8 +27,8 @@ namespace Collectivite.Models
         [Display(Name = "Attestation TVA")]
         AttestationTVA,
 
-        [Display(Name = "Contrat")]
-        Contrat,
+        [Display(Name = "Contrat de travail")]
+        ContratTravail,
 
         [Display(Name = "Autre")]
         Autre
@@ -49,19 +49,25 @@ namespace Collectivite.Models
         [Required]
         public TypeDocument Type { get; set; }
 
+        /// <summary>
+        /// Numéro du document (ex: numéro CNI, numéro RCCM, etc.)
+        /// </summary>
+        [MaxLength(100)]
+        public string? NumeroDocument { get; set; }
+
         [Required]
         [MaxLength(255)]
         public string NomFichier { get; set; } = null!;
 
         /// <summary>
-        /// Chemin du fichier sur le serveur
+        /// Chemin du fichier sur le serveur ou dans le système
         /// </summary>
         [Required]
         [MaxLength(500)]
         public string CheminFichier { get; set; } = null!;
 
         /// <summary>
-        /// Extension du fichier (.pdf, .jpg, etc.)
+        /// Extension du fichier (.pdf, .jpg, .png, etc.)
         /// </summary>
         [MaxLength(10)]
         public string? Extension { get; set; }
@@ -73,15 +79,29 @@ namespace Collectivite.Models
 
         public DateTime DateAjout { get; set; } = DateTime.Now;
 
-        [MaxLength(500)]
-        public string? Description { get; set; }
-
         /// <summary>
         /// Date d'expiration du document (si applicable)
         /// </summary>
         public DateTime? DateExpiration { get; set; }
 
+        /// <summary>
+        /// Date d'émission du document
+        /// </summary>
+        public DateTime? DateEmission { get; set; }
+
+        [MaxLength(500)]
+        public string? Description { get; set; }
+
+        /// <summary>
+        /// Indique si le document est valide/vérifié
+        /// </summary>
         public bool IsValide { get; set; } = true;
+
+        /// <summary>
+        /// Indique si le document est obligatoire pour ce type de tiers
+        /// </summary>
+        [NotMapped]
+        public bool IsObligatoire { get; set; }
 
         // ═══════════════════════════════════════════════════════════
         // RELATIONS
@@ -102,7 +122,7 @@ namespace Collectivite.Models
             TypeDocument.NIF => "NIF",
             TypeDocument.QuitusFiscal => "Quitus Fiscal",
             TypeDocument.AttestationTVA => "Attestation TVA",
-            TypeDocument.Contrat => "Contrat",
+            TypeDocument.ContratTravail => "Contrat de travail",
             TypeDocument.Autre => "Autre",
             _ => "Inconnu"
         };
@@ -123,5 +143,28 @@ namespace Collectivite.Models
 
         [NotMapped]
         public bool EstExpire => DateExpiration.HasValue && DateExpiration.Value < DateTime.Now;
+
+        [NotMapped]
+        public bool ExpireBientot => DateExpiration.HasValue &&
+                                      DateExpiration.Value > DateTime.Now &&
+                                      DateExpiration.Value <= DateTime.Now.AddDays(30);
+
+        [NotMapped]
+        public string StatutExpiration
+        {
+            get
+            {
+                if (!DateExpiration.HasValue)
+                    return "Non applicable";
+
+                if (EstExpire)
+                    return "Expiré";
+
+                if (ExpireBientot)
+                    return "Expire bientôt";
+
+                return "Valide";
+            }
+        }
     }
 }
