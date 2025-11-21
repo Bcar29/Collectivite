@@ -23,6 +23,7 @@ namespace Collectivite.Services
         public DbSet<Facture> Factures { get; set; }
         public DbSet<DetailsFacture> DetailsFactures { get; set; }
         public DbSet<Tiers> Tiers { get; set; }
+        public DbSet<DocumentTiers> DocumentTiers { get; set; }
         public DbSet<CompteBancaire> CompteBancaires { get; set; }
         public DbSet<BonCommande> BonCommandes { get; set; }
         public DbSet<DetailBonCommande> DetailsBonCommandes { get; set; }
@@ -332,6 +333,13 @@ namespace Collectivite.Services
                 .WithMany(m => m.EcritureComptables)
                 .HasForeignKey(ec => ec.MandatId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // COMPTE COMPTABLE
+            modelBuilder.Entity<CompteComptable>()
+                .HasOne(c => c.CompteParent)
+                .WithMany(c => c.SousComptes)
+                .HasForeignKey(c => c.CompteParentId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
 
     }

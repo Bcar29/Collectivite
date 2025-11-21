@@ -1,0 +1,360 @@
+﻿<Page x:Class="Collectivite.Views.Pages.CompteComptablePage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+      Background="#F5F5F5"
+      Title="Gestion des Comptes comptable">
+
+    <Page.Resources>
+        <!-- Converters -->
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        
+
+    </Page.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="77*"/>
+            <ColumnDefinition Width="613*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- ═══════════════════════════════════════════════════════════
+      OVERLAY DE CHARGEMENT
+      ═══════════════════════════════════════════════════════════ -->
+        <Grid Background="#80000000" 
+       Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"
+       Panel.ZIndex="999" Grid.ColumnSpan="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="16*"/>
+                <ColumnDefinition Width="9*"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Left" Margin="351,0,0,0">
+                <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}"
+                    Value="0"
+                    IsIndeterminate="True"
+                    Width="60"
+                    Height="60"/>
+                <TextBlock Text="Chargement..." 
+                  Foreground="White"
+                  FontSize="16"
+                  Margin="0,20,0,0"
+                  HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- ═══════════════════════════════════════════════════════════
+     CONTENU PRINCIPAL
+     ═══════════════════════════════════════════════════════════ -->
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20" Grid.ColumnSpan="2">
+            <StackPanel>
+
+                <!-- ───────────────────────────────────────────────────
+             HEADER AVEC BOUTON D'AJOUT
+             ─────────────────────────────────────────────────── -->
+                <Grid Margin="0,0,0,20">
+                    <!-- Titre -->
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Calculator" 
+                                       Width="32" 
+                                       Height="32"
+                                       Foreground="#1976D2"
+                                       VerticalAlignment="Center"/>
+                        <TextBlock Text="Gestion des Comptes Comptables" 
+                         FontSize="24"
+                         FontWeight="SemiBold"
+                         Margin="15,0,0,0"
+                         VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <!-- Bouton Ajouter -->
+                    <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                    Height="40"
+                    Command="{Binding OppenAddCompteCommand}"
+                    HorizontalAlignment="Right">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Plus" 
+                                           VerticalAlignment="Center"
+                                           Margin="0,0,8,0"/>
+                            <TextBlock Text="Nouveau Compte" 
+                             VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
+
+                <!-- ───────────────────────────────────────────────────
+             FILTRES (Optionnel - pour naviguer dans la hiérarchie)
+             ─────────────────────────────────────────────────── -->
+                <materialDesign:Card Padding="15" 
+                           UniformCornerRadius="8"
+                           Margin="0,0,0,15">
+                    <StackPanel Orientation="Horizontal">
+                        <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Command="{Binding LoadCompteCommand}"
+                                Height="36"
+                                Margin="0,0,10,0">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="FormatListBulleted" 
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,8,0"/>
+                                <TextBlock Text="Tous les comptes" 
+                                 VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Command="{Binding LoadComptesRacinesCommand}"
+                                Height="36">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="FileTree" 
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,8,0"/>
+                                <TextBlock Text="Comptes racines" 
+                                 VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <!-- ───────────────────────────────────────────────────
+             DATAGRID DES COMPTES COMPTABLES
+             ─────────────────────────────────────────────────── -->
+                <materialDesign:Card Padding="0" 
+                           UniformCornerRadius="8">
+                    <DataGrid
+                        ItemsSource="{Binding CompteComptables}"
+                      SelectedItem="{Binding SelectedCompte}"
+                      AutoGenerateColumns="False"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
+                      IsReadOnly="True"
+                      SelectionMode="Single"
+                      materialDesign:DataGridAssist.CellPadding="13 8 8 8"
+                      materialDesign:DataGridAssist.ColumnHeaderPadding="8">
+
+                        <DataGrid.Columns>
+
+                            <!-- Numero compte -->
+                            <DataGridTextColumn Header="Numéro Compte" 
+                                Binding="{Binding NumeroCompte}"
+                                Width="200"
+                                FontWeight="Medium"/>
+
+                            <!-- Intitule Compte -->
+                            <DataGridTextColumn Header="Intitulé Compte" 
+                                  Binding="{Binding IntituleCompte}"
+                                  Width="*"
+                                  FontWeight="Medium"/>
+
+                            <!-- Compte Parent -->
+                            <DataGridTemplateColumn Header="Compte Parent" Width="250">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="SubdirectoryArrowRight" 
+                                                           Width="16" 
+                                                           Height="16"
+                                                           Foreground="#666"
+                                                           VerticalAlignment="Center"
+                                                           Margin="0,0,8,0"
+                                                           Visibility="{Binding CompteParent, Converter={StaticResource BoolToVis}}"/>
+                                            <TextBlock Text="{Binding CompteParent.NumeroCompte}" 
+                                             FontSize="12"
+                                             Foreground="#666"
+                                             VerticalAlignment="Center"/>
+                                            <TextBlock Text=" - " 
+                                             FontSize="12"
+                                             Foreground="#666"
+                                             VerticalAlignment="Center"
+                                             Visibility="{Binding CompteParent, Converter={StaticResource BoolToVis}}"/>
+                                            <TextBlock Text="{Binding CompteParent.IntituleCompte}" 
+                                             FontSize="12"
+                                             Foreground="#666"
+                                             VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Nombre de sous-comptes -->
+                            <DataGridTemplateColumn Header="Sous-comptes" Width="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                                Height="28"
+                                                Padding="8,4"
+                                                Command="{Binding DataContext.LoadSousComptesCommand, 
+                                                        RelativeSource={RelativeSource AncestorType=Page}}"
+                                                CommandParameter="{Binding Id}"
+                                                IsEnabled="{Binding SousComptes.Count}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="FolderOpen" 
+                                                               Width="16" 
+                                                               Height="16"
+                                                               VerticalAlignment="Center"
+                                                               Margin="0,0,5,0"/>
+                                                <TextBlock Text="{Binding SousComptes.Count}" 
+                                                 VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Actions -->
+                            <DataGridTemplateColumn Header="Actions" Width="150">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" 
+                                          HorizontalAlignment="Center">
+
+                                            <!-- Bouton Modifier -->
+                                            <Button Style="{StaticResource MaterialDesignIconButton}"
+                                          ToolTip="Modifier"
+                                          Command="{Binding DataContext.OppenEditCompteCommand, 
+                                                  RelativeSource={RelativeSource AncestorType=Page}}"
+                                          CommandParameter="{Binding}"
+                                          Margin="4,0">
+                                                <materialDesign:PackIcon Kind="Pencil" 
+                                                               Foreground="#1976D2"/>
+                                            </Button>
+
+                                            <!-- Bouton Supprimer -->
+                                            <Button Style="{StaticResource MaterialDesignIconButton}"
+                                          ToolTip="Supprimer"
+                                          Command="{Binding DataContext.DeleteCompteCommand, 
+                                                  RelativeSource={RelativeSource AncestorType=Page}}"
+                                          CommandParameter="{Binding}"
+                                          Margin="4,0">
+                                                <materialDesign:PackIcon Kind="Delete" 
+                                                               Foreground="#F44336"/>
+                                            </Button>
+
+                                        </StackPanel>
+
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </materialDesign:Card>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ═══════════════════════════════════════════════════════════
+      DIALOG MODAL AJOUT/MODIFICATION
+      ═══════════════════════════════════════════════════════════ -->
+        <materialDesign:DialogHost IsOpen="{Binding IsDialogOpen}"
+                          CloseOnClickAway="False"
+                          Panel.ZIndex="1000" Grid.ColumnSpan="2">
+            <materialDesign:DialogHost.DialogContent>
+                <StackPanel Width="550" Margin="20">
+
+                    <!-- Titre du dialog -->
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+                        <materialDesign:PackIcon Kind="Calculator" 
+                                        Width="24" 
+                                        Height="24"
+                                        Foreground="#1976D2"
+                                        VerticalAlignment="Center"
+                                        Margin="0,0,10,0"/>
+                        <TextBlock Text="{Binding DialogTitle}"
+                          FontSize="20"
+                          FontWeight="SemiBold"
+                          VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <!-- Numéro du compte  -->
+                    <TextBox materialDesign:HintAssist.Hint="Numéro du compte *"
+                    Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                    Text="{Binding DialogCompte.NumeroCompte, UpdateSourceTrigger=PropertyChanged}"
+                    Margin="0,0,0,15"
+                    MaxLength="20"/>
+
+                    <!-- Intitulé Compte  -->
+                    <TextBox materialDesign:HintAssist.Hint="Intitulé du compte *"
+                    Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                    Text="{Binding DialogCompte.IntituleCompte, UpdateSourceTrigger=PropertyChanged}"
+                    Margin="0,0,0,15"
+                    MaxLength="255"/>
+
+                    <!-- Compte Parent (ComboBox) -->
+                    <ComboBox materialDesign:HintAssist.Hint="Compte parent (optionnel)"
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                          ItemsSource="{Binding ComptesParentDisponibles}"
+                          SelectedValue="{Binding DialogCompte.CompteParentId}"
+                          SelectedValuePath="Id"
+                          Margin="0,0,0,15">
+
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding NumeroCompte}" 
+                           FontWeight="Medium"
+                           Margin="0,0,8,0"/>
+                                    <TextBlock Text="-" 
+                           Margin="0,0,8,0"
+                           Foreground="#666"/>
+                                    <TextBlock Text="{Binding IntituleCompte}"
+                           Foreground="#666"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+
+                    <!-- Info sur la hiérarchie -->
+                    <Border Background="#E3F2FD" 
+                            CornerRadius="4"
+                            Padding="10"
+                            Margin="0,0,0,15">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="InformationOutline" 
+                                           Width="20" 
+                                           Height="20"
+                                           Foreground="#1976D2"
+                                           VerticalAlignment="Center"
+                                           Margin="0,0,10,0"/>
+                            <TextBlock TextWrapping="Wrap"
+                                       FontSize="12"
+                                       Foreground="#1976D2">
+                                <Run Text="Si aucun compte parent n'est sélectionné, ce compte sera un compte racine."/>
+                                <LineBreak/>
+                                <Run Text="Vous pouvez créer une hiérarchie en sélectionnant un compte parent."/>
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Note explicative -->
+                    <TextBlock Text="* Champs obligatoires"
+                      FontSize="11"
+                      Foreground="#666"
+                      FontStyle="Italic"
+                      Margin="0,0,0,15"/>
+
+                    <!-- Boutons -->
+                    <StackPanel Orientation="Horizontal" 
+                       HorizontalAlignment="Right">
+                        <Button Style="{StaticResource MaterialDesignFlatButton}"
+                       Content="Annuler"
+                       Command="{Binding CancelCompteCommand}"
+                       Margin="0,0,10,0"
+                       Width="100"/>
+
+                        <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                       Content="Enregistrer"
+                       Command="{Binding SaveCompteCommand}"
+                       Width="120">
+                            <Button.CommandParameter>
+                                <Binding RelativeSource="{RelativeSource Self}"/>
+                            </Button.CommandParameter>
+                        </Button>
+                    </StackPanel>
+
+                </StackPanel>
+            </materialDesign:DialogHost.DialogContent>
+        </materialDesign:DialogHost>
+
+    </Grid>
+</Page>
