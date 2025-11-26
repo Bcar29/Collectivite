@@ -3,11 +3,16 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
       Language="fr-FR"
+      xmlns:utils="clr-namespace:Collectivite.Utils"
       Background="#F5F5F5"
       Title="Détail du Mandat">
 
     <Page.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <utils:NullToBooleanConverter x:Key="NullToBooleanConverter"/>
+        <utils:PaymentTooltipConverter x:Key="PaymentTooltipConverter"/>
+        <utils:PaymentCommandConverter x:Key="PaymentCommandConverter"/>
+        <utils:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter"/>
     </Page.Resources>
 
     <Grid>
@@ -152,7 +157,7 @@
                                 <Button.Visibility>
                                     <Binding Path="EstPaye">
                                         <Binding.Converter>
-                                            <StaticResource ResourceKey="InverseBoolToVisibilityConverter "/>
+                                            <StaticResource ResourceKey="InverseBoolToVisibilityConverter"/>
                                         </Binding.Converter>
                                     </Binding>
                                 </Button.Visibility>

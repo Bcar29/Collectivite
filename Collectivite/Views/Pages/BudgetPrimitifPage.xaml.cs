@@ -23,15 +23,21 @@ namespace Collectivite.Views.Pages
     /// </summary>
     public partial class BudgetPrimitifPage : Page
     {
+        private readonly BudgetPrimitifViewModel _viewModel;
+
         public BudgetPrimitifPage()
         {
             InitializeComponent();
 
-            var budgetPrimitifService = new BudgetPrimitifService();
-            var viewModel = new BudgetPrimitifViewModel(budgetPrimitifService);
+            // Créer et assigner le ViewModel
+            _viewModel = new BudgetPrimitifViewModel(new BudgetPrimitifService());
+            DataContext = _viewModel;
+        }
 
-            // ⚠️ IMPORTANT : Définir le DataContext pour le binding
-            DataContext = viewModel;
+        private void Page_Unloaded(object sender, RoutedEventArgs e)
+        {
+            // Disposer le ViewModel
+            _viewModel?.Dispose();
         }
     }
 }

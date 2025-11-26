@@ -47,7 +47,7 @@
                 <!-- Header de la sidebar -->
                 <Border DockPanel.Dock="Top" 
                        Background="{DynamicResource PrimaryHueMidBrush}"
-                       Height="160"
+                       Height="180"
                        Padding="20">
                     <StackPanel VerticalAlignment="Center">
                         <materialDesign:PackIcon Kind="CityVariant" 
@@ -55,14 +55,22 @@
                                                Height="60"
                                                Foreground="Green"
                                                HorizontalAlignment="Center"/>
-                        <TextBlock Text="Gestion Municipale"
-                                 FontSize="20"
+                        <TextBlock Text="Plateforme de Gestion Budgetaire "
+                                 FontSize="15"
                                  FontWeight="Bold"
                                  Foreground="Black"
                                  TextAlignment="Center"
                                  Margin="0,15,0,0"/>
-                        <TextBlock Text="Solution Budgétaire"
-                                 FontSize="13"
+                        <TextBlock Text="et Comptable des Collectivités"
+                                 FontSize="15"
+                                   FontWeight="Bold"
+                                 Foreground="Black"
+                                 TextAlignment="Center"
+                                 Opacity="0.9"
+                                 Margin="0,5,0,0"/>
+                        <TextBlock Text="Locales"
+                                 FontSize="15"
+                                   FontWeight="Bold"
                                  Foreground="Black"
                                  TextAlignment="Center"
                                  Opacity="0.9"
@@ -532,18 +540,36 @@
                               Orientation="Horizontal" 
                               VerticalAlignment="Center">
                         <!-- Bouton Exercice -->
-                        <Button Style="{StaticResource MaterialDesignFlatButton}"
-                               Height="36"
-                               Padding="15,0"
-                               Margin="0,0,15,0">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Calendar" 
-                                                       VerticalAlignment="Center"
-                                                       Margin="0,0,8,0"/>
-                                <TextBlock Text="{Binding ExerciceText}" 
-                                         VerticalAlignment="Center"/>
-                            </StackPanel>
+                        <Button x:Name="ExerciceButton"
+                            Click="ExerciceButtonDown_Click"
+                            Style="{StaticResource MaterialDesignFlatButton}"
+                            Height="36"
+                            Padding="15,0"
+                            Margin="0,0,15,0">
+                            <Button.Content>
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Calendar" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Text="{Binding ExerciceText}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button.Content>
+                            <Button.ContextMenu>
+                                <ContextMenu x:Name="ExerciceMenu"
+                                     ItemsSource="{Binding Exercices}"
+                                     MinWidth="180"
+                                     Width="200">
+                                    <ContextMenu.Resources>
+                                        <Style TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+                                            <Setter Property="Header" Value="{Binding Libelle}"/>
+                                            <Setter Property="Command" Value="{Binding DataContext.SelectExerciceCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                            <Setter Property="CommandParameter" Value="{Binding Id}"/>
+                                            <Setter Property="Padding" Value="10,8"/>
+                                            <Setter Property="Height" Value="36"/>
+                                        </Style>
+                                    </ContextMenu.Resources>
+                                </ContextMenu>
+                            </Button.ContextMenu>
                         </Button>
+
 
                         <!-- Séparateur -->
                         <Border Width="1" 
