@@ -147,7 +147,7 @@ namespace Collectivite.ViewModels
                 // Charger les exercices
                 using (var context = new AppDbContext())
                 {
-                    var exerciceService = new ExerciceService(context);
+                    var exerciceService = new ExerciceService();
                     var exercices = await exerciceService.GetAllExerciceAsync();
 
                     Exercices.Clear();

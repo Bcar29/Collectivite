@@ -51,4 +51,6 @@
     <Folder Include="Migrations\" />
   </ItemGroup>
 
+  <!-- Included explicitly to ensure the converter is compiled if implicit globs are modified -->
+
 </Project>

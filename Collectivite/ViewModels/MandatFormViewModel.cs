@@ -1,6 +1,7 @@
 ﻿using Collectivite.Models;
 using Collectivite.Services;
 using Collectivite.Utils;
+using DocumentFormat.OpenXml.Bibliography;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -16,6 +17,43 @@ namespace Collectivite.ViewModels
         private int? _mandatId;
         private Mandat _mandat;
 
+
+        private BudgetLine? _selectedBudgetLine;
+        public BudgetLine? SelectedBudgetLine
+        {
+            get => _selectedBudgetLine;
+            set
+            {
+                _selectedBudgetLine = value;
+                OnPropertyChanged(nameof(SelectedBudgetLine));
+                // Vous pouvez aussi exposer des propriétés spécifiques
+                OnPropertyChanged(nameof(MontantDisponible));
+                OnPropertyChanged(nameof(NomenclatureCode));
+            }
+        }
+
+        // Propriétés calculées pour affichage
+        public decimal MontantDisponible => SelectedBudgetLine?.MontantDefinitif ?? 0;
+        public string NomenclatureCode => SelectedBudgetLine?.Nommenclature ?.code() ?? "";
+
+        
+
+        // Méthode pour charger le BudgetLine quand l'engagement change
+        private async Task OnEngagementChanged()
+        {
+             MandatService mandatService = new MandatService();
+            
+            if (Mandat.EngagementId > 0)
+            {
+                var budgetLine = await mandatService.GetBudgetLineByEngagementIdAsync(Mandat.EngagementId);
+                SelectedBudgetLine = budgetLine;
+                Console.WriteLine(budgetLine);
+            }
+            else
+            {
+                SelectedBudgetLine = null;
+            }
+        }
         public MandatFormViewModel(int? mandatId = null)
         {
             _mandatId = mandatId;
@@ -234,5 +272,7 @@ namespace Collectivite.ViewModels
         }
 
         #endregion
+
+
     }
 }

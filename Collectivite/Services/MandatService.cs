@@ -17,6 +17,24 @@ namespace Collectivite.Services
         #region Récupération
 
         /// <summary>
+        /// Récupère la ligne budgétaire d'un engagement
+        /// </summary>
+        public async Task<BudgetLine?> GetBudgetLineByEngagementIdAsync(int engagementId)
+        {
+            using var context = CreateContext();
+
+            var engagement = await context.Engagements
+                .Include(e => e.BudgetLine)
+                    .ThenInclude(bl => bl.Nommenclature)
+                .Include(e => e.BudgetLine)
+                    .ThenInclude(bl => bl.Remaniements)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(e => e.Id == engagementId);
+
+            return engagement?.BudgetLine;
+        }
+
+        /// <summary>
         /// Récupère tous les mandats avec leurs relations
         /// </summary>
         public async Task<List<Mandat>> GetAllMandatsAsync()
