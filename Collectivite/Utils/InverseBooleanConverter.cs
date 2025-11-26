@@ -5,8 +5,7 @@ using System.Windows.Data;
 namespace Collectivite.Utils
 {
     /// <summary>
-    /// Converter pour inverser une valeur booléenne
-    /// Utilisé pour IsEnabled avec EstCloture
+    /// Convertit un booléen en son inverse (true -> false, false -> true)
     /// </summary>
     public class InverseBooleanConverter : IValueConverter
     {
@@ -16,7 +15,7 @@ namespace Collectivite.Utils
             {
                 return !boolValue;
             }
-            return false;
+            return true;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
@@ -25,7 +24,7 @@ namespace Collectivite.Utils
             {
                 return !boolValue;
             }
-            return false;
+            return true;
         }
     }
 }

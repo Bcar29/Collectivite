@@ -1,6 +1,7 @@
 ﻿using Collectivite.Models;
 using Collectivite.Services;
 using Collectivite.ViewModels;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,13 +24,37 @@ namespace Collectivite.Views.Pages
     /// </summary>
     public partial class BudgetLinesPage : Page
     {
+        private readonly BudgetLineService _service;
+
         public BudgetLinesPage()
         {
             InitializeComponent();
 
-            // ⚙️ Ici tu injectes le service (ou via ton conteneur d’injection)
-            var service = new BudgetLineService();
-            this.DataContext = new BudgetLinesViewModel(service, 1);
+            _service = new BudgetLineService();
+
+            // On attend que la Page soit entièrement chargée
+            Loaded += BudgetLinesPage_Loaded;
+        }
+
+        private async void BudgetLinesPage_Loaded(object sender, RoutedEventArgs e)
+        {
+            using var ctx = new AppDbContext();
+
+            // 🔍 Récupérer le budget primitif actif
+            BudgetPrimitif? bp = await ctx.BudgetsPrimitifs
+                .Include(b => b.Exercice)
+                .FirstOrDefaultAsync(b => b.Exercice.EstCloture == false);
+
+            if (bp == null)
+            {
+                MessageBox.Show("Aucun budget primitif actif trouvé.",
+                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            // ✔ Mettre la valeur dynamique dans le ViewModel
+            this.DataContext = new BudgetLinesViewModel(_service, bp.Id);
         }
     }
+
 }

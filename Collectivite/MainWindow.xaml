@@ -38,9 +38,12 @@
             <Setter Property="Margin" Value="20,15,0,5"/>
 
         </Style>
+<<<<<<< HEAD
 
         <!-- Style pour les Expander de section du menu -->
 
+=======
+>>>>>>> 285bf0304735cd8f30eaab87374090f7c262a89d
     </Window.Resources>
 
     <materialDesign:DrawerHost IsLeftDrawerOpen="{Binding IsMenuOpen}">
@@ -93,19 +96,23 @@
                         </Button>
 
                         <!-- Section Configuration -->
+<<<<<<< HEAD
 
+=======
+                        <TextBlock Text="Configuration" Style="{StaticResource MenuHeaderStyle}"/>
+>>>>>>> 285bf0304735cd8f30eaab87374090f7c262a89d
                         <Expander Style="{StaticResource MaterialDesignExpander}" 
-                                      HorizontalAlignment="Left"
-                                      Width="250"
-                                      Margin="10,10,0,10">
+                                  HorizontalAlignment="Left"
+                                  Width="250"
+                                  Margin="10,10,0,10">
                             <Expander.Header>
                                 <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="Cog" 
-                                           VerticalAlignment="Center"
-                                           Width="22"
-                                           Height="22"
-                                           Margin="0,0,10,0"
-                                           Foreground="Black"/>
+                                    <materialDesign:PackIcon Kind="Settings" 
+                                       VerticalAlignment="Center"
+                                       Width="22"
+                                       Height="22"
+                                       Margin="0,0,10,0"
+                                       Foreground="Black"/>
                                     <TextBlock Text="Paramétrage" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Expander.Header>
@@ -113,31 +120,35 @@
                             <StackPanel Orientation="Vertical" Margin="30,0,0,0">
                                 <StackPanel.Resources>
                                     <Style TargetType="Button" BasedOn="{StaticResource MenuButtonStyle}">
-                                        <Setter Property="Foreground" Value="#424256"/>
+                                        <Setter Property="Foreground" Value="#424242"/>
                                     </Style>
                                 </StackPanel.Resources>
 
-                                <Button Click="CommuneButton_Click">
+                                <Button Style="{StaticResource MenuButtonStyle}"
+                                         Click="CommuneButton_Click">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="MapMarker" 
                                                VerticalAlignment="Center"
                                                Width="22"
                                                Height="22"
                                                Margin="0,0,15,0"/>
-                                        <TextBlock Text="Commune" FontSize="12" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Commune" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
-                                <Button Click="ExerciceButton_Click">
+
+                                <Button Style="{StaticResource MenuButtonStyle}"
+                                          Click="ExerciceButton_Click">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="CalendarRange" 
-                                               VerticalAlignment="Center"
-                                               Width="22"
-                                               Height="22"
-                                               Margin="0,0,15,0"/>
+                                           VerticalAlignment="Center"
+                                           Width="22"
+                                           Height="22"
+                                           Margin="0,0,15,0"/>
                                         <TextBlock Text="Exercice" FontSize="12" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
-                                <Button Click="NommenclatureButton_Click">
+
+                                <Button Click="NommenclatureButton_Click" Style="{StaticResource MenuButtonStyle}">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="BookmarkMultiple" 
                                                VerticalAlignment="Center"
@@ -147,10 +158,17 @@
                                         <TextBlock Text="Nommenclature" FontSize="12" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
+
+
                             </StackPanel>
                         </Expander>
+<<<<<<< HEAD
                         <!-- Section Configuration FIN -->
 
+=======
+                        <!-- Section Configuration fin-->
+                        
+>>>>>>> 285bf0304735cd8f30eaab87374090f7c262a89d
                         <Button Style="{StaticResource MenuButtonStyle}"
                             Click="CompteComptable_Click">
                             <StackPanel Orientation="Horizontal">
@@ -278,12 +296,26 @@
                         
                         <!-- Section Gestion Budgétaire Fin -->
                         
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> 285bf0304735cd8f30eaab87374090f7c262a89d
                         <!-- Section Gestion Compte Bancaire et Tiers -->
                         <TextBlock Text="Compte Bancaire et Tiers" Style="{StaticResource MenuHeaderStyle}"/>
 
-                        <Button Style="{StaticResource MenuButtonStyle}" Click="CompteBancaireButton_Click">
+                        <Button Style="{StaticResource MenuButtonStyle}" Click="TiersButton_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="AccountGroup" 
+                                 VerticalAlignment="Center"
+                                 Width="22"
+                                 Height="22"
+                                 Margin="0,0,15,0"/>
+                                <TextBlock Text="Gestion des Tiers" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- <Button Style="{StaticResource MenuButtonStyle}" Click="CompteBancaireButton_Click">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="Bank" 
                                 VerticalAlignment="Center"
@@ -292,18 +324,7 @@
                                 Margin="0,0,15,0"/>
                                 <TextBlock Text="Compte Bancaire" VerticalAlignment="Center"/>
                             </StackPanel>
-                        </Button>
-
-                        <Button Style="{StaticResource MenuButtonStyle}" Click="TiersButton_Click">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="AccountGroup" 
-                                VerticalAlignment="Center"
-                                Width="22"
-                                Height="22"
-                                Margin="0,0,15,0"/>
-                                <TextBlock Text="Gestion des Tiers" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
+                        </Button> -->
 
 
                         <Button Style="{StaticResource MenuButtonStyle}" Click="RecensementButton_Click">
@@ -344,7 +365,7 @@
                                     </Style>
                                 </StackPanel.Resources>
 
-                                <Button Style="{StaticResource MenuButtonStyle}">
+                                <Button Style="{StaticResource MenuButtonStyle}" Click="BonCommande_Click">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="FileDocumentEdit" 
                                             VerticalAlignment="Center"
@@ -399,7 +420,7 @@
                                     </StackPanel>
                                 </Button>
 
-                                <Button Style="{StaticResource MenuButtonStyle}">
+                                <Button Style="{StaticResource MenuButtonStyle}" Click="OrdreRecette_Click">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="Receipt" 
                                            VerticalAlignment="Center"
@@ -410,6 +431,10 @@
                                     </StackPanel>
                                 </Button>
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 285bf0304735cd8f30eaab87374090f7c262a89d
                             </StackPanel>
                         </Expander>
                         <!-- Section Saisie des Pièces Fin -->
@@ -488,8 +513,12 @@
                             </StackPanel>
                         </Expander>
                         <!-- Section Gestion Comptable Fin  -->
+<<<<<<< HEAD
 
 
+=======
+                        
+>>>>>>> 285bf0304735cd8f30eaab87374090f7c262a89d
                         <!-- Espacement final -->
                         <Border Height="20"/>
                     </StackPanel>
@@ -660,8 +689,7 @@
             <!-- Zone de contenu principal (Frame) -->
             <Border DockPanel.Dock="Top" Background="#F5F5F5">
                 <Frame x:Name="MainContentFrame"
-                      NavigationUIVisibility="Hidden"
-                      Margin="0"/>
+                       NavigationUIVisibility="Hidden"/>
             </Border>
         </DockPanel>
     </materialDesign:DrawerHost>

@@ -8,24 +8,31 @@ using System.Threading.Tasks;
 
 namespace Collectivite.Services
 {
-    class BudgetPrimitifService
+    public class BudgetPrimitifService
     {
-        private readonly AppDbContext _context;
-        public BudgetPrimitifService(AppDbContext context)
+        //private readonly AppDbContext _context;
+        //public BudgetPrimitifService(AppDbContext context)
+        //{
+        //    _context = context;
+        //}
+        private AppDbContext CreateContext()
         {
-            _context = context;
+            return new AppDbContext();
         }
         //recuper tous les exercices
         public async Task<List<Exercice>> GetAllExercie()
         {
-            return await _context.Exercices
+            using var context = CreateContext();
+
+            return await context.Exercices
                 .OrderByDescending(e => e.DateFin)
                 .ToListAsync();
         }
         // recuperer tous les BudgetPrimitif
         public async Task<List<BudgetPrimitif>> GetAllBudgetPrimitifAsync()
         {
-            return await _context.BudgetsPrimitifs
+            using var context = CreateContext();
+            return await context.BudgetsPrimitifs
                 .Include(e => e.Exercice)
                 .ToListAsync();
         }
@@ -35,15 +42,17 @@ namespace Collectivite.Services
         {
             try
             {
+                using var context = CreateContext();
+
                 // Validation : Vérifier qu'il n'existe pas déjà un budget pour cet exercice
-                var existe = await _context.BudgetsPrimitifs
+                var existe = await context.BudgetsPrimitifs
                     .AnyAsync(b => b.ExerciceId == budgePrimitif.ExerciceId);
                 if (existe)
                 {
                     return (false, $"un budget existe dejà pour cet exercice.", null);
                 }
-                _context.BudgetsPrimitifs.Add(budgePrimitif);
-                await _context.SaveChangesAsync();
+                context.BudgetsPrimitifs.Add(budgePrimitif);
+                await context.SaveChangesAsync();
                 return (true, "budget créée avec succès.", budgePrimitif);
             }
             catch (Exception ex)
@@ -57,14 +66,15 @@ namespace Collectivite.Services
         {
             try
             {
-                var existingBudgetPrimitif = await _context.BudgetsPrimitifs
+                using var context = CreateContext();
+                var existingBudgetPrimitif = await context.BudgetsPrimitifs
                     .FirstOrDefaultAsync(b => b.Id == budgetPrimitif.Id);
                 if (existingBudgetPrimitif == null)
                 {
                     return (false, "Budget Primitif non trouvée.");
                 }
                 // Validation : Vérifier qu'il n'existe pas déjà un budget primitif pour cet exercice
-                var existe = await _context.BudgetsPrimitifs
+                var existe = await context.BudgetsPrimitifs
                     .AnyAsync(b => b.ExerciceId == budgetPrimitif.Id && b.Id != budgetPrimitif.Id);
                 if (existe)
                 {
@@ -76,7 +86,7 @@ namespace Collectivite.Services
                 existingBudgetPrimitif.DateValidation = budgetPrimitif.DateValidation;
                 //existingBudgetPrimitif.Montant = budgetPrimitif.Montant;
                 
-                await _context.SaveChangesAsync();
+                await context.SaveChangesAsync();
                 return (true, "budget mise à jour avec succès.");
             }
             catch (Exception ex)
@@ -90,19 +100,94 @@ namespace Collectivite.Services
         {
             try
             {
-                var existingBudgetPrimif = await _context.BudgetsPrimitifs
+                using var context = CreateContext();
+
+                var existingBudgetPrimif = await context.BudgetsPrimitifs
                     .FirstOrDefaultAsync(b => b.Id == budgetPrimitifId);
                 if (existingBudgetPrimif == null)
                 {
                     return (false, "Budget Primitif non trouvée.");
                 }
-                _context.BudgetsPrimitifs.Remove(existingBudgetPrimif);
-                await _context.SaveChangesAsync();
+                context.BudgetsPrimitifs.Remove(existingBudgetPrimif);
+                await context.SaveChangesAsync();
                 return (true, "Budget primitif supprimée avec succès.");
             }
             catch (Exception ex)
             {
                 return (false, $"Erreur lors de la suppression du budget : {ex.Message}");
+            }
+        }
+
+        //valider le budget primitif
+        /// <summary>
+        /// Valide un budget primitif et enregistre la date de validation
+        /// Un budget ne peut être validé qu'une seule fois
+        /// </summary>
+        public async Task<(bool Success, string Message)> ValiderBudgetPrimitif(
+            int budgetPrimitifId,
+            DateOnly dateValidation)
+        {
+            try
+            {
+                using var context = CreateContext();
+
+                var budget = await context.BudgetsPrimitifs
+                    .Include(b => b.Exercice)
+                    .FirstOrDefaultAsync(b => b.Id == budgetPrimitifId);
+
+                if (budget == null)
+                    return (false, "❌ Budget primitif introuvable.");
+
+                // Vérification 1 : Le budget !est déjà validé
+                if (budget.Status == BudgetPrimitif.Statusbudget.VALIDATED)
+                    return (false, "❌ Ce budget est déjà validé.");
+
+                // Vérification 2 : La date de validation doit être >= date d'approbation
+                if (dateValidation < budget.DateApprobation)
+                {
+                    return (false,
+                        $"❌ La date de validation ({dateValidation:dd/MM/yyyy}) ne peut pas être antérieure " +
+                        $"à la date d'approbation ({budget.DateApprobation:dd/MM/yyyy}).");
+                }
+
+                // Vérification 3 : La date de validation doit être dans l'exercice budgétaire
+                if (budget.Exercice != null)
+                {
+                    if (dateValidation < budget.Exercice.DateDebut || dateValidation > budget.Exercice.DateFin)
+                    {
+                        return (false,
+                            $"❌ La date de validation doit être comprise dans l'exercice budgétaire " +
+                            $"({budget.Exercice.DateDebut:dd/MM/yyyy} - {budget.Exercice.DateFin:dd/MM/yyyy}).");
+                    }
+                }
+
+                // Vérification 4 : Le budget doit avoir des lignes budgétaires
+                var hasLines = await context.BudgetLines
+                    .AnyAsync(bl => bl.BudgetPrimitifId == budgetPrimitifId);
+
+                if (!hasLines)
+                {
+                    return (false,
+                        "❌ Impossible de valider un budget sans lignes budgétaires. " +
+                        "Veuillez d'abord ajouter des lignes au budget.");
+                }
+
+                // Validation du budget
+                budget.Status = BudgetPrimitif.Statusbudget.VALIDATED;
+                budget.DateValidation = dateValidation;
+
+                await context.SaveChangesAsync();
+
+                return (true,
+                    $"✅ Budget primitif validé avec succès.\n\n" +
+                    $"Exercice : {budget.Exercice?.Libelle ?? "N/A"}\n" +
+                    $"Date de validation : {dateValidation:dd/MM/yyyy}\n" +
+                    $"Montant total : {budget.MontantTotal:N0} GNF\n\n" +
+                    $"⚠️ Le budget ne pourra plus être modifié.");
+            }
+            catch (Exception ex)
+            {
+                return (false, $"❌ Erreur lors de la validation : {ex.Message}");
             }
         }
     }
