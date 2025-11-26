@@ -89,7 +89,24 @@ namespace Collectivite.Services
                 line.MontantActu = newMontantPrevu;
 
                 await context.SaveChangesAsync();
+                var bp = await context.BudgetsPrimitifs
+                    .FirstOrDefaultAsync(b => b.Id == line.BudgetPrimitifId);
 
+                if (bp != null)
+                {
+                    if (line.Nommenclature.Nature == NatureType.Recette)
+                    {
+                        bp.MontantRecette -= oldMontant;
+                        bp.MontantRecette += line.MontantPrevu;
+                        await context.SaveChangesAsync();
+
+                    }else if (line.Nommenclature.Nature == NatureType.Depense)
+                    {
+                        bp.MontantDepense -= oldMontant;
+                        bp.MontantDepense += line.MontantPrevu;
+                        await context.SaveChangesAsync();
+                    }
+                }
                 // Recalculer les ancêtres
                 await RecalculateAncestorsAsync(line.NommenclatureId, line.BudgetPrimitifId);
 
@@ -188,6 +205,40 @@ namespace Collectivite.Services
                 .Include(b => b.Nommenclature)
                 .ThenInclude(n => n.Enfants)
                 .Where(b => b.BudgetPrimitifId == budgetPrimitifId)
+                .ToListAsync();
+        }
+
+        // Méthode alternative qui utilise l'exercice courant
+        public async Task<List<BudgetLine>> GetBudgetLinesForCurrentExerciceAsync()
+        {
+            var exerciceService = ExerciceService.Instance;
+
+            if (exerciceService.CurrentExercice == null)
+            {
+                return new List<BudgetLine>();
+            }
+
+            using var context = CreateContext();
+
+            // Récupérer le budget primitif pour l'exercice courant
+            var budgetPrimitif = await context.BudgetsPrimitifs
+                .FirstOrDefaultAsync(b => b.ExerciceId == exerciceService.CurrentExercice.Id);
+
+            if (budgetPrimitif == null)
+            {
+                return new List<BudgetLine>();
+            }
+
+            return await GetBudgetLinesForBudgetPrimitifAsync(budgetPrimitif.Id);
+        }
+
+        public async Task<List<BudgetLine>> GetDepenseForEngagement(int budgetPrimitifId)
+        {
+            using var context = CreateContext();
+            return await context.BudgetLines
+                .Include(b => b.Nommenclature)
+                .ThenInclude(n => n.Enfants)
+                .Where(b => b.BudgetPrimitifId == budgetPrimitifId && b.Nommenclature.Nature == NatureType.Depense && (b.Nommenclature.Enfants == null || !b.Nommenclature.Enfants.Any()))
                 .ToListAsync();
         }
 

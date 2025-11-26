@@ -21,6 +21,13 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<List<BonCommande>> GetAllBonCommandesAsync()
         {
+            var exerciceService = ExerciceService.Instance;
+
+            if (exerciceService.CurrentExercice == null)
+            {
+                return new List<BonCommande>();
+            }
+
             using var context = CreateContext();
 
             return await context.BonCommandes

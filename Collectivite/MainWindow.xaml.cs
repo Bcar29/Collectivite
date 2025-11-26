@@ -1,6 +1,8 @@
 using Collectivite.Services;
 using Collectivite.ViewModels;
 using System.Windows;
+using System.Windows.Controls;
+
 
 // Ajoutez cette ligne pour inclure le namespace contenant CommunePage
 using Collectivite.Views.Pages;
@@ -89,8 +91,6 @@ namespace Collectivite
         {
             _viewModel.UpdatePageTitle("GESTION BUDGÉTAIRE - BUDGET LINE");
 
-            //NavigationService.Instance.NavigateTo(new Views.Pages.BudgetLinePage());
-
              NavigationService.Instance.NavigateTo(new Views.Pages.BudgetLinesPage());
             _viewModel.IsMenuOpen = false;
         }
@@ -168,6 +168,20 @@ namespace Collectivite
             NavigationService.Instance.NavigateTo(new DashboardPage());
         }
 
+        private void ExerciceButtonDown_Click(object sender, RoutedEventArgs e)
+        {
+            var button = sender as Button;
+            if (button?.ContextMenu != null)
+            {
+                button.ContextMenu.PlacementTarget = button;
+                button.ContextMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
+                button.ContextMenu.HorizontalOffset = 0;
+                button.ContextMenu.VerticalOffset = 0;
+                button.ContextMenu.IsOpen = true;
+            }
+        }
+
+
         // Méthode temporaire pour afficher un placeholder
         private static FrameworkElement CreatePlaceholderContent(string pageName)
         {
@@ -216,5 +230,9 @@ namespace Collectivite
 
             return grid;
         }
+    
+
+    
+    
     }
 }

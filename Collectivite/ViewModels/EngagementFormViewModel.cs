@@ -20,10 +20,12 @@ namespace Collectivite.ViewModels
         private Engagement _engagement;
         private bool _isEditMode;
         private string _fichierName;
-        private readonly AppDbContext _context;
+        //private readonly AppDbContext _context;
+        private readonly int _budgetPrimitifId;
 
-        public EngagementFormViewModel(int? engagementId = null)
+        public EngagementFormViewModel(int bpId, int? engagementId = null)
         {
+            _budgetPrimitifId = bpId;
             _engagement = new Engagement
             {
                 DateEngagement = DateTime.Now,
@@ -157,8 +159,9 @@ namespace Collectivite.ViewModels
                 }
 
                 // Charger les lignes budgétaires
+               
                 var budgetLineService = new BudgetLineService();
-                var budgetLines = await budgetLineService.GetBudgetLinesForBudgetPrimitifAsync(1);// TODO: mettre le bon budgetLine
+                var budgetLines = await budgetLineService.GetDepenseForEngagement(_budgetPrimitifId);
                 BudgetLines.Clear();
                 foreach (var bl in budgetLines)
                 {

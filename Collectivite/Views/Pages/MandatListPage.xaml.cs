@@ -26,5 +26,31 @@ namespace Collectivite.Views.Pages
             InitializeComponent();
             DataContext = new MandatListViewModel();
         }
+        private void BtnAdd_Click(object sender, RoutedEventArgs e)
+        {
+            // Navigation vers la page de formulaire
+            var formPage = new MandatFormPage();
+            NavigationService?.Navigate(formPage);
+        }
+
+        private void BtnEdit_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.Tag is int mandatId)
+            {
+                // Navigation vers la page de formulaire en mode édition
+                var formPage = new MandatFormPage(mandatId);
+                NavigationService?.Navigate(formPage);
+            }
+        }
+
+        private void BtnDetail_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.Tag is int mandatId)
+            {
+                // Navigation vers la page de détails
+                var detailPage = new MandatDetailPage(mandatId);
+                NavigationService?.Navigate(detailPage);
+            }
+        }
     }
 }

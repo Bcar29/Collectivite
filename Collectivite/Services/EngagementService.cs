@@ -168,8 +168,8 @@ namespace Collectivite.Services
                 if (engagement.BudgetLineId <= 0)
                     return (false, "La ligne budgétaire est obligatoire.", null);
 
-                if (engagement.TiersId <= 0)
-                    return (false, "Le tiers est obligatoire.", null);
+                //if (engagement.TiersId <= 0)
+                //    return (false, "Le tiers est obligatoire.", null);
 
                 if (string.IsNullOrWhiteSpace(engagement.Objet))
                     return (false, "L'objet de l'engagement est obligatoire.", null);

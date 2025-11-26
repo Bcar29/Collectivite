@@ -6,6 +6,7 @@
       xmlns:local="clr-namespace:Collectivite.Models"
       Language="fr-FR"
       Background="#F5F5F5"
+      xmlns:utils="clr-namespace:Collectivite.Utils"
       Title="Gestion des Mandats"
       x:Name="MandatListPageRoot">
 
@@ -14,7 +15,6 @@
         <utils:NullToBooleanConverter x:Key="NullToBooleanConverter"/>
         <utils:PaymentTooltipConverter x:Key="PaymentTooltipConverter"/>
         <utils:PaymentCommandConverter x:Key="PaymentCommandConverter"/>
-        
     </Page.Resources>
 
     <Grid>

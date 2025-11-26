@@ -1,6 +1,9 @@
 using Collectivite.Models;
 using Collectivite.Services;
 using Collectivite.Utils;
+using System;
+using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Linq;
@@ -10,6 +13,7 @@ namespace Collectivite.ViewModels
     public class MainViewModel : ViewModelBase
     {
         private readonly AuthService _authService;
+        private readonly ExerciceService _exerciceService;
         private readonly NavigationService _navigationService;
         private readonly RelayCommand _openProfileCommand;
         private readonly RelayCommand _openSettingsCommand;
@@ -24,20 +28,33 @@ namespace Collectivite.ViewModels
         public MainViewModel(AuthService authService)
         {
             _authService = authService;
+            _exerciceService = ExerciceService.Instance;
             _navigationService = NavigationService.Instance;
 
-            // Initialiser les commandes en premier
+            // Initialiser les commandes
             LogoutCommand = new RelayCommand(_ => Logout());
             _openProfileCommand = new RelayCommand(_ => ShowProfile(), _ => _authService.CurrentUser != null);
             _openSettingsCommand = new RelayCommand(_ => ShowSettings());
+            SelectExerciceCommand = new RelayCommand(param => SelectExercice(param));
             OpenProfileCommand = _openProfileCommand;
             OpenSettingsCommand = _openSettingsCommand;
             OpenMenuCommand = new RelayCommand(_ => IsMenuOpen = true);
             CloseMenuCommand = new RelayCommand(_ => IsMenuOpen = false);
 
-            // Initialiser les données utilisateur après les commandes
+            // S'abonner aux changements d'exercice
+            _exerciceService.ExerciceChanged += OnExerciceChanged;
+
+            // Charger les exercices de manière asynchrone
+            _ = LoadExercicesAsync();
+
+            // Initialiser les données utilisateur
             InitializeUserData();
         }
+
+        // Collection des exercices
+        public ObservableCollection<Exercice> Exercices { get; } = new();
+
+        public ICommand SelectExerciceCommand { get; }
 
         public string CurrentPageTitle
         {
@@ -105,6 +122,90 @@ namespace Collectivite.ViewModels
         public ICommand OpenMenuCommand { get; }
         public ICommand CloseMenuCommand { get; }
 
+        /// <summary>
+        /// Charge tous les exercices depuis la base de données
+        /// </summary>
+        private async Task LoadExercicesAsync()
+        {
+            try
+            {
+                var exercices = await _exerciceService.GetAllExerciceAsync();
+
+                // Effacer et recharger la collection
+                Exercices.Clear();
+                foreach (var exercice in exercices)
+                {
+                    Exercices.Add(exercice);
+                }
+
+                // Initialiser l'exercice courant si pas déjà défini
+                if (_exerciceService.CurrentExercice == null && exercices.Any())
+                {
+                    // Prendre l'exercice non clôturé ou le plus récent
+                    var activeExercice = exercices.FirstOrDefault(e => !e.EstCloture)
+                                        ?? exercices.First();
+                    _exerciceService.CurrentExercice = activeExercice;
+                }
+
+                // Mettre à jour le texte avec l'exercice actuel
+                if (_exerciceService.CurrentExercice != null)
+                {
+                    ExerciceText = _exerciceService.CurrentExercice.Libelle;
+                }
+
+                // Notifier le changement
+                OnPropertyChanged(nameof(Exercices));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Erreur lors du chargement des exercices : {ex.Message}",
+                    "Erreur",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+        }
+
+        /// <summary>
+        /// Sélectionne un exercice spécifique
+        /// </summary>
+        private void SelectExercice(object? parameter)
+        {
+            if (parameter is int exerciceId)
+            {
+                var selectedExercice = Exercices.FirstOrDefault(e => e.Id == exerciceId);
+                if (selectedExercice != null)
+                {
+                    // Utiliser la méthode du service pour notifier tous les abonnés
+                    _exerciceService.SetCurrentExercice(selectedExercice);
+
+                    // Mettre à jour le texte affiché
+                    ExerciceText = selectedExercice.Libelle!;
+
+                    // Notifier le changement
+                    OnPropertyChanged(nameof(ExerciceText));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gestionnaire d'événement pour les changements d'exercice
+        /// </summary>
+        private void OnExerciceChanged(object? sender, Exercice exercice)
+        {
+            // Mettre à jour l'interface utilisateur sur le thread UI
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                ExerciceText = exercice.Libelle!;
+                //Properties.Settings.Default.ExerciceId = exercice.Id;
+                //Properties.Settings.Default.Save();
+                OnPropertyChanged(nameof(ExerciceText));
+
+                // Vous pouvez ajouter d'autres notifications ici
+                // Par exemple, recharger des données dépendantes de l'exercice
+            });
+        }
+
         private void InitializeUserData()
         {
             if (_authService.CurrentUser != null)
@@ -115,10 +216,15 @@ namespace Collectivite.ViewModels
                 UserPhone = string.IsNullOrWhiteSpace(_authService.CurrentUser.Tel)
                     ? "Téléphone non renseigné"
                     : _authService.CurrentUser.Tel;
-                ExerciceText = "Exercice 2025";
 
+                // Notifier les changements
+                OnPropertyChanged(nameof(CommuneName));
+                OnPropertyChanged(nameof(UserIdentifier));
+                OnPropertyChanged(nameof(UserEmail));
+                OnPropertyChanged(nameof(UserPhone));
                 OnPropertyChanged(nameof(UserFullName));
                 OnPropertyChanged(nameof(UserInitials));
+
                 _openProfileCommand.RaiseCanExecuteChanged();
             }
             else
@@ -127,6 +233,13 @@ namespace Collectivite.ViewModels
                 UserIdentifier = "Non connecté";
                 UserEmail = "Email non disponible";
                 UserPhone = "Téléphone non disponible";
+
+                // Notifier les changements
+                OnPropertyChanged(nameof(CommuneName));
+                OnPropertyChanged(nameof(UserIdentifier));
+                OnPropertyChanged(nameof(UserEmail));
+                OnPropertyChanged(nameof(UserPhone));
+
                 _openProfileCommand.RaiseCanExecuteChanged();
             }
         }
@@ -141,14 +254,15 @@ namespace Collectivite.ViewModels
 
             if (result == MessageBoxResult.Yes)
             {
+                // Se désabonner de l'événement
+                _exerciceService.ExerciceChanged -= OnExerciceChanged;
+
                 _authService.Logout();
                 _openProfileCommand.RaiseCanExecuteChanged();
 
-                // Ouvrir la fenêtre de connexion
                 var loginWindow = new Views.LoginWindow();
                 loginWindow.Show();
 
-                // Fermer la fenêtre principale
                 Application.Current.Windows.OfType<Window>()
                     .FirstOrDefault(w => w is MainWindow)?.Close();
             }
@@ -172,8 +286,10 @@ namespace Collectivite.ViewModels
                 OnPropertyChanged(nameof(UserFullName));
                 OnPropertyChanged(nameof(UserInitials));
                 OnPropertyChanged(nameof(UserEmail));
+                OnPropertyChanged(nameof(UserPhone));
             }
         }
+
         private void ShowSettings()
         {
             var settingsWindow = new Views.SettingsWindow();
@@ -186,6 +302,15 @@ namespace Collectivite.ViewModels
         public void UpdatePageTitle(string title)
         {
             CurrentPageTitle = title;
+            OnPropertyChanged(nameof(CurrentPageTitle));
+        }
+
+        /// <summary>
+        /// Rafraîchir la liste des exercices (utile après ajout/modification)
+        /// </summary>
+        public async Task RefreshExercicesAsync()
+        {
+            await LoadExercicesAsync();
         }
     }
 }

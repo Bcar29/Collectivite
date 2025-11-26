@@ -13,24 +13,75 @@ namespace Collectivite.Services
 {
     public class ExerciceService
     {
+        private static ExerciceService? _instance;
+        private Exercice? _currentExercice;
+
+        // Singleton
+        public static ExerciceService Instance => _instance ??= new ExerciceService();
+
+        // Exercice courant
+        public Exercice? CurrentExercice
+        {
+            get => _currentExercice;
+            set => _currentExercice = value;
+        }
+
+        // Événement pour notifier le changement d'exercice
+        public event EventHandler<Exercice>? ExerciceChanged;
+
         private AppDbContext CreateContext()
         {
             return new AppDbContext();
         }
+
+        // Initialiser l'exercice actif au démarrage
+        public async Task InitializeCurrentExerciceAsync()
+        {
+            var exercices = await GetAllExerciceAsync();
+            _currentExercice = exercices.FirstOrDefault(e => !e.EstCloture);
+
+            // Si aucun exercice ouvert, prendre le plus récent
+            if (_currentExercice == null)
+            {
+                _currentExercice = exercices.LastOrDefault();
+            }
+        }
+
+        // Changer l'exercice courant
+        public void SetCurrentExercice(Exercice exercice)
+        {
+            _currentExercice = exercice;
+            ExerciceChanged?.Invoke(this, exercice);
+        }
+
         // Recuperer tous les exercices
         public async Task<List<Exercice>> GetAllExerciceAsync()
-            {
-
+        {
             using var context = CreateContext();
             return await context.Exercices
+                .OrderByDescending(e => e.Id)
+                .ToListAsync();
+        }
 
-                
+        // Récupérer les exercices non clôturés
+        public async Task<List<Exercice>> GetOpenExercicesAsync()
+        {
+            using var context = CreateContext();
+            return await context.Exercices
+                .Where(e => !e.EstCloture)
                 .OrderByDescending(e => e.DateDebut)
                 .ToListAsync();
         }
-        
 
-
+        // Récupérer l'exercice actif (non clôturé le plus récent)
+        public async Task<Exercice?> GetActiveExerciceAsync()
+        {
+            using var context = CreateContext();
+            return await context.Exercices
+                .Where(e => !e.EstCloture)
+                .OrderByDescending(e => e.DateDebut)
+                .FirstOrDefaultAsync();
+        }
 
         // Recupler tous les exercices de la commune
         //public async Task<List<Exercice>> GetExercicesByCommuneIdAsync(int communeId)
@@ -60,7 +111,6 @@ namespace Collectivite.Services
                 .FirstOrDefaultAsync();
         }
 
-
         // Ajouter un nouvel exercice
         public async Task<(bool Success, string Message, Exercice? Exercice)> CreateAsync(Exercice exercice)
         {
@@ -76,34 +126,24 @@ namespace Collectivite.Services
                     return (false, $"{exercice.Libelle} existe déjà .", null);
                 }
 
-                // Validation : Vérifier qu'il n'existe pas déjà un exercice non clôturé pour cette commune
-                var notClosedExercice = await context.Exercices
-                    .AnyAsync(e => e.EstCloture == false);
-                if (notClosedExercice)
+                if (string.IsNullOrWhiteSpace(exercice.Libelle))
                 {
-                    return (false, "Il existe déjà un exercice non clôturé pour cette commune.", null);
+                    return (false, "le libelle de l'exercice est obligatoire.", null);
                 }
+
+                // Validation : Vérifier qu'il n'existe pas déjà un exercice non clôturé pour cette commune
+                //var notClosedExercice = await context.Exercices
+                //    .AnyAsync(e => e.EstCloture == false);
+                //if (notClosedExercice)
+                //{
+                //    return (false, "Il existe déjà un exercice non clôturé pour cette commune.", null);
+                //}
 
                 // Validation : Date de fin après date de début
                 if (exercice.DateFin <= exercice.DateDebut)
                 {
                     return (false, "La date de fin doit être après la date de début.", null);
                 }
-
-                // validation de la liaison avec details de la commune
-                //if (exercice.DetailCommune == null)
-                //{
-                //    DetailCommune? dt = await LastDetailCommune();
-                //    if (dt != null)
-                //    {
-                //        exercice.IdDetailCommune = dt.Id;
-                //    }
-                //    else
-                //    {
-                //    return (false, "La liaison au details de la commune .", null);
-                //    }
-                    
-                //}
 
                 context.Exercices.Add(exercice);
                 await context.SaveChangesAsync();
@@ -128,7 +168,6 @@ namespace Collectivite.Services
                 await context.SaveChangesAsync();
 
                 return (true, "Exercice créé avec succès.", exercice);
-
             }
             catch (Exception ex)
             {
@@ -144,7 +183,7 @@ namespace Collectivite.Services
                 // verifier q'un autre exercice n'existe pas avec le meme libelle
                 using var context = CreateContext();
                 var existe = await context.Exercices
-                    .AnyAsync(e => e.Libelle == exercice.Libelle  && e.Id != exercice.Id);
+                    .AnyAsync(e => e.Libelle == exercice.Libelle && e.Id != exercice.Id);
                 if (existe)
                 {
                     return (false, $"{exercice.Libelle} existe déjà.");
@@ -155,15 +194,18 @@ namespace Collectivite.Services
                 {
                     return (false, "Exercice non trouvé.");
                 }
+
                 // Validation : Date de fin après date de début
                 if (exercice.DateFin <= exercice.DateDebut)
                 {
                     return (false, "La date de fin doit être après la date de début.");
                 }
+
                 existingExercice.Libelle = exercice.Libelle;
                 existingExercice.DateDebut = exercice.DateDebut;
                 existingExercice.DateFin = exercice.DateFin;
                 existingExercice.EstCloture = exercice.EstCloture;
+
                 await context.SaveChangesAsync();
                 return (true, "Exercice mis à jour avec succès.");
             }
@@ -184,13 +226,15 @@ namespace Collectivite.Services
                 {
                     return (false, "Exercice non trouvé.");
                 }
+
                 // Vérifier les dépendances (par exemple, BudgetsPrimitifs liés)
-                var hasDependencies = await context.BudgetsPrimitifs
-                    .AnyAsync(bp => bp.ExerciceId == exerciceId);
-                if (hasDependencies)
-                {
-                    return (false, "Impossible de supprimer l'exercice car il a des dépendances.");
-                }
+                //var hasDependencies = await context.BudgetsPrimitifs
+                //    .AnyAsync(bp => bp.ExerciceId == exerciceId);
+                //if (hasDependencies)
+                //{
+                //    return (false, "Impossible de supprimer l'exercice car il a des dépendances.");
+                //}
+
                 context.Exercices.Remove(exercice);
                 await context.SaveChangesAsync();
                 return (true, "Exercice supprimé avec succès.");

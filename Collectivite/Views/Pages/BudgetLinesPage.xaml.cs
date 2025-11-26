@@ -24,36 +24,23 @@ namespace Collectivite.Views.Pages
     /// </summary>
     public partial class BudgetLinesPage : Page
     {
-        private readonly BudgetLineService _service;
-
         public BudgetLinesPage()
         {
             InitializeComponent();
 
-            _service = new BudgetLineService();
+            //_service = new BudgetLineService();
 
             // On attend que la Page soit entièrement chargée
-            Loaded += BudgetLinesPage_Loaded;
+            DataContext = new BudgetLinesViewModel(new BudgetLineService());
         }
 
-        private async void BudgetLinesPage_Loaded(object sender, RoutedEventArgs e)
+        private void Page_Unloaded(object sender, RoutedEventArgs e)
         {
-            using var ctx = new AppDbContext();
-
-            // 🔍 Récupérer le budget primitif actif
-            BudgetPrimitif? bp = await ctx.BudgetsPrimitifs
-                .Include(b => b.Exercice)
-                .FirstOrDefaultAsync(b => b.Exercice.EstCloture == false);
-
-            if (bp == null)
+            if (DataContext is BudgetLinesViewModel viewModel)
             {
-                MessageBox.Show("Aucun budget primitif actif trouvé.",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
+                viewModel.Dispose();
+                System.Diagnostics.Debug.WriteLine("BudgetLinesViewModel disposed");
             }
-
-            // ✔ Mettre la valeur dynamique dans le ViewModel
-            this.DataContext = new BudgetLinesViewModel(_service, bp.Id);
         }
     }
 

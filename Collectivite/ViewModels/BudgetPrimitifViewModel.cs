@@ -14,9 +14,10 @@ using System.Windows.Input;
 
 namespace Collectivite.ViewModels
 {
-    class BudgetPrimitifViewModel: ViewModelBase
+    class BudgetPrimitifViewModel : ViewModelBase, IDisposable
     {
         private readonly BudgetPrimitifService _budgetPrimitifService;
+        private readonly ExerciceService _exerciceService;
         private bool _isLoading;
         private BudgetPrimitif? _selectedBudgetPrimitif;
         private bool _isDialogOpen;
@@ -34,14 +35,17 @@ namespace Collectivite.ViewModels
         public BudgetPrimitifViewModel(BudgetPrimitifService budgetPrimitifService)
         {
             _budgetPrimitifService = budgetPrimitifService;
+            _exerciceService = ExerciceService.Instance;
+
             _dialogBudgetPrimitif = new BudgetPrimitif
             {
                 DateApprobation = DateOnly.FromDateTime(DateTime.Now),
-                //DateValidation = DateOnly.FromDateTime(DateTime.Now)
             };
 
-            //Commandes
+            // S'abonner aux changements d'exercice
+            _exerciceService.ExerciceChanged += OnExerciceChanged;
 
+            //Commandes
             LoadBudgetPrimitifCommand = new RelayCommand(async _ => await LoadBudgetPrimitifAsync());
             OppenAddBudgetPrimitifCommand = new RelayCommand(async _ => await OpenAddBudgetPrimitif());
             OppenEditBudgetPrimitifCommand = new RelayCommand<BudgetPrimitif>(budgetPrimitif => OppenEditBudgetPrimitif(budgetPrimitif));
@@ -72,9 +76,8 @@ namespace Collectivite.ViewModels
 
             // Charger les données au démarrage3
             LoadBudgetPrimitifCommand.Execute(null);
-
-
         }
+
         #region Properties
         public ObservableCollection<BudgetPrimitif> BudgetPrimitifs { get; } = new();
         public ObservableCollection<Exercice> Exercices { get; } = new();
@@ -101,18 +104,14 @@ namespace Collectivite.ViewModels
         {
             get => _dialogBudgetPrimitif;
             set => SetProperty(ref _dialogBudgetPrimitif, value);
-
         }
+
         public bool IsEditMode
         {
             get => _isEditMode;
             set => SetProperty(ref _isEditMode, value);
         }
-        //public BudgetPrimitifService Exercice
-        //{
-        //    get => _exercice;
-        //    set => SetProperty(ref _exercice, value);
-        //}
+
         public DateTime DilogBudgetPrimitifDateApprobation
         {
             get => DialogBudgetPrimitif.DateApprobation.HasValue 
@@ -124,6 +123,7 @@ namespace Collectivite.ViewModels
                 OnPropertyChanged();
             }
         }
+
         public DateTime DilogBudgetPrimitifDateValidation
         {
             get => DialogBudgetPrimitif.DateValidation.HasValue ? DialogBudgetPrimitif.DateValidation.Value.ToDateTime(TimeOnly.MinValue) : DateTime.Now;
@@ -203,21 +203,55 @@ namespace Collectivite.ViewModels
         #endregion
 
         #region Methods
-        public async System.Threading.Tasks.Task LoadBudgetPrimitifAsync()
+
+        /// <summary>
+        /// Gestionnaire pour recharger les données quand l'exercice change
+        /// </summary>
+        private async void OnExerciceChanged(object? sender, Exercice exercice)
+        {
+            await Application.Current.Dispatcher.InvokeAsync(async () =>
+            {
+                //System.Diagnostics.Debug.WriteLine($"Rechargement des budgets pour l'exercice : {exercice.Libelle}");
+                await LoadBudgetPrimitifAsync();
+            });
+        }
+
+        public async Task LoadBudgetPrimitifAsync()
         {
             IsLoading = true;
             try
             {
+                // Vérifier qu'un exercice est sélectionné
+                if (_exerciceService.CurrentExercice == null)
+                {
+                    BudgetPrimitifs.Clear();
+                    MessageBox.Show(
+                        "Aucun exercice n'est sélectionné.",
+                        "Information",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                    return;
+                }
+
                 var budgetPrimitifs = await _budgetPrimitifService.GetAllBudgetPrimitifAsync();
+
                 BudgetPrimitifs.Clear();
                 foreach (var budget in budgetPrimitifs)
                 {
                     BudgetPrimitifs.Add(budget);
                 }
+
+                OnPropertyChanged(nameof(BudgetPrimitifs));
+
+                System.Diagnostics.Debug.WriteLine($"Chargé {budgetPrimitifs.Count} budgets pour l'exercice {_exerciceService.CurrentExercice.Libelle}");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement des budgets : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(
+                    $"Erreur lors du chargement des budgets : {ex.Message}",
+                    "Erreur",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
             }
             finally
             {
@@ -225,7 +259,7 @@ namespace Collectivite.ViewModels
             }
         }
 
-        public async System.Threading.Tasks.Task OpenAddBudgetPrimitif()
+        public async Task OpenAddBudgetPrimitif()
         {
             // ═══════════════════════════════════════════════════════════
             // Les budgets primitifs sont créés automatiquement lors de la création d'un exercice
@@ -263,7 +297,7 @@ namespace Collectivite.ViewModels
             return !string.IsNullOrWhiteSpace(DialogBudgetPrimitif.MontantTotal.ToString());
         }
 
-        private async System.Threading.Tasks.Task SaveBudgetPrimitifAsync()
+        private async Task SaveBudgetPrimitifAsync()
         {
             try
             {
@@ -272,7 +306,11 @@ namespace Collectivite.ViewModels
                     var (success, message) = await _budgetPrimitifService.UpdateBudgetPrimitifAsync(DialogBudgetPrimitif);
                     if (success)
                     {
-                        MessageBox.Show("Budget mis à jour avec succès.", "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+                        MessageBox.Show(
+                            "Budget mis à jour avec succès.",
+                            "Succès",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Information);
                         await LoadBudgetPrimitifAsync();
                         IsDialogOpen = false;
                     }
@@ -296,11 +334,14 @@ namespace Collectivite.ViewModels
                         MessageBox.Show(message, "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
-
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de l'enregistrement du budget : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(
+                    $"Erreur lors de l'enregistrement du budget : {ex.Message}",
+                    "Erreur",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
             }
             finally
             {
@@ -313,17 +354,27 @@ namespace Collectivite.ViewModels
             IsDialogOpen = false;
         }
 
-        private async System.Threading.Tasks.Task DeleteBudgetPrimitifAsync(BudgetPrimitif? budgetPrimitif)
+        private async Task DeleteBudgetPrimitifAsync(BudgetPrimitif? budgetPrimitif)
         {
             if (budgetPrimitif == null) return;
-            var result = MessageBox.Show($"Êtes-vous sûr de vouloir supprimer le budget de  '{budgetPrimitif.Exercice.Libelle}' ?", "Confirmation de suppression", MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+            var result = MessageBox.Show(
+                $"Êtes-vous sûr de vouloir supprimer le budget de '{budgetPrimitif.Exercice.Libelle}' ?",
+                "Confirmation de suppression",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
             if (result == MessageBoxResult.Yes)
             {
                 IsLoading = true;
                 var (success, message) = await _budgetPrimitifService.DeleteBudgetPrimitifAsync(budgetPrimitif.Id);
                 if (success)
                 {
-                    MessageBox.Show("budget supprimée avec succès.", "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show(
+                        "Budget supprimé avec succès.",
+                        "Succès",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
                     await LoadBudgetPrimitifAsync();
                 }
                 else
@@ -478,7 +529,8 @@ namespace Collectivite.ViewModels
                     FichierValidation,
                     FileNameValidation);
 
-                MessageBox.Show(message,
+                MessageBox.Show(
+                    message,
                     success ? "Succès" : "Erreur",
                     MessageBoxButton.OK,
                     success ? MessageBoxImage.Information : MessageBoxImage.Warning);
@@ -493,8 +545,11 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(
+                    $"Erreur : {ex.Message}",
+                    "Erreur",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
             }
             finally
             {
@@ -532,6 +587,19 @@ namespace Collectivite.ViewModels
             IsValidationDialogOpen = false;
             _budgetToValidate = null;
         }
+
+        /// <summary>
+        /// Nettoyer les ressources et se désabonner des événements
+        /// </summary>
+        public void Dispose()
+        {
+            if (!_isDisposed)
+            {
+                _exerciceService.ExerciceChanged -= OnExerciceChanged;
+                _isDisposed = true;
+            }
+        }
+
         #endregion
     }
 }

@@ -1,10 +1,12 @@
 using Collectivite.Models;
 using Collectivite.Services;
 using Collectivite.Utils;
+using DocumentFormat.OpenXml.Spreadsheet;
+using System.Linq;
+using System.Text.Json;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using System.Threading.Tasks;
-using System.Linq;
 
 namespace Collectivite.ViewModels
 {
@@ -24,7 +26,7 @@ namespace Collectivite.ViewModels
 
         public string Username
         {
-            get => _username;
+            get => _username; 
             set
             {
                 if (SetProperty(ref _username, value))
@@ -74,6 +76,8 @@ namespace Collectivite.ViewModels
                    !string.IsNullOrWhiteSpace(Password) &&
                    !IsLoading;
         }
+       
+
 
         private async Task LoginAsync()
         {
@@ -86,6 +90,14 @@ namespace Collectivite.ViewModels
 
             if (success && user != null)
             {
+                var options = new JsonSerializerOptions
+                {
+                    ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles
+                };
+                var json = JsonSerializer.Serialize(user, options);
+                Properties.Settings.Default.UserJson = json;
+                Properties.Settings.Default.CommuneId = user.CommuneId;
+                Properties.Settings.Default.Save();
                 // Fermer la fenêtre de connexion et ouvrir la fenêtre principale
                 Application.Current.Dispatcher.Invoke(() =>
                 {
