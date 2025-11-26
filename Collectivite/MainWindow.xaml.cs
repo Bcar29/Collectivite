@@ -5,6 +5,7 @@ using System.Windows;
 // Ajoutez cette ligne pour inclure le namespace contenant CommunePage
 using Collectivite.Views.Pages;
 using Collectivite.Views;
+using System.util;
 
 namespace Collectivite
 {
@@ -15,6 +16,27 @@ namespace Collectivite
 
         public MainWindow() : this(null)
         {
+        }
+
+        // Dans YourWindow.xaml.cs ou YourUserControl.xaml.cs
+
+        private async void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            await ActualiserEtatBoutons();
+        }
+
+        private async Task ActualiserEtatBoutons()
+        {
+            var service = new BudgetPrimitifService();
+
+            // Récupérer l'exerciceId depuis votre TextBlock
+            
+                bool estActif = await service.EstActif(1);
+
+                // Activer/désactiver les boutons
+                BtnSaisie.IsEnabled = !estActif;
+               
+            
         }
 
         public MainWindow(AuthService? authService)
