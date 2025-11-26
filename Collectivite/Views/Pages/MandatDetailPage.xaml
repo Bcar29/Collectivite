@@ -1,6 +1,7 @@
 ﻿<Page x:Class="Collectivite.Views.Pages.MandatDetailPage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:utils="clr-namespace:Collectivite.Utils"
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
       Language="fr-FR"
       xmlns:utils="clr-namespace:Collectivite.Utils"
