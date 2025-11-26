@@ -120,7 +120,7 @@ namespace Collectivite
 
         private void Mandat_Click(object sender, RoutedEventArgs e)
         {
-            _viewModel.UpdatePageTitle("GESTION BUDGÉTAIRE - FICHE D'ENGAGEMENT");
+            _viewModel.UpdatePageTitle("GESTION BUDGÉTAIRE - FICHE DE MANDAT");
             NavigationService.Instance.NavigateTo(new Views.Pages.MandatListPage());
             _viewModel.IsMenuOpen = false;
         }

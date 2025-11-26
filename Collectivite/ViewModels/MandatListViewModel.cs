@@ -240,7 +240,7 @@ namespace Collectivite.ViewModels
 
         private void OpenAddPage()
         {
-            var formPage = new EngagementFormPage();
+            var formPage = new MandatFormPage();
             NavigationService.Instance.NavigateTo(formPage);
         }
 

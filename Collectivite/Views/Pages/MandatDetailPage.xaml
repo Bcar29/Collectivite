@@ -4,7 +4,6 @@
       xmlns:utils="clr-namespace:Collectivite.Utils"
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
       Language="fr-FR"
-      xmlns:utils="clr-namespace:Collectivite.Utils"
       Background="#F5F5F5"
       Title="Détail du Mandat">
 

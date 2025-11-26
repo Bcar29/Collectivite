@@ -31,6 +31,7 @@ namespace Collectivite.ViewModels
         private BudgetPrimitif? _budgetToApprove;
         private byte[]? _fichierValidation;
         private string? _fileNameValidation;
+        private bool _isDisposed;
 
         public BudgetPrimitifViewModel(BudgetPrimitifService budgetPrimitifService)
         {

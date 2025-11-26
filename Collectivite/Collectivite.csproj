@@ -9,6 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="NewFolder\**" />
+    <EmbeddedResource Remove="NewFolder\**" />
+    <None Remove="NewFolder\**" />
+    <Page Remove="NewFolder\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="commune.png" />
   </ItemGroup>
 
@@ -49,9 +56,6 @@
     <Page Update="MainWindow.xaml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Page>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="NewFolder\" />
   </ItemGroup>
 
   <ItemGroup>

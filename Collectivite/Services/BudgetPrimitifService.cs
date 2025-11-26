@@ -31,28 +31,10 @@ namespace Collectivite.Services
         // recuperer tous les BudgetPrimitif
         public async Task<List<BudgetPrimitif>> GetAllBudgetPrimitifAsync()
         {
-            try
-            {
-                using var context = CreateContext();
-                var exerciceService = ExerciceService.Instance;
-
-                if (exerciceService.CurrentExercice == null)
-                {
-                    throw new InvalidOperationException("Aucun exercice n'est sélectionné.");
-                }
-                //var exerciceId = Properties.Settings.Default.ExerciceId;
-
-                return await context.BudgetsPrimitifs
-                    .Include(e => e.Exercice)
-                    .Where(e => e.ExerciceId ==exerciceService.CurrentExercice.Id)
-                    //.OrderByDescending(e => e.DateCreation) // Optionnel : tri
-                    .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                // Logger l'erreur si vous avez un système de logging
-                throw new Exception($"Erreur lors de la récupération des budgets primitifs : {ex.Message}", ex);
-            }
+            using var context = CreateContext();
+            return await context.BudgetsPrimitifs
+                .Include(e => e.Exercice)
+                .ToListAsync();
         }
 
         // ajouter un budgetprimitif
@@ -162,15 +144,7 @@ namespace Collectivite.Services
                 if (budget.Status != BudgetPrimitif.Statusbudget.DRAFT)
                     return (false, "❌ Ce budget ne peut pas être approuvé. Il doit être en mode DRAFT.");
 
-                // Vérification 2 : Budget équilibré (recettes = dépenses)
-                if (budget.MontantDepense != budget.MontantRecette)
-                {
-                    return (false,
-                        "❌ Impossible d'approuver un budget non équilibré. " +
-                        "Le total des dépenses doit être égal au total des recettes.");
-                }
-
-                // Vérification 3 : La date d'approbation doit être dans l'exercice budgétaire
+                // Vérification 2 : La date d'approbation doit être dans l'exercice budgétaire
                 if (budget.Exercice != null)
                 {
                     if (dateApprobation < budget.Exercice.DateDebut || dateApprobation > budget.Exercice.DateFin)
