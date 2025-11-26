@@ -3,12 +3,16 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
       xmlns:models="clr-namespace:Collectivite.Models"
+      xmlns:utils="clr-namespace:Collectivite.Utils"
       Language="fr-FR"
       Background="#F5F5F5"
       Title="Gestion des Remaniements">
 
     <Page.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <utils:VariationToBrushConverter x:Key="VariationToBrushConverter"/>
+        <utils:VariationToLabelConverter x:Key="VariationToLabelConverter"/>
+        <utils:CollectionHasItemsToVisibilityConverter x:Key="CollectionHasItemsToVisibilityConverter"/>
 
         <!-- Enum TypeRemaniement -->
         <ObjectDataProvider x:Key="TypeRemaniementValues" 
@@ -69,15 +73,6 @@
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
-                    <Button Style="{StaticResource MaterialDesignRaisedButton}"
-                            Command="{Binding OpenAddDialogCommand}"
-                            Height="36"
-                            Margin="0,0,10,0">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="Plus" Margin="0,0,5,0" />
-                            <TextBlock Text="Nouveau Remaniement" />
-                        </StackPanel>
-                    </Button>
                     <Button Style="{StaticResource MaterialDesignOutlinedButton}"
                             Command="{Binding LoadDataCommand}"
                             Height="36">
@@ -111,7 +106,7 @@
                     </TabItem.Header>
 
                     <materialDesign:Card Padding="0" Margin="0,10,0,0">
-                        <DataGrid ItemsSource="{Binding Remaniements}"
+                        <DataGrid ItemsSource="{Binding BudgetLines}"
                                   AutoGenerateColumns="False"
                                   CanUserAddRows="False"
                                   IsReadOnly="True"
@@ -119,127 +114,81 @@
                                   materialDesign:DataGridAssist.CellPadding="13 8 8 8">
 
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="Chapitre" 
-                                                  Binding="{Binding BudgetLine.Nommenclature.Chapitre}" 
-                                                  Width="100"/>
-                                <DataGridTextColumn Header="Article" 
-                                                  Binding="{Binding BudgetLine.Nommenclature.Article}" 
-                                                  Width="80"/>
-                                <DataGridTextColumn Header="Paragraphe" 
-                                                  Binding="{Binding BudgetLine.Nommenclature.Paragraphe}" 
-                                                  Width="100"/>
-                                <DataGridTextColumn Header="S-Paragraphe" 
-                                                  Binding="{Binding BudgetLine.Nommenclature.SousParagraphe}" 
-                                                  Width="150"/>
-                                <DataGridTextColumn Header="Intitulé" 
-                                                  Binding="{Binding BudgetLine.Nommenclature.Intitule}" 
-                                                  Width="*" 
-                                                  MinWidth="120"/>
-                                <DataGridTextColumn Header="Date" 
-                                                  Binding="{Binding Date, StringFormat='dd/MM/yyyy'}" 
-                                                  Width="100"/>
-                                <DataGridTextColumn Header="Motif" 
-                                                  Binding="{Binding Motif}" 
-                                                  Width="150"/>
+                                <DataGridTextColumn Header="Chapitre"
+                                                    Binding="{Binding Nommenclature.Chapitre}"
+                                                    Width="100"/>
+                                <DataGridTextColumn Header="Article"
+                                                    Binding="{Binding Nommenclature.Article}"
+                                                    Width="80"/>
+                                <DataGridTextColumn Header="Paragraphe"
+                                                    Binding="{Binding Nommenclature.Paragraphe}"
+                                                    Width="100"/>
+                                <DataGridTextColumn Header="S-Paragraphe"
+                                                    Binding="{Binding Nommenclature.SousParagraphe}"
+                                                    Width="150"/>
+                                <DataGridTextColumn Header="Intitulé"
+                                                    Binding="{Binding Nommenclature.Intitule}"
+                                                    Width="*"
+                                                    MinWidth="200"/>
+                                <DataGridTextColumn Header="Montant prévu"
+                                                    Binding="{Binding MontantPrevu, StringFormat={}{0:N0} GNF}"
+                                                    Width="150"/>
 
-                                <!-- Type de remaniement -->
-                                <DataGridTemplateColumn Header="Type" Width="90">
+                                <DataGridTemplateColumn Header="Remaniements" Width="200">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Border CornerRadius="4" Padding="6,3">
-                                                <Border.Style>
-                                                    <Style TargetType="Border">
-                                                        <Setter Property="Background" Value="#E8F5E9"/>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding TypeRemaniement}" Value="en_moins">
-                                                                <Setter Property="Background" Value="#FFEBEE"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </Border.Style>
-                                                <TextBlock FontSize="11" FontWeight="Medium" HorizontalAlignment="Center">
-                                                    <TextBlock.Style>
-                                                        <Style TargetType="TextBlock">
-                                                            <Setter Property="Text" Value="+ PLUS"/>
-                                                            <Setter Property="Foreground" Value="#388E3C"/>
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding TypeRemaniement}" Value="en_moins">
-                                                                    <Setter Property="Text" Value="- MOINS"/>
-                                                                    <Setter Property="Foreground" Value="#F44336"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </TextBlock.Style>
-                                                </TextBlock>
-                                            </Border>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-
-                                <!-- Montant Prévu 
-                                <DataGridTemplateColumn Header="Montant Prévu" Width="130">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding BudgetLine.MontantPrevu, StringFormat={}{0:N0} GNF}"
-                                                       Style="{StaticResource MontantTextBlockStyle}"
-                                                       Foreground="#757575"/>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>-->
-
-                                <!-- Remaniement -->
-                                <DataGridTemplateColumn Header="Remaniement" Width="130">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock >
-                                                <TextBlock.Style>
-                                                    <Style TargetType="TextBlock" BasedOn="{StaticResource MontantTextBlockStyle}">
-                                                        <Setter Property="Text" Value="{Binding Montant, StringFormat='+{0:N0} GNF'}"/>
-                                                        <Setter Property="Foreground" Value="#388E3C"/>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding TypeRemaniement}" Value="en_moins">
-                                                                <Setter Property="Text" Value="{Binding Montant, StringFormat='-{0:N0} GNF'}"/>
-                                                                <Setter Property="Foreground" Value="#F44336"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </TextBlock.Style>
-                                            </TextBlock>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-
-                                <!-- Montant Définitif -->
-                                <DataGridTemplateColumn Header="Montant Définitif" Width="150">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Border Background="#E3F2FD" 
-                                                    CornerRadius="4" 
-                                                    Padding="8,4">
-                                                <TextBlock Text="{Binding BudgetLine.MontantDefinitif, StringFormat={}{0:N0} GNF}"
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding VariationTotale, StringFormat={}{0:N0} GNF}"
                                                            FontWeight="Bold"
-                                                           Foreground="#1976D2"
+                                                           Foreground="{Binding VariationTotale, Converter={StaticResource VariationToBrushConverter}}"
                                                            HorizontalAlignment="Right"/>
-                                            </Border>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-
-                                <!-- Actions -->
-                                <DataGridTemplateColumn Header="Actions" Width="80">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                        Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                        CommandParameter="{Binding}"
-                                                        ToolTip="Supprimer">
-                                                    <materialDesign:PackIcon Kind="Delete" Foreground="#F44336"/>
-                                                </Button>
+                                                <TextBlock Text="{Binding VariationTotale, Converter={StaticResource VariationToLabelConverter}}"
+                                                           Foreground="{Binding VariationTotale, Converter={StaticResource VariationToBrushConverter}}"
+                                                           FontSize="11"
+                                                           HorizontalAlignment="Right"/>
                                             </StackPanel>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
+
+                                <DataGridTextColumn Header="Montant définitif"
+                                                    Binding="{Binding MontantActu, StringFormat={}{0:N0} GNF}"
+                                                    Width="160"/>
+
+                             <DataGridTemplateColumn Header="Actions" Width="160">
+    <DataGridTemplateColumn.CellTemplate>
+        <DataTemplate>
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Center">
+
+                <!-- Bouton Ajouter -->
+                <Button Style="{StaticResource MaterialDesignIconButton}"
+                        ToolTip="Ajouter un remaniement"
+                        Command="{Binding DataContext.OpenAddDialogCommand, 
+                                  RelativeSource={RelativeSource AncestorType=Page}}"
+                        CommandParameter="{Binding}"
+                        Margin="4,0">
+                    <materialDesign:PackIcon Kind="PlusCircle"
+                                             Foreground="#4CAF50"/>
+                </Button>
+
+                <!-- Bouton Voir détail -->
+                <Button Style="{StaticResource MaterialDesignIconButton}"
+                        ToolTip="Voir détail"
+                        Command="{Binding DataContext.OpenDetailsCommand, 
+                                  RelativeSource={RelativeSource AncestorType=Page}}"
+                        CommandParameter="{Binding}"
+                        Margin="4,0">
+                    <materialDesign:PackIcon Kind="Eye"
+                                             Foreground="#1976D2"/>
+                </Button>
+
+            </StackPanel>
+        </DataTemplate>
+    </DataGridTemplateColumn.CellTemplate>
+</DataGridTemplateColumn>
+
+
                             </DataGrid.Columns>
                         </DataGrid>
                     </materialDesign:Card>
@@ -264,115 +213,75 @@
                     </TabItem.Header>
 
                     <materialDesign:Card Padding="0" Margin="0,10,0,0">
-                        <DataGrid ItemsSource="{Binding Remaniements}"
+                        <DataGrid ItemsSource="{Binding BudgetLines}"
                                   AutoGenerateColumns="False"
                                   CanUserAddRows="False"
                                   IsReadOnly="True"
                                   SelectionMode="Single"
                                   materialDesign:DataGridAssist.CellPadding="13 8 8 8">
 
-                            <!-- Mêmes colonnes que l'onglet 1 -->
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="Chapitre" Binding="{Binding BudgetLine.Nommenclature.Chapitre}" Width="100"/>
-                                <DataGridTextColumn Header="Article" Binding="{Binding BudgetLine.Nommenclature.Article}" Width="80"/>
-                                <DataGridTextColumn Header="Paragraphe" Binding="{Binding BudgetLine.Nommenclature.Paragraphe}" Width="100"/>
-                                <DataGridTextColumn Header="S-Paragraphe" Binding="{Binding BudgetLine.Nommenclature.SousParagraphe}" Width="150"/>
-                                <DataGridTextColumn Header="Intitulé" Binding="{Binding BudgetLine.Nommenclature.Intitule}" Width="*" MinWidth="180"/>
-                                <DataGridTextColumn Header="Date" Binding="{Binding Date, StringFormat='dd/MM/yyyy'}" Width="100"/>
-                                <DataGridTextColumn Header="Motif" Binding="{Binding Motif}" Width="150"/>
+                                <DataGridTextColumn Header="Chapitre" Binding="{Binding Nommenclature.Chapitre}" Width="100"/>
+                                <DataGridTextColumn Header="Article" Binding="{Binding Nommenclature.Article}" Width="80"/>
+                                <DataGridTextColumn Header="Paragraphe" Binding="{Binding Nommenclature.Paragraphe}" Width="100"/>
+                                <DataGridTextColumn Header="S-Paragraphe" Binding="{Binding Nommenclature.SousParagraphe}" Width="150"/>
+                                <DataGridTextColumn Header="Intitulé" Binding="{Binding Nommenclature.Intitule}" Width="*" MinWidth="200"/>
+                                <DataGridTextColumn Header="Montant prévu" Binding="{Binding MontantPrevu, StringFormat={}{0:N0} GNF}" Width="150"/>
 
-                                <DataGridTemplateColumn Header="Type" Width="90">
+                                <DataGridTemplateColumn Header="Remaniements" Width="200">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Border CornerRadius="4" Padding="6,3">
-                                                <Border.Style>
-                                                    <Style TargetType="Border">
-                                                        <Setter Property="Background" Value="#E8F5E9"/>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding TypeRemaniement}" Value="en_moins">
-                                                                <Setter Property="Background" Value="#FFEBEE"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </Border.Style>
-                                                <TextBlock FontSize="11" FontWeight="Medium" HorizontalAlignment="Center">
-                                                    <TextBlock.Style>
-                                                        <Style TargetType="TextBlock">
-                                                            <Setter Property="Text" Value="+ PLUS"/>
-                                                            <Setter Property="Foreground" Value="#388E3C"/>
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding TypeRemaniement}" Value="en_moins">
-                                                                    <Setter Property="Text" Value="- MOINS"/>
-                                                                    <Setter Property="Foreground" Value="#F44336"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </TextBlock.Style>
-                                                </TextBlock>
-                                            </Border>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-
-                                <!-- Mêmes colonnes que l'onglet 1 
-                                <DataGridTemplateColumn Header="Montant Prévu" Width="130">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding BudgetLine.MontantPrevu, StringFormat={}{0:N0} GNF}"
-                                                       Style="{StaticResource MontantTextBlockStyle}"
-                                                       Foreground="#757575"/>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn> ======================================== -->
-
-                                <DataGridTemplateColumn Header="Remaniement" Width="130">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock>
-                                                <TextBlock.Style>
-                                                    <Style TargetType="TextBlock" BasedOn="{StaticResource MontantTextBlockStyle}">
-                                                        <Setter Property="Text" Value="{Binding Montant, StringFormat='+{0:N0} GNF'}"/>
-                                                        <Setter Property="Foreground" Value="#388E3C"/>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding TypeRemaniement}" Value="en_moins">
-                                                                <Setter Property="Text" Value="{Binding Montant, StringFormat='-{0:N0} GNF'}"/>
-                                                                <Setter Property="Foreground" Value="#F44336"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </TextBlock.Style>
-                                            </TextBlock>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-
-                                <DataGridTemplateColumn Header="Montant Définitif" Width="150">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Border Background="#E3F2FD" CornerRadius="4" Padding="8,4">
-                                                <TextBlock Text="{Binding BudgetLine.MontantDefinitif, StringFormat={}{0:N0} GNF}"
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding VariationTotale, StringFormat={}{0:N0} GNF}"
                                                            FontWeight="Bold"
-                                                           Foreground="#1976D2"
+                                                           Foreground="{Binding VariationTotale, Converter={StaticResource VariationToBrushConverter}}"
                                                            HorizontalAlignment="Right"/>
-                                            </Border>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-
-                                <DataGridTemplateColumn Header="Actions" Width="80">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                        Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                        CommandParameter="{Binding}"
-                                                        ToolTip="Supprimer">
-                                                    <materialDesign:PackIcon Kind="Delete" Foreground="#F44336"/>
-                                                </Button>
+                                                <TextBlock Text="{Binding VariationTotale, Converter={StaticResource VariationToLabelConverter}}"
+                                                           Foreground="{Binding VariationTotale, Converter={StaticResource VariationToBrushConverter}}"
+                                                           FontSize="11"
+                                                           HorizontalAlignment="Right"/>
                                             </StackPanel>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
+
+                                <DataGridTextColumn Header="Montant définitif"
+                                                    Binding="{Binding MontantActu, StringFormat={}{0:N0} GNF}"
+                                                    Width="160"/>
+
+                                <DataGridTemplateColumn Header="Actions" Width="160">
+    <DataGridTemplateColumn.CellTemplate>
+        <DataTemplate>
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Center">
+
+                <!-- Bouton Ajouter -->
+                <Button Style="{StaticResource MaterialDesignIconButton}"
+                        ToolTip="Ajouter un remaniement"
+                        Command="{Binding DataContext.OpenAddDialogCommand, 
+                                  RelativeSource={RelativeSource AncestorType=Page}}"
+                        CommandParameter="{Binding}"
+                        Margin="4,0">
+                    <materialDesign:PackIcon Kind="PlusCircle"
+                                             Foreground="#4CAF50"/>
+                </Button>
+
+                <!-- Bouton Voir détail -->
+                <Button Style="{StaticResource MaterialDesignIconButton}"
+                        ToolTip="Voir détail"
+                        Command="{Binding DataContext.OpenDetailsCommand, 
+                                  RelativeSource={RelativeSource AncestorType=Page}}"
+                        CommandParameter="{Binding}"
+                        Margin="4,0">
+                    <materialDesign:PackIcon Kind="Eye"
+                                             Foreground="#1976D2"/>
+                </Button>
+
+            </StackPanel>
+        </DataTemplate>
+    </DataGridTemplateColumn.CellTemplate>
+</DataGridTemplateColumn>
+
                             </DataGrid.Columns>
                         </DataGrid>
                     </materialDesign:Card>
@@ -397,7 +306,7 @@
                     </TabItem.Header>
 
                     <materialDesign:Card Padding="0" Margin="0,10,0,0">
-                        <DataGrid ItemsSource="{Binding Remaniements}"
+                        <DataGrid ItemsSource="{Binding BudgetLines}"
                                   AutoGenerateColumns="False"
                                   CanUserAddRows="False"
                                   IsReadOnly="True"
@@ -405,107 +314,67 @@
                                   materialDesign:DataGridAssist.CellPadding="13 8 8 8">
 
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="Chapitre" Binding="{Binding BudgetLine.Nommenclature.Chapitre}" Width="100"/>
-                                <DataGridTextColumn Header="Article" Binding="{Binding BudgetLine.Nommenclature.Article}" Width="80"/>
-                                <DataGridTextColumn Header="Paragraphe" Binding="{Binding BudgetLine.Nommenclature.Paragraphe}" Width="100"/>
-                                <DataGridTextColumn Header="S-Paragraphe" Binding="{Binding BudgetLine.Nommenclature.SousParagraphe}" Width="150"/>
-                                <DataGridTextColumn Header="Intitulé" Binding="{Binding BudgetLine.Nommenclature.Intitule}" Width="*" MinWidth="180"/>
-                                <DataGridTextColumn Header="Date" Binding="{Binding Date, StringFormat='dd/MM/yyyy'}" Width="100"/>
-                                <DataGridTextColumn Header="Motif" Binding="{Binding Motif}" Width="150"/>
+                                <DataGridTextColumn Header="Chapitre" Binding="{Binding Nommenclature.Chapitre}" Width="100"/>
+                                <DataGridTextColumn Header="Article" Binding="{Binding Nommenclature.Article}" Width="80"/>
+                                <DataGridTextColumn Header="Paragraphe" Binding="{Binding Nommenclature.Paragraphe}" Width="100"/>
+                                <DataGridTextColumn Header="S-Paragraphe" Binding="{Binding Nommenclature.SousParagraphe}" Width="150"/>
+                                <DataGridTextColumn Header="Intitulé" Binding="{Binding Nommenclature.Intitule}" Width="*" MinWidth="200"/>
+                                <DataGridTextColumn Header="Montant prévu" Binding="{Binding MontantPrevu, StringFormat={}{0:N0} GNF}" Width="150"/>
 
-                                <DataGridTemplateColumn Header="Type" Width="90">
+                                <DataGridTemplateColumn Header="Remaniements" Width="200">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Border CornerRadius="4" Padding="6,3">
-                                                <Border.Style>
-                                                    <Style TargetType="Border">
-                                                        <Setter Property="Background" Value="#E8F5E9"/>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding TypeRemaniement}" Value="en_moins">
-                                                                <Setter Property="Background" Value="#FFEBEE"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </Border.Style>
-                                                <TextBlock FontSize="11" FontWeight="Medium" HorizontalAlignment="Center">
-                                                    <TextBlock.Style>
-                                                        <Style TargetType="TextBlock">
-                                                            <Setter Property="Text" Value="+ PLUS"/>
-                                                            <Setter Property="Foreground" Value="#388E3C"/>
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding TypeRemaniement}" Value="en_moins">
-                                                                    <Setter Property="Text" Value="- MOINS"/>
-                                                                    <Setter Property="Foreground" Value="#F44336"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </TextBlock.Style>
-                                                </TextBlock>
-                                            </Border>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <!-- ========================================
-                 
-        
-                                <DataGridTemplateColumn Header="Montant Prévu" Width="130">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding BudgetLine.MontantPrevu, StringFormat={}{0:N0} GNF}"
-                                                       Style="{StaticResource MontantTextBlockStyle}"
-                                                       Foreground="#757575"/>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>         ======================================== -->
-
-                                <DataGridTemplateColumn Header="Remaniement" Width="130">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock>
-                                                <TextBlock.Style>
-                                                    <Style TargetType="TextBlock" BasedOn="{StaticResource MontantTextBlockStyle}">
-                                                        <Setter Property="Text" Value="{Binding Montant, StringFormat='+{0:N0} GNF'}"/>
-                                                        <Setter Property="Foreground" Value="#388E3C"/>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding TypeRemaniement}" Value="en_moins">
-                                                                <Setter Property="Text" Value="{Binding Montant, StringFormat='-{0:N0} GNF'}"/>
-                                                                <Setter Property="Foreground" Value="#F44336"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </TextBlock.Style>
-                                            </TextBlock>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-
-                                <DataGridTemplateColumn Header="Montant Définitif" Width="150">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Border Background="#E3F2FD" CornerRadius="4" Padding="8,4">
-                                                <TextBlock Text="{Binding BudgetLine.MontantDefinitif, StringFormat={}{0:N0} GNF}"
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding VariationTotale, StringFormat={}{0:N0} GNF}"
                                                            FontWeight="Bold"
-                                                           Foreground="#1976D2"
+                                                           Foreground="{Binding VariationTotale, Converter={StaticResource VariationToBrushConverter}}"
                                                            HorizontalAlignment="Right"/>
-                                            </Border>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-
-                                <DataGridTemplateColumn Header="Actions" Width="80">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                        Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                        CommandParameter="{Binding}"
-                                                        ToolTip="Supprimer">
-                                                    <materialDesign:PackIcon Kind="Delete" Foreground="#F44336"/>
-                                                </Button>
+                                                <TextBlock Text="{Binding VariationTotale, Converter={StaticResource VariationToLabelConverter}}"
+                                                           Foreground="{Binding VariationTotale, Converter={StaticResource VariationToBrushConverter}}"
+                                                           FontSize="11"
+                                                           HorizontalAlignment="Right"/>
                                             </StackPanel>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
+
+                                <DataGridTextColumn Header="Montant définitif"
+                                                    Binding="{Binding MontantActu, StringFormat={}{0:N0} GNF}"
+                                                    Width="160"/>
+
+                                <DataGridTemplateColumn Header="Actions" Width="160">
+    <DataGridTemplateColumn.CellTemplate>
+        <DataTemplate>
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Center">
+
+                <!-- Bouton Ajouter -->
+                <Button Style="{StaticResource MaterialDesignIconButton}"
+                        ToolTip="Ajouter un remaniement"
+                        Command="{Binding DataContext.OpenAddDialogCommand, 
+                                  RelativeSource={RelativeSource AncestorType=Page}}"
+                        CommandParameter="{Binding}"
+                        Margin="4,0">
+                    <materialDesign:PackIcon Kind="PlusCircle"
+                                             Foreground="#4CAF50"/>
+                </Button>
+
+                <!-- Bouton Voir détail -->
+                <Button Style="{StaticResource MaterialDesignIconButton}"
+                        ToolTip="Voir détail"
+                        Command="{Binding DataContext.OpenDetailsCommand, 
+                                  RelativeSource={RelativeSource AncestorType=Page}}"
+                        CommandParameter="{Binding}"
+                        Margin="4,0">
+                    <materialDesign:PackIcon Kind="Eye"
+                                             Foreground="#1976D2"/>
+                </Button>
+
+            </StackPanel>
+        </DataTemplate>
+    </DataGridTemplateColumn.CellTemplate>
+</DataGridTemplateColumn>
+
                             </DataGrid.Columns>
                         </DataGrid>
                     </materialDesign:Card>
@@ -530,7 +399,7 @@
                     </TabItem.Header>
 
                     <materialDesign:Card Padding="0" Margin="0,10,0,0">
-                        <DataGrid ItemsSource="{Binding Remaniements}"
+                        <DataGrid ItemsSource="{Binding BudgetLines}"
                                   AutoGenerateColumns="False"
                                   CanUserAddRows="False"
                                   IsReadOnly="True"
@@ -538,109 +407,67 @@
                                   materialDesign:DataGridAssist.CellPadding="13 8 8 8">
 
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="Chapitre" Binding="{Binding BudgetLine.Nommenclature.Chapitre}" Width="100"/>
-                                <DataGridTextColumn Header="Article" Binding="{Binding BudgetLine.Nommenclature.Article}" Width="80"/>
-                                <DataGridTextColumn Header="Paragraphe" Binding="{Binding BudgetLine.Nommenclature.Paragraphe}" Width="100"/>
-                                <DataGridTextColumn Header="S-Paragraphe" Binding="{Binding BudgetLine.Nommenclature.SousParagraphe}" Width="150"/>
-                                <DataGridTextColumn Header="Intitulé" Binding="{Binding BudgetLine.Nommenclature.Intitule}" Width="*" MinWidth="180"/>
-                                <DataGridTextColumn Header="Date" Binding="{Binding Date, StringFormat='dd/MM/yyyy'}" Width="100"/>
-                                <DataGridTextColumn Header="Motif" Binding="{Binding Motif}" Width="150"/>
+                                <DataGridTextColumn Header="Chapitre" Binding="{Binding Nommenclature.Chapitre}" Width="100"/>
+                                <DataGridTextColumn Header="Article" Binding="{Binding Nommenclature.Article}" Width="80"/>
+                                <DataGridTextColumn Header="Paragraphe" Binding="{Binding Nommenclature.Paragraphe}" Width="100"/>
+                                <DataGridTextColumn Header="S-Paragraphe" Binding="{Binding Nommenclature.SousParagraphe}" Width="150"/>
+                                <DataGridTextColumn Header="Intitulé" Binding="{Binding Nommenclature.Intitule}" Width="*" MinWidth="200"/>
+                                <DataGridTextColumn Header="Montant prévu" Binding="{Binding MontantPrevu, StringFormat={}{0:N0} GNF}" Width="150"/>
 
-                                <DataGridTemplateColumn Header="Type" Width="90">
+                                <DataGridTemplateColumn Header="Remaniements" Width="200">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Border CornerRadius="4" Padding="6,3">
-                                                <Border.Style>
-                                                    <Style TargetType="Border">
-                                                        <Setter Property="Background" Value="#E8F5E9"/>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding TypeRemaniement}" Value="en_moins">
-                                                                <Setter Property="Background" Value="#FFEBEE"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </Border.Style>
-                                                <TextBlock FontSize="11" FontWeight="Medium" HorizontalAlignment="Center">
-                                                    <TextBlock.Style>
-                                                        <Style TargetType="TextBlock">
-                                                            <Setter Property="Text" Value="+ PLUS"/>
-                                                            <Setter Property="Foreground" Value="#388E3C"/>
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding TypeRemaniement}" Value="en_moins">
-                                                                    <Setter Property="Text" Value="- MOINS"/>
-                                                                    <Setter Property="Foreground" Value="#F44336"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </TextBlock.Style>
-                                                </TextBlock>
-                                            </Border>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-
-                                <!-- ========================================
-                                ONGLET 4 : DÉPENSE - INVESTISSEMENT
-                     
-
-                                <DataGridTemplateColumn Header="Montant Prévu" Width="130">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding BudgetLine.MontantPrevu, StringFormat={}{0:N0} GNF}"
-                                                       Style="{StaticResource MontantTextBlockStyle}"
-                                                       Foreground="#757575"/>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>======================================== -->
-
-                                <DataGridTemplateColumn Header="Remaniement" Width="130">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock>
-                                                <TextBlock.Style>
-                                                    <Style TargetType="TextBlock" BasedOn="{StaticResource MontantTextBlockStyle}">
-                                                        <Setter Property="Text" Value="{Binding Montant, StringFormat='+{0:N0} GNF'}"/>
-                                                        <Setter Property="Foreground" Value="#388E3C"/>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding TypeRemaniement}" Value="en_moins">
-                                                                <Setter Property="Text" Value="{Binding Montant, StringFormat='-{0:N0} GNF'}"/>
-                                                                <Setter Property="Foreground" Value="#F44336"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </TextBlock.Style>
-                                            </TextBlock>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-
-                                <DataGridTemplateColumn Header="Montant Définitif" Width="150">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Border Background="#E3F2FD" CornerRadius="4" Padding="8,4">
-                                                <TextBlock Text="{Binding BudgetLine.MontantDefinitif, StringFormat={}{0:N0} GNF}"
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding VariationTotale, StringFormat={}{0:N0} GNF}"
                                                            FontWeight="Bold"
-                                                           Foreground="#1976D2"
+                                                           Foreground="{Binding VariationTotale, Converter={StaticResource VariationToBrushConverter}}"
                                                            HorizontalAlignment="Right"/>
-                                            </Border>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-
-                                <DataGridTemplateColumn Header="Actions" Width="80">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                        Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                        CommandParameter="{Binding}"
-                                                        ToolTip="Supprimer">
-                                                    <materialDesign:PackIcon Kind="Delete" Foreground="#F44336"/>
-                                                </Button>
+                                                <TextBlock Text="{Binding VariationTotale, Converter={StaticResource VariationToLabelConverter}}"
+                                                           Foreground="{Binding VariationTotale, Converter={StaticResource VariationToBrushConverter}}"
+                                                           FontSize="11"
+                                                           HorizontalAlignment="Right"/>
                                             </StackPanel>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
+
+                                <DataGridTextColumn Header="Montant définitif"
+                                                    Binding="{Binding MontantActu, StringFormat={}{0:N0} GNF}"
+                                                    Width="160"/>
+
+                                <DataGridTemplateColumn Header="Actions" Width="160">
+    <DataGridTemplateColumn.CellTemplate>
+        <DataTemplate>
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Center">
+
+                <!-- Bouton Ajouter -->
+                <Button Style="{StaticResource MaterialDesignIconButton}"
+                        ToolTip="Ajouter un remaniement"
+                        Command="{Binding DataContext.OpenAddDialogCommand, 
+                                  RelativeSource={RelativeSource AncestorType=Page}}"
+                        CommandParameter="{Binding}"
+                        Margin="4,0">
+                    <materialDesign:PackIcon Kind="PlusCircle"
+                                             Foreground="#4CAF50"/>
+                </Button>
+
+                <!-- Bouton Voir détail -->
+                <Button Style="{StaticResource MaterialDesignIconButton}"
+                        ToolTip="Voir détail"
+                        Command="{Binding DataContext.OpenDetailsCommand, 
+                                  RelativeSource={RelativeSource AncestorType=Page}}"
+                        CommandParameter="{Binding}"
+                        Margin="4,0">
+                    <materialDesign:PackIcon Kind="Eye"
+                                             Foreground="#1976D2"/>
+                </Button>
+
+            </StackPanel>
+        </DataTemplate>
+    </DataGridTemplateColumn.CellTemplate>
+</DataGridTemplateColumn>
+
                             </DataGrid.Columns>
                         </DataGrid>
                     </materialDesign:Card>
@@ -670,19 +497,41 @@
                                  VerticalAlignment="Center"/>
                     </StackPanel>
 
+                    <!-- Informations sur la ligne sélectionnée -->
+                    <Border Background="#E8F5E9"
+                            CornerRadius="8"
+                            Padding="15"
+                            Margin="0,0,0,20">
+                        <StackPanel>
+                            <TextBlock Text="{Binding SelectedBudgetLine.Nommenclature.Intitule, TargetNullValue='Sélectionnez une ligne dans la liste principale'}"
+                                       FontSize="16"
+                                       FontWeight="SemiBold"
+                                       Foreground="#1B5E20"
+                                       TextWrapping="Wrap"/>
+
+                            <WrapPanel Margin="0,10,0,0">
+                                <TextBlock Text="Montant prévu :"
+                                           FontWeight="SemiBold"
+                                           Foreground="#455A64"/>
+                                <TextBlock Text="{Binding SelectedBudgetLine.MontantPrevu, StringFormat={}{0:N0} GNF}"
+                                           Margin="6,0,20,0"
+                                           Foreground="#455A64"/>
+
+                                <TextBlock Text="Montant définitif :"
+                                           FontWeight="SemiBold"
+                                           Foreground="#455A64"/>
+                                <TextBlock Text="{Binding SelectedBudgetLine.MontantActu, StringFormat={}{0:N0} GNF}"
+                                           Margin="6,0,0,0"
+                                           Foreground="#455A64"/>
+                            </WrapPanel>
+                        </StackPanel>
+                    </Border>
+
                     <!-- Type de remaniement -->
                     <ComboBox materialDesign:HintAssist.Hint="Type de remaniement *"
                               Style="{StaticResource MaterialDesignOutlinedComboBox}"
                               ItemsSource="{Binding Source={StaticResource TypeRemaniementValues}}"
                               SelectedItem="{Binding DialogRemaniement.TypeRemaniement}"
-                              Margin="0,0,0,15"/>
-
-                    <!-- Ligne budgétaire -->
-                    <ComboBox materialDesign:HintAssist.Hint="Ligne budgétaire *"
-                              Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                              ItemsSource="{Binding BudgetLinesSansEnfants}"
-                              SelectedItem="{Binding SelectedBudgetLine}"
-                              DisplayMemberPath="Nommenclature.Intitule"
                               Margin="0,0,0,15"/>
 
                     <!-- Montant -->
@@ -743,6 +592,112 @@
                                 Content="Enregistrer"
                                 Command="{Binding SaveCommand}"
                                 Width="150"/>
+                    </StackPanel>
+                </StackPanel>
+            </materialDesign:DialogHost.DialogContent>
+        </materialDesign:DialogHost>
+
+        <!-- Dialog - Détails des remaniements -->
+        <materialDesign:DialogHost IsOpen="{Binding IsDetailDialogOpen}"
+                                   CloseOnClickAway="False"
+                                   Panel.ZIndex="1100">
+            <materialDesign:DialogHost.DialogContent>
+                <StackPanel Width="720" Margin="20">
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+                        <materialDesign:PackIcon Kind="FileTableBoxMultiple"
+                                                 Width="24"
+                                                 Height="24"
+                                                 Foreground="#1976D2"
+                                                 Margin="0,0,10,0"/>
+                        <TextBlock Text="Détail des remaniements"
+                                   FontSize="20"
+                                   FontWeight="SemiBold"/>
+                    </StackPanel>
+
+                    <Border Background="#E3F2FD"
+                            CornerRadius="8"
+                            Padding="12"
+                            Margin="0,0,0,20">
+                        <StackPanel>
+                            <TextBlock Text="{Binding DetailBudgetLine.Nommenclature.Intitule, TargetNullValue='Aucune ligne sélectionnée'}"
+                                       FontWeight="SemiBold"
+                                       FontSize="16"
+                                       TextWrapping="Wrap"/>
+                            <WrapPanel Margin="0,10,0,0">
+                                <TextBlock Text="Montant prévu :" FontWeight="SemiBold" Foreground="#455A64"/>
+                                <TextBlock Text="{Binding DetailBudgetLine.MontantPrevu, StringFormat={}{0:N0} GNF}"
+                                           Margin="6,0,20,0"
+                                           Foreground="#455A64"/>
+                                <TextBlock Text="Montant définitif :" FontWeight="SemiBold" Foreground="#455A64"/>
+                                <TextBlock Text="{Binding DetailBudgetLine.MontantActu, StringFormat={}{0:N0} GNF}"
+                                           Margin="6,0,0,0"
+                                           Foreground="#455A64"/>
+                            </WrapPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Text="Aucun remaniement enregistré pour cette ligne."
+                               Foreground="#546E7A"
+                               FontStyle="Italic"
+                               HorizontalAlignment="Center"
+                               Margin="0,0,0,20">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding DetailRemaniements, Converter={StaticResource CollectionHasItemsToVisibilityConverter}}"
+                                                 Value="Collapsed">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+
+                    <materialDesign:Card Padding="0">
+                        <DataGrid ItemsSource="{Binding DetailRemaniements}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  IsReadOnly="True"
+                                  SelectionMode="Single"
+                                  materialDesign:DataGridAssist.CellPadding="13 8 8 8">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Date"
+                                                    Binding="{Binding Date, StringFormat='dd/MM/yyyy'}"
+                                                    Width="120"/>
+                                <DataGridTextColumn Header="Type"
+                                                    Binding="{Binding TypeRemaniement}"
+                                                    Width="120"/>
+                                <DataGridTextColumn Header="Motif"
+                                                    Binding="{Binding Motif}"
+                                                    Width="*"
+                                                    MinWidth="200"/>
+                                <DataGridTextColumn Header="Montant"
+                                                    Binding="{Binding Montant, StringFormat={}{0:N0} GNF}"
+                                                    Width="150"/>
+                                <DataGridTemplateColumn Header="Actions" Width="80">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                    Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                    CommandParameter="{Binding}"
+                                                    ToolTip="Supprimer">
+                                                <materialDesign:PackIcon Kind="Delete" Foreground="#F44336"/>
+                                            </Button>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </materialDesign:Card>
+
+                    <StackPanel Orientation="Horizontal"
+                                HorizontalAlignment="Right"
+                                Margin="0,20,0,0">
+                        <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                                Command="{Binding CloseDetailsCommand}"
+                                Content="Fermer"
+                                Width="120"/>
                     </StackPanel>
                 </StackPanel>
             </materialDesign:DialogHost.DialogContent>

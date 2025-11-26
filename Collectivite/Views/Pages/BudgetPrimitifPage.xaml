@@ -60,20 +60,6 @@
                                  Margin="15,0,0,0"
                                  VerticalAlignment="Center"/>
                     </StackPanel>
-
-                    <!-- Bouton Ajouter -->
-                    <Button Style="{StaticResource MaterialDesignRaisedButton}"
-                            Height="40"
-                            Command="{Binding OppenAddBudgetPrimitifCommand}"
-                            HorizontalAlignment="Right">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="Plus" 
-                                                   VerticalAlignment="Center"
-                                                   Margin="0,0,8,0"/>
-                            <TextBlock Text="Nouveau Budget" 
-                                     VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
                 </Grid>
 
                 <!-- ───────────────────────────────────────────────────
@@ -249,6 +235,24 @@
                                         <StackPanel Orientation="Horizontal" 
                       HorizontalAlignment="Center">
 
+                                            <!-- Bouton Approuver (visible seulement si statut = DRAFT) -->
+                                            <Button Style="{StaticResource MaterialDesignIconButton}"
+                      ToolTip="Approuver le budget"
+                      Command="{Binding DataContext.OpenApprovalDialogCommand, 
+                              RelativeSource={RelativeSource AncestorType=Page}}"
+                      CommandParameter="{Binding}"
+                      Margin="4,0">
+                                                <Button.Visibility>
+                                                    <Binding Path="Status" 
+                               Converter="{StaticResource EnumToVisibilityConverter}" 
+                               ConverterParameter="DRAFT"/>
+                                                </Button.Visibility>
+                                                <materialDesign:PackIcon Kind="CheckCircleOutline" 
+                                           Foreground="#FF9800"
+                                           Width="20"
+                                           Height="20"/>
+                                            </Button>
+
                                             <!-- Bouton Valider (visible seulement si statut = APPROVED) -->
                                             <Button Style="{StaticResource MaterialDesignIconButton}"
                       ToolTip="Valider le budget"
@@ -292,24 +296,6 @@
                                                 </StackPanel>
                                             </Border>
 
-                                            <!-- Bouton Modifier (visible seulement si statut = APPROVED) -->
-                                            <Button Style="{StaticResource MaterialDesignIconButton}"
-                      ToolTip="Modifier"
-                      Command="{Binding DataContext.OpenEditBudgetPrimitifCommand, 
-                              RelativeSource={RelativeSource AncestorType=Page}}"
-                      CommandParameter="{Binding}"
-                      Margin="4,0">
-                                                <Button.Visibility>
-                                                    <Binding Path="Status" 
-                               Converter="{StaticResource EnumToVisibilityConverter}" 
-                               ConverterParameter="APPROVED"/>
-                                                </Button.Visibility>
-                                                <materialDesign:PackIcon Kind="Pencil" 
-                                           Foreground="#1976D2"
-                                           Width="20"
-                                           Height="20"/>
-                                            </Button>
-
                                             <!-- Bouton Supprimer (visible seulement si statut = APPROVED) -->
                                     <Button Style="{StaticResource MaterialDesignIconButton}"
                                           ToolTip="Supprimer"
@@ -340,159 +326,126 @@
         </ScrollViewer>
 
         <!-- ═══════════════════════════════════════════════════════════
-             DIALOG MODAL AJOUT/MODIFICATION
-             ═══════════════════════════════════════════════════════════ -->
-        <materialDesign:DialogHost IsOpen="{Binding IsDialogOpen}"
-                                 CloseOnClickAway="False"
-                                 Panel.ZIndex="1000">
+             DIALOGHOST - APPROBATION DU BUDGET
+         ═══════════════════════════════════════════════════════════ -->
+        <materialDesign:DialogHost IsOpen="{Binding IsApprovalDialogOpen}" 
+                           CloseOnClickAway="False"
+                           Panel.ZIndex="1001">
             <materialDesign:DialogHost.DialogContent>
-                <StackPanel Width="550" Margin="20">
+                <materialDesign:Card Width="500">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
 
-                    <!-- Titre du dialog -->
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
-                        <materialDesign:PackIcon Kind="CashMultiple" 
-                                               Width="24" 
-                                               Height="24"
-                                               Foreground="#1976D2"
+                        <!-- Header -->
+                        <Border Grid.Row="0" Background="#FF9800" Padding="20">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="CheckCircleOutline" 
+                                               Width="32" 
+                                               Height="32"
+                                               Foreground="White"
                                                VerticalAlignment="Center"
-                                               Margin="0,0,10,0"/>
-                        <TextBlock Text="{Binding DialogTitle}"
-                                 FontSize="20"
-                                 FontWeight="SemiBold"
-                                 VerticalAlignment="Center"/>
-                    </StackPanel>
+                                               Margin="0,0,15,0"/>
+                                <StackPanel>
+                                    <TextBlock Text="Approbation du Budget Primitif"
+                                     FontSize="20"
+                                     FontWeight="SemiBold"
+                                     Foreground="White"/>
+                                    <TextBlock Text="Approuver le budget avant validation"
+                                     FontSize="12"
+                                     Foreground="White"
+                                     Opacity="0.9"
+                                     Margin="0,5,0,0"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
 
-                    <!-- Sélection de l'exercice -->
-                    <ComboBox materialDesign:HintAssist.Hint="Exercice *"
-                            Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                            ItemsSource="{Binding Exercices}"
-                            SelectedValue="{Binding DialogBudgetPrimitif.ExerciceId, UpdateSourceTrigger=PropertyChanged}"
-                            SelectedValuePath="Id"
-                            DisplayMemberPath="Libelle"
-                            Margin="0,0,0,15">
-                        <!--   <ComboBox.ItemTemplate>
-                            <DataTemplate>
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="CalendarRange" 
-                                                           Width="16" 
-                                                           Height="16"
-                                                           Foreground="#1976D2"
-                                                           VerticalAlignment="Center"
-                                                           Margin="0,0,8,0"/>
-                                    <TextBlock>
-                                        <Run Text="{Binding Libelle}"/>
-                                        <Run Text=" (" Foreground="#666"/>
-                                        <Run Text="{Binding Annee}" Foreground="#666"/>
-                                        <Run Text=")" Foreground="#666"/>
+                        <!-- Contenu -->
+                        <StackPanel Grid.Row="1" Margin="20">
+
+                            <!-- Date d'approbation -->
+                            <DatePicker SelectedDate="{Binding DateApprobationDateTime, Mode=TwoWay}"
+                              materialDesign:HintAssist.Hint="Date d'approbation *"
+                              Style="{StaticResource MaterialDesignOutlinedDatePicker}"
+                              Margin="0,0,0,20"/>
+
+                            <!-- Avertissement -->
+                            <Border Background="#FFF3E0"
+                          CornerRadius="8"
+                          Padding="15">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                        <materialDesign:PackIcon Kind="InformationOutline" 
+                                                       Width="24" 
+                                                       Height="24"
+                                                       Foreground="#FF9800"
+                                                       VerticalAlignment="Top"
+                                                       Margin="0,0,10,0"/>
+                                        <TextBlock TextWrapping="Wrap" 
+                                         FontSize="13" 
+                                         Foreground="#F57C00"
+                                         FontWeight="Medium">
+                                    <Run Text="ℹ️ Information"/>
+                                        </TextBlock>
+                                    </StackPanel>
+
+                                    <TextBlock TextWrapping="Wrap" 
+                                     FontSize="12" 
+                                     Foreground="#666"
+                                     Margin="34,0,0,0">
+                                <Run Text="L'approbation du budget permet de le rendre disponible pour la validation."/>
+                                <LineBreak/>
+                                <Run Text="Une fois approuvé, le budget pourra être validé avec un fichier de validation."/>
                                     </TextBlock>
                                 </StackPanel>
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>-->
-                    </ComboBox>
+                            </Border>
 
-                    <!-- Montant Total-->
-                    <TextBox materialDesign:HintAssist.Hint="Montant du budget (GNF) *"
-                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                           Text="{Binding DialogBudgetPrimitif.MontantTotal, UpdateSourceTrigger=PropertyChanged, StringFormat=N0}"
-                           IsEnabled="False"
-                           Margin="0,0,0,15">
-                        <TextBox.InputBindings>
-                            <KeyBinding Key="Enter" Command="{Binding SaveBudgetPrimitifCommand}"/>
-                        </TextBox.InputBindings>
-                    </TextBox>
-                    <!-- Montant Recette-->
-                    <TextBox materialDesign:HintAssist.Hint="Montant Total recette (GNF) *"
-                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                           Text="{Binding DialogBudgetPrimitif.MontantRecette, UpdateSourceTrigger=PropertyChanged, StringFormat=N0}"
-                           IsEnabled="False"
-                           Margin="0,0,0,15">
-                        <TextBox.InputBindings>
-                            <KeyBinding Key="Enter" Command="{Binding SaveBudgetPrimitifCommand}"/>
-                        </TextBox.InputBindings>
-                    </TextBox>
-                    <!-- Montant Depense-->
-                    <TextBox materialDesign:HintAssist.Hint="Montant Total depense (GNF) *"
-                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                           Text="{Binding DialogBudgetPrimitif.MontantDepense, UpdateSourceTrigger=PropertyChanged, StringFormat=N0}"
-                           IsEnabled="False"
-                           Margin="0,0,0,15">
-                        <TextBox.InputBindings>
-                            <KeyBinding Key="Enter" Command="{Binding SaveBudgetPrimitifCommand}"/>
-                        </TextBox.InputBindings>
-                    </TextBox>
+                        </StackPanel>
 
-                    <!-- Date d'approbation -->
-                    <DatePicker materialDesign:HintAssist.Hint="Date d'approbation *"
-                              Style="{StaticResource MaterialDesignOutlinedDatePicker}"
-                              SelectedDate="{Binding DilogBudgetPrimitifDateApprobation}"
-                              Language="fr-FR"
-                              Margin="0,0,0,15"/>
-                    <!-- Date de validation 
-                    <DatePicker materialDesign:HintAssist.Hint="Date de validation *"
-                              Style="{StaticResource MaterialDesignOutlinedDatePicker}"
-                              SelectedDate="{Binding DilogBudgetPrimitifDateValidation}"
-                              Language="fr-FR"
-                              Margin="0,0,0,15"/> -->
+                        <!-- Footer -->
+                        <Border Grid.Row="2" 
+                      Background="#FAFAFA" 
+                      BorderBrush="#E0E0E0" 
+                      BorderThickness="0,1,0,0"
+                      Padding="20">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                <Button Content="Annuler"
+                              Style="{StaticResource MaterialDesignFlatButton}"
+                              Command="{Binding CancelApprovalCommand}"
+                              Width="100"
+                              Height="40"
+                              Margin="0,0,10,0"/>
 
-                    <!-- Section d'information -->
-                    <Border Background="#FFF3E0"
-                          CornerRadius="8"
-                          Padding="15"
-                          Margin="0,0,0,15">
-                        <StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                <materialDesign:PackIcon Kind="InformationOutline" 
-                                                       Width="20" 
-                                                       Height="20"
-                                                       Foreground="#F57C00"
+                                <Button Command="{Binding ConfirmApprovalCommand}"
+                              Width="140"
+                              Height="40"
+                              Background="#FF9800"
+                              BorderBrush="#FF9800"
+                              Style="{StaticResource MaterialDesignRaisedButton}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="CheckCircleOutline" 
                                                        VerticalAlignment="Center"
                                                        Margin="0,0,8,0"/>
-                                <TextBlock Text="Information" 
-                                         FontWeight="SemiBold"
-                                         FontSize="14"
-                                         Foreground="#F57C00"
-                                         VerticalAlignment="Center"/>
+                                        <TextBlock Text="Approuver" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
                             </StackPanel>
-                            <TextBlock Text="Le budget primitif représente la prévision budgétaire initiale votée pour l'exercice fiscal sélectionné."
-                                     FontSize="12"
-                                     Foreground="#424242"
-                                     TextWrapping="Wrap"/>
-                        </StackPanel>
-                    </Border>
+                        </Border>
 
-                    <!-- Note explicative -->
-                    <TextBlock Text="* Champs obligatoires"
-                             FontSize="11"
-                             Foreground="#666"
-                             FontStyle="Italic"
-                             Margin="5,0,0,15"/>
-
-                    <!-- Boutons -->
-                    <StackPanel Orientation="Horizontal" 
-                              HorizontalAlignment="Right">
-                        <Button Style="{StaticResource MaterialDesignFlatButton}"
-                              Content="Annuler"
-                              Command="{Binding CancelBudgetPrimitifCommand}"
-                              Margin="0,0,10,0"
-                              Width="100"/>
-
-                        <Button Style="{StaticResource MaterialDesignRaisedButton}"
-                              Content="Enregistrer"
-                              Command="{Binding SaveBudgetPrimitifCommand}"
-                              Width="120"/>
-                    </StackPanel>
-
-                </StackPanel>
+                    </Grid>
+                </materialDesign:Card>
             </materialDesign:DialogHost.DialogContent>
         </materialDesign:DialogHost>
-
 
         <!-- ═══════════════════════════════════════════════════════════
              DIALOGHOST - VALIDATION DU BUDGET
          ═══════════════════════════════════════════════════════════ -->
         <materialDesign:DialogHost IsOpen="{Binding IsValidationDialogOpen}" 
                            CloseOnClickAway="False"
-                           Panel.ZIndex="1001">
+                           Panel.ZIndex="1002">
             <materialDesign:DialogHost.DialogContent>
                 <materialDesign:Card Width="500">
                     <Grid>
@@ -532,7 +485,35 @@
                             <DatePicker SelectedDate="{Binding DateValidationDateTime, Mode=TwoWay}"
                               materialDesign:HintAssist.Hint="Date de validation *"
                               Style="{StaticResource MaterialDesignOutlinedDatePicker}"
-                              Margin="0,0,0,20"/>
+                              Margin="0,0,0,15"/>
+
+                            <!-- Fichier de validation -->
+                            <StackPanel Margin="0,0,0,15">
+                                <TextBlock Text="Fichier de validation"
+                                     FontSize="12"
+                                     FontWeight="Medium"
+                                     Foreground="#424242"
+                                     Margin="0,0,0,8"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <TextBox Grid.Column="0"
+                                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                         Text="{Binding FileNameValidation, Mode=OneWay}"
+                                         IsReadOnly="True"
+                                         materialDesign:HintAssist.Hint="Aucun fichier sélectionné"
+                                         Margin="0,0,10,0"/>
+                                    
+                                    <Button Grid.Column="1"
+                                        Style="{StaticResource MaterialDesignRaisedButton}"
+                                        Command="{Binding SelectFileCommand}"
+                                        Content="Parcourir"
+                                        Width="100"/>
+                                </Grid>
+                            </StackPanel>
 
                             <!-- Avertissement -->
                             <Border Background="#FFF3E0"

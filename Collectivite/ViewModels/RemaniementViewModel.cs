@@ -1,7 +1,8 @@
-﻿using Collectivite.Models;
+using Collectivite.Models;
 using Collectivite.Services;
 using Collectivite.Utils;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
@@ -15,14 +16,14 @@ namespace Collectivite.ViewModels
     public class RemaniementViewModel : ViewModelBase
     {
         private bool _isLoading;
-        private Remaniement? _selectedRemaniement;
         private bool _isDialogOpen;
         private Remaniement _dialogRemaniement;
         private BudgetLine? _selectedBudgetLine;
         private int _selectedTabIndex;
+        private bool _isDetailDialogOpen;
+        private BudgetLine? _detailBudgetLine;
 
-        // Collection principale non filtrée
-        private ObservableCollection<Remaniement> _allRemaniements = new();
+        private readonly List<BudgetLine> _allBudgetLines = new();
 
         public RemaniementViewModel()
         {
@@ -34,93 +35,74 @@ namespace Collectivite.ViewModels
                 TypeRemaniement = TypeRemaniement.en_plus
             };
 
-            // Commandes
             LoadDataCommand = new RelayCommand(async _ => await LoadDataAsync());
-            OpenAddDialogCommand = new RelayCommand(async _ => await OpenAddDialogAsync());
+            OpenAddDialogCommand = new RelayCommand<BudgetLine>(async line => await OpenAddDialogAsync(line), line => line != null);
+            OpenDetailsCommand = new RelayCommand<BudgetLine>(async line => await OpenDetailsDialogAsync(line), line => line != null);
             SaveCommand = new RelayCommand(async _ => await SaveAsync(), _ => CanSave());
             CancelCommand = new RelayCommand(_ => CancelDialog());
             DeleteCommand = new RelayCommand<Remaniement>(async rem => await DeleteAsync(rem));
+            CloseDetailsCommand = new RelayCommand(_ => CloseDetailsDialog());
 
-            // Charger les données au démarrage
             LoadDataCommand.Execute(null);
         }
 
-        #region Properties
+        #region Collections exposées
 
-        /// <summary>
-        /// Collection visible dans le DataGrid (filtrée selon l'onglet)
-        /// </summary>
-        public ObservableCollection<Remaniement> Remaniements { get; } = new();
+        public ObservableCollection<BudgetLine> BudgetLines { get; } = new();
+        public ObservableCollection<Remaniement> DetailRemaniements { get; } = new();
 
-        /// <summary>
-        /// Lignes budgétaires sans enfants pour la sélection
-        /// </summary>
-        public ObservableCollection<BudgetLine> BudgetLinesSansEnfants { get; } = new();
+        #endregion
 
-        /// <summary>
-        /// Indicateur de chargement
-        /// </summary>
+        #region Propriétés bindables
+
         public bool IsLoading
         {
             get => _isLoading;
             set => SetProperty(ref _isLoading, value);
         }
 
-        /// <summary>
-        /// Remaniement sélectionné dans le DataGrid
-        /// </summary>
-        public Remaniement? SelectedRemaniement
-        {
-            get => _selectedRemaniement;
-            set => SetProperty(ref _selectedRemaniement, value);
-        }
-
-        /// <summary>
-        /// Indique si le dialog est ouvert
-        /// </summary>
         public bool IsDialogOpen
         {
             get => _isDialogOpen;
             set => SetProperty(ref _isDialogOpen, value);
         }
 
-        /// <summary>
-        /// Remaniement en cours d'édition dans le dialog
-        /// </summary>
         public Remaniement DialogRemaniement
         {
             get => _dialogRemaniement;
             set => SetProperty(ref _dialogRemaniement, value);
         }
 
-        /// <summary>
-        /// Ligne budgétaire sélectionnée dans le dialog
-        /// </summary>
         public BudgetLine? SelectedBudgetLine
         {
             get => _selectedBudgetLine;
             set
             {
                 SetProperty(ref _selectedBudgetLine, value);
-                if (value != null && DialogRemaniement != null)
+                if (value != null)
                 {
                     DialogRemaniement.IdBudgetLine = value.Id;
                     OnPropertyChanged(nameof(DialogRemaniement));
                 }
+                OnPropertyChanged(nameof(DialogTitle));
+            }
+        }
+
+        public string DialogTitle
+        {
+            get
+            {
+                if (SelectedBudgetLine?.Nommenclature != null)
+                {
+                    return $"Remaniement - {SelectedBudgetLine.Nommenclature.Intitule}";
+                }
+                return "Nouveau remaniement";
             }
         }
 
         /// <summary>
-        /// Titre du dialog
-        /// </summary>
-        public string DialogTitle => "Nouveau Remaniement";
-
-        /// <summary>
-        /// Index de l'onglet sélectionné
-        /// 0 = Recette - Fonctionnement
-        /// 1 = Recette - Investissement
-        /// 2 = Dépense - Fonctionnement
-        /// 3 = Dépense - Investissement
+        /// 0 = Recette-Fonctionnement, 1 = Recette-Investissement,
+        /// 2 = Dépense-Fonctionnement, 3 = Dépense-Investissement
         /// </summary>
         public int SelectedTabIndex
         {
@@ -129,58 +111,55 @@ namespace Collectivite.ViewModels
             {
                 if (SetProperty(ref _selectedTabIndex, value))
                 {
-                    ApplyFilter(); // Rafraîchit la liste filtrée
+                    ApplyFilter();
                 }
             }
         }
 
-        /// <summary>
-        /// Nombre total de remaniements dans l'onglet actuel
-        /// </summary>
-        public int TotalRemaniements => Remaniements.Count;
+        public int TotalRemaniements => BudgetLines.Sum(bl => bl.Remaniements?.Count ?? 0);
+        public decimal TotalVariation => BudgetLines.Sum(bl => bl.VariationTotale);
 
-        /// <summary>
-        /// Montant total des remaniements dans l'onglet actuel
-        /// </summary>
-        public decimal TotalMontant => (decimal)Remaniements.Sum(r => r.Montant);
+        public bool IsDetailDialogOpen
+        {
+            get => _isDetailDialogOpen;
+            set => SetProperty(ref _isDetailDialogOpen, value);
+        }
+
+        public BudgetLine? DetailBudgetLine
+        {
+            get => _detailBudgetLine;
+            set => SetProperty(ref _detailBudgetLine, value);
+        }
 
         #endregion
 
-        #region Commands
+        #region Commandes
 
         public ICommand LoadDataCommand { get; }
         public ICommand OpenAddDialogCommand { get; }
+        public ICommand OpenDetailsCommand { get; }
         public ICommand SaveCommand { get; }
         public ICommand CancelCommand { get; }
         public ICommand DeleteCommand { get; }
+        public ICommand CloseDetailsCommand { get; }
 
         #endregion
 
-        #region Methods
+        #region Chargement / filtrage
 
-        /// <summary>
-        /// Charge tous les remaniements depuis la base de données
-        /// </summary>
         private async System.Threading.Tasks.Task LoadDataAsync()
         {
             IsLoading = true;
 
             try
             {
-                var remaniementService = new RemaniementService();
-                var remaniements = await remaniementService.GetAllRemaniementsAsync();
+                var service = new RemaniementService();
+                var budgetLines = await service.GetBudgetLinesForValidatedBudgetAsync();
 
-                _allRemaniements.Clear();
-                foreach (var r in remaniements)
-                {
-                    _allRemaniements.Add(r);
-                }
+                _allBudgetLines.Clear();
+                _allBudgetLines.AddRange(budgetLines);
 
-                ApplyFilter(); // Appliquer le filtre selon l'onglet actif
-
-                // Rafraîchir les propriétés calculées
-                OnPropertyChanged(nameof(TotalRemaniements));
-                OnPropertyChanged(nameof(TotalMontant));
+                ApplyFilter();
             }
             catch (Exception ex)
             {
@@ -193,102 +172,120 @@ namespace Collectivite.ViewModels
             }
         }
 
-        /// <summary>
-        /// Applique un filtre sur la collection Remaniements selon l'onglet sélectionné
-        /// 0 = Recette - Fonctionnement
-        /// 1 = Recette - Investissement
-        /// 2 = Dépense - Fonctionnement
-        /// 3 = Dépense - Investissement
-        /// </summary>
         private void ApplyFilter()
         {
-            Remaniements.Clear();
+            BudgetLines.Clear();
 
-            if (_allRemaniements.Count == 0)
+            if (!_allBudgetLines.Any())
                 return;
 
-            var filtered = _allRemaniements.AsEnumerable();
+            IEnumerable<BudgetLine> filtered = _allBudgetLines;
 
-            // ✅ CORRECTION : Filtrer par Nature ET Section
             switch (SelectedTabIndex)
             {
-                case 0: // Recette - Fonctionnement
-                    filtered = filtered.Where(r => 
-                        r.BudgetLine?.Nommenclature?.Nature == NatureType.Recette &&
-                        r.BudgetLine?.Nommenclature?.Section == SectionType.Fonctionnement);
+                case 0:
+                    filtered = filtered.Where(bl =>
+                        bl.Nommenclature?.Nature == NatureType.Recette &&
+                        bl.Nommenclature?.Section == SectionType.Fonctionnement);
                     break;
-
-                case 1: // Recette - Investissement
-                    filtered = filtered.Where(r => 
-                        r.BudgetLine?.Nommenclature?.Nature == NatureType.Recette &&
-                        r.BudgetLine?.Nommenclature?.Section == SectionType.Investissement);
+                case 1:
+                    filtered = filtered.Where(bl =>
+                        bl.Nommenclature?.Nature == NatureType.Recette &&
+                        bl.Nommenclature?.Section == SectionType.Investissement);
                     break;
-
-                case 2: // Dépense - Fonctionnement
-                    filtered = filtered.Where(r => 
-                        r.BudgetLine?.Nommenclature?.Nature == NatureType.Depense &&
-                        r.BudgetLine?.Nommenclature?.Section == SectionType.Fonctionnement);
+                case 2:
+                    filtered = filtered.Where(bl =>
+                        bl.Nommenclature?.Nature == NatureType.Depense &&
+                        bl.Nommenclature?.Section == SectionType.Fonctionnement);
                     break;
-
-                case 3: // Dépense - Investissement
-                    filtered = filtered.Where(r => 
-                        r.BudgetLine?.Nommenclature?.Nature == NatureType.Depense &&
-                        r.BudgetLine?.Nommenclature?.Section == SectionType.Investissement);
+                case 3:
+                    filtered = filtered.Where(bl =>
+                        bl.Nommenclature?.Nature == NatureType.Depense &&
+                        bl.Nommenclature?.Section == SectionType.Investissement);
                     break;
-
                 default:
-                    // Par défaut, afficher tous
                     break;
             }
 
-            // Trier par date décroissante
-            foreach (var r in filtered.OrderByDescending(r => r.Date))
+            foreach (var line in filtered
+                .OrderBy(bl => bl.Nommenclature?.Chapitre)
+                .ThenBy(bl => bl.Nommenclature?.Article)
+                .ThenBy(bl => bl.Nommenclature?.Paragraphe)
+                .ThenBy(bl => bl.Nommenclature?.SousParagraphe))
             {
-                Remaniements.Add(r);
+                BudgetLines.Add(line);
             }
 
-            // Notifier les propriétés calculées
             OnPropertyChanged(nameof(TotalRemaniements));
-            OnPropertyChanged(nameof(TotalMontant));
+            OnPropertyChanged(nameof(TotalVariation));
         }
 
-        /// <summary>
-        /// Ouvre le dialog pour créer un nouveau remaniement
-        /// </summary>
-        private async System.Threading.Tasks.Task OpenAddDialogAsync()
+        #endregion
+
+        #region Dialog Remaniement
+
+        private System.Threading.Tasks.Task OpenAddDialogAsync(BudgetLine? budgetLine)
+        {
+            if (budgetLine == null)
+                return System.Threading.Tasks.Task.CompletedTask;
+
+            SelectedBudgetLine = budgetLine;
+            DialogRemaniement = new Remaniement
+            {
+                Date = DateTime.Now,
+                Montant = 0,
+                Motif = "",
+                TypeRemaniement = TypeRemaniement.en_plus,
+                IdBudgetLine = budgetLine.Id
+            };
+
+            IsDialogOpen = true;
+            return System.Threading.Tasks.Task.CompletedTask;
+        }
+
+        private bool CanSave()
+        {
+            return DialogRemaniement != null &&
+                   SelectedBudgetLine != null &&
+                   DialogRemaniement.Montant > 0 &&
+                   !string.IsNullOrWhiteSpace(DialogRemaniement.Motif);
+        }
+
+        private async System.Threading.Tasks.Task SaveAsync()
         {
             IsLoading = true;
 
             try
             {
-                // ✅ CORRECTION : Créer le service ici
-                var remaniementService = new RemaniementService();
-                
-                // Charger les lignes budgétaires disponibles
-                var lines = await remaniementService.GetBudgetLinesSansEnfantsAsync();
-
-                BudgetLinesSansEnfants.Clear();
-                foreach (var line in lines)
+                if (SelectedBudgetLine == null)
                 {
-                    BudgetLinesSansEnfants.Add(line);
+                    MessageBox.Show("Veuillez sélectionner une ligne budgétaire.",
+                        "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
                 }
 
-                // Initialiser un nouveau remaniement
-                DialogRemaniement = new Remaniement
+                var service = new RemaniementService();
+                var budgetLineId = DialogRemaniement.IdBudgetLine;
+
+                var (success, message, _) = await service.CreateRemaniementAsync(
+                    DialogRemaniement,
+                    DialogRemaniement.TypeRemaniement);
+
+                MessageBox.Show(message,
+                    success ? "Succès" : "Erreur",
+                    MessageBoxButton.OK,
+                    success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+
+                if (success)
                 {
-                    Date = DateTime.Now,
-                    Montant = 0,
-                    Motif = "",
-                    TypeRemaniement = TypeRemaniement.en_plus
-                };
-
-                SelectedBudgetLine = null;
-
-                IsDialogOpen = true;
+                    IsDialogOpen = false;
+                    await LoadDataAsync();
+                    await RefreshDetailsIfNeeded(budgetLineId);
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de l'ouverture du dialog : {ex.Message}",
+                MessageBox.Show($"Erreur : {ex.Message}",
                     "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
@@ -297,93 +294,6 @@ namespace Collectivite.ViewModels
             }
         }
 
-        /// <summary>
-        /// Vérifie si le remaniement peut être enregistré
-        /// </summary>
-        private bool CanSave()
-        {
-            return DialogRemaniement != null &&
-                   DialogRemaniement.Montant > 0 &&
-                   !string.IsNullOrWhiteSpace(DialogRemaniement.Motif) &&
-                   DialogRemaniement.IdBudgetLine > 0 &&
-                   SelectedBudgetLine != null;
-        }
-
-        /// <summary>
-        /// Enregistre le nouveau remaniement
-        /// </summary>
-        private async System.Threading.Tasks.Task SaveAsync()
-        {
-            IsLoading = true;
-
-            try
-            {
-                // Confirmation avant l'enregistrement
-                var typeText = DialogRemaniement.TypeRemaniement == TypeRemaniement.en_plus
-                    ? "Augmentation (+)"
-                    : "Diminution (-)";
-
-                var natureText = SelectedBudgetLine?.Nommenclature?.Nature == NatureType.Recette
-                    ? "Recette"
-                    : "Dépense";
-
-                var sectionText = SelectedBudgetLine?.Nommenclature?.Section == SectionType.Fonctionnement
-                    ? "Fonctionnement"
-                    : "Investissement";
-
-                var confirmation = MessageBox.Show(
-                    $"Confirmer le remaniement ?\n\n" +
-                    $"Type : {typeText}\n" +
-                    $"Catégorie : {natureText} - {sectionText}\n" +
-                    $"Montant : {DialogRemaniement.Montant:N0} GNF\n" +
-                    $"Ligne budgétaire : {SelectedBudgetLine?.Nommenclature?.Intitule}\n" +
-                    $"Motif : {DialogRemaniement.Motif}",
-                    "Confirmation du remaniement",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Question);
-
-                if (confirmation != MessageBoxResult.Yes)
-                {
-                    IsLoading = false;
-                    return;
-                }
-
-                // ✅ CORRECTION : Créer le service ici
-                var remaniementService = new RemaniementService();
-
-                // Créer le remaniement
-                var (success, message, remaniement) = await remaniementService.CreateRemaniementAsync(
-                    DialogRemaniement,
-                    DialogRemaniement.TypeRemaniement
-                );
-
-                if (success)
-                {
-                    MessageBox.Show(message, "Succès",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
-                    IsDialogOpen = false;
-                    await LoadDataAsync(); // Recharger les données
-                }
-                else
-                {
-                    MessageBox.Show(message, "Erreur",
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-            finally
-            {
-                IsLoading = false;
-            }
-        }
-
-        /// <summary>
-        /// Annule et ferme le dialog
-        /// </summary>
         private void CancelDialog()
         {
             IsDialogOpen = false;
@@ -397,39 +307,73 @@ namespace Collectivite.ViewModels
             SelectedBudgetLine = null;
         }
 
-        /// <summary>
-        /// Supprime un remaniement
-        /// </summary>
+        #endregion
+
+        #region Détails remaniements
+
+        private async System.Threading.Tasks.Task OpenDetailsDialogAsync(BudgetLine? budgetLine)
+        {
+            if (budgetLine == null)
+                return;
+
+            DetailBudgetLine = budgetLine;
+            await LoadDetailRemaniementsAsync(budgetLine.Id);
+            IsDetailDialogOpen = true;
+        }
+
+        private async System.Threading.Tasks.Task LoadDetailRemaniementsAsync(int budgetLineId)
+        {
+            try
+            {
+                var service = new RemaniementService();
+                var details = await service.GetRemaniementsByBudgetLineAsync(budgetLineId);
+
+                DetailRemaniements.Clear();
+                foreach (var rem in details.OrderByDescending(r => r.Date))
+                {
+                    DetailRemaniements.Add(rem);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors du chargement des détails : {ex.Message}",
+                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void CloseDetailsDialog()
+        {
+            IsDetailDialogOpen = false;
+            DetailRemaniements.Clear();
+            DetailBudgetLine = null;
+        }
+
+        #endregion
+
+        #region Suppression
+
         private async System.Threading.Tasks.Task DeleteAsync(Remaniement? remaniement)
         {
             if (remaniement == null)
                 return;
 
-            var typeText = remaniement.TypeRemaniement == TypeRemaniement.en_plus
-                ? "en PLUS"
-                : "en MOINS";
+            var typeText = remaniement.TypeRemaniement == TypeRemaniement.en_plus ? "en PLUS" : "en MOINS";
 
-            var result = MessageBox.Show(
-                $"⚠️ Supprimer ce remaniement ?\n\n" +
-                $"Type : {typeText}\n" +
-                $"Montant : {remaniement.Montant:N0} GNF\n" +
-                $"Motif : {remaniement.Motif}\n\n" +
-                $"Cette action est irréversible.",
-                "Confirmation de suppression",
+            var confirm = MessageBox.Show(
+                $"Supprimer ce remaniement ?\n\nType : {typeText}\nMontant : {remaniement.Montant:N0} GNF\nMotif : {remaniement.Motif}",
+                "Confirmation",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Warning);
 
-            if (result != MessageBoxResult.Yes)
+            if (confirm != MessageBoxResult.Yes)
                 return;
 
             IsLoading = true;
 
             try
             {
-                // ✅ CORRECTION : Créer le service ici
-                var remaniementService = new RemaniementService();
-                
-                var (success, message) = await remaniementService.DeleteRemaniementAsync(remaniement.Id);
+                var service = new RemaniementService();
+                var (success, message) = await service.DeleteRemaniementAsync(remaniement.Id);
 
                 MessageBox.Show(message,
                     success ? "Succès" : "Erreur",
@@ -438,13 +382,14 @@ namespace Collectivite.ViewModels
 
                 if (success)
                 {
-                    await LoadDataAsync(); // Recharger les données
+                    await LoadDataAsync();
+                    await RefreshDetailsIfNeeded(remaniement.IdBudgetLine);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erreur : {ex.Message}",
+                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -452,6 +397,15 @@ namespace Collectivite.ViewModels
             }
         }
 
+        private async System.Threading.Tasks.Task RefreshDetailsIfNeeded(int budgetLineId)
+        {
+            if (IsDetailDialogOpen && DetailBudgetLine?.Id == budgetLineId)
+            {
+                await LoadDetailRemaniementsAsync(budgetLineId);
+            }
+        }
+
         #endregion
     }
 }
+

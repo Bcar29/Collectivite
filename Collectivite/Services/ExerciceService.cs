@@ -148,6 +148,25 @@ namespace Collectivite.Services
                 context.Exercices.Add(exercice);
                 await context.SaveChangesAsync();
 
+                // ═══════════════════════════════════════════════════════════
+                // CRÉATION AUTOMATIQUE DU BUDGET PRIMITIF ASSOCIÉ
+                // ═══════════════════════════════════════════════════════════
+                var budgetPrimitif = new BudgetPrimitif
+                {
+                    ExerciceId = exercice.Id,
+                    MontantTotal = 0,
+                    MontantDepense = 0,
+                    MontantRecette = 0,
+                    DateApprobation = null,
+                    DateValidation = null,
+                    FichierValidation = null,
+                    FileName = null,
+                    Status = BudgetPrimitif.Statusbudget.DRAFT
+                };
+
+                context.BudgetsPrimitifs.Add(budgetPrimitif);
+                await context.SaveChangesAsync();
+
                 return (true, "Exercice créé avec succès.", exercice);
             }
             catch (Exception ex)

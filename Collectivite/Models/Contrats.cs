@@ -20,9 +20,11 @@ namespace Collectivite.Models
         public int TiersId { get; set; }
         public Tiers Tiers { get; set; } = null!;
 
-        [Required(ErrorMessage = " l'objet du contrat est obligatoire")]
+        
+
         public string Objet { get; set; } = null!;
-        [Required(ErrorMessage = "Le montant du contrat est obligatoire.")]
+        [Required(ErrorMessage = " l'objet du contrat est obligatoire")]
+
         [Range(0, double.MaxValue, ErrorMessage = "Le montant doit être positif.")]
         public double MontantContrat { get; set; }
         public byte[]? FichierJoin { get; set; }

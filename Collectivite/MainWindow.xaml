@@ -103,7 +103,6 @@
                         </Button>
 
                         <!-- Section Configuration -->
-
                         <Expander Style="{StaticResource MaterialDesignExpander}" 
                                   HorizontalAlignment="Left"
                                   Width="250"
@@ -165,7 +164,6 @@
 
                             </StackPanel>
                         </Expander>
-
                         <!-- Section Configuration FIN -->
 
                         <Button Style="{StaticResource MenuButtonStyle}"
@@ -294,7 +292,6 @@
                         </Expander>
                         
                         <!-- Section Gestion Budgétaire Fin -->
-
                         <!-- Section Gestion Compte Bancaire et Tiers -->
                         <TextBlock Text="Compte Bancaire et Tiers" Style="{StaticResource MenuHeaderStyle}"/>
 
@@ -504,7 +501,6 @@
                             </StackPanel>
                         </Expander>
                         <!-- Section Gestion Comptable Fin  -->
-
                         <!-- Espacement final -->
                         <Border Height="20"/>
                     </StackPanel>
