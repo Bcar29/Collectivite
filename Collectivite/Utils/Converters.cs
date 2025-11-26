@@ -111,4 +111,58 @@ namespace Collectivite.Utils
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
             => throw new NotImplementedException();
     }
+
+    /// <summary>
+    /// Convertit une variation (decimal/double/int) en couleur (vert, rouge, gris)
+    /// </summary>
+    public class VariationToBrushConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            var variation = ToDecimal(value);
+
+            if (variation > 0) return new SolidColorBrush((Color)ColorConverter.ConvertFromString("#388E3C"));
+            if (variation < 0) return new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F44336"));
+
+            return new SolidColorBrush((Color)ColorConverter.ConvertFromString("#546E7A"));
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+            => throw new NotImplementedException();
+
+        private static decimal ToDecimal(object value)
+        {
+            return value switch
+            {
+                decimal d => d,
+                double dbl => (decimal)dbl,
+                int i => i,
+                _ => 0m
+            };
+        }
+    }
+
+    /// <summary>
+    /// Convertit une variation en libellé (Augmentation / Diminution / Équilibré)
+    /// </summary>
+    public class VariationToLabelConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            var variation = value switch
+            {
+                decimal d => d,
+                double dbl => (decimal)dbl,
+                int i => i,
+                _ => 0m
+            };
+
+            if (variation > 0) return "Augmentation";
+            if (variation < 0) return "Diminution";
+            return "Équilibré";
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+            => throw new NotImplementedException();
+    }
 }

@@ -1,9 +1,11 @@
 ﻿using Collectivite.Models;
 using Collectivite.Services;
 using Collectivite.Utils;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -21,10 +23,13 @@ namespace Collectivite.ViewModels
         private BudgetPrimitif _dialogBudgetPrimitif;
         private bool _isEditMode;
         private bool _isValidationDialogOpen;
+        private bool _isApprovalDialogOpen;
         private DateOnly _dateValidation = DateOnly.FromDateTime(DateTime.Now);
+        private DateOnly _dateApprobation = DateOnly.FromDateTime(DateTime.Now);
         private BudgetPrimitif? _budgetToValidate;
-        private readonly AppDbContext _context;
-        //private BudgetPrimitifService _exercice;
+        private BudgetPrimitif? _budgetToApprove;
+        private byte[]? _fichierValidation;
+        private string? _fileNameValidation;
 
         public BudgetPrimitifViewModel(BudgetPrimitifService budgetPrimitifService)
         {
@@ -44,7 +49,10 @@ namespace Collectivite.ViewModels
             CancelBudgetPrimitifCommand = new RelayCommand(_ => CancelBudgetPrimitif());
             DeleteBudgetPrimitifCommand = new RelayCommand<BudgetPrimitif>(async budgetPrimitif => await DeleteBudgetPrimitifAsync(budgetPrimitif));
             OpenValidationDialogCommand = new RelayCommand<BudgetPrimitif>(
-            budget => OpenValidationDialog(budget));
+                budget => OpenValidationDialog(budget));
+
+            OpenApprovalDialogCommand = new RelayCommand<BudgetPrimitif>(
+                budget => OpenApprovalDialog(budget));
 
             ConfirmValidationCommand = new RelayCommand(
                 async _ => await ConfirmValidationAsync(),
@@ -52,6 +60,15 @@ namespace Collectivite.ViewModels
 
             CancelValidationCommand = new RelayCommand(
                 _ => CancelValidation());
+
+            ConfirmApprovalCommand = new RelayCommand(
+                async _ => await ConfirmApprovalAsync(),
+                _ => CanConfirmApproval());
+
+            CancelApprovalCommand = new RelayCommand(
+                _ => CancelApproval());
+
+            SelectFileCommand = new RelayCommand(_ => SelectFile());
 
             // Charger les données au démarrage3
             LoadBudgetPrimitifCommand.Execute(null);
@@ -98,7 +115,9 @@ namespace Collectivite.ViewModels
         //}
         public DateTime DilogBudgetPrimitifDateApprobation
         {
-            get => DialogBudgetPrimitif.DateApprobation.ToDateTime(TimeOnly.MinValue);
+            get => DialogBudgetPrimitif.DateApprobation.HasValue 
+                ? DialogBudgetPrimitif.DateApprobation.Value.ToDateTime(TimeOnly.MinValue) 
+                : DateTime.Now;
             set
             {
                 DialogBudgetPrimitif.DateApprobation = DateOnly.FromDateTime(value);
@@ -132,6 +151,37 @@ namespace Collectivite.ViewModels
             get => DateValidation.ToDateTime(TimeOnly.MinValue);
             set => DateValidation = DateOnly.FromDateTime(value);
         }
+
+        public bool IsApprovalDialogOpen
+        {
+            get => _isApprovalDialogOpen;
+            set => SetProperty(ref _isApprovalDialogOpen, value);
+        }
+
+        public DateOnly DateApprobation
+        {
+            get => _dateApprobation;
+            set => SetProperty(ref _dateApprobation, value);
+        }
+
+        public DateTime DateApprobationDateTime
+        {
+            get => DateApprobation.ToDateTime(TimeOnly.MinValue);
+            set => DateApprobation = DateOnly.FromDateTime(value);
+        }
+
+        public byte[]? FichierValidation
+        {
+            get => _fichierValidation;
+            set => SetProperty(ref _fichierValidation, value);
+        }
+
+        public string? FileNameValidation
+        {
+            get => _fileNameValidation;
+            set => SetProperty(ref _fileNameValidation, value);
+        }
+
         public string DialogTitle => IsEditMode ? "Modifier budget primitif" : "Ajouter budget primitif";
 
         #endregion
@@ -146,6 +196,10 @@ namespace Collectivite.ViewModels
         public ICommand OpenValidationDialogCommand { get; }
         public ICommand ConfirmValidationCommand { get; }
         public ICommand CancelValidationCommand { get; }
+        public ICommand OpenApprovalDialogCommand { get; }
+        public ICommand ConfirmApprovalCommand { get; }
+        public ICommand CancelApprovalCommand { get; }
+        public ICommand SelectFileCommand { get; }
         #endregion
 
         #region Methods
@@ -173,42 +227,35 @@ namespace Collectivite.ViewModels
 
         public async System.Threading.Tasks.Task OpenAddBudgetPrimitif()
         {
-            try{
-                var exercices = await _budgetPrimitifService.GetAllExercie();
-                Exercices.Clear();
-                foreach (var exercice in exercices)
-                {
-                   Exercices.Add(exercice);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Erreur lors du chargement des exercices : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-            DialogBudgetPrimitif = new BudgetPrimitif();
-            IsEditMode = false;
-            IsDialogOpen = true;
+            // ═══════════════════════════════════════════════════════════
+            // Les budgets primitifs sont créés automatiquement lors de la création d'un exercice
+            // ═══════════════════════════════════════════════════════════
+            MessageBox.Show(
+                "Les budgets primitifs sont créés automatiquement lors de la création d'un exercice.\n\n" +
+                "Pour créer un nouveau budget primitif, veuillez créer un nouvel exercice.",
+                "Information",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
         }
 
+        // ═══════════════════════════════════════════════════════════
+        // MÉTHODE SUPPRIMÉE : Le bouton Modifier est remplacé par Approuver
+        // ═══════════════════════════════════════════════════════════
+        // Cette méthode n'est plus utilisée car on ne modifie plus les budgets
+        // après leur création. On les approuve puis on les valide.
         private void OppenEditBudgetPrimitif(BudgetPrimitif? budgetPrimitif)
         {
+            // Cette méthode est conservée pour compatibilité mais ne devrait plus être appelée
+            // Le bouton Modifier a été remplacé par le bouton Approuver
             if (budgetPrimitif == null)
                 return;
-            IsEditMode = true;
-            DialogBudgetPrimitif= new BudgetPrimitif
-            {
-                Id = budgetPrimitif.Id,
-                DateApprobation = budgetPrimitif.DateApprobation,
-                DateValidation = budgetPrimitif.DateValidation,
-                MontantTotal = budgetPrimitif.MontantTotal,
-                MontantDepense = budgetPrimitif.MontantDepense,
-                MontantRecette = budgetPrimitif.MontantRecette,
-                Exercice = budgetPrimitif.Exercice,
-                ExerciceId = budgetPrimitif.ExerciceId,
-                
-            };
-            IsDialogOpen = true;
-
+            
+            MessageBox.Show(
+                "La modification du budget primitif n'est plus disponible.\n" +
+                "Veuillez utiliser le bouton d'approbation pour approuver le budget.",
+                "Information",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
         }
 
         private bool CanSaveBudgetPrimitif()
@@ -287,6 +334,41 @@ namespace Collectivite.ViewModels
             }
         }
 
+        private void OpenApprovalDialog(BudgetPrimitif? budget)
+        {
+            if (budget == null) return;
+
+            // Vérifier si le budget est déjà approuvé
+            if (budget.Status == BudgetPrimitif.Statusbudget.APPROVED || budget.Status == BudgetPrimitif.Statusbudget.VALIDATED)
+            {
+                MessageBox.Show(
+                    $"Ce budget est déjà approuvé.\n\n" +
+                    $"Date d'approbation : {budget.DateApprobation?.ToString("dd/MM/yyyy") ?? "N/A"}",
+                    "Information",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
+            }
+
+            // Vérifier que le budget est en DRAFT
+            if (budget.Status != BudgetPrimitif.Statusbudget.DRAFT)
+            {
+                MessageBox.Show(
+                    "Ce budget ne peut pas être approuvé. Il doit être en mode DRAFT.",
+                    "Erreur",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            _budgetToApprove = budget;
+
+            // Initialiser la date d'approbation avec la date du jour
+            DateApprobation = DateOnly.FromDateTime(DateTime.Now);
+
+            IsApprovalDialogOpen = true;
+        }
+
         private void OpenValidationDialog(BudgetPrimitif? budget)
         {
             if (budget == null) return;
@@ -303,14 +385,29 @@ namespace Collectivite.ViewModels
                 return;
             }
 
+            // Vérifier que le budget est approuvé
+            if (budget.Status != BudgetPrimitif.Statusbudget.APPROVED)
+            {
+                MessageBox.Show(
+                    "Ce budget doit être approuvé avant d'être validé.",
+                    "Erreur",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
             _budgetToValidate = budget;
 
             // Initialiser la date de validation avec la date du jour
             // mais vérifier qu'elle est >= date d'approbation
             var today = DateOnly.FromDateTime(DateTime.Now);
-            DateValidation = today >= budget.DateApprobation
+            DateValidation = budget.DateApprobation.HasValue && today >= budget.DateApprobation.Value
                 ? today
-                : budget.DateApprobation;
+                : (budget.DateApprobation ?? today);
+
+            // Réinitialiser le fichier
+            FichierValidation = null;
+            FileNameValidation = null;
 
             IsValidationDialogOpen = true;
         }
@@ -318,6 +415,52 @@ namespace Collectivite.ViewModels
         private bool CanConfirmValidation()
         {
             return _budgetToValidate != null;
+        }
+
+        private bool CanConfirmApproval()
+        {
+            return _budgetToApprove != null;
+        }
+
+        private async Task ConfirmApprovalAsync()
+        {
+            if (_budgetToApprove == null) return;
+
+            IsLoading = true;
+            IsApprovalDialogOpen = false;
+
+            try
+            {
+                var (success, message) = await _budgetPrimitifService.ApprouverBudgetPrimitif(
+                    _budgetToApprove.Id,
+                    DateApprobation);
+
+                MessageBox.Show(message,
+                    success ? "Succès" : "Erreur",
+                    MessageBoxButton.OK,
+                    success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+
+                if (success)
+                {
+                    await LoadBudgetPrimitifAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur : {ex.Message}",
+                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsLoading = false;
+                _budgetToApprove = null;
+            }
+        }
+
+        private void CancelApproval()
+        {
+            IsApprovalDialogOpen = false;
+            _budgetToApprove = null;
         }
 
         private async Task ConfirmValidationAsync()
@@ -329,21 +472,24 @@ namespace Collectivite.ViewModels
 
             try
             {
-                var service = new BudgetPrimitifService();
-                var (success, message) = await service.ValiderBudgetPrimitif(
+                var (success, message) = await _budgetPrimitifService.ValiderBudgetPrimitif(
                     _budgetToValidate.Id,
-                    DateValidation);
+                    DateValidation,
+                    FichierValidation,
+                    FileNameValidation);
 
                 MessageBox.Show(message,
                     success ? "Succès" : "Erreur",
                     MessageBoxButton.OK,
                     success ? MessageBoxImage.Information : MessageBoxImage.Warning);
 
-                //if (success)
-                //{
-                //    // Recharger les données
-                //    await LoadBudgetsPrimitivesAsync();
-                //}
+                if (success)
+                {
+                    await LoadBudgetPrimitifAsync();
+                    // Réinitialiser le fichier
+                    FichierValidation = null;
+                    FileNameValidation = null;
+                }
             }
             catch (Exception ex)
             {
@@ -354,6 +500,30 @@ namespace Collectivite.ViewModels
             {
                 IsLoading = false;
                 _budgetToValidate = null;
+            }
+        }
+
+        private void SelectFile()
+        {
+            var openFileDialog = new OpenFileDialog
+            {
+                Filter = "Fichiers PDF|*.pdf|Tous les fichiers|*.*",
+                Title = "Sélectionner le fichier de validation"
+            };
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    FileNameValidation = System.IO.Path.GetFileName(openFileDialog.FileName);
+                    FichierValidation = File.ReadAllBytes(openFileDialog.FileName);
+                    OnPropertyChanged(nameof(FileNameValidation));
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Erreur lors de la lecture du fichier : {ex.Message}",
+                        "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
         }
 

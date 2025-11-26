@@ -44,6 +44,7 @@ namespace Collectivite.ViewModels
             // Si ID fourni, charger l'engagement
             if (engagementId.HasValue)
             {
+
                 _isEditMode = true;
                 LoadEngagementAsync(engagementId.Value);
             }
@@ -165,7 +166,7 @@ namespace Collectivite.ViewModels
                 }
 
                 // Charger les contrats
-                //var contratService = new ContratService();
+                //var contratService = new ContratService(_context);
                 //var contrats = await contratService.GetAllContratsAsync();
                 //Contrats.Clear();
                 //foreach (var c in contrats)
@@ -238,10 +239,10 @@ namespace Collectivite.ViewModels
         private bool CanSave()
         {
             return Engagement != null &&
-                   //Engagement.ExerciceId > 0 &&
+                   Engagement.ExerciceId > 0 &&
                    Engagement.CommuneId > 0 &&
                    Engagement.BudgetLineId > 0 &&
-                   //Engagement.TiersId > 0 &&
+                   Engagement.TiersId > 0 &&
                    !string.IsNullOrWhiteSpace(Engagement.Objet);
                    //Engagement.MontantEngagement > 0;
         }
@@ -249,15 +250,15 @@ namespace Collectivite.ViewModels
         private async System.Threading.Tasks.Task SaveAsync()
         {
             // Validation supplémentaire
-            //if (Engagement.MontantEngagement > DisponibleBudgetaire)
-            //{
-            //    MessageBox.Show(
-            //        $"Le montant de l'engagement ({Engagement.MontantEngagement:N0} GNF) dépasse le disponible budgétaire ({DisponibleBudgetaire:N0} GNF).",
-            //        "Validation",
-            //        MessageBoxButton.OK,
-            //        MessageBoxImage.Warning);
-            //    return;
-            //}
+            if (Engagement.MontantEngagement > DisponibleBudgetaire)
+            {
+                MessageBox.Show(
+                    $"Le montant de l'engagement ({Engagement.MontantEngagement:N0} GNF) dépasse le disponible budgétaire ({DisponibleBudgetaire:N0} GNF).",
+                    "Validation",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
 
             IsLoading = true;
 

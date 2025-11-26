@@ -33,6 +33,27 @@ namespace Collectivite.Services
         }
 
         /// <summary>
+        /// Récupère toutes les lignes budgétaires appartenant à un budget primitif validé
+        /// (avec leurs remaniements pour le calcul des totaux)
+        /// </summary>
+        public async Task<List<BudgetLine>> GetBudgetLinesForValidatedBudgetAsync()
+        {
+            using var context = CreateContext();
+
+            return await context.BudgetLines
+                .Include(bl => bl.Nommenclature)
+                .Include(bl => bl.Remaniements)
+                .Include(bl => bl.BudgetPrimitif)
+                .Where(bl => bl.BudgetPrimitif.Status == BudgetPrimitif.Statusbudget.VALIDATED)
+                .AsNoTracking()
+                .OrderBy(bl => bl.Nommenclature.Chapitre)
+                .ThenBy(bl => bl.Nommenclature.Article)
+                .ThenBy(bl => bl.Nommenclature.Paragraphe)
+                .ThenBy(bl => bl.Nommenclature.SousParagraphe)
+                .ToListAsync();
+        }
+
+        /// <summary>
         /// Récupère un remaniement par son ID
         /// </summary>
         public async Task<Remaniement?> GetRemaniementByIdAsync(int id)
