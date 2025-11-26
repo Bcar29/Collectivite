@@ -19,7 +19,16 @@ namespace Collectivite.Models
         public DateOnly DateEcheance { get; set; }
         public int TiersId { get; set; }
         public Tiers Tiers { get; set; } = null!;
+<<<<<<< HEAD
+
         [Required(ErrorMessage = " l'objet du contrat est obligatoire")]
+
+        
+
+        public string Objet { get; set; } = null!;
+=======
+        [Required(ErrorMessage = " l'objet du contrat est obligatoire")]
+>>>>>>> 285bf0304735cd8f30eaab87374090f7c262a89d
 
         public string Objet { get; set; } = null!;
         [Required(ErrorMessage = "Le montant du contrat est obligatoire.")]

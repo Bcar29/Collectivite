@@ -1,6 +1,7 @@
 ﻿<Page x:Class="Collectivite.Views.Pages.MandatDetailPage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:utils="clr-namespace:Collectivite.Utils"
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
       Language="fr-FR"
       Background="#F5F5F5"
@@ -8,6 +9,10 @@
 
     <Page.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <utils:NullToBooleanConverter x:Key="NullToBooleanConverter"/>
+        <utils:PaymentTooltipConverter x:Key="PaymentTooltipConverter"/>
+        <utils:PaymentCommandConverter x:Key="PaymentCommandConverter"/>
+        <utils:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter"/>
     </Page.Resources>
 
     <Grid>
@@ -152,7 +157,7 @@
                                 <Button.Visibility>
                                     <Binding Path="EstPaye">
                                         <Binding.Converter>
-                                            <StaticResource ResourceKey="InverseBoolToVisibilityConverter "/>
+                                            <StaticResource ResourceKey="InverseBoolToVisibilityConverter"/>
                                         </Binding.Converter>
                                     </Binding>
                                 </Button.Visibility>

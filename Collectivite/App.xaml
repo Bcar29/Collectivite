@@ -4,6 +4,25 @@
              xmlns:local="clr-namespace:Collectivite" 
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              StartupUri="MainWindow.xaml">
+<<<<<<< HEAD
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Material Design DOIT être chargé en PREMIER -->
+                <materialDesign:BundledTheme BaseTheme="Light" 
+                                            PrimaryColor="DeepPurple" 
+                                            SecondaryColor="Lime" />
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign3.Defaults.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            
+            <!-- Puis vos convertisseurs personnalisés -->
+            <local:NullToBooleanConverter x:Key="NullToBooleanConverter" />
+            
+
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
+=======
             <Application.Resources>
                 
                 <ResourceDictionary>
@@ -14,3 +33,4 @@
                 </ResourceDictionary>
             </Application.Resources>
 </Application>
+>>>>>>> 285bf0304735cd8f30eaab87374090f7c262a89d
