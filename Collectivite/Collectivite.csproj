@@ -51,7 +51,6 @@
     </Page>
   </ItemGroup>
 
-<<<<<<< HEAD
   <ItemGroup>
     <Folder Include="NewFolder\" />
   </ItemGroup>
@@ -64,15 +63,11 @@
     </Compile>
   </ItemGroup>
 
-=======
-<<<<<<< HEAD
+
   <ItemGroup>
     <Folder Include="Migrations\" />
   </ItemGroup>
 
   <!-- Included explicitly to ensure the converter is compiled if implicit globs are modified -->
 
-=======
->>>>>>> 285bf0304735cd8f30eaab87374090f7c262a89d
->>>>>>> 93bbd45149212e661ef9cf7e5087c62481143d4e
 </Project>

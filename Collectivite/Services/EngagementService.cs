@@ -26,8 +26,15 @@ namespace Collectivite.Services
         public async Task<List<Engagement>> GetAllEngagementsAsync()
         {
             using var context = CreateContext();
+            var exerciceService = ExerciceService.Instance;
+
+            if (exerciceService.CurrentExercice == null)
+            {
+                return new List<Engagement>();
+            }
 
             return await context.Engagements
+                .Where(e => e.ExerciceId == exerciceService.CurrentExercice.Id)
                 .Include(e => e.Exercice)
                 .Include(e => e.Commune)
                 .Include(e => e.BudgetLine)

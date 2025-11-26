@@ -23,9 +23,9 @@ namespace Collectivite.ViewModels
         //private readonly AppDbContext _context;
         private readonly int _budgetPrimitifId;
 
-        public EngagementFormViewModel(int bpId, int? engagementId = null)
+        public EngagementFormViewModel(int? engagementId = null)
         {
-            _budgetPrimitifId = bpId;
+            //_budgetPrimitifId = bpId;
             _engagement = new Engagement
             {
                 DateEngagement = DateTime.Now,
@@ -160,12 +160,22 @@ namespace Collectivite.ViewModels
                 // Charger les lignes budgétaires
                
                 var budgetLineService = new BudgetLineService();
-                var budgetLines = await budgetLineService.GetDepenseForEngagement(_budgetPrimitifId);
+                var exercice = ExerciceService.Instance;
+
+                //if (exerciceService.CurrentExercice == null)
+                //{
+                //    return new List<Engagement>();
+                //}
                 BudgetLines.Clear();
-                foreach (var bl in budgetLines)
+                if (exercice.CurrentExercice != null && exercice.CurrentExercice.BudgetPrimitif != null)
                 {
-                    BudgetLines.Add(bl);
+                    var budgetLines = await budgetLineService.GetDepenseForEngagement(exercice.CurrentExercice.BudgetPrimitif.Id);
+                    foreach (var bl in budgetLines)
+                    {
+                        BudgetLines.Add(bl);
+                    }
                 }
+                
 
                 // Charger les contrats
                 //var contratService = new ContratService();
@@ -243,7 +253,7 @@ namespace Collectivite.ViewModels
             return Engagement != null &&
                    //Engagement.ExerciceId > 0 &&
                    Engagement.CommuneId > 0 &&
-                   Engagement.BudgetLineId > 0 &&
+                   //Engagement.BudgetLineId > 0 &&
                    //Engagement.TiersId > 0 &&
                    !string.IsNullOrWhiteSpace(Engagement.Objet);
                    //Engagement.MontantEngagement > 0;

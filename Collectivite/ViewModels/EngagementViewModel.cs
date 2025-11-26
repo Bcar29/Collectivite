@@ -11,16 +11,21 @@ namespace Collectivite.ViewModels
     /// <summary>
     /// ViewModel pour la liste des engagements
     /// </summary>
-    public class EngagementViewModel : ViewModelBase
+    public class EngagementViewModel : ViewModelBase, IDisposable
     {
         private bool _isLoading;
         private Engagement? _selectedEngagement;
         private string _searchText;
         private int? _selectedExerciceId;
+        private bool _isDisposed;
+        private readonly ExerciceService _exerciceService;
+
 
         public EngagementViewModel()
         {
             _searchText = string.Empty;
+            _exerciceService = ExerciceService.Instance;
+            _exerciceService.ExerciceChanged += OnExerciceChanged;
 
             // Commandes
             LoadDataCommand = new RelayCommand(async _ => await LoadDataAsync());
@@ -80,7 +85,14 @@ namespace Collectivite.ViewModels
         #endregion
 
         #region Methods
-
+        private async void OnExerciceChanged(object? sender, Exercice exercice)
+        {
+            await Application.Current.Dispatcher.InvokeAsync(async () =>
+            {
+                //System.Diagnostics.Debug.WriteLine($"Rechargement des budgets pour l'exercice : {exercice.Libelle}");
+                await LoadDataAsync();
+            });
+        }
         private async System.Threading.Tasks.Task LoadDataAsync()
         {
             IsLoading = true;
@@ -206,6 +218,18 @@ namespace Collectivite.ViewModels
             {
                 MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
                     MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        /// <summary>
+        /// Nettoyer les ressources et se désabonner des événements
+        /// </summary>
+        public void Dispose()
+        {
+            if (!_isDisposed)
+            {
+                _exerciceService.ExerciceChanged -= OnExerciceChanged;
+                _isDisposed = true;
             }
         }
 

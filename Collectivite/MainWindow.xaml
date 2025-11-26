@@ -38,12 +38,11 @@
             <Setter Property="Margin" Value="20,15,0,5"/>
 
         </Style>
-<<<<<<< HEAD
+
 
         <!-- Style pour les Expander de section du menu -->
 
-=======
->>>>>>> 285bf0304735cd8f30eaab87374090f7c262a89d
+
     </Window.Resources>
 
     <materialDesign:DrawerHost IsLeftDrawerOpen="{Binding IsMenuOpen}">
@@ -104,11 +103,7 @@
                         </Button>
 
                         <!-- Section Configuration -->
-<<<<<<< HEAD
 
-=======
-                        <TextBlock Text="Configuration" Style="{StaticResource MenuHeaderStyle}"/>
->>>>>>> 285bf0304735cd8f30eaab87374090f7c262a89d
                         <Expander Style="{StaticResource MaterialDesignExpander}" 
                                   HorizontalAlignment="Left"
                                   Width="250"
@@ -170,13 +165,9 @@
 
                             </StackPanel>
                         </Expander>
-<<<<<<< HEAD
+
                         <!-- Section Configuration FIN -->
 
-=======
-                        <!-- Section Configuration fin-->
-                        
->>>>>>> 285bf0304735cd8f30eaab87374090f7c262a89d
                         <Button Style="{StaticResource MenuButtonStyle}"
                             Click="CompteComptable_Click">
                             <StackPanel Orientation="Horizontal">
@@ -303,12 +294,7 @@
                         </Expander>
                         
                         <!-- Section Gestion Budgétaire Fin -->
-                        
-<<<<<<< HEAD
 
-
-=======
->>>>>>> 285bf0304735cd8f30eaab87374090f7c262a89d
                         <!-- Section Gestion Compte Bancaire et Tiers -->
                         <TextBlock Text="Compte Bancaire et Tiers" Style="{StaticResource MenuHeaderStyle}"/>
 
@@ -439,10 +425,7 @@
                                     </StackPanel>
                                 </Button>
 
-<<<<<<< HEAD
-=======
 
->>>>>>> 285bf0304735cd8f30eaab87374090f7c262a89d
                             </StackPanel>
                         </Expander>
                         <!-- Section Saisie des Pièces Fin -->
@@ -521,12 +504,7 @@
                             </StackPanel>
                         </Expander>
                         <!-- Section Gestion Comptable Fin  -->
-<<<<<<< HEAD
 
-
-=======
-                        
->>>>>>> 285bf0304735cd8f30eaab87374090f7c262a89d
                         <!-- Espacement final -->
                         <Border Height="20"/>
                     </StackPanel>
