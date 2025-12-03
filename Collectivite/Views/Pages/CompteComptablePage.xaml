@@ -121,7 +121,7 @@
                 <materialDesign:Card Padding="0" 
                            UniformCornerRadius="8">
                     <DataGrid
-                        ItemsSource="{Binding CompteComptables}"
+                      ItemsSource="{Binding CompteComptables}"
                       SelectedItem="{Binding SelectedCompte}"
                       AutoGenerateColumns="False"
                       CanUserAddRows="False"
