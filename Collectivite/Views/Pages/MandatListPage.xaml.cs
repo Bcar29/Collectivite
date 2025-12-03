@@ -26,6 +26,14 @@ namespace Collectivite.Views.Pages
             InitializeComponent();
             DataContext = new MandatListViewModel();
         }
+        private void Page_Unloaded(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is MandatListViewModel viewModel)
+            {
+                viewModel.Dispose();
+                //System.Diagnostics.Debug.WriteLine("BudgetLinesViewModel disposed");
+            }
+        }
         private void BtnAdd_Click(object sender, RoutedEventArgs e)
         {
             // Navigation vers la page de formulaire

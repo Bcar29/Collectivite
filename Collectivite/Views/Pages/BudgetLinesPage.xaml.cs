@@ -39,7 +39,7 @@ namespace Collectivite.Views.Pages
             if (DataContext is BudgetLinesViewModel viewModel)
             {
                 viewModel.Dispose();
-                System.Diagnostics.Debug.WriteLine("BudgetLinesViewModel disposed");
+                //System.Diagnostics.Debug.WriteLine("BudgetLinesViewModel disposed");
             }
         }
     }

@@ -35,6 +35,7 @@ namespace Collectivite.Services
                     .ThenInclude(e => e.Tiers)
                 .Include(bc => bc.Details)
                 .AsNoTracking()
+                //.Where(bc => bc.)
                 .OrderByDescending(bc => bc.DateCreation)
                 .ToListAsync();
         }

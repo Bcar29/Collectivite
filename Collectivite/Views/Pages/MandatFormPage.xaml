@@ -213,7 +213,7 @@
                         </Button>
 
                         <!-- Montant net (lecture seule, calculé) -->
-                        <Border Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="3"
+                        <Border Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="1"
                                 Background="#E8F5E9"
                                 BorderBrush="#4CAF50"
                                 BorderThickness="2"
@@ -241,6 +241,17 @@
                                 </StackPanel>
                             </DockPanel>
                         </Border>
+
+                        <Button Grid.Row="8" Grid.Column="2" Grid.ColumnSpan="1"
+                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            Command="{Binding ConvertMontantToLettresCommand}"
+                            Height="56"
+                            Padding="20,0">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="TextToSpeech" Margin="0,0,8,0"/>
+                                <TextBlock Text="Convertir en lettres"/>
+                            </StackPanel>
+                        </Button>
 
                         <!-- Montant en lettres -->
                         <TextBox Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="3"

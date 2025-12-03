@@ -32,6 +32,7 @@ namespace Collectivite.ViewModels
         private byte[]? _fichierValidation;
         private string? _fileNameValidation;
         private bool _isDisposed;
+
         public BudgetPrimitifViewModel(BudgetPrimitifService budgetPrimitifService)
         {
             _budgetPrimitifService = budgetPrimitifService;
@@ -47,7 +48,7 @@ namespace Collectivite.ViewModels
 
             //Commandes
             LoadBudgetPrimitifCommand = new RelayCommand(async _ => await LoadBudgetPrimitifAsync());
-            OppenAddBudgetPrimitifCommand = new RelayCommand(async _ => await OpenAddBudgetPrimitif());
+            OppenAddBudgetPrimitifCommand = new RelayCommand( _ =>  OpenAddBudgetPrimitif());
             OppenEditBudgetPrimitifCommand = new RelayCommand<BudgetPrimitif>(budgetPrimitif => OppenEditBudgetPrimitif(budgetPrimitif));
             SaveBudgetPrimitifCommand = new RelayCommand(async _ => await SaveBudgetPrimitifAsync(), _ => CanSaveBudgetPrimitif());
             CancelBudgetPrimitifCommand = new RelayCommand(_ => CancelBudgetPrimitif());
@@ -259,7 +260,7 @@ namespace Collectivite.ViewModels
             }
         }
 
-        public async Task OpenAddBudgetPrimitif()
+        public void  OpenAddBudgetPrimitif()
         {
             // ═══════════════════════════════════════════════════════════
             // Les budgets primitifs sont créés automatiquement lors de la création d'un exercice

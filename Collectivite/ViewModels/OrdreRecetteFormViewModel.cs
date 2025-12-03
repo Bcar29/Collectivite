@@ -15,9 +15,14 @@ namespace Collectivite.ViewModels
         private OrdreRecette _ordreRecette;
         private bool _isEditMode;
         private bool _hasValidationErrors;
+        private readonly ExerciceService _exerciceService;
+        private bool _isDisposed;
 
         public OrdreRecetteFormViewModel(int? ordreRecetteId = null)
         {
+            _exerciceService = ExerciceService.Instance;
+            _exerciceService.ExerciceChanged += OnExerciceChanged;
+
             _ordreRecette = new OrdreRecette
             {
                 DateOrdre = DateTime.Now,
@@ -89,7 +94,13 @@ namespace Collectivite.ViewModels
         #endregion
 
         #region Methods
-
+        private async void OnExerciceChanged(object? sender, Exercice exercice)
+        {
+            await Application.Current.Dispatcher.InvokeAsync(async () =>
+            {
+                await LoadDataAsync();
+            });
+        }
         private async System.Threading.Tasks.Task LoadDataAsync()
         {
             IsLoading = true;
@@ -317,92 +328,18 @@ namespace Collectivite.ViewModels
         {
             if (OrdreRecette.MontantOrdre > 0)
             {
-                OrdreRecette.MontantOrdreLettre = ConvertirNombreEnLettres((long)OrdreRecette.MontantOrdre);
+                OrdreRecette.MontantOrdreLettre = Convertir.ConvertirNombreEnLettres((long)OrdreRecette.MontantOrdre);
                 OnPropertyChanged(nameof(OrdreRecette));
             }
         }
 
-        private string ConvertirNombreEnLettres(long nombre, bool ajouterDevise = true)
+        public void Dispose()
         {
-            if (nombre == 0) return "zéro" + (ajouterDevise ? " franc guinéen" : "");
-
-            string[] unites = { "", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf" };
-            string[] dizaines = { "", "dix", "vingt", "trente", "quarante", "cinquante", "soixante", "soixante-dix", "quatre-vingt", "quatre-vingt-dix" };
-            string[] speciales = { "dix", "onze", "douze", "treize", "quatorze", "quinze", "seize", "dix-sept", "dix-huit", "dix-neuf" };
-
-            string resultat = "";
-
-            if (nombre >= 1000000000)
+            if (!_isDisposed)
             {
-                long milliards = nombre / 1000000000;
-                resultat += ConvertirNombreEnLettres(milliards, false) + " milliard" + (milliards > 1 ? "s" : "") + " ";
-                nombre %= 1000000000;
+                _exerciceService.ExerciceChanged -= OnExerciceChanged;
+                _isDisposed = true;
             }
-
-            if (nombre >= 1000000)
-            {
-                long millions = nombre / 1000000;
-                resultat += ConvertirNombreEnLettres(millions, false) + " million" + (millions > 1 ? "s" : "") + " ";
-                nombre %= 1000000;
-            }
-
-            if (nombre >= 1000)
-            {
-                long milliers = nombre / 1000;
-                if (milliers == 1)
-                    resultat += "mille ";
-                else
-                    resultat += ConvertirNombreEnLettres(milliers, false) + " mille ";
-                nombre %= 1000;
-            }
-
-            if (nombre >= 100)
-            {
-                long centaines = nombre / 100;
-                if (centaines == 1)
-                    resultat += "cent ";
-                else
-                    resultat += ConvertirNombreEnLettres(centaines, false) + " cent" + (nombre % 100 == 0 ? "s" : "") + " ";
-                nombre %= 100;
-            }
-
-            if (nombre >= 20)
-            {
-                long diz = nombre / 10;
-                long unit = nombre % 10;
-
-                if (diz == 7 || diz == 9)
-                {
-                    resultat += dizaines[diz - 1];
-                    resultat += "-" + ConvertirNombreEnLettres(10 + unit, false);
-                }
-                else if (diz == 8)
-                {
-                    resultat += "quatre-vingt";
-                    if (unit == 0)
-                        resultat += "s";
-                    else
-                        resultat += "-" + unites[unit];
-                }
-                else
-                {
-                    resultat += dizaines[diz];
-                    if (unit == 1 && diz != 8)
-                        resultat += "-et-un";
-                    else if (unit > 0)
-                        resultat += "-" + unites[unit];
-                }
-            }
-            else if (nombre >= 10)
-            {
-                resultat += speciales[nombre - 10];
-            }
-            else if (nombre > 0)
-            {
-                resultat += unites[nombre];
-            }
-
-            return resultat.Trim() + (ajouterDevise ? " francs guinéens" : "");
         }
 
         #endregion

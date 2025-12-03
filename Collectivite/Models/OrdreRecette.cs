@@ -52,7 +52,7 @@ namespace Collectivite.Models
         // 🔹 Montant de l’ordre
         [Required(ErrorMessage = "Le montant de l'ordre est obligatoire")]
         [Range(0, double.MaxValue, ErrorMessage = "Le montant doit être positif")]
-        public double MontantOrdre { get; set; }
+        public decimal MontantOrdre { get; set; }
 
         // 🔹 Montant en lettres
         [Required(ErrorMessage = "Le montant en lettres est obligatoire")]

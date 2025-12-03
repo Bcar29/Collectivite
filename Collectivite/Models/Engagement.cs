@@ -47,15 +47,16 @@ namespace Collectivite.Models
 
         [Required(ErrorMessage = "Les crédits budgétaires sont obligatoires.")]
         [Range(0, double.MaxValue, ErrorMessage = "Le montant doit être positif.")]
-        public double CreditsBudgetaires { get; set; }
+        public decimal CreditsBudgetaires { get; set; }
 
         [Range(0, double.MaxValue, ErrorMessage = "Le montant doit être positif.")]
-        public double EngagementsAnterieurs { get; set; }
+        public decimal EngagementsAnterieurs { get; set; }
 
         [Required(ErrorMessage = "Le montant de l'engagement est obligatoire.")]
         [Range(0, double.MaxValue, ErrorMessage = "Le montant doit être positif.")]
-        public double MontantEngagement { get; set; }
+        public decimal MontantEngagement { get; set; }
 
+        public string MontantLettre { get; set; } = null!;
         public byte[]? FichierJoin { get; set; }
         public string? FichierName { get; set; }
         public int? ContratId { get; set; }
@@ -69,7 +70,7 @@ namespace Collectivite.Models
         public Mandat? Mandat { get; set; }
 
         [NotMapped]
-        public double CumulEngagement => EngagementsAnterieurs + MontantEngagement;
+        public decimal CumulEngagement => EngagementsAnterieurs + MontantEngagement;
 
         // Constructeur par défaut
         public Engagement()

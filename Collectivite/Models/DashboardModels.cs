@@ -1,3 +1,5 @@
+using System.Windows.Input;
+
 namespace Collectivite.Models
 {
     /// <summary>
@@ -51,6 +53,8 @@ namespace Collectivite.Models
         public string Icon { get; set; } = string.Empty;
         public string Color { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
+
+        public ICommand? Command { get; set; }
     }
 
     /// <summary>

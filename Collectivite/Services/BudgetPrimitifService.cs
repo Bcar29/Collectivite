@@ -187,15 +187,7 @@ namespace Collectivite.Services
                 if (budget.Status != BudgetPrimitif.Statusbudget.DRAFT)
                     return (false, "❌ Ce budget ne peut pas être approuvé. Il doit être en mode DRAFT.");
 
-                // Vérification 2 : Budget équilibré (recettes = dépenses)
-                if (budget.MontantDepense != budget.MontantRecette)
-                {
-                    return (false,
-                        "❌ Impossible d'approuver un budget non équilibré. " +
-                        "Le total des dépenses doit être égal au total des recettes.");
-                }
-
-                // Vérification 3 : La date d'approbation doit être dans l'exercice budgétaire
+                // Vérification 2 : La date d'approbation doit être dans l'exercice budgétaire
                 if (budget.Exercice != null)
                 {
                     if (dateApprobation < budget.Exercice.DateDebut || dateApprobation > budget.Exercice.DateFin)

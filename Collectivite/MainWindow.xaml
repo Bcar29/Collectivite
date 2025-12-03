@@ -12,6 +12,7 @@
         Title="Gestion Budgétaire et Comptable"
         Height="800" 
         Width="1400"
+        Unloaded="Window_Unloaded"
         WindowStartupLocation="CenterScreen"
         WindowState="Maximized">
 
@@ -38,6 +39,10 @@
             <Setter Property="Margin" Value="20,15,0,5"/>
 
         </Style>
+
+
+        <!-- Style pour les Expander de section du menu -->
+
 
     </Window.Resources>
 
@@ -99,7 +104,6 @@
                         </Button>
 
                         <!-- Section Configuration -->
-
                         <Expander Style="{StaticResource MaterialDesignExpander}" 
                                   HorizontalAlignment="Left"
                                   Width="250"
@@ -277,7 +281,8 @@
                                     </StackPanel>
                                 </Button>
 
-                                <Button Style="{StaticResource MenuButtonStyle}">
+                                <Button Style="{StaticResource MenuButtonStyle}"
+                                        Click="CompteAdministratif_Click">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="FileChart" 
                                            VerticalAlignment="Center"
@@ -292,7 +297,6 @@
                         </Expander>
                         
                         <!-- Section Gestion Budgétaire Fin -->
-                        
                         <!-- Section Gestion Compte Bancaire et Tiers -->
                         <TextBlock Text="Compte Bancaire et Tiers" Style="{StaticResource MenuHeaderStyle}"/>
 
@@ -453,7 +457,7 @@
                                     </Style>
                                 </StackPanel.Resources>
 
-                                <Button Style="{StaticResource MenuButtonStyle}">
+                                <Button Style="{StaticResource MenuButtonStyle}" Click="CompteGestion_Click">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="Book" 
                                            VerticalAlignment="Center"
