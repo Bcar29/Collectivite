@@ -74,6 +74,7 @@ namespace Collectivite.ViewModels
             CalculerMontantNetCommand = new RelayCommand(_ => CalculerMontantNet());
             SaveCommand = new RelayCommand(async _ => await SaveAsync(), _ => CanSave());
             CancelCommand = new RelayCommand(_ => Cancel());
+            ConvertMontantToLettresCommand = new RelayCommand(_ => ConvertMontantToLettres());
 
             // Charger les données
             LoadDataCommand.Execute(null);
@@ -114,6 +115,7 @@ namespace Collectivite.ViewModels
         public ICommand CalculerMontantNetCommand { get; }
         public ICommand SaveCommand { get; }
         public ICommand CancelCommand { get; }
+        public ICommand ConvertMontantToLettresCommand { get; }
 
         #endregion
 
@@ -222,6 +224,41 @@ namespace Collectivite.ViewModels
                 {
                     var (success, message, mandat) = await mandatService.CreateMandatAsync(Mandat);
 
+                    //  Si Mandat est créé avec succès, générer l'écriture comptable
+                    if (success && mandat != null)
+                    {
+                        // Récupérer la ligne budgétaire de l'engagement correspondant avec sa nomenclature
+                        var currenEngagement = Engagements
+                            .FirstOrDefault(e => e.Id == Mandat.EngagementId);
+
+                        if (currenEngagement != null)
+                        {
+                            var budgetLine = currenEngagement.BudgetLine;
+
+                            if (budgetLine?.Nommenclature != null)
+                            {
+                                //  APPELER LA FONCTION UTILITAIRE
+                                var (ecritureSuccess, ecritureMessage, ecriture) =
+                                    await EcritureComptableHelper.GenererEcritureComptableAsync(
+                                        budgetLine,  // La ligne budgétaire complète
+                                        null,        // Pas d'ordre de recette (null car on traite un mandat)
+                                        mandat       // Le mandat créé
+                                    );
+
+                                // Ajouter le résultat au message principal
+                                if (ecritureSuccess)
+                                {
+                                    message += "\n\n" + ecritureMessage;
+                                }
+                                else
+                                {
+                                    // Le mandat est créé mais pas l'écriture
+                                    message += "\n\n⚠️ " + ecritureMessage;
+                                }
+                            }
+                        }
+                    }
+
                     MessageBox.Show(message,
                         success ? "Succès" : "Erreur",
                         MessageBoxButton.OK,
@@ -270,6 +307,15 @@ namespace Collectivite.ViewModels
                 }
             }
         }
+
+         private void ConvertMontantToLettres()
+         {
+            if (Mandat.MontantNet > 0)
+            {
+                Mandat.MontantLettre = Convertir.ConvertirNombreEnLettres((long)Mandat.MontantNet);
+                OnPropertyChanged(nameof(Mandat));
+            }
+         }
 
         #endregion
 

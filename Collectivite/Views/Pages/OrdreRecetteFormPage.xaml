@@ -4,6 +4,7 @@
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
       Language="fr-FR"
       Background="#F5F5F5"
+      Unloaded="Page_Unloaded"
       Title="Ordre de Recette">
 
     <Page.Resources>
@@ -129,6 +130,7 @@
                                       Style="{StaticResource MaterialDesignOutlinedComboBox}"
                                       ItemsSource="{Binding BudgetLines}"
                                       SelectedValue="{Binding OrdreRecette.BudgetLineId}"
+                              
                                       SelectedValuePath="Id"
                                       DisplayMemberPath="Nommenclature.Intitule"
                                       Margin="0,0,0,15"/>

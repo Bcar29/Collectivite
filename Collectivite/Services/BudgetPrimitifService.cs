@@ -31,10 +31,28 @@ namespace Collectivite.Services
         // recuperer tous les BudgetPrimitif
         public async Task<List<BudgetPrimitif>> GetAllBudgetPrimitifAsync()
         {
-            using var context = CreateContext();
-            return await context.BudgetsPrimitifs
-                .Include(e => e.Exercice)
-                .ToListAsync();
+            try
+            {
+                using var context = CreateContext();
+                var exerciceService = ExerciceService.Instance;
+
+                if (exerciceService.CurrentExercice == null)
+                {
+                    throw new InvalidOperationException("Aucun exercice n'est sélectionné.");
+                }
+                //var exerciceId = Properties.Settings.Default.ExerciceId;
+
+                return await context.BudgetsPrimitifs
+                    .Include(e => e.Exercice)
+                    .Where(e => e.ExerciceId ==exerciceService.CurrentExercice.Id)
+                    //.OrderByDescending(e => e.DateCreation) // Optionnel : tri
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                // Logger l'erreur si vous avez un système de logging
+                throw new Exception($"Erreur lors de la récupération des budgets primitifs : {ex.Message}", ex);
+            }
         }
 
         // ajouter un budgetprimitif
@@ -115,6 +133,31 @@ namespace Collectivite.Services
             catch (Exception ex)
             {
                 return (false, $"Erreur lors de la suppression du budget : {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Vérifie si un budget primitif est activé (validé) pour l'exercice donné
+        /// </summary>
+        /// <param name="exerciceId">ID de l'exercice</param>
+        /// <returns>True si un budget validé existe pour cet exercice, False sinon</returns>
+        public async Task<bool> EstActif(int exerciceId)
+        {
+            try
+            {
+                using var context = CreateContext();
+
+                var budget = await context.BudgetsPrimitifs
+                    .FirstOrDefaultAsync(b => b.ExerciceId == exerciceId);
+
+                if (budget == null)
+                    return false;
+
+                return budget.Status == BudgetPrimitif.Statusbudget.VALIDATED;
+            }
+            catch
+            {
+                return false;
             }
         }
 

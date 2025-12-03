@@ -26,8 +26,8 @@ namespace Collectivite.ViewModels
         private int? _filterTiersId;
         private DateTime? _filterDateDebut;
         private DateTime? _filterDateFin;
-        private double? _filterMontantMin;
-        private double? _filterMontantMax;
+        private decimal? _filterMontantMin;
+        private decimal? _filterMontantMax;
 
         public OrdreRecetteViewModel()
         {
@@ -110,7 +110,7 @@ namespace Collectivite.ViewModels
 
         public string DialogTitle => IsEditMode ? "Modifier l'ordre de recette" : "Nouvel ordre de recette";
 
-        public double TotalOrdres => OrdresRecette.Sum(o => o.MontantOrdre);
+        public decimal TotalOrdres => OrdresRecette.Sum(o => o.MontantOrdre);
         public int CountOrdres => OrdresRecette.Count;
 
         #endregion
@@ -153,13 +153,13 @@ namespace Collectivite.ViewModels
             set => SetProperty(ref _filterDateFin, value);
         }
 
-        public double? FilterMontantMin
+        public decimal? FilterMontantMin
         {
             get => _filterMontantMin;
             set => SetProperty(ref _filterMontantMin, value);
         }
 
-        public double? FilterMontantMax
+        public decimal? FilterMontantMax
         {
             get => _filterMontantMax;
             set => SetProperty(ref _filterMontantMax, value);
@@ -170,8 +170,8 @@ namespace Collectivite.ViewModels
         #region Commands
 
         public ICommand LoadDataCommand { get; }
-        public ICommand OpenAddDialogCommand { get; }
-        public ICommand OpenEditDialogCommand { get; }
+        //public ICommand OpenAddDialogCommand { get; }
+        //public ICommand OpenEditDialogCommand { get; }
         public ICommand SaveCommand { get; }
         public ICommand CancelCommand { get; }
         public ICommand DeleteCommand { get; }

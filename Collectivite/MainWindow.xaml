@@ -12,6 +12,7 @@
         Title="Gestion Budgétaire et Comptable"
         Height="800" 
         Width="1400"
+        Unloaded="Window_Unloaded"
         WindowStartupLocation="CenterScreen"
         WindowState="Maximized">
 
@@ -38,6 +39,10 @@
             <Setter Property="Margin" Value="20,15,0,5"/>
 
         </Style>
+
+
+        <!-- Style pour les Expander de section du menu -->
+
 
     </Window.Resources>
 
@@ -99,7 +104,6 @@
                         </Button>
 
                         <!-- Section Configuration -->
-                        <TextBlock Text="Configuration" Style="{StaticResource MenuHeaderStyle}"/>
                         <Expander Style="{StaticResource MaterialDesignExpander}" 
                                   HorizontalAlignment="Left"
                                   Width="250"
@@ -161,7 +165,10 @@
 
                             </StackPanel>
                         </Expander>
+
+
                         <!-- Section Configuration FIN -->
+
 
                         <Button Style="{StaticResource MenuButtonStyle}"
                             Click="CompteComptable_Click">
@@ -226,7 +233,7 @@
                                             </Style>
                                         </StackPanel.Resources>
 
-                                        <Button Style="{StaticResource MenuButtonStyle}" Click="BudgetLineButton_Click">
+                                        <Button x:Name="BtnSaisie" Style="{StaticResource MenuButtonStyle}" Click="BtnSaisie_Click">
                                             <StackPanel Orientation="Horizontal">
                                                 <materialDesign:PackIcon Kind="FormatListBulleted" 
                                                    VerticalAlignment="Center"
@@ -237,7 +244,7 @@
                                             </StackPanel>
                                         </Button>
 
-                                        <Button Style="{StaticResource MenuButtonStyle}" Click="BudgetPrimitifButton_Click">
+                                        <Button  Style="{StaticResource MenuButtonStyle}" Click="Sythese_Click">
                                             <StackPanel Orientation="Horizontal">
                                                 <materialDesign:PackIcon Kind="FileDocument" 
                                                     VerticalAlignment="Center"
@@ -252,7 +259,7 @@
                                 </Expander>
                                 <!-- Budge Preparatoire fin-->
 
-                                <Button Style="{StaticResource MenuButtonStyle}"  Click="BudgetPrimitifButton_Click"> 
+                                <Button x:Name="BtnBudgetPrimitif" Style="{StaticResource MenuButtonStyle}"  Click="BtnBudgetPrimitif_Click"> 
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="FileDocument" 
                                                 VerticalAlignment="Center"
@@ -274,7 +281,8 @@
                                     </StackPanel>
                                 </Button>
 
-                                <Button Style="{StaticResource MenuButtonStyle}">
+                                <Button Style="{StaticResource MenuButtonStyle}"
+                                        Click="CompteAdministratif_Click">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="FileChart" 
                                            VerticalAlignment="Center"
@@ -289,7 +297,6 @@
                         </Expander>
                         
                         <!-- Section Gestion Budgétaire Fin -->
-                        
                         <!-- Section Gestion Compte Bancaire et Tiers -->
                         <TextBlock Text="Compte Bancaire et Tiers" Style="{StaticResource MenuHeaderStyle}"/>
 
@@ -418,6 +425,7 @@
                                         <TextBlock Text="Ordre de Recette" FontSize="12" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
+
                             </StackPanel>
                         </Expander>
                         <!-- Section Saisie des Pièces Fin -->
@@ -448,7 +456,7 @@
                                     </Style>
                                 </StackPanel.Resources>
 
-                                <Button Style="{StaticResource MenuButtonStyle}">
+                                <Button Style="{StaticResource MenuButtonStyle}" Click="CompteGestion_Click">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="Book" 
                                            VerticalAlignment="Center"
@@ -459,7 +467,7 @@
                                     </StackPanel>
                                 </Button>
 
-                                <Button Style="{StaticResource MenuButtonStyle}">
+                                <Button Style="{StaticResource MenuButtonStyle}" Click="LivreJournalButton_Click">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="BookOpen" 
                                            VerticalAlignment="Center"

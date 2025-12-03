@@ -6,6 +6,7 @@ using System.Windows.Media;
 
 namespace Collectivite.Utils
 {
+   
     /// <summary>
     /// Convertit une chaîne de couleur hexadécimale en SolidColorBrush
     /// </summary>
@@ -165,7 +166,6 @@ namespace Collectivite.Utils
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
             => throw new NotImplementedException();
     }
-
     /// <summary>
     /// Convertit un bool en texte configurable ("Oui;Non" par défaut).
     /// </summary>
@@ -188,3 +188,86 @@ namespace Collectivite.Utils
             => throw new NotImplementedException();
     }
 }
+    // ═══════════════════════════════════════════════════════════════════════
+    // NOUVEAUX CONVERTERS (ajoutés pour la gestion des nomenclatures)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Convertit un enum en boolean pour les RadioButtons
+    /// Utilisé pour lier des RadioButtons à des propriétés enum (Nature, Section)
+    /// </summary>
+    public class EnumToBoolConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value == null || parameter == null)
+                return false;
+
+            return value.ToString() == parameter.ToString();
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value == null || parameter == null)
+                return null;
+
+            if ((bool)value)
+                return Enum.Parse(targetType, parameter.ToString());
+
+            return Binding.DoNothing;
+        }
+    }
+
+    /// <summary>
+    /// Inverse un boolean (pour les bindings inverses)
+    /// Utilisé pour IsSaisieLibreMode = !IsNommenclatureMode
+    /// </summary>
+    public class InverseBoolConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is bool boolValue)
+                return !boolValue;
+
+            return false;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is bool boolValue)
+                return !boolValue;
+
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Convertit un boolean en couleur (pour le background conditionnel)
+    /// Format du paramètre: "ColorIfTrue|ColorIfFalse"
+    /// Exemple: "#F5F5F5|White"
+    /// Utilisé pour griser le champ intitulé en mode lecture seule
+    /// </summary>
+    public class BoolToColorConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is bool boolValue && parameter is string colors)
+            {
+                var colorArray = colors.Split('|');
+                if (colorArray.Length == 2)
+                {
+                    var colorString = boolValue ? colorArray[0] : colorArray[1];
+                    return System.Windows.Media.ColorConverter.ConvertFromString(colorString);
+                }
+            }
+
+            return System.Windows.Media.Colors.White;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+

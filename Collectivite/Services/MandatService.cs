@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace Collectivite.Services
 {
@@ -40,8 +41,15 @@ namespace Collectivite.Services
         public async Task<List<Mandat>> GetAllMandatsAsync()
         {
             using var context = CreateContext();
+            var exerciceService = ExerciceService.Instance;
+
+            if (exerciceService.CurrentExercice == null)
+            {
+                return new List<Mandat>();
+            }
 
             return await context.Mandats
+                .Where(m => m.Engagement.ExerciceId == exerciceService.CurrentExercice.Id)
                 .Include(m => m.Engagement)
                     .ThenInclude(e => e.BudgetLine)
                         .ThenInclude(bl => bl.Nommenclature)
@@ -98,8 +106,8 @@ namespace Collectivite.Services
             string? bordereau = null,
             TypeMois? mois = null,
             int? engagementId = null,
-            double? montantMin = null,
-            double? montantMax = null,
+            decimal? montantMin = null,
+            decimal? montantMax = null,
             DateTime? dateEmissionDebut = null,
             DateTime? dateEmissionFin = null,
             bool? estPaye = null)
@@ -188,10 +196,12 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<(bool Success, string Message, Mandat? Mandat)> CreateMandatAsync(Mandat mandat)
         {
-            using var context = CreateContext();
+            using AppDbContext context = CreateContext();
+            //using var context = CreateContext();
 
             try
             {
+
                 // Validations
                 if (string.IsNullOrWhiteSpace(mandat.NumeroMandat))
                     return (false, "Le numéro du mandat est obligatoire.", null);
@@ -215,6 +225,26 @@ namespace Collectivite.Services
                 var engagement = await context.Engagements.FindAsync(mandat.EngagementId);
                 if (engagement == null)
                     return (false, "Engagement introuvable.", null);
+
+                // Vérifier que la ligne budgétaire associée existe et recupérer sa nomenclature
+                var budgetLine = await context.BudgetLines
+                    .Include(bl => bl.Nommenclature)
+                    .Select(bl => new { bl.Id, bl.Nommenclature.CodeNomenclature })
+                    .FirstOrDefaultAsync();
+                if (budgetLine == null)
+                    return (false, "La ligne budgétaire spécifiée dans l'engagement n'existe pas.", null);
+
+                if (string.IsNullOrWhiteSpace(budgetLine.CodeNomenclature))
+                    return (false, "La ligne budgétaire spécifiée dans l'engagement ne possède pas de nomenclature.", null);
+
+                // Vérifier si la nomenclature existe dans la table CompteComptable
+                var compteComptableExists = await context.CompteComptables
+                    .AnyAsync(cc => cc.NumeroCompte == budgetLine.CodeNomenclature);
+
+                if (!compteComptableExists)
+                    return (false, $"La nomenclature '{budgetLine.CodeNomenclature}' de la ligne budgétaire n'a pas de ContrePartie dans les Comptes Comptables.", null);
+
+
 
                 // Vérifier l'unicité du numéro de mandat
                 var existingMandat = await context.Mandats
@@ -246,8 +276,27 @@ namespace Collectivite.Services
                 context.Mandats.Add(newMandat);
                 await context.SaveChangesAsync();
 
+                var bl = await context.Engagements
+                    .Where(e => e.Id == newMandat!.EngagementId)
+                    .Select(e => e.BudgetLine)
+                    .FirstOrDefaultAsync();
+
+                if (bl != null)
+                {
+                    bl.MontantActu -= newMandat!.MontantNet;
+                    await context.SaveChangesAsync();
+
+                    // 🔥 recalcul hiérarchique
+                    using var ctx = CreateContext();
+                    await OrdreRecetteService.RecalculateRealisation(
+                        ctx,
+                        bl.NommenclatureId,
+                        bl.BudgetPrimitifId
+                    );
+                }
                 // Recharger avec les relations
                 var savedMandat = await GetMandatByIdAsync(newMandat.Id);
+
 
                 return (true, "✅ Mandat créé avec succès.", savedMandat);
             }
@@ -419,7 +468,7 @@ namespace Collectivite.Services
         /// <summary>
         /// Obtient le total des mandats par mois
         /// </summary>
-        public async Task<Dictionary<TypeMois, double>> GetTotalParMoisAsync()
+        public async Task<Dictionary<TypeMois, decimal>> GetTotalParMoisAsync()
         {
             using var context = CreateContext();
 
@@ -432,7 +481,7 @@ namespace Collectivite.Services
         /// <summary>
         /// Obtient le total des mandats payés et non payés
         /// </summary>
-        public async Task<(double TotalPaye, double TotalNonPaye)> GetStatutsPaiementAsync()
+        public async Task<(decimal TotalPaye, decimal TotalNonPaye)> GetStatutsPaiementAsync()
         {
             using var context = CreateContext();
 

@@ -47,18 +47,18 @@ namespace Collectivite.Models
         public Engagement Engagement { get; set; } = null!;
 
         [Required(ErrorMessage = "Le montant brut est obligatoire")]
-        [Range(0, double.MaxValue, ErrorMessage = "Le montant brut doit être positif")]
-        public double MontantBrut { get; set; }
+        //[Range(0, double.MaxValue, ErrorMessage = "Le montant brut doit être positif")]
+        public decimal MontantBrut { get; set; }
 
-        [Range(0, double.MaxValue, ErrorMessage = "La valeur de la RTS doit être positive")]
-        public double Rts { get; set; }
+        //[Range(0, double.MaxValue, ErrorMessage = "La valeur de la RTS doit être positive")]
+        public decimal Rts { get; set; }
 
-        [Range(0, double.MaxValue, ErrorMessage = "Les autres précomptes doivent être positifs")]
-        public double AutresPrecomptes { get; set; }
+        //[Range(0, double.MaxValue, ErrorMessage = "Les autres précomptes doivent être positifs")]
+        public decimal AutresPrecomptes { get; set; }
 
         [Required(ErrorMessage = "Le montant net est obligatoire")]
-        [Range(0, double.MaxValue, ErrorMessage = "Le montant net doit être positif")]
-        public double MontantNet { get; set; }
+        //[Range(0, double.MaxValue, ErrorMessage = "Le montant net doit être positif")]
+        public decimal MontantNet { get; set; }
 
         [Required(ErrorMessage = "Le montant en lettres est obligatoire")]
         [MaxLength(255, ErrorMessage = "Le montant en lettres ne doit pas dépasser 255 caractères")]

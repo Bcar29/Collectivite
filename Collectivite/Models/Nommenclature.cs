@@ -55,6 +55,7 @@ namespace Collectivite.Models
 
         public List<Nommenclature>? Enfants { get; set; } = new List<Nommenclature>();
 
+        
         public string code()
         {
             if (!string.IsNullOrWhiteSpace(SousParagraphe))
@@ -68,5 +69,24 @@ namespace Collectivite.Models
             else
                 return "Aucun code disponible";
         }
+
+        [NotMapped]
+        public string CodeNomenclature
+        {
+            get
+            {
+                if (!string.IsNullOrWhiteSpace(SousParagraphe))
+                    return SousParagraphe!;
+                if (!string.IsNullOrWhiteSpace(Paragraphe))
+                    return Paragraphe!;
+                if (!string.IsNullOrWhiteSpace(Article))
+                    return Article!;
+                if (!string.IsNullOrWhiteSpace(Chapitre))
+                    return Chapitre!;
+
+                return "";
+            }
+        }
+
     }
 }

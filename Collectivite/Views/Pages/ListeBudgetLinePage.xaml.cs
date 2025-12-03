@@ -1,4 +1,5 @@
-﻿using Collectivite.ViewModels;
+﻿using Collectivite.Services;
+using Collectivite.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,18 +18,20 @@ using System.Windows.Shapes;
 namespace Collectivite.Views.Pages
 {
     /// <summary>
-    /// Logique d'interaction pour OrdreRecetteFormPage.xaml
+    /// Logique d'interaction pour ListeBudgetLinePage.xaml
     /// </summary>
-    public partial class OrdreRecetteFormPage : Page
+    public partial class ListeBudgetLinePage : Page
     {
-        public OrdreRecetteFormPage(int? ordreRecetteId = null)
+        public ListeBudgetLinePage()
         {
             InitializeComponent();
-            DataContext = new OrdreRecetteFormViewModel(ordreRecetteId);
+            // On attend que la Page soit entièrement chargée
+            DataContext = new BudgetLinesViewModel(new BudgetLineService());
         }
+
         private void Page_Unloaded(object sender, RoutedEventArgs e)
         {
-            if (DataContext is OrdreRecetteFormViewModel viewModel)
+            if (DataContext is BudgetLinesViewModel viewModel)
             {
                 viewModel.Dispose();
                 //System.Diagnostics.Debug.WriteLine("BudgetLinesViewModel disposed");

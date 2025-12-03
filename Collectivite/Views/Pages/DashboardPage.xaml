@@ -492,6 +492,7 @@
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                                          Command="{Binding Command}"
                                           Height="70"
                                           Margin="0,0,0,12"
                                           HorizontalContentAlignment="Left"

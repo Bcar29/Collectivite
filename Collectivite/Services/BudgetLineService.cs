@@ -234,13 +234,19 @@ namespace Collectivite.Services
             return await GetBudgetLinesForBudgetPrimitifAsync(budgetPrimitif.Id);
         }
 
-        public async Task<List<BudgetLine>> GetDepenseForEngagement(int budgetPrimitifId)
+        public async Task<List<BudgetLine>> GetDepenseForEngagement()
         {
             using var context = CreateContext();
+            var exerciceService = ExerciceService.Instance;
+
+            if (exerciceService.CurrentExercice == null)
+            {
+                return new List<BudgetLine>();
+            }
             return await context.BudgetLines
                 .Include(b => b.Nommenclature)
                 .ThenInclude(n => n.Enfants)
-                .Where(b => b.BudgetPrimitifId == budgetPrimitifId && b.Nommenclature.Nature == NatureType.Depense && (b.Nommenclature.Enfants == null || !b.Nommenclature.Enfants.Any()))
+                .Where(b => b.BudgetPrimitif.ExerciceId == exerciceService.CurrentExercice.Id && b.BudgetPrimitif.Status == BudgetPrimitif.Statusbudget.VALIDATED && b.Nommenclature.Nature == NatureType.Depense && (b.Nommenclature.Enfants == null || !b.Nommenclature.Enfants.Any()))
                 .ToListAsync();
         }
 
@@ -329,7 +335,7 @@ namespace Collectivite.Services
         /// <summary>
         /// Recalcule les montants de tous les parents jusqu'à la racine
         /// </summary>
-        private async Task RecalculateAncestorsAsync(int childNomenclatureId, int budgetPrimitifId)
+        private async Task  RecalculateAncestorsAsync(int childNomenclatureId, int budgetPrimitifId)
         {
             using var context = CreateContext();
             var child = await context.Nommenclatures

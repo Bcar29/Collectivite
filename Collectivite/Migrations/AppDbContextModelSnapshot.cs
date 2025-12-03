@@ -91,11 +91,17 @@ namespace Collectivite.Migrations
                     b.Property<int>("BudgetPrimitifId")
                         .HasColumnType("int");
 
-                    b.Property<int>("MontantActu")
-                        .HasColumnType("int");
+                    b.Property<decimal>("MontantActu")
+                        .HasColumnType("decimal(65,30)");
 
-                    b.Property<int>("MontantPrevu")
-                        .HasColumnType("int");
+                    b.Property<decimal>("MontantEntreSortie")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<decimal>("MontantPrevu")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<decimal>("MontantRealise")
+                        .HasColumnType("decimal(65,30)");
 
                     b.Property<int>("NommenclatureId")
                         .HasColumnType("int");
@@ -132,14 +138,14 @@ namespace Collectivite.Migrations
                     b.Property<string>("FileName")
                         .HasColumnType("longtext");
 
-                    b.Property<int>("MontantDepense")
-                        .HasColumnType("int");
+                    b.Property<decimal>("MontantDepense")
+                        .HasColumnType("decimal(65,30)");
 
-                    b.Property<int>("MontantRecette")
-                        .HasColumnType("int");
+                    b.Property<decimal>("MontantRecette")
+                        .HasColumnType("decimal(65,30)");
 
-                    b.Property<int>("MontantTotal")
-                        .HasColumnType("int");
+                    b.Property<decimal>("MontantTotal")
+                        .HasColumnType("decimal(65,30)");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -229,7 +235,7 @@ namespace Collectivite.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("CompteParentId")
+                    b.Property<int?>("ContrePartieId")
                         .HasColumnType("int");
 
                     b.Property<string>("IntituleCompte")
@@ -244,7 +250,7 @@ namespace Collectivite.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CompteParentId");
+                    b.HasIndex("ContrePartieId");
 
                     b.ToTable("CompteComptables");
                 });
@@ -571,8 +577,8 @@ namespace Collectivite.Migrations
                     b.Property<int?>("MandatId")
                         .HasColumnType("int");
 
-                    b.Property<double>("Montant")
-                        .HasColumnType("double");
+                    b.Property<decimal>("Montant")
+                        .HasColumnType("decimal(65,30)");
 
                     b.Property<int?>("OrdreRecetteId")
                         .HasColumnType("int");
@@ -607,14 +613,14 @@ namespace Collectivite.Migrations
                     b.Property<int?>("ContratId")
                         .HasColumnType("int");
 
-                    b.Property<double>("CreditsBudgetaires")
-                        .HasColumnType("double");
+                    b.Property<decimal>("CreditsBudgetaires")
+                        .HasColumnType("decimal(65,30)");
 
                     b.Property<DateTime>("DateEngagement")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<double>("EngagementsAnterieurs")
-                        .HasColumnType("double");
+                    b.Property<decimal>("EngagementsAnterieurs")
+                        .HasColumnType("decimal(65,30)");
 
                     b.Property<int>("ExerciceId")
                         .HasColumnType("int");
@@ -628,8 +634,12 @@ namespace Collectivite.Migrations
                     b.Property<string>("FichierName")
                         .HasColumnType("longtext");
 
-                    b.Property<double>("MontantEngagement")
-                        .HasColumnType("double");
+                    b.Property<decimal>("MontantEngagement")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<string>("MontantLettre")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.Property<string>("Objet")
                         .IsRequired()
@@ -755,8 +765,8 @@ namespace Collectivite.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<double>("AutresPrecomptes")
-                        .HasColumnType("double");
+                    b.Property<decimal>("AutresPrecomptes")
+                        .HasColumnType("decimal(65,30)");
 
                     b.Property<string>("Bordereau")
                         .HasMaxLength(50)
@@ -780,16 +790,16 @@ namespace Collectivite.Migrations
                     b.Property<int>("Mois")
                         .HasColumnType("int");
 
-                    b.Property<double>("MontantBrut")
-                        .HasColumnType("double");
+                    b.Property<decimal>("MontantBrut")
+                        .HasColumnType("decimal(65,30)");
 
                     b.Property<string>("MontantLettre")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("varchar(255)");
 
-                    b.Property<double>("MontantNet")
-                        .HasColumnType("double");
+                    b.Property<decimal>("MontantNet")
+                        .HasColumnType("decimal(65,30)");
 
                     b.Property<string>("Motif")
                         .IsRequired()
@@ -805,8 +815,8 @@ namespace Collectivite.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("varchar(255)");
 
-                    b.Property<double>("Rts")
-                        .HasColumnType("double");
+                    b.Property<decimal>("Rts")
+                        .HasColumnType("decimal(65,30)");
 
                     b.HasKey("Id");
 
@@ -885,8 +895,8 @@ namespace Collectivite.Migrations
                     b.Property<int>("ExerciceId")
                         .HasColumnType("int");
 
-                    b.Property<double>("MontantOrdre")
-                        .HasColumnType("double");
+                    b.Property<decimal>("MontantOrdre")
+                        .HasColumnType("decimal(65,30)");
 
                     b.Property<string>("MontantOrdreLettre")
                         .IsRequired()
@@ -1239,12 +1249,12 @@ namespace Collectivite.Migrations
 
             modelBuilder.Entity("Collectivite.Models.CompteComptable", b =>
                 {
-                    b.HasOne("Collectivite.Models.CompteComptable", "CompteParent")
+                    b.HasOne("Collectivite.Models.CompteComptable", "ContrePartie")
                         .WithMany("SousComptes")
-                        .HasForeignKey("CompteParentId")
+                        .HasForeignKey("ContrePartieId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.Navigation("CompteParent");
+                    b.Navigation("ContrePartie");
                 });
 
             modelBuilder.Entity("Collectivite.Models.Contrats", b =>

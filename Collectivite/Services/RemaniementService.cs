@@ -39,13 +39,19 @@ namespace Collectivite.Services
         public async Task<List<BudgetLine>> GetBudgetLinesForValidatedBudgetAsync()
         {
             using var context = CreateContext();
+            var exerciceService = ExerciceService.Instance;
+
+            if (exerciceService.CurrentExercice == null)
+            {
+                return new List<BudgetLine>();
+            }
 
             return await context.BudgetLines
+                .Where(bl => bl.BudgetPrimitif.Status == BudgetPrimitif.Statusbudget.VALIDATED && bl.BudgetPrimitif.ExerciceId == exerciceService.CurrentExercice.Id)
                 .Include(bl => bl.Nommenclature)
                 .ThenInclude(n => n.Enfants)
                 .Include(bl => bl.Remaniements)
                 .Include(bl => bl.BudgetPrimitif)
-                .Where(bl => bl.BudgetPrimitif.Status == BudgetPrimitif.Statusbudget.VALIDATED)
                 .AsNoTracking()
                 .OrderBy(bl => bl.Nommenclature.Chapitre)
                 .ThenBy(bl => bl.Nommenclature.Article)

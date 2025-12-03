@@ -30,7 +30,7 @@ namespace Collectivite.Models
 
         [Required(ErrorMessage = "Le montant de l'écriture est obligatoire.")]
         [Range(0, double.MaxValue, ErrorMessage = "Le montant doit être supérieur à zéro.")]
-        public double Montant { get; set; }
+        public decimal Montant { get; set; }
 
         // L’écriture peut provenir d’un ordre de recette ou d’un mandat (dépense)
         public int? OrdreRecetteId { get; set; }

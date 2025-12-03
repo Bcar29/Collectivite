@@ -44,5 +44,15 @@ namespace Collectivite.Views.Pages
                 NavigationService?.Navigate(detailPage);
             }
         }
+
+        private void Page_Unloaded(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is EngagementViewModel viewModel)
+            {
+                viewModel.Dispose();
+                //System.Diagnostics.Debug.WriteLine("BudgetLinesViewModel disposed");
+            }
+        }
+
     }
 }

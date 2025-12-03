@@ -18,13 +18,14 @@ namespace Collectivite.ViewModels
         private readonly RelayCommand _openProfileCommand;
         private readonly RelayCommand _openSettingsCommand;
         private string _currentPageTitle = "TABLEAU DE BORD";
-        private string _exerciceText = "Exercice 2025";
+        private string _exerciceText = "";
         private string _communeName = string.Empty;
         private bool _isMenuOpen;
         private string _userIdentifier = "Utilisateur";
         private string _userEmail = "Email non défini";
         private string _userPhone = "Téléphone non défini";
         private string _userRole = "Rôle non défini";
+        private bool _isDisposed;
 
         public MainViewModel(AuthService authService)
         {
@@ -44,6 +45,9 @@ namespace Collectivite.ViewModels
 
             // S'abonner aux changements d'exercice
             _exerciceService.ExerciceChanged += OnExerciceChanged;
+
+            // S'abonner aux changements de la liste des exercices
+            GlobalEvents.ExercicesListChanged += OnExercicesListChanged;
 
             // Charger les exercices de manière asynchrone
             _ = LoadExercicesAsync();
@@ -132,7 +136,7 @@ namespace Collectivite.ViewModels
         /// <summary>
         /// Charge tous les exercices depuis la base de données
         /// </summary>
-        private async Task LoadExercicesAsync()
+        public  async Task LoadExercicesAsync()
         {
             try
             {
@@ -146,7 +150,7 @@ namespace Collectivite.ViewModels
                 }
 
                 // Initialiser l'exercice courant si pas déjà défini
-                if (_exerciceService.CurrentExercice == null && exercices.Any())
+                if ( exercices.Any())
                 {
                     // Prendre l'exercice non clôturé ou le plus récent
                     var activeExercice = exercices.FirstOrDefault(e => !e.EstCloture)
@@ -157,7 +161,7 @@ namespace Collectivite.ViewModels
                 // Mettre à jour le texte avec l'exercice actuel
                 if (_exerciceService.CurrentExercice != null)
                 {
-                    ExerciceText = _exerciceService.CurrentExercice.Libelle;
+                    ExerciceText = _exerciceService.CurrentExercice.Libelle!;
                 }
 
                 // Notifier le changement
@@ -204,15 +208,26 @@ namespace Collectivite.ViewModels
             Application.Current.Dispatcher.Invoke(() =>
             {
                 ExerciceText = exercice.Libelle!;
-                //Properties.Settings.Default.ExerciceId = exercice.Id;
-                //Properties.Settings.Default.Save();
+                
                 OnPropertyChanged(nameof(ExerciceText));
 
                 // Vous pouvez ajouter d'autres notifications ici
                 // Par exemple, recharger des données dépendantes de l'exercice
+
             });
         }
 
+        /// <summary>
+        /// Gestionnaire pour recharger la liste quand elle est modifiée
+        /// </summary>
+        private async void OnExercicesListChanged(object? sender, EventArgs e)
+        {
+            await Application.Current.Dispatcher.InvokeAsync(async () =>
+            {
+                System.Diagnostics.Debug.WriteLine("🔄 Rafraîchissement de la liste des exercices...");
+                await LoadExercicesAsync();
+            });
+        }
         private void InitializeUserData()
         {
             if (_authService.CurrentUser != null)
@@ -323,5 +338,24 @@ namespace Collectivite.ViewModels
         {
             await LoadExercicesAsync();
         }
+
+        public void Dispose()
+        {
+            if (!_isDisposed)
+            {
+                _exerciceService.ExerciceChanged -= OnExerciceChanged;
+                GlobalEvents.ExercicesListChanged -= OnExercicesListChanged;
+                _isDisposed = true; ;
+            }
+        }
+
+        //protected override void OnDispose()
+        //{
+        //    _exerciceService.ExerciceChanged -= OnExerciceChanged;
+        //    GlobalEvents.ExercicesListChanged -= OnExercicesListChanged;
+        //    base.OnDispose();
+        //}
+
+
     }
 }

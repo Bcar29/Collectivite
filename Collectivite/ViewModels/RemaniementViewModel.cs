@@ -208,10 +208,11 @@ namespace Collectivite.ViewModels
             }
 
             foreach (var line in filtered
-                .OrderBy(bl => bl.Nommenclature?.Chapitre)
-                .ThenBy(bl => bl.Nommenclature?.Article)
-                .ThenBy(bl => bl.Nommenclature?.Paragraphe)
-                .ThenBy(bl => bl.Nommenclature?.SousParagraphe))
+                .OrderBy(bl => bl.Nommenclature.code())
+                //.ThenBy(bl => bl.Nommenclature?.Article)
+                //.ThenBy(bl => bl.Nommenclature?.Paragraphe)
+                //.ThenBy(bl => bl.Nommenclature?.SousParagraphe)
+                )
             {
                 BudgetLines.Add(line);
             }

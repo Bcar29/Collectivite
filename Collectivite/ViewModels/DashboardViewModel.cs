@@ -17,15 +17,17 @@ namespace Collectivite.ViewModels
             _auditService = auditService;
             _statistics = new BudgetStatistics();
 
+            
+            // Commandes pour les actions rapides
+            NewMandatCommand = new RelayCommand(_ => NavigationService.Instance.NavigateTo(new Views.Pages.MandatListPage()));
+            NewBonCommandeCommand = new RelayCommand(_ => NavigationService.Instance.NavigateTo(new Views.Pages.BonCommandeListPage()));
+            NewOrdreRecetteCommand = new RelayCommand(_ => NavigationService.Instance.NavigateTo(new Views.Pages.OrdreRecettePage()));
+            NewEngagementCommand = new RelayCommand(_ => NavigationService.Instance.NavigateTo(new Views.Pages.EngagementPage()));
+            _auditService = auditService;
+
             // Initialiser les données
             LoadDashboardData();
 
-            // Commandes pour les actions rapides
-            NewMandatCommand = new RelayCommand(_ => ExecuteQuickAction("Nouveau Mandat"));
-            NewBonCommandeCommand = new RelayCommand(_ => ExecuteQuickAction("Nouveau Bon de Commande"));
-            NewOrdreRecetteCommand = new RelayCommand(_ => ExecuteQuickAction("Nouvel Ordre de Recette"));
-            NewEngagementCommand = new RelayCommand(_ => ExecuteQuickAction("Nouvel Engagement"));
-            _auditService = auditService;
         }
 
         #region Properties
@@ -161,7 +163,7 @@ namespace Collectivite.ViewModels
 
                 var logs = await _auditService.GetAllLogsAsync();
 
-                foreach (var log in logs.Take(20)) // charger les 20 dernières
+                foreach (var log in logs.Take(10)) // charger les 10 dernières
                 {
                     RecentActivities.Add(log);
                 }
@@ -182,7 +184,8 @@ namespace Collectivite.ViewModels
                 Title = "Nouveau Mandat",
                 Icon = "CashCheck",
                 Color = "#4CAF50",
-                Description = "Créer un mandat de paiement"
+                Description = "Créer un mandat de paiement",
+                Command = NewMandatCommand
             });
 
             QuickActions.Add(new QuickAction
@@ -190,7 +193,8 @@ namespace Collectivite.ViewModels
                 Title = "Bon de Commande",
                 Icon = "FileDocumentEdit",
                 Color = "#2196F3",
-                Description = "Créer un bon de commande"
+                Description = "Créer un bon de commande",
+                Command = NewBonCommandeCommand
             });
 
             QuickActions.Add(new QuickAction
@@ -198,7 +202,8 @@ namespace Collectivite.ViewModels
                 Title = "Ordre de Recette",
                 Icon = "Receipt",
                 Color = "#FF9800",
-                Description = "Créer un ordre de recette"
+                Description = "Créer un ordre de recette",
+                Command = NewOrdreRecetteCommand
             });
 
             QuickActions.Add(new QuickAction
@@ -206,9 +211,11 @@ namespace Collectivite.ViewModels
                 Title = "Engagement",
                 Icon = "ClipboardText",
                 Color = "#9C27B0",
-                Description = "Créer une fiche d'engagement"
+                Description = "Créer une fiche d'engagement",
+                Command = NewEngagementCommand
             });
         }
+
 
         private void ExecuteQuickAction(string actionName)
         {

@@ -18,7 +18,7 @@ namespace Collectivite.Services
         public async Task<List<CompteComptable>> GetCompteComptablesAsync()
         {
             return await _appDbContext.CompteComptables
-                .Include(c => c.CompteParent)
+                .Include(c => c.ContrePartie)
                 .Include(c => c.SousComptes)
                 .AsNoTracking()
                 .OrderBy(c => c.NumeroCompte)
@@ -29,7 +29,7 @@ namespace Collectivite.Services
         public async Task<CompteComptable?> GetCompteComptableByIdAsync(int id)
         {
             return await _appDbContext.CompteComptables
-                .Include(c => c.CompteParent)
+                .Include(c => c.ContrePartie)
                 .Include(c => c.SousComptes)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(c => c.Id == id);
@@ -39,7 +39,7 @@ namespace Collectivite.Services
         public async Task<CompteComptable?> GetCompteComptableByNumeroAsync(string numeroCompte)
         {
             return await _appDbContext.CompteComptables
-                .Include(c => c.CompteParent)
+                .Include(c => c.ContrePartie)
                 .Include(c => c.SousComptes)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(c => c.NumeroCompte == numeroCompte);
@@ -49,7 +49,7 @@ namespace Collectivite.Services
         public async Task<List<CompteComptable>> GetComptesRacinesAsync()
         {
             return await _appDbContext.CompteComptables
-                .Where(c => c.CompteParentId == null)
+                .Where(c => c.ContrePartieId == null)
                 .Include(c => c.SousComptes)
                 .AsNoTracking()
                 .OrderBy(c => c.NumeroCompte)
@@ -57,10 +57,10 @@ namespace Collectivite.Services
         }
 
         // Récupérer les sous-comptes d'un compte parent
-        public async Task<List<CompteComptable>> GetSousComptesAsync(int compteParentId)
+        public async Task<List<CompteComptable>> GetSousComptesAsync(int contrePartieId)
         {
             return await _appDbContext.CompteComptables
-                .Where(c => c.CompteParentId == compteParentId)
+                .Where(c => c.ContrePartieId == contrePartieId)
                 .Include(c => c.SousComptes)
                 .AsNoTracking()
                 .OrderBy(c => c.NumeroCompte)
@@ -89,13 +89,13 @@ namespace Collectivite.Services
                 }
 
                 // Vérifier si le compte parent existe (si spécifié)
-                if (compte.CompteParentId.HasValue)
+                if (compte.ContrePartieId.HasValue)
                 {
                     var parentExiste = await _appDbContext.CompteComptables
-                        .AnyAsync(c => c.Id == compte.CompteParentId.Value);
+                        .AnyAsync(c => c.Id == compte.ContrePartieId.Value);
                     if (!parentExiste)
                     {
-                        return (false, $"Le compte parent avec l'ID {compte.CompteParentId} n'existe pas.", null);
+                        return (false, $"Le compte parent avec l'ID {compte.ContrePartieId} n'existe pas.", null);
                     }
                 }
 
@@ -140,23 +140,23 @@ namespace Collectivite.Services
                 }
 
                 // Vérifier si le compte parent existe (si spécifié)
-                if (compte.CompteParentId.HasValue)
+                if (compte.ContrePartieId.HasValue)
                 {
                     // Empêcher qu'un compte soit son propre parent
-                    if (compte.CompteParentId == compte.Id)
+                    if (compte.ContrePartieId == compte.Id)
                     {
                         return (false, "Un compte ne peut pas être son propre parent.");
                     }
 
                     var parentExiste = await _appDbContext.CompteComptables
-                        .AnyAsync(c => c.Id == compte.CompteParentId.Value);
+                        .AnyAsync(c => c.Id == compte.ContrePartieId.Value);
                     if (!parentExiste)
                     {
-                        return (false, $"Le compte parent avec l'ID {compte.CompteParentId} n'existe pas.");
+                        return (false, $"Le compte parent avec l'ID {compte.ContrePartieId} n'existe pas.");
                     }
 
                     // Empêcher les références circulaires
-                    if (await IsCircularReferenceAsync(compte.Id, compte.CompteParentId.Value))
+                    if (await IsCircularReferenceAsync(compte.Id, compte.ContrePartieId.Value))
                     {
                         return (false, "Cette opération créerait une référence circulaire dans la hiérarchie des comptes.");
                     }
@@ -164,7 +164,7 @@ namespace Collectivite.Services
 
                 existingCompte.NumeroCompte = compte.NumeroCompte;
                 existingCompte.IntituleCompte = compte.IntituleCompte;
-                existingCompte.CompteParentId = compte.CompteParentId;
+                existingCompte.ContrePartieId = compte.ContrePartieId;
 
                 await _appDbContext.SaveChangesAsync();
 
@@ -223,12 +223,12 @@ namespace Collectivite.Services
                     .AsNoTracking()
                     .FirstOrDefaultAsync(c => c.Id == currentParentId);
 
-                if (parent == null || parent.CompteParentId == null)
+                if (parent == null || parent.ContrePartieId == null)
                 {
                     break;
                 }
 
-                currentParentId = parent.CompteParentId.Value;
+                currentParentId = parent.ContrePartieId.Value;
             }
 
             return false;

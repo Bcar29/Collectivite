@@ -1,6 +1,8 @@
 ﻿using Collectivite.Models;
 using Collectivite.Services;
 using Collectivite.Utils;
+using DocumentFormat.OpenXml.InkML;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Win32;
 using System;
 using System.Collections.ObjectModel;
@@ -21,15 +23,19 @@ namespace Collectivite.ViewModels
         private bool _isEditMode;
         private string _fichierName;
         //private readonly AppDbContext _context;
+        private readonly ExerciceService _exerciceService;
         private readonly int _budgetPrimitifId;
+        private bool _isDisposed;
 
-        public EngagementFormViewModel(int bpId, int? engagementId = null)
+        public EngagementFormViewModel(int? engagementId = null)
         {
-            _budgetPrimitifId = bpId;
+            _exerciceService = ExerciceService.Instance;
+            _exerciceService.ExerciceChanged += OnExerciceChanged;
+            //_budgetPrimitifId = bpId;
             _engagement = new Engagement
             {
                 DateEngagement = DateTime.Now,
-                //CreditsBudgetaires = SelectedBudgetLine?.MontantPrevu ?? 0
+                //CreditsBudgetaires = SelectedBudgetLine?.MontantActu ?? 0
             };
             _fichierName = string.Empty;
 
@@ -39,6 +45,8 @@ namespace Collectivite.ViewModels
             CancelCommand = new RelayCommand(_ => Cancel());
             ChooseFileCommand = new RelayCommand(_ => ChooseFile());
             CalculerDisponibleCommand = new RelayCommand(_ => CalculerDisponible());
+            ConvertMontantToLettresCommand = new RelayCommand(_ => ConvertMontantToLettres());
+
 
             // Charger les données
             LoadDataCommand.Execute(null);
@@ -73,21 +81,17 @@ namespace Collectivite.ViewModels
             {
                 if (SetProperty(ref _selectedBudgetLine, value))
                 {
-                    // 🔥 MAGIE ICI !
                     if (_selectedBudgetLine != null)
                     {
-                        // 1️⃣ Copier la valeur dans Engagement
-                        Engagement.CreditsBudgetaires = _selectedBudgetLine.MontantPrevu;
+                        Engagement.CreditsBudgetaires = _selectedBudgetLine.MontantActu;
 
-                        // 2️⃣ Notifier l'interface que Engagement a changé
-                        OnPropertyChanged(nameof(Engagement));
-
-                        // 3️⃣ Notifier les propriétés calculées
-                        OnPropertyChanged(nameof(DisponibleBudgetaire));
+                        // 🔥 Lancer la méthode async
+                        _ = LoadEngagementsForSelectedBudgetLineAsync();
                     }
                 }
             }
         }
+
 
         public Engagement Engagement
         {
@@ -109,7 +113,7 @@ namespace Collectivite.ViewModels
 
         public string PageTitle => IsEditMode ? "Modifier l'engagement" : "Nouvel engagement";
 
-        public double DisponibleBudgetaire => Engagement.CreditsBudgetaires - Engagement.EngagementsAnterieurs;
+        public decimal DisponibleBudgetaire => Engagement.CreditsBudgetaires - Engagement.EngagementsAnterieurs;
 
         #endregion
 
@@ -120,12 +124,20 @@ namespace Collectivite.ViewModels
         public ICommand CancelCommand { get; }
         public ICommand ChooseFileCommand { get; }
         public ICommand CalculerDisponibleCommand { get; }
+        public ICommand ConvertMontantToLettresCommand { get; }
 
         #endregion
 
         #region Methods
-
-        private async System.Threading.Tasks.Task LoadDataAsync()
+        private async void OnExerciceChanged(object? sender, Exercice exercice)
+        {
+            await Application.Current.Dispatcher.InvokeAsync(async () =>
+            {
+                //System.Diagnostics.Debug.WriteLine($"Rechargement des budgets pour l'exercice : {exercice.Libelle}");
+                await LoadDataAsync();
+            });
+        }
+        public async System.Threading.Tasks.Task LoadDataAsync()
         {
             IsLoading = true;
 
@@ -161,12 +173,18 @@ namespace Collectivite.ViewModels
                 // Charger les lignes budgétaires
                
                 var budgetLineService = new BudgetLineService();
-                var budgetLines = await budgetLineService.GetDepenseForEngagement(_budgetPrimitifId);
+                var exercice = ExerciceService.Instance;
+
                 BudgetLines.Clear();
+                
+                    
+                var budgetLines = await budgetLineService.GetDepenseForEngagement();
                 foreach (var bl in budgetLines)
                 {
                     BudgetLines.Add(bl);
                 }
+                
+
 
                 // Charger les contrats
                 //var contratService = new ContratService(_context);
@@ -244,8 +262,10 @@ namespace Collectivite.ViewModels
             return Engagement != null &&
                    Engagement.ExerciceId > 0 &&
                    Engagement.CommuneId > 0 &&
+
                    Engagement.BudgetLineId > 0 &&
-                   Engagement.TiersId > 0 &&
+                   //Engagement.TiersId > 0 &&
+
                    !string.IsNullOrWhiteSpace(Engagement.Objet);
                    //Engagement.MontantEngagement > 0;
         }
@@ -389,6 +409,42 @@ namespace Collectivite.ViewModels
             OnPropertyChanged(nameof(DisponibleBudgetaire));
         }
 
+        private async Task LoadEngagementsForSelectedBudgetLineAsync()
+        {
+            using var context = EngagementService.CreateContext();
+
+            var totalEngage = await context.Engagements
+                .Where(e => e.BudgetLineId == _selectedBudgetLine!.Id)
+                .SumAsync(e => (decimal?)e.MontantEngagement) ?? 0;
+
+            Engagement.EngagementsAnterieurs = totalEngage;
+
+            // 🔔 Notifier l’UI
+            OnPropertyChanged(nameof(Engagement));
+            OnPropertyChanged(nameof(DisponibleBudgetaire));
+        }
+
+        private void ConvertMontantToLettres()
+        {
+            if (Engagement.MontantEngagement > 0)
+            {
+                Engagement.MontantLettre = Convertir.ConvertirNombreEnLettres((long)Engagement.MontantEngagement);
+                OnPropertyChanged(nameof(Engagement));
+            }
+        }
+
+
+        /// <summary>
+        /// Nettoyer les ressources et se désabonner des événements
+        /// </summary>
+        public void Dispose()
+        {
+            if (!_isDisposed)
+            {
+                _exerciceService.ExerciceChanged -= OnExerciceChanged;
+                _isDisposed = true;
+            }
+        }
         #endregion
     }
 }

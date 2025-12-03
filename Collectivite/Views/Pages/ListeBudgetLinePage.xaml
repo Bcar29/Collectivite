@@ -1,0 +1,181 @@
+﻿<Page x:Class="Collectivite.Views.Pages.ListeBudgetLinePage"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:Utils="clr-namespace:Collectivite.Utils"
+        Background="#F5F5F5">
+
+    <Page.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <Utils:CollectionHasItemsToVisibilityConverter x:Key="CollectionHasItemsToVisibilityConverter"/>
+        <Utils:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
+    </Page.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Overlay de chargement -->
+        <Grid Background="#80000000" 
+          Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}"
+          Panel.ZIndex="999">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}"
+                       Value="0"
+                       IsIndeterminate="True"
+                       Width="60"
+                       Height="60"/>
+                <TextBlock Text="Chargement..." 
+                       Foreground="White"
+                       FontSize="16"
+                       Margin="0,20,0,0"
+                       HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Onglets -->
+        <TabControl Grid.Row="1" 
+                SelectedIndex="{Binding SelectedTabIndex}"
+                Margin="20,0,20,20">
+
+            <!-- Recette - Fonctionnement -->
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="CashPlus" 
+                                           Width="20" 
+                                           Height="20"
+                                           VerticalAlignment="Center"
+                                           Margin="0,0,8,0"/>
+                        <TextBlock Text="Recette - Fonctionnement" 
+                             VerticalAlignment="Center" 
+                             FontWeight="Medium"/>
+                    </StackPanel>
+                </TabItem.Header>
+
+                <materialDesign:Card Padding="0" Margin="0,10,0,0">
+                    <DataGrid ItemsSource="{Binding DisplayedLines}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          Style="{StaticResource MaterialDesignDataGrid}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Chapitre" Binding="{Binding Nommenclature.Chapitre}" Width="100"/>
+                            <DataGridTextColumn Header="Article" Binding="{Binding Nommenclature.Article}" Width="100"/>
+                            <DataGridTextColumn Header="Paragraphe" Binding="{Binding Nommenclature.Paragraphe}" Width="100"/>
+                            <DataGridTextColumn Header="Sous-Paragraphe" Binding="{Binding Nommenclature.SousParagraphe}" Width="150"/>
+                            <DataGridTextColumn Header="Intitulé" Binding="{Binding Nommenclature.Intitule}" Width="*"/>
+                            <DataGridTextColumn Header="Montant prévu" Binding="{Binding MontantPrevu, StringFormat=N0}" Width="150"/>
+
+                            
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </materialDesign:Card>
+
+            </TabItem>
+
+            <!-- Recette - Investissement -->
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="TrendingUp" 
+                                           Width="20" 
+                                           Height="20"
+                                           VerticalAlignment="Center"
+                                           Margin="0,0,8,0"/>
+                        <TextBlock Text="Recette - Investissement" 
+                             VerticalAlignment="Center" 
+                             FontWeight="Medium"/>
+                    </StackPanel>
+                </TabItem.Header>
+                <!-- Même structure de DataGrid -->
+                <materialDesign:Card Padding="0" Margin="0,10,0,0">
+                    <DataGrid ItemsSource="{Binding DisplayedLines}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Chapitre" Binding="{Binding Nommenclature.Chapitre}" Width="100"/>
+                            <DataGridTextColumn Header="Article" Binding="{Binding Nommenclature.Article}" Width="100"/>
+                            <DataGridTextColumn Header="Paragraphe" Binding="{Binding Nommenclature.Paragraphe}" Width="100"/>
+                            <DataGridTextColumn Header="Sous-Paragraphe" Binding="{Binding Nommenclature.SousParagraphe}" Width="150"/>
+                            <DataGridTextColumn Header="Intitulé" Binding="{Binding Nommenclature.Intitule}" Width="*"/>
+                            <DataGridTextColumn Header="Montant prévu" Binding="{Binding MontantPrevu, StringFormat=N0}" Width="150"/>
+
+                            
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </materialDesign:Card>
+            </TabItem>
+
+            <!-- Dépense - Fonctionnement -->
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="CashMinus" 
+                                           Width="20" 
+                                           Height="20"
+                                           VerticalAlignment="Center"
+                                           Margin="0,0,8,0"/>
+                        <TextBlock Text="Dépense - Fonctionnement" 
+                             VerticalAlignment="Center" 
+                             FontWeight="Medium"/>
+                    </StackPanel>
+                </TabItem.Header>
+                <materialDesign:Card Padding="0" Margin="0,10,0,0">
+                    <DataGrid ItemsSource="{Binding DisplayedLines}"
+           AutoGenerateColumns="False"
+           IsReadOnly="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Chapitre" Binding="{Binding Nommenclature.Chapitre}" Width="100"/>
+                            <DataGridTextColumn Header="Article" Binding="{Binding Nommenclature.Article}" Width="100"/>
+                            <DataGridTextColumn Header="Paragraphe" Binding="{Binding Nommenclature.Paragraphe}" Width="100"/>
+                            <DataGridTextColumn Header="Sous-Paragraphe" Binding="{Binding Nommenclature.SousParagraphe}" Width="150"/>
+                            <DataGridTextColumn Header="Intitulé" Binding="{Binding Nommenclature.Intitule}" Width="*"/>
+                            <DataGridTextColumn Header="Montant prévu" Binding="{Binding MontantPrevu, StringFormat=N0}" Width="150"/>
+
+                            
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </materialDesign:Card>
+            </TabItem>
+
+            <!-- Dépense - Investissement -->
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="TrendingDown" 
+                                           Width="20" 
+                                           Height="20"
+                                           VerticalAlignment="Center"
+                                           Margin="0,0,8,0"/>
+                        <TextBlock Text="Dépense - Investissement" 
+                             VerticalAlignment="Center" 
+                             FontWeight="Medium"/>
+                    </StackPanel>
+                </TabItem.Header>
+                <materialDesign:Card Padding="0" Margin="0,10,0,0">
+                    <DataGrid ItemsSource="{Binding DisplayedLines}"
+                                   AutoGenerateColumns="False"
+                                   IsReadOnly="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Chapitre" Binding="{Binding Nommenclature.Chapitre}" Width="100"/>
+                            <DataGridTextColumn Header="Article" Binding="{Binding Nommenclature.Article}" Width="100"/>
+                            <DataGridTextColumn Header="Paragraphe" Binding="{Binding Nommenclature.Paragraphe}" Width="100"/>
+                            <DataGridTextColumn Header="Sous-Paragraphe" Binding="{Binding Nommenclature.SousParagraphe}" Width="150"/>
+                            <DataGridTextColumn Header="Intitulé" Binding="{Binding Nommenclature.Intitule}" Width="*"/>
+                            <DataGridTextColumn Header="Montant prévu" Binding="{Binding MontantPrevu, StringFormat=N0}" Width="150"/>
+
+                            
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </materialDesign:Card>
+            </TabItem>
+
+        </TabControl>
+
+
+    </Grid>
+
+
+</Page>
