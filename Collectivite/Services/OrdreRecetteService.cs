@@ -1,5 +1,6 @@
 ﻿using Collectivite.Models;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Asn1;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -198,35 +199,49 @@ namespace Collectivite.Services
         /// Crée un nouvel ordre de recette
         /// </summary>
         public async Task<(bool Success, string Message, OrdreRecette? OrdreRecette)> CreateOrdreRecetteAsync(
-            OrdreRecette ordreRecette)
+    OrdreRecette ordreRecette)
         {
-            using var context = CreateContext();
-
+            using AppDbContext context = CreateContext();
+            //using var context = CreateContext();
             try
             {
                 // Validation
                 if (string.IsNullOrWhiteSpace(ordreRecette.NumeroOrdre))
                     return (false, "Le numéro d'ordre est obligatoire.", null);
-
                 if (ordreRecette.BudgetLineId <= 0)
                     return (false, "La ligne budgétaire est obligatoire.", null);
-
                 if (ordreRecette.ExerciceId <= 0)
                     return (false, "L'exercice est obligatoire.", null);
-
                 if (ordreRecette.CommuneId <= 0)
                     return (false, "La commune est obligatoire.", null);
-
                 if (string.IsNullOrWhiteSpace(ordreRecette.Comptable))
                     return (false, "Le nom du comptable est obligatoire.", null);
-
                 if (ordreRecette.MontantOrdre <= 0)
                     return (false, "Le montant doit être supérieur à zéro.", null);
+
+                // Vérifier que la ligne budgétaire existe et récupérer sa nomenclature
+
+                var budgetLine = await context.BudgetLines
+                    .Where(bl => bl.Id == ordreRecette.BudgetLineId)
+                    .Select(bl => new { bl.Id, bl.Nommenclature.CodeNomenclature })
+                    .FirstOrDefaultAsync();
+
+                if (budgetLine == null)
+                    return (false, "La ligne budgétaire spécifiée n'existe pas.", null);
+
+                if (string.IsNullOrWhiteSpace(budgetLine.CodeNomenclature))
+                    return (false, "La ligne budgétaire ne possède pas de nomenclature.", null);
+
+                // Vérifier si la nomenclature existe dans la table CompteComptable
+                var compteComptableExists = await context.CompteComptables
+                    .AnyAsync(cc => cc.NumeroCompte == budgetLine.CodeNomenclature);
+
+                if (!compteComptableExists)
+                    return (false, $"La nomenclature '{budgetLine.CodeNomenclature}' de la ligne budgétaire n'a pas de ContrePartie dans les Comptes Comptables.", null);
 
                 // Vérifier l'unicité du numéro d'ordre
                 var existingOrdre = await context.OrdreRecettes
                     .AnyAsync(o => o.NumeroOrdre == ordreRecette.NumeroOrdre);
-
                 if (existingOrdre)
                     return (false, $"Le numéro d'ordre '{ordreRecette.NumeroOrdre}' existe déjà.", null);
 
@@ -255,8 +270,7 @@ namespace Collectivite.Services
 
                 // Recharger avec les relations
                 var savedOrdre = await GetOrdreRecetteByIdAsync(newOrdre.Id);
-
-                return (true, "✅ Ordre de recette créé avec succès.", savedOrdre);
+                return (true, "✅ Ordre de recette créé avec succès", savedOrdre);
             }
             catch (DbUpdateException dbEx)
             {

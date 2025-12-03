@@ -6,29 +6,40 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
+using System.Threading.Tasks;
 
 namespace Collectivite.ViewModels
 {
     public class CompteComptableViewModel : ViewModelBase
     {
         private readonly CompteComptableService _compteService;
+        private readonly NommenclatureService _nomenclatureService;
+
         private bool _isLoading;
         private CompteComptable? _selectedCompte;
         private bool _isDialogOpen;
         private CompteComptable _dialogCompte;
         private bool _isEditMode;
 
-        public CompteComptableViewModel(CompteComptableService compte)
+        // Nouvelles propriétés pour la gestion des nomenclatures
+        private NatureType _natureSelectionnee = NatureType.Recette;
+        private SectionType _sectionSelectionnee = SectionType.Fonctionnement;
+        private Nommenclature? _nomenclatureSelectionnee;
+        private bool _isNommenclatureMode = true;
+
+        public CompteComptableViewModel(CompteComptableService compteService, NommenclatureService nomenclatureService)
         {
-            _compteService = compte;
+            _compteService = compteService;
+            _nomenclatureService = nomenclatureService;
+
             _dialogCompte = new CompteComptable
             {
                 NumeroCompte = "",
                 IntituleCompte = "",
-                CompteParentId = null
+                ContrePartieId = null
             };
 
-            // Commandes
+            // Commandes existantes
             LoadCompteCommand = new RelayCommand(async _ => await LoadCompteAsync());
             LoadComptesRacinesCommand = new RelayCommand(async _ => await LoadComptesRacinesAsync());
             LoadSousComptesCommand = new RelayCommand<int?>(async parentId => await LoadSousComptesAsync(parentId));
@@ -38,16 +49,20 @@ namespace Collectivite.ViewModels
             CancelCompteCommand = new RelayCommand(_ => CancelCompte());
             DeleteCompteCommand = new RelayCommand<CompteComptable>(async compte => await DeleteCompteAsync(compte));
 
+            // Nouvelles commandes pour les nomenclatures
+            LoadNomenclaturesCommand = new RelayCommand(async _ => await LoadNomenclaturesAsync());
+            ChangerModeCommand = new RelayCommand<bool?>(mode => ChangerMode(mode));
+
             // Charger les données au démarrage
             LoadCompteCommand.Execute(null);
-           // LoadComptesForParentSelectionAsync();
         }
 
         #region Properties 
         public ObservableCollection<CompteComptable> CompteComptables { get; } = [];
-
-        // Liste des comptes disponibles pour la sélection du parent
         public ObservableCollection<CompteComptable> ComptesParentDisponibles { get; } = [];
+
+        // Nouvelle collection pour les nomenclatures
+        public ObservableCollection<Nommenclature> NomenclaturesDisponibles { get; } = [];
 
         public bool IsLoading
         {
@@ -81,6 +96,66 @@ namespace Collectivite.ViewModels
 
         public string DialogTitle => IsEditMode ? "Modifier le Compte" : "Ajouter un Compte";
 
+        // Nouvelles propriétés pour la gestion des nomenclatures
+        public NatureType NatureSelectionnee
+        {
+            get => _natureSelectionnee;
+            set
+            {
+                if (SetProperty(ref _natureSelectionnee, value))
+                {
+                    LoadNomenclaturesCommand.Execute(null);
+                }
+            }
+        }
+
+        public SectionType SectionSelectionnee
+        {
+            get => _sectionSelectionnee;
+            set
+            {
+                if (SetProperty(ref _sectionSelectionnee, value))
+                {
+                    LoadNomenclaturesCommand.Execute(null);
+                }
+            }
+        }
+
+        public Nommenclature? NommenclatureSelectionnee
+        {
+            get => _nomenclatureSelectionnee;
+            set
+            {
+                if (SetProperty(ref _nomenclatureSelectionnee, value))
+                {
+                    OnNommenclatureSelected();
+                }
+            }
+        }
+
+        public bool IsNommenclatureMode
+        {
+            get => _isNommenclatureMode;
+            set
+            {
+                if (SetProperty(ref _isNommenclatureMode, value))
+                {
+                    if (value)
+                    {
+                        // Mode nomenclature: recharger les nomenclatures
+                        LoadNomenclaturesCommand.Execute(null);
+                    }
+                    else
+                    {
+                        // Mode saisie libre: réinitialiser
+                        NommenclatureSelectionnee = null;
+                    }
+                }
+            }
+        }
+
+        public bool IsSaisieLibreMode => !IsNommenclatureMode;
+
         #endregion
 
         #region Commands
@@ -92,6 +167,10 @@ namespace Collectivite.ViewModels
         public ICommand SaveCompteCommand { get; }
         public ICommand CancelCompteCommand { get; }
         public ICommand DeleteCompteCommand { get; }
+
+        // Nouvelles commandes
+        public ICommand LoadNomenclaturesCommand { get; }
+        public ICommand ChangerModeCommand { get; }
         #endregion
 
         #region Methods
@@ -103,9 +182,7 @@ namespace Collectivite.ViewModels
             try
             {
                 var comptes = await _compteService.GetCompteComptablesAsync();
-
                 CompteComptables.Clear();
-
                 foreach (var compte in comptes)
                 {
                     CompteComptables.Add(compte);
@@ -129,9 +206,7 @@ namespace Collectivite.ViewModels
             try
             {
                 var comptes = await _compteService.GetComptesRacinesAsync();
-
                 CompteComptables.Clear();
-
                 foreach (var compte in comptes)
                 {
                     CompteComptables.Add(compte);
@@ -158,9 +233,7 @@ namespace Collectivite.ViewModels
             try
             {
                 var sousComptes = await _compteService.GetSousComptesAsync(parentId.Value);
-
                 CompteComptables.Clear();
-
                 foreach (var compte in sousComptes)
                 {
                     CompteComptables.Add(compte);
@@ -183,7 +256,6 @@ namespace Collectivite.ViewModels
             try
             {
                 var comptes = await _compteService.GetCompteComptablesAsync();
-
                 ComptesParentDisponibles.Clear();
 
                 // Ajouter une option "Aucun parent" (compte racine)
@@ -210,23 +282,77 @@ namespace Collectivite.ViewModels
             }
         }
 
-        private void OpenAddCompte()
+        // NOUVELLE MÉTHODE: Charger les nomenclatures sans enfants avec filtres
+        private async System.Threading.Tasks.Task LoadNomenclaturesAsync()
+        {
+            try
+            {
+                var nomenclatures = await _nomenclatureService.GetNommenclaturesSansEnfantsAvecFiltresAsync(
+                    nature: NatureSelectionnee,
+                    section: SectionSelectionnee
+                );
+
+                NomenclaturesDisponibles.Clear();
+                foreach (var nomenclature in nomenclatures)
+                {
+                    NomenclaturesDisponibles.Add(nomenclature);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors du chargement des nomenclatures : {ex.Message}",
+                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        // NOUVELLE MÉTHODE: Gestion de la sélection d'une nomenclature
+        private void OnNommenclatureSelected()
+        {
+            if (NommenclatureSelectionnee != null && IsNommenclatureMode)
+            {
+                // Remplir automatiquement le numéro et l'intitulé
+                DialogCompte.NumeroCompte = NommenclatureSelectionnee.CodeNomenclature;
+                DialogCompte.IntituleCompte = NommenclatureSelectionnee.Intitule ?? "";
+
+                // Notifier les changements
+                OnPropertyChanged(nameof(DialogCompte));
+                CommandManager.InvalidateRequerySuggested();
+            }
+        }
+
+        // NOUVELLE MÉTHODE: Changer le mode (nomenclature vs saisie libre)
+        private void ChangerMode(bool? isNommenclatureMode)
+        {
+            if (isNommenclatureMode.HasValue)
+            {
+                IsNommenclatureMode = isNommenclatureMode.Value;
+            }
+        }
+
+        private async Task OpenAddCompte()
         {
             IsEditMode = false;
             DialogCompte = new CompteComptable
             {
                 NumeroCompte = "",
                 IntituleCompte = "",
-                CompteParentId = null
+                ContrePartieId = null
             };
 
-            LoadComptesForParentSelectionAsync();
-            OnPropertyChanged(nameof(DialogCompte));
+            // Réinitialiser les sélections
+            IsNommenclatureMode = true;
+            NommenclatureSelectionnee = null;
+            NatureSelectionnee = NatureType.Recette;
+            SectionSelectionnee = SectionType.Fonctionnement;
 
+           await LoadComptesForParentSelectionAsync();
+            LoadNomenclaturesCommand.Execute(null);
+
+            OnPropertyChanged(nameof(DialogCompte));
             IsDialogOpen = true;
         }
 
-        private void OpenEditCompte(CompteComptable? compte)
+        private async Task OpenEditCompte(CompteComptable? compte)
         {
             if (compte == null)
                 return;
@@ -237,12 +363,15 @@ namespace Collectivite.ViewModels
                 Id = compte.Id,
                 NumeroCompte = compte.NumeroCompte,
                 IntituleCompte = compte.IntituleCompte,
-                CompteParentId = compte.CompteParentId
+                ContrePartieId = compte.ContrePartieId
             };
 
-            LoadComptesForParentSelectionAsync();
-            OnPropertyChanged(nameof(DialogCompte));
+            // En mode édition, on passe en saisie libre par défaut
+            IsNommenclatureMode = false;
+            NommenclatureSelectionnee = null;
 
+           await  LoadComptesForParentSelectionAsync();
+            OnPropertyChanged(nameof(DialogCompte));
             IsDialogOpen = true;
         }
 
@@ -259,9 +388,9 @@ namespace Collectivite.ViewModels
             try
             {
                 // Si l'ID du parent est 0 (option "Aucun parent"), on met null
-                if (DialogCompte.CompteParentId == 0)
+                if (DialogCompte.ContrePartieId == 0)
                 {
-                    DialogCompte.CompteParentId = null;
+                    DialogCompte.ContrePartieId = null;
                 }
 
                 if (IsEditMode)

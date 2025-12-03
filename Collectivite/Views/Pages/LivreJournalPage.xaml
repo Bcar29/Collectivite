@@ -1,0 +1,495 @@
+﻿<Page x:Class="Collectivite.Views.Pages.LivreJournalPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+      xmlns:utils="clr-namespace:Collectivite.Utils"
+      mc:Ignorable="d" 
+      d:DesignHeight="800" d:DesignWidth="1400"
+      Background="{DynamicResource MaterialDesignPaper}"
+      Title="Livre Journal">
+
+    <Page.Resources>
+        <!-- Converters -->
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <utils:DateOnlyToDateTimeConverter x:Key="DateOnlyToDateTimeConverter"/>
+
+        <!-- Style pour les en-têtes du DataGrid -->
+        <Style x:Key="DataGridHeaderStyle"
+       TargetType="DataGridColumnHeader"
+       BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">
+            <Setter Property="Background" Value="{DynamicResource MaterialDesignDarkBackground}"/>
+            <Setter Property="Foreground" Value= "DarkSlateBlue"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Height" Value="50"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Padding" Value="10,5"/>
+        </Style>
+
+
+        <Style x:Key="DataGridCellCenterStyle" TargetType="DataGridCell">
+            <Setter Property="TextBlock.TextAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Padding" Value="10,5"/>
+        </Style>
+
+        <Style x:Key="DataGridCellRightStyle" TargetType="DataGridCell">
+            <Setter Property="TextBlock.TextAlignment" Value="Right"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Padding" Value="10,5"/>
+        </Style>
+    </Page.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Titre et Actions -->
+        <Grid Grid.Row="0" Margin="0,0,0,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0">
+                <TextBlock Text="Livre Journal" 
+                           Style="{StaticResource MaterialDesignHeadline4TextBlock}"
+                           FontWeight="Bold"/>
+                <TextBlock Text="Gestion des écritures comptables" 
+                           Style="{StaticResource MaterialDesignBody2TextBlock}"
+                           Opacity="0.7"
+                           Margin="0,5,0,0"/>
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                        Command="{Binding ToggleFiltersCommand}"
+                        Margin="0,0,10,0"
+                        ToolTip="Afficher/Masquer les filtres">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Filter" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                        <TextBlock Text="Filtres"/>
+                    </StackPanel>
+                </Button>
+
+                <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                        Command="{Binding VerifierEquilibreCommand}"
+                        Margin="0,0,10,0"
+                        ToolTip="Vérifier l'équilibre du journal">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="ScaleBalance" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                        <TextBlock Text="Vérifier"/>
+                    </StackPanel>
+                </Button>
+
+                <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                        Command="{Binding ExportCommand}"
+                        Margin="0,0,10,0"
+                        Background="{DynamicResource SecondaryHueMidBrush}"
+                        ToolTip="Exporter le journal">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="FileExport" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                        <TextBlock Text="Exporter"/>
+                    </StackPanel>
+                </Button>
+
+                <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                        Command="{Binding OpenAddEcritureCommand}"
+                        Background="{DynamicResource PrimaryHueMidBrush}"
+                        Foreground="White">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Plus" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                        <TextBlock Text="Nouvelle Écriture"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- Filtres -->
+        <materialDesign:Card Grid.Row="1" Margin="0,0,0,10" Visibility="{Binding ShowFilters, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Expander Header="Filtres de recherche" IsExpanded="True" Padding="15">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <DatePicker Grid.Column="0" 
+                                materialDesign:HintAssist.Hint="Date de début"
+                                Style="{StaticResource MaterialDesignOutlinedDatePicker}"
+                                Margin="0,0,10,0"
+                                SelectedDate="{Binding DateDebutDateTime, Mode=TwoWay}"/>
+
+                    <DatePicker Grid.Column="1" 
+                                materialDesign:HintAssist.Hint="Date de fin"
+                                Style="{StaticResource MaterialDesignOutlinedDatePicker}"
+                                Margin="0,0,10,0"
+                                SelectedDate="{Binding DateFinDateTime, Mode=TwoWay}"/>
+
+                    <ComboBox Grid.Column="2"
+                              materialDesign:HintAssist.Hint="Filtrer par compte"
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                              ItemsSource="{Binding ComptesDisponibles}"
+                              SelectedItem="{Binding CompteFiltre, Mode=TwoWay}"
+                              Margin="0,0,10,0">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock>
+                                    <Run Text="{Binding NumeroCompte, Mode=OneWay}" FontWeight="Bold"/>
+                                    <Run Text=" - "/>
+                                    <Run Text="{Binding IntituleCompte, Mode=OneWay}"/>
+                                </TextBlock>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <StackPanel Grid.Column="3" Orientation="Horizontal">
+                        <Button Command="{Binding ApplyFiltersCommand}"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                Margin="0,0,10,0">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Magnify" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                <TextBlock Text="Appliquer"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding ClearFiltersCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="FilterRemove" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                <TextBlock Text="Réinitialiser"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Expander>
+        </materialDesign:Card>
+
+        <!-- Indicateur de chargement -->
+        <ProgressBar Grid.Row="2" 
+                     IsIndeterminate="True" 
+                     Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}"
+                     Margin="0,0,0,10"/>
+
+        <!-- DataGrid du Livre Journal -->
+        <materialDesign:Card Grid.Row="3">
+            <DataGrid ItemsSource="{Binding Ecritures}"
+                      SelectedItem="{Binding SelectedEcriture}"
+                      AutoGenerateColumns="False"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
+                      IsReadOnly="True"
+                      SelectionMode="Single"
+                      HeadersVisibility="Column"
+                      GridLinesVisibility="Horizontal"
+                      AlternatingRowBackground="{DynamicResource MaterialDesignDivider}"
+                      RowHeight="70">
+
+                <DataGrid.Columns>
+                    <!-- Imputation Débit Crédit -->
+                    <DataGridTemplateColumn Header="Débit" Width="120" HeaderStyle="{StaticResource DataGridHeaderStyle}">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <TextBlock Text="{Binding CompteDebit.NumeroCompte}" 
+                                           FontWeight="Bold" 
+                                           FontSize="13"
+                                           Margin="0,0,0,7"
+                           
+                                           TextAlignment="Center"/>
+
+                                    <!-- ligne vide pour équilibrer la hauteur -->
+                                    <TextBlock Text="" Height="30"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTemplateColumn Header="Crédit" Width="120" HeaderStyle="{StaticResource DataGridHeaderStyle}">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <TextBlock Text="" Height="30"/>
+                                    <!-- ligne vide au-dessus -->
+
+                                    <TextBlock Text="{Binding CompteCredit.NumeroCompte}" 
+                           FontWeight="Bold" 
+                           FontSize="13"
+                           TextAlignment="Center"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+
+                    <!-- Libellés -->
+                    <DataGridTemplateColumn Header="Libellés" Width="*" HeaderStyle="{StaticResource DataGridHeaderStyle}">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <!-- Ligne Débit -->
+                                    <TextBlock FontSize="13">
+                    <Run Text="{Binding CompteDebit.IntituleCompte}" />
+                                    </TextBlock>
+
+                                    <!-- Ligne Crédit -->
+                                    <TextBlock FontSize="13" Margin="0,10,0,0">
+                    <Run Text="{Binding CompteCredit.IntituleCompte}" />
+                                    </TextBlock>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+
+                    <!-- Montant Débit Crédit-->
+                    <DataGridTemplateColumn Header="Débit" Width="100" HeaderStyle="{StaticResource DataGridHeaderStyle}">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Montant, StringFormat=N0}"
+                           TextAlignment="Right"
+                           FontWeight="Bold" 
+                           FontSize="13"/>
+
+                                    <!-- Ligne vide pour aligner -->
+                                    <TextBlock Text="" Height="30"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTemplateColumn Header="Crédit" Width="100" HeaderStyle="{StaticResource DataGridHeaderStyle}">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <TextBlock Text="" Height="30"/>
+                                    <!-- Vide au-dessus -->
+
+                                    <TextBlock Text="{Binding Montant, StringFormat=N0}"
+                                       TextAlignment="Right"
+                                       FontWeight="Bold" 
+                                       FontSize="13"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+
+                    <!-- Date -->
+                    <DataGridTextColumn Header="Date" 
+                                        Binding="{Binding DateEcriture, StringFormat='dd/MM/yyyy'}" 
+                                        Width="110"
+                                        HeaderStyle="{StaticResource DataGridHeaderStyle}"
+                                        CellStyle="{StaticResource DataGridCellCenterStyle}"/>
+
+                    <!-- Actions 
+                    <DataGridTemplateColumn Header="Actions" Width="120" HeaderStyle="{StaticResource DataGridHeaderStyle}">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                                            Command="{Binding DataContext.OpenEditEcritureCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}"
+                                            ToolTip="Modifier"
+                                            Margin="2">
+                                        <materialDesign:PackIcon Kind="Pencil" Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                                    </Button>
+
+                                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                                            Command="{Binding DataContext.DeleteEcritureCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}"
+                                            ToolTip="Supprimer"
+                                            Margin="2">
+                                        <materialDesign:PackIcon Kind="Delete" Foreground="#D32F2F"/>
+                                    </Button>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>-->
+                </DataGrid.Columns>
+            </DataGrid>
+        </materialDesign:Card>
+
+        <!-- Totaux et informations -->
+        <materialDesign:Card Grid.Row="4" Margin="0,10,0,0" Padding="15">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="Information" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <TextBlock VerticalAlignment="Center">
+                        <Run Text="Nombre d'écritures :"/>
+                        <Run Text="{Binding Ecritures.Count, Mode=OneWay}" FontWeight="Bold"/>
+                    </TextBlock>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="30,0,0,0">
+                    <TextBlock Text="Total Débit:" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <TextBlock Text="{Binding TotalDebit, StringFormat='{}{0:N2}'}" 
+                               FontWeight="Bold" 
+                               FontSize="16"
+                               Foreground="{DynamicResource PrimaryHueMidBrush}"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="30,0,0,0">
+                    <TextBlock Text="Total Crédit:" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <TextBlock Text="{Binding TotalCredit, StringFormat='{}{0:N2}'}" 
+                               FontWeight="Bold" 
+                               FontSize="16"
+                               Foreground="{DynamicResource SecondaryHueMidBrush}"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="3" Orientation="Horizontal" Margin="30,0,0,0">
+                    <TextBlock Text="Différence:" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <TextBlock Text="{Binding Difference, StringFormat='{}{0:N2}'}" 
+                               FontWeight="Bold" 
+                               FontSize="16"
+                               VerticalAlignment="Center">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="#388E3C"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsEquilibre}" Value="False">
+                                        <Setter Property="Foreground" Value="#D32F2F"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+
+                <materialDesign:Chip Grid.Column="4" Margin="20,0,0,0">
+                    <materialDesign:Chip.Style>
+                        <Style TargetType="materialDesign:Chip" BasedOn="{StaticResource {x:Type materialDesign:Chip}}">
+                            <Setter Property="Content" Value="✓ Équilibré"/>
+                            <Setter Property="Background" Value="#4CAF50"/>
+                            <Setter Property="Foreground" Value="White"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsEquilibre}" Value="False">
+                                    <Setter Property="Content" Value="✗ Non équilibré"/>
+                                    <Setter Property="Background" Value="#F44336"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </materialDesign:Chip.Style>
+                </materialDesign:Chip>
+            </Grid>
+        </materialDesign:Card>
+
+        <!-- Dialog pour ajouter/modifier une écriture -->
+        <materialDesign:DialogHost Grid.Row="0" Grid.RowSpan="5" 
+                                   IsOpen="{Binding IsDialogOpen}"
+                                   CloseOnClickAway="False">
+            <materialDesign:DialogHost.DialogContent>
+                <materialDesign:Card Width="600" Padding="20">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Titre -->
+                        <TextBlock Grid.Row="0" 
+                                   Text="{Binding DialogTitle, Mode=OneWay}" 
+                                   Style="{StaticResource MaterialDesignHeadline5TextBlock}"
+                                   Margin="0,0,0,20"/>
+
+                        <!-- Formulaire -->
+                        <StackPanel Grid.Row="1" Margin="0,0,0,20">
+                            <!-- Date - UTILISE LE CONVERTER -->
+                            <DatePicker materialDesign:HintAssist.Hint="Date de l'écriture*"
+                                        Style="{StaticResource MaterialDesignOutlinedDatePicker}"
+                                        SelectedDate="{Binding DialogEcriture.DateEcriture, Mode=TwoWay, Converter={StaticResource DateOnlyToDateTimeConverter}}"
+                                        Margin="0,0,0,15"/>
+
+                            <!-- Compte Débit -->
+                            <ComboBox materialDesign:HintAssist.Hint="Compte Débit*"
+                                      Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                      ItemsSource="{Binding ComptesDisponibles}"
+                                      SelectedValue="{Binding DialogEcriture.CompteDebitId, Mode=TwoWay}"
+                                      SelectedValuePath="Id"
+                                      Margin="0,0,0,15">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel>
+                                            <TextBlock>
+                                                <Run Text="{Binding NumeroCompte, Mode=OneWay}" FontWeight="Bold"/>
+                                                <Run Text=" - "/>
+                                                <Run Text="{Binding IntituleCompte, Mode=OneWay}"/>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+
+                            <!-- Compte Crédit -->
+                            <ComboBox materialDesign:HintAssist.Hint="Compte Crédit*"
+                                      Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                      ItemsSource="{Binding ComptesDisponibles}"
+                                      SelectedValue="{Binding DialogEcriture.CompteCreditId, Mode=TwoWay}"
+                                      SelectedValuePath="Id"
+                                      Margin="0,0,0,15">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel>
+                                            <TextBlock>
+                                                <Run Text="{Binding NumeroCompte, Mode=OneWay}" FontWeight="Bold"/>
+                                                <Run Text=" - "/>
+                                                <Run Text="{Binding IntituleCompte, Mode=OneWay}"/>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+
+                            <!-- Montant -->
+                            <TextBox materialDesign:HintAssist.Hint="Montant*"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     Text="{Binding DialogEcriture.Montant, Mode=TwoWay, StringFormat=N2}"
+                                     Margin="0,0,0,15"/>
+
+                            <TextBlock Text="* Champs obligatoires" 
+                                       FontSize="12" 
+                                       Opacity="0.6"
+                                       Margin="0,10,0,0"/>
+                        </StackPanel>
+
+                        <!-- Boutons -->
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="Annuler" 
+                                    Command="{Binding CancelEcritureCommand}"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Margin="0,0,10,0"
+                                    Width="100"/>
+                            <Button Content="Enregistrer" 
+                                    Command="{Binding SaveEcritureCommand}"
+                                    Style="{StaticResource MaterialDesignRaisedButton}"
+                                    
+                                    Width="120"/>
+                        </StackPanel>
+                    </Grid>
+                </materialDesign:Card>
+            </materialDesign:DialogHost.DialogContent>
+        </materialDesign:DialogHost>
+    </Grid>
+</Page>

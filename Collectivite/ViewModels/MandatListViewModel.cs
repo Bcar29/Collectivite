@@ -1,10 +1,12 @@
 ﻿using Collectivite.Models;
 using Collectivite.Services;
 using Collectivite.Utils;
+using Collectivite.Views.Pages;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 
 namespace Collectivite.ViewModels
@@ -238,8 +240,8 @@ namespace Collectivite.ViewModels
 
         private void OpenAddPage()
         {
-            var addPage = new Views.Pages.MandatFormPage();
-            Application.Current.MainWindow.Content = addPage;
+            var formPage = new MandatFormPage();
+            NavigationService.Instance.NavigateTo(formPage);
         }
 
         private void OpenEditPage(Mandat? mandat)
@@ -247,7 +249,7 @@ namespace Collectivite.ViewModels
             if (mandat == null) return;
 
             var editPage = new Views.Pages.MandatFormPage(mandat.Id);
-            Application.Current.MainWindow.Content = editPage;
+            NavigationService.Instance.NavigateTo(editPage);
         }
 
         private void OpenDetailPage(Mandat? mandat)
@@ -255,7 +257,7 @@ namespace Collectivite.ViewModels
             if (mandat == null) return;
 
             var detailPage = new Views.Pages.MandatDetailPage(mandat.Id);
-            Application.Current.MainWindow.Content = detailPage;
+            NavigationService.Instance.NavigateTo(detailPage);
         }
 
         private async System.Threading.Tasks.Task DeleteAsync(Mandat? mandat)

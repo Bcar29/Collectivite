@@ -258,7 +258,7 @@ reports/
 backups/
 
 # Fichiers de migration générés (si besoin)
-# Migrations/ 
+Migrations/ 
 
 # Certificats et clés (TRÈS IMPORTANT)
 *.pfx

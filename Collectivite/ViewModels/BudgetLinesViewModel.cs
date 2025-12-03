@@ -11,10 +11,10 @@ using System.Windows.Input;
 
 namespace Collectivite.ViewModels
 {
-    public class BudgetLinesViewModel : ViewModelBase
+    public class BudgetLinesViewModel : ViewModelBase, IDisposable
     {
         private readonly BudgetLineService _service;
-        private readonly int _budgetPrimitifId;
+        private int _budgetPrimitifId;
         private BudgetPrimitif? _budgetPrimitif;
         private bool _isLoading;
         private bool _isDialogOpen;
@@ -22,6 +22,8 @@ namespace Collectivite.ViewModels
         private BudgetLine? _currentLine;
         private Nommenclature? _selectedNomenclature;
         private string _montantPrevu = "0";
+        private bool _isDisposed;
+        private readonly ExerciceService _exerciceService;
 
         // ═══════════════════════════════════════════════════════════
         // PROPRIÉTÉS - GÉNÉRAL
@@ -111,10 +113,14 @@ namespace Collectivite.ViewModels
         // CONSTRUCTEUR
         // ═══════════════════════════════════════════════════════════
 
-        public BudgetLinesViewModel(BudgetLineService service, int budgetPrimitifId)
+        public BudgetLinesViewModel(BudgetLineService service)
         {
             _service = service;
-            _budgetPrimitifId = budgetPrimitifId;
+            //_budgetPrimitifId = budgetPrimitifId;
+            _exerciceService = ExerciceService.Instance;
+
+            // S'abonner aux changements d'exercice
+            _exerciceService.ExerciceChanged += OnExerciceChanged;
 
             // Commandes principales
             AddCommand = new RelayCommand(async _ => await OpenAddDialogAsync(), _ => CanModifyBudget);
@@ -131,6 +137,24 @@ namespace Collectivite.ViewModels
         }
 
         // ═══════════════════════════════════════════════════════════
+        // GESTION DU CHANGEMENT D'EXERCICE
+        // ═══════════════════════════════════════════════════════════
+
+        private async void OnExerciceChanged(object? sender, Exercice exercice)
+        {
+            await Application.Current.Dispatcher.InvokeAsync(async () =>
+            {
+                System.Diagnostics.Debug.WriteLine($"Rechargement des lignes budgétaires pour l'exercice : {exercice.Libelle}");
+
+                // Recharger le budget primitif pour le nouvel exercice
+                await LoadBudgetPrimitifForCurrentExerciceAsync();
+
+                // Recharger les lignes budgétaires
+                await LoadForSelectedTabAsync();
+            });
+        }
+
+        // ═══════════════════════════════════════════════════════════
         // INITIALISATION
         // ═══════════════════════════════════════════════════════════
 
@@ -139,7 +163,8 @@ namespace Collectivite.ViewModels
             IsLoading = true;
             try
             {
-                await LoadBudgetPrimitifAsync();
+                //await LoadBudgetPrimitifAsync();
+                await LoadBudgetPrimitifForCurrentExerciceAsync();
                 await LoadForSelectedTabAsync();
             }
             catch (Exception ex)
@@ -163,6 +188,45 @@ namespace Collectivite.ViewModels
             OnPropertyChanged(nameof(CanModifyBudget));
         }
 
+        /// <summary>
+        /// Charge le budget primitif du nouvel exercice
+        /// </summary>
+        private async Task LoadBudgetPrimitifForCurrentExerciceAsync()
+        {
+            try
+            {
+                if (_exerciceService.CurrentExercice == null)
+                {
+                    _budgetPrimitif = null;
+                    _budgetPrimitifId = 0;
+                    DisplayedLines.Clear();
+                    return;
+                }
+
+                using var context = new AppDbContext();
+                _budgetPrimitif = await context.BudgetsPrimitifs
+                    .FirstOrDefaultAsync(b => b.ExerciceId == _exerciceService.CurrentExercice.Id);
+
+                if (_budgetPrimitif != null)
+                {
+                    _budgetPrimitifId = _budgetPrimitif.Id;
+                }
+                else
+                {
+                    _budgetPrimitifId = 0;
+                    DisplayedLines.Clear();
+                }
+
+                OnPropertyChanged(nameof(IsBudgetValidated));
+                OnPropertyChanged(nameof(CanModifyBudget));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors du chargement du budget : {ex.Message}",
+                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         // ═══════════════════════════════════════════════════════════
         // CHARGEMENT DES DONNÉES
         // ═══════════════════════════════════════════════════════════
@@ -184,6 +248,12 @@ namespace Collectivite.ViewModels
             IsLoading = true;
             try
             {
+                if (_budgetPrimitifId == 0)
+                {
+                    DisplayedLines.Clear();
+                    return;
+                }
+
                 var filter = TabToFilter(SelectedTabIndex);
                 var all = await _service.GetBudgetLinesForBudgetPrimitifAsync(_budgetPrimitifId);
 
@@ -191,10 +261,10 @@ namespace Collectivite.ViewModels
                     .Where(b => b.Nommenclature != null &&
                                 b.Nommenclature.Nature == filter.nature &&
                                 b.Nommenclature.Section == filter.section)
-                    .OrderBy(b => b.Nommenclature.Chapitre)
-                    .ThenBy(b => b.Nommenclature.Article)
-                    .ThenBy(b => b.Nommenclature.Paragraphe)
-                    .ThenBy(b => b.Nommenclature.SousParagraphe)
+                    .OrderBy(b => b.Nommenclature.code())
+                    //.ThenBy(b => b.Nommenclature.Article)
+                    //.ThenBy(b => b.Nommenclature.Paragraphe)
+                    //.ThenBy(b => b.Nommenclature.SousParagraphe)
                     .ToList();
 
                 DisplayedLines.Clear();
@@ -224,6 +294,16 @@ namespace Collectivite.ViewModels
             {
                 MessageBox.Show(
                     "Ce budget est validé et ne peut plus être modifié.",
+                    "Information",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
+            }
+
+            if (_budgetPrimitifId == 0)
+            {
+                MessageBox.Show(
+                    "Aucun budget primitif disponible pour cet exercice.",
                     "Information",
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
@@ -476,6 +556,18 @@ namespace Collectivite.ViewModels
                 {
                     IsLoading = false;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Nettoyer les ressources et se désabonner des événements
+        /// </summary>
+        public void Dispose()
+        {
+            if (!_isDisposed)
+            {
+                _exerciceService.ExerciceChanged -= OnExerciceChanged;
+                _isDisposed = true;
             }
         }
     }

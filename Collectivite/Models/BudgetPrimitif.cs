@@ -11,7 +11,7 @@ namespace Collectivite.Models
     {
         public enum Statusbudget
         {
-           
+            DRAFT,
             APPROVED,
             VALIDATED
         }
@@ -25,9 +25,13 @@ namespace Collectivite.Models
         public int MontantTotal { get; set; } = 0;
         public int MontantDepense { get; set; } = 0;
         public int MontantRecette { get; set; } = 0;
-        public DateOnly DateApprobation { get; set; }
+        public DateOnly? DateApprobation { get; set; }
         public DateOnly? DateValidation { get; set; }
-        public Statusbudget Status { get; set; } = Statusbudget.APPROVED;
+
+        // Fichier ajouté
+        public byte[]? FichierValidation { get; set; }
+        public string? FileName { get; set; }
+        public Statusbudget Status { get; set; } = Statusbudget.DRAFT;
         public ICollection<BudgetLine>? BudgetLines { get; set; } = new List<BudgetLine>();
 
     }

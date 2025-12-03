@@ -1,7 +1,5 @@
-﻿using Collectivite.Models;
-using Collectivite.Services;
+﻿using Collectivite.Services;
 using Collectivite.ViewModels;
-using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,16 +18,13 @@ using System.Windows.Shapes;
 namespace Collectivite.Views.Pages
 {
     /// <summary>
-    /// Logique d'interaction pour BudgetLinesPage.xaml
+    /// Logique d'interaction pour ListeBudgetLinePage.xaml
     /// </summary>
-    public partial class BudgetLinesPage : Page
+    public partial class ListeBudgetLinePage : Page
     {
-        public BudgetLinesPage()
+        public ListeBudgetLinePage()
         {
             InitializeComponent();
-
-            //_service = new BudgetLineService();
-
             // On attend que la Page soit entièrement chargée
             DataContext = new BudgetLinesViewModel(new BudgetLineService());
         }
@@ -39,9 +34,8 @@ namespace Collectivite.Views.Pages
             if (DataContext is BudgetLinesViewModel viewModel)
             {
                 viewModel.Dispose();
-                System.Diagnostics.Debug.WriteLine("BudgetLinesViewModel disposed");
+                //System.Diagnostics.Debug.WriteLine("BudgetLinesViewModel disposed");
             }
         }
     }
-
 }

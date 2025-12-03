@@ -216,13 +216,13 @@ namespace Collectivite.ViewModels
         private async System.Threading.Tasks.Task SaveAsync()
         {
             IsLoading = true;
-
             try
             {
                 var ordreRecetteService = new OrdreRecetteService();
 
                 if (IsEditMode)
                 {
+                    // ========== MODE MODIFICATION ==========
                     var (success, message) = await ordreRecetteService.UpdateOrdreRecetteAsync(OrdreRecette);
 
                     MessageBox.Show(message,
@@ -237,8 +237,47 @@ namespace Collectivite.ViewModels
                 }
                 else
                 {
+                    // ========== MODE CRÉATION ==========
+
+                    // 1️⃣ Créer l'ordre de recette
                     var (success, message, ordreRecette) = await ordreRecetteService.CreateOrdreRecetteAsync(OrdreRecette);
 
+                    // 2️⃣ Si l'ordre est créé avec succès, générer l'écriture comptable
+                    if (success && ordreRecette != null)
+                    {
+                        // Récupérer la ligne budgétaire sélectionnée avec sa nomenclature
+                        var budgetLineSelectionnee = BudgetLines
+                            .FirstOrDefault(bl => bl.Id == OrdreRecette.BudgetLineId);
+                        
+                        // Vérifier que la ligne et la nomenclature existent
+                        if (budgetLineSelectionnee?.Nommenclature != null)
+                        {
+                            // 🎯 APPELER LA FONCTION UTILITAIRE
+                            var (ecritureSuccess, ecritureMessage, ecriture) =
+                                await EcritureComptableHelper.GenererEcritureComptableAsync(
+                                    budgetLineSelectionnee, // La ligne budgétaire complète
+                                    ordreRecette,// L'ordre de recette créé
+                                    null // Pas de mandat dans ce cas
+                                );
+
+                            // Ajouter le résultat au message principal
+                            if (ecritureSuccess)
+                            {
+                                message += "\n\n" + ecritureMessage;
+                            }
+                            else
+                            {
+                                // L'ordre est créé mais pas l'écriture
+                                message += "\n\n⚠️ " + ecritureMessage;
+                            }
+                        }
+                        else
+                        {
+                            message += "\n\n⚠️ Écriture non générée : ligne budgétaire ou nomenclature invalide.";
+                        }
+                    }
+
+                    // 3️⃣ Afficher le message final
                     MessageBox.Show(message,
                         success ? "Succès" : "Erreur",
                         MessageBoxButton.OK,

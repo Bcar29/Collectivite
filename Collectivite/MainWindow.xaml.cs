@@ -1,6 +1,8 @@
 using Collectivite.Services;
 using Collectivite.ViewModels;
 using System.Windows;
+using System.Windows.Controls;
+
 
 // Ajoutez cette ligne pour inclure le namespace contenant CommunePage
 using Collectivite.Views.Pages;
@@ -100,18 +102,16 @@ namespace Collectivite
         }
 
         
-        private void BudgetPrimitifButton_Click(object sender, RoutedEventArgs e)
+        private void Sythese_Click(object sender, RoutedEventArgs e)
         {
-            _viewModel.UpdatePageTitle("CONFIGURATION - BUDGET PRIMITIF");
+            _viewModel.UpdatePageTitle("CONFIGURATION - SYNTHESE");
              NavigationService.Instance.NavigateTo(new Views.Pages.BudgetPrimitifPage());
             _viewModel.IsMenuOpen = false;
         }
 
         private void BudgetLineButton_Click(object sender, RoutedEventArgs e)
         {
-            _viewModel.UpdatePageTitle("GESTION BUDGÉTAIRE - BUDGET LINE");
-
-            //NavigationService.Instance.NavigateTo(new Views.Pages.BudgetLinePage());
+            _viewModel.UpdatePageTitle("GESTION BUDGÉTAIRE - LIGNE BUDGETAIRE");
 
              NavigationService.Instance.NavigateTo(new Views.Pages.BudgetLinesPage());
             _viewModel.IsMenuOpen = false;
@@ -190,6 +190,89 @@ namespace Collectivite
             NavigationService.Instance.NavigateTo(new DashboardPage());
         }
 
+        private void ExerciceButtonDown_Click(object sender, RoutedEventArgs e)
+        {
+            var button = sender as Button;
+            if (button?.ContextMenu != null)
+            {
+                button.ContextMenu.PlacementTarget = button;
+                button.ContextMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
+                button.ContextMenu.HorizontalOffset = 0;
+                button.ContextMenu.VerticalOffset = 0;
+                button.ContextMenu.IsOpen = true;
+            }
+        }
+
+        // Gestion d'activation/désactivation des boutons Saisie et Budget Primitif en fonction de l'état du budget primitif
+
+        private async void BtnSaisie_Click(object sender, RoutedEventArgs e)
+        {
+            var service = new BudgetPrimitifService();
+            var exerciceService = ExerciceService.Instance;
+
+            if (exerciceService.CurrentExercice == null)
+            {
+                throw new InvalidOperationException("Aucun exercice n'est sélectionné.");
+            }
+
+            bool estActif = await service.EstActif(exerciceService.CurrentExercice.Id);
+
+            if (estActif)
+            {
+                MessageBox.Show("Impossible de saisir une ligne budgétaire!",
+                               "Budget déjà validé",
+                               MessageBoxButton.OK,
+                               MessageBoxImage.Warning);
+                return;
+            }
+
+            // Continuer avec la page des lignes de budget
+            _viewModel.UpdatePageTitle("GESTION BUDGÉTAIRE - BUDGET LINE");
+
+            NavigationService.Instance.NavigateTo(new Views.Pages.BudgetLinesPage());
+            _viewModel.IsMenuOpen = false;
+
+        }
+
+        private async void BtnBudgetPrimitif_Click(object sender, RoutedEventArgs e)
+        {
+            var service = new BudgetPrimitifService();
+            var exerciceService = ExerciceService.Instance;
+
+            if (exerciceService.CurrentExercice == null)
+            {
+                throw new InvalidOperationException("Aucun exercice n'est sélectionné.");
+            }
+
+            bool estActif = await service.EstActif(exerciceService.CurrentExercice.Id);
+
+            if (!estActif)
+            {
+                MessageBox.Show("Impossible de naviguer vers cette page !",
+                               "Aucun budget validé",
+                               MessageBoxButton.OK,
+                               MessageBoxImage.Warning);
+                return;
+            }
+
+            
+            // Continuer avec la page de la liste des lignes de budget
+            _viewModel.UpdatePageTitle("GESTION BUDGÉTAIRE - BUDGET PRIMITIF");
+
+            NavigationService.Instance.NavigateTo(new Views.Pages.ListeBudgetLinePage());
+            _viewModel.IsMenuOpen = false;
+        }
+
+        // Navigation vers la page Livre Journal
+        private void LivreJournalButton_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.UpdatePageTitle("COMPTABILITÉ - LIVRE JOURNAL");
+            NavigationService.Instance.NavigateTo(new Views.Pages.LivreJournalPage());
+            _viewModel.IsMenuOpen = false;
+        }
+
+
+
         // Méthode temporaire pour afficher un placeholder
         private static FrameworkElement CreatePlaceholderContent(string pageName)
         {
@@ -238,5 +321,9 @@ namespace Collectivite
 
             return grid;
         }
+    
+
+    
+    
     }
 }

@@ -222,6 +222,41 @@ namespace Collectivite.ViewModels
                 {
                     var (success, message, mandat) = await mandatService.CreateMandatAsync(Mandat);
 
+                    //  Si Mandat est créé avec succès, générer l'écriture comptable
+                    if (success && mandat != null)
+                    {
+                        // Récupérer la ligne budgétaire de l'engagement correspondant avec sa nomenclature
+                        var currenEngagement = Engagements
+                            .FirstOrDefault(e => e.Id == Mandat.EngagementId);
+
+                        if (currenEngagement != null)
+                        {
+                            var budgetLine = currenEngagement.BudgetLine;
+
+                            if (budgetLine?.Nommenclature != null)
+                            {
+                                //  APPELER LA FONCTION UTILITAIRE
+                                var (ecritureSuccess, ecritureMessage, ecriture) =
+                                    await EcritureComptableHelper.GenererEcritureComptableAsync(
+                                        budgetLine,  // La ligne budgétaire complète
+                                        null,        // Pas d'ordre de recette (null car on traite un mandat)
+                                        mandat       // Le mandat créé
+                                    );
+
+                                // Ajouter le résultat au message principal
+                                if (ecritureSuccess)
+                                {
+                                    message += "\n\n" + ecritureMessage;
+                                }
+                                else
+                                {
+                                    // Le mandat est créé mais pas l'écriture
+                                    message += "\n\n⚠️ " + ecritureMessage;
+                                }
+                            }
+                        }
+                    }
+
                     MessageBox.Show(message,
                         success ? "Succès" : "Erreur",
                         MessageBoxButton.OK,
