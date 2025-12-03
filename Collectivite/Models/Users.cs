@@ -17,6 +17,10 @@ namespace Collectivite.Models
         // Relation avec la commune
         public int CommuneId { get; set; }
         public Commune Commune { get; set; } = null!;
+
+        // Rôle et autorisations
+        public int RoleId { get; set; }
+        public Role Role { get; set; } = null!;
     }
 
 }

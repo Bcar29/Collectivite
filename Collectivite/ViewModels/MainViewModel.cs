@@ -24,6 +24,7 @@ namespace Collectivite.ViewModels
         private string _userIdentifier = "Utilisateur";
         private string _userEmail = "Email non défini";
         private string _userPhone = "Téléphone non défini";
+        private string _userRole = "Rôle non défini";
 
         public MainViewModel(AuthService authService)
         {
@@ -90,6 +91,12 @@ namespace Collectivite.ViewModels
         {
             get => _userPhone;
             set => SetProperty(ref _userPhone, value);
+        }
+
+        public string UserRole
+        {
+            get => _userRole;
+            set => SetProperty(ref _userRole, value);
         }
 
         public string UserFullName => _authService.CurrentUser?.Username ?? "Utilisateur";
@@ -217,13 +224,16 @@ namespace Collectivite.ViewModels
                     ? "Téléphone non renseigné"
                     : _authService.CurrentUser.Tel;
 
+                    // Rôle de l'utilisateur
+                    UserRole = _authService.CurrentRoleName ?? "Rôle non défini";
+
                 // Notifier les changements
                 OnPropertyChanged(nameof(CommuneName));
                 OnPropertyChanged(nameof(UserIdentifier));
                 OnPropertyChanged(nameof(UserEmail));
                 OnPropertyChanged(nameof(UserPhone));
                 OnPropertyChanged(nameof(UserFullName));
-                OnPropertyChanged(nameof(UserInitials));
+                    OnPropertyChanged(nameof(UserRole));
 
                 _openProfileCommand.RaiseCanExecuteChanged();
             }
@@ -233,12 +243,14 @@ namespace Collectivite.ViewModels
                 UserIdentifier = "Non connecté";
                 UserEmail = "Email non disponible";
                 UserPhone = "Téléphone non disponible";
+                    UserRole = "Non connecté";
 
                 // Notifier les changements
                 OnPropertyChanged(nameof(CommuneName));
                 OnPropertyChanged(nameof(UserIdentifier));
                 OnPropertyChanged(nameof(UserEmail));
                 OnPropertyChanged(nameof(UserPhone));
+                    OnPropertyChanged(nameof(UserRole));
 
                 _openProfileCommand.RaiseCanExecuteChanged();
             }
@@ -284,7 +296,6 @@ namespace Collectivite.ViewModels
             if (result == true)
             {
                 OnPropertyChanged(nameof(UserFullName));
-                OnPropertyChanged(nameof(UserInitials));
                 OnPropertyChanged(nameof(UserEmail));
                 OnPropertyChanged(nameof(UserPhone));
             }

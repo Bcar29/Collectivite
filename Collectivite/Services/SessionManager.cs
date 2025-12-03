@@ -1,4 +1,5 @@
 using Collectivite.Models;
+using System.Collections.Generic;
 
 namespace Collectivite.Services
 {
@@ -21,11 +22,15 @@ namespace Collectivite.Services
         }
 
         public static User? CurrentUser => AuthService.CurrentUser;
+        public static IReadOnlyCollection<string> CurrentPermissions => AuthService.CurrentPermissions;
+        public static string? CurrentRoleName => AuthService.CurrentRoleName;
 
         public static void Reset()
         {
             _authService?.Logout();
         }
+
+        public static bool HasPermission(string permissionCode) => AuthService.HasPermission(permissionCode);
     }
 }
 

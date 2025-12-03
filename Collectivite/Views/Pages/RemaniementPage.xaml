@@ -159,7 +159,9 @@
     <DataGridTemplateColumn.CellTemplate>
         <DataTemplate>
             <StackPanel Orientation="Horizontal"
-                        HorizontalAlignment="Center">
+                        HorizontalAlignment="Center"
+                        Visibility="{Binding Nommenclature.Enfants, Converter={StaticResource CollectionHasItemsToVisibilityConverter}}">
+                        
 
                 <!-- Bouton Ajouter -->
                 <Button Style="{StaticResource MaterialDesignIconButton}"
@@ -253,7 +255,8 @@
     <DataGridTemplateColumn.CellTemplate>
         <DataTemplate>
             <StackPanel Orientation="Horizontal"
-                        HorizontalAlignment="Center">
+                        HorizontalAlignment="Center"
+                        Visibility="{Binding Nommenclature.Enfants, Converter={StaticResource CollectionHasItemsToVisibilityConverter}}">
 
                 <!-- Bouton Ajouter -->
                 <Button Style="{StaticResource MaterialDesignIconButton}"
@@ -346,7 +349,8 @@
     <DataGridTemplateColumn.CellTemplate>
         <DataTemplate>
             <StackPanel Orientation="Horizontal"
-                        HorizontalAlignment="Center">
+                        HorizontalAlignment="Center"
+                        Visibility="{Binding Nommenclature.Enfants, Converter={StaticResource CollectionHasItemsToVisibilityConverter}}">
 
                 <!-- Bouton Ajouter -->
                 <Button Style="{StaticResource MaterialDesignIconButton}"
@@ -439,7 +443,8 @@
     <DataGridTemplateColumn.CellTemplate>
         <DataTemplate>
             <StackPanel Orientation="Horizontal"
-                        HorizontalAlignment="Center">
+                        HorizontalAlignment="Center"
+                        Visibility="{Binding Nommenclature.Enfants, Converter={StaticResource CollectionHasItemsToVisibilityConverter}}">
 
                 <!-- Bouton Ajouter -->
                 <Button Style="{StaticResource MaterialDesignIconButton}"

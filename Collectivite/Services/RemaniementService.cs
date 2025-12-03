@@ -42,6 +42,7 @@ namespace Collectivite.Services
 
             return await context.BudgetLines
                 .Include(bl => bl.Nommenclature)
+                .ThenInclude(n => n.Enfants)
                 .Include(bl => bl.Remaniements)
                 .Include(bl => bl.BudgetPrimitif)
                 .Where(bl => bl.BudgetPrimitif.Status == BudgetPrimitif.Statusbudget.VALIDATED)
@@ -119,6 +120,43 @@ namespace Collectivite.Services
                 .ToList();
         }
 
+        /// <summary>
+        /// 🆕 Récupère toutes les lignes budgétaires parentes dans la hiérarchie
+        /// </summary>
+        private async Task<List<BudgetLine>> GetParentBudgetLinesAsync(AppDbContext context, int nommenclatureId, int budgetPrimitifId)
+        {
+            var parentLines = new List<BudgetLine>();
+
+            // Charger la nomenclature avec son parent
+            var currentNommenclature = await context.Nommenclatures
+                .Include(n => n.Parent)
+                .FirstOrDefaultAsync(n => n.Id == nommenclatureId);
+
+            // Remonter la hiérarchie
+            while (currentNommenclature?.Parent != null)
+            {
+                // Trouver la BudgetLine correspondant à ce parent
+                var parentBudgetLine = await context.BudgetLines
+                    .Include(bl => bl.Nommenclature)
+                    .Include(bl => bl.Remaniements)
+                    .FirstOrDefaultAsync(bl => 
+                        bl.NommenclatureId == currentNommenclature.Parent.Id && 
+                        bl.BudgetPrimitifId == budgetPrimitifId);
+
+                if (parentBudgetLine != null)
+                {
+                    parentLines.Add(parentBudgetLine);
+                }
+
+                // Remonter au parent suivant
+                currentNommenclature = await context.Nommenclatures
+                    .Include(n => n.Parent)
+                    .FirstOrDefaultAsync(n => n.Id == currentNommenclature.ParentId);
+            }
+
+            return parentLines;
+        }
+
         #endregion
 
         #region Création
@@ -128,6 +166,7 @@ namespace Collectivite.Services
             TypeRemaniement type)
         {
             using var context = CreateContext();
+            using var transaction = await context.Database.BeginTransactionAsync();
 
             try
             {
@@ -144,7 +183,8 @@ namespace Collectivite.Services
                 // Vérifier que la ligne budgétaire existe
                 var budgetLine = await context.BudgetLines
                     .Include(bl => bl.Nommenclature)
-                    .Include(bl => bl.Remaniements) // ✅ Pour calculer MontantDefinitif
+                    .Include(bl => bl.Remaniements)
+                    .Include(bl => bl.BudgetPrimitif)
                     .FirstOrDefaultAsync(bl => bl.Id == remaniement.IdBudgetLine);
 
                 if (budgetLine == null)
@@ -174,7 +214,13 @@ namespace Collectivite.Services
                     }
                 }
 
-                // ✅ Créer un nouvel objet sans navigation
+                // 🆕 Récupérer toutes les lignes parentes
+                var parentBudgetLines = await GetParentBudgetLinesAsync(
+                    context, 
+                    budgetLine.NommenclatureId, 
+                    budgetLine.BudgetPrimitifId);
+
+                // ✅ Créer le remaniement principal (sur l'enfant)
                 var newRemaniement = new Remaniement
                 {
                     IdBudgetLine = remaniement.IdBudgetLine,
@@ -187,7 +233,30 @@ namespace Collectivite.Services
                 context.Remaniements.Add(newRemaniement);
                 await context.SaveChangesAsync();
 
-                // ✅ Mettre à jour MontantActu
+                var remaniementsCreated = new List<string>
+                {
+                    $"✅ Ligne enfant : {budgetLine.Nommenclature.Intitule} ({remaniement.Montant:N0} GNF)"
+                };
+
+                // 🆕 Créer les remaniements pour tous les parents
+                foreach (var parentLine in parentBudgetLines)
+                {
+                    var parentRemaniement = new Remaniement
+                    {
+                        IdBudgetLine = parentLine.Id,
+                        Date = remaniement.Date,
+                        Montant = remaniement.Montant,
+                        Motif = $"[Propagation] {remaniement.Motif.Trim()}",
+                        TypeRemaniement = type
+                    };
+
+                    context.Remaniements.Add(parentRemaniement);
+                    remaniementsCreated.Add($"✅ Ligne parente : {parentLine.Nommenclature.Intitule} ({remaniement.Montant:N0} GNF)");
+                }
+
+                await context.SaveChangesAsync();
+
+                // ✅ Mettre à jour MontantActu pour la ligne enfant
                 var updatedBudgetLine = await context.BudgetLines
                     .Include(bl => bl.Remaniements)
                     .FirstOrDefaultAsync(bl => bl.Id == remaniement.IdBudgetLine);
@@ -195,24 +264,43 @@ namespace Collectivite.Services
                 if (updatedBudgetLine != null)
                 {
                     updatedBudgetLine.UpdateMontantActu();
-                    await context.SaveChangesAsync();
                 }
+
+                // 🆕 Mettre à jour MontantActu pour toutes les lignes parentes
+                foreach (var parentLine in parentBudgetLines)
+                {
+                    var parentToUpdate = await context.BudgetLines
+                        .Include(bl => bl.Remaniements)
+                        .FirstOrDefaultAsync(bl => bl.Id == parentLine.Id);
+
+                    if (parentToUpdate != null)
+                    {
+                        parentToUpdate.UpdateMontantActu();
+                    }
+                }
+
+                await context.SaveChangesAsync();
+                await transaction.CommitAsync();
 
                 // ✅ Recharger SANS cycle
                 var savedRemaniement = await GetRemaniementByIdAsync(newRemaniement.Id);
 
                 var typeText = type == TypeRemaniement.en_plus ? "augmentation" : "diminution";
-                return (true,
-                    $"✅ Remaniement créé avec succès ({typeText} de {remaniement.Montant:N0} GNF).",
-                    savedRemaniement);
+                var message = $"✅ Remaniement créé avec succès ({typeText} de {remaniement.Montant:N0} GNF).\n\n" +
+                              $"📊 Remaniements créés :\n" +
+                              string.Join("\n", remaniementsCreated);
+
+                return (true, message, savedRemaniement);
             }
             catch (DbUpdateException dbEx)
             {
+                await transaction.RollbackAsync();
                 var innerMessage = dbEx.InnerException?.Message ?? dbEx.Message;
                 return (false, $"Erreur de base de données : {innerMessage}", null);
             }
             catch (Exception ex)
             {
+                await transaction.RollbackAsync();
                 return (false, $"Erreur : {ex.Message}", null);
             }
         }
@@ -224,22 +312,51 @@ namespace Collectivite.Services
         public async Task<(bool Success, string Message)> DeleteRemaniementAsync(int id)
         {
             using var context = CreateContext();
+            using var transaction = await context.Database.BeginTransactionAsync();
 
             try
             {
                 var remaniement = await context.Remaniements
+                    .Include(r => r.BudgetLine)
+                        .ThenInclude(bl => bl.Nommenclature)
                     .FirstOrDefaultAsync(r => r.Id == id);
 
                 if (remaniement == null)
                     return (false, "Remaniement introuvable.");
 
                 var budgetLineId = remaniement.IdBudgetLine;
+                var budgetLine = remaniement.BudgetLine;
 
-                // Supprimer le remaniement
+                // 🆕 Récupérer les lignes parentes
+                var parentBudgetLines = await GetParentBudgetLinesAsync(
+                    context,
+                    budgetLine.NommenclatureId,
+                    budgetLine.BudgetPrimitifId);
+
+                // Supprimer le remaniement principal
                 context.Remaniements.Remove(remaniement);
+
+                // 🆕 Supprimer les remaniements correspondants sur les parents
+                // (même date, même montant, même type, motif avec [Propagation])
+                foreach (var parentLine in parentBudgetLines)
+                {
+                    var parentRemaniement = await context.Remaniements
+                        .FirstOrDefaultAsync(r =>
+                            r.IdBudgetLine == parentLine.Id &&
+                            r.Date == remaniement.Date &&
+                            r.Montant == remaniement.Montant &&
+                            r.TypeRemaniement == remaniement.TypeRemaniement &&
+                            r.Motif.StartsWith("[Propagation]"));
+
+                    if (parentRemaniement != null)
+                    {
+                        context.Remaniements.Remove(parentRemaniement);
+                    }
+                }
+
                 await context.SaveChangesAsync();
 
-                // ✅ Mettre à jour MontantActu
+                // ✅ Mettre à jour MontantActu pour la ligne enfant
                 var updatedBudgetLine = await context.BudgetLines
                     .Include(bl => bl.Remaniements)
                     .FirstOrDefaultAsync(bl => bl.Id == budgetLineId);
@@ -247,13 +364,29 @@ namespace Collectivite.Services
                 if (updatedBudgetLine != null)
                 {
                     updatedBudgetLine.UpdateMontantActu();
-                    await context.SaveChangesAsync();
                 }
 
-                return (true, "✅ Remaniement supprimé avec succès.");
+                // 🆕 Mettre à jour MontantActu pour toutes les lignes parentes
+                foreach (var parentLine in parentBudgetLines)
+                {
+                    var parentToUpdate = await context.BudgetLines
+                        .Include(bl => bl.Remaniements)
+                        .FirstOrDefaultAsync(bl => bl.Id == parentLine.Id);
+
+                    if (parentToUpdate != null)
+                    {
+                        parentToUpdate.UpdateMontantActu();
+                    }
+                }
+
+                await context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return (true, "✅ Remaniement supprimé avec succès (y compris les propagations aux parents).");
             }
             catch (Exception ex)
             {
+                await transaction.RollbackAsync();
                 return (false, $"Erreur lors de la suppression : {ex.Message}");
             }
         }

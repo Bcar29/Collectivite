@@ -65,8 +65,4 @@
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
   </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Migrations\" />
-  </ItemGroup>
 </Project>

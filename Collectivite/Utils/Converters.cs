@@ -165,4 +165,26 @@ namespace Collectivite.Utils
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
             => throw new NotImplementedException();
     }
+
+    /// <summary>
+    /// Convertit un bool en texte configurable ("Oui;Non" par défaut).
+    /// </summary>
+    public class BoolToTextConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            var format = parameter as string ?? "Oui;Non";
+            var parts = format.Split(';');
+            var trueText = parts.Length > 0 ? parts[0] : "Oui";
+            var falseText = parts.Length > 1 ? parts[1] : "Non";
+
+            if (value is bool boolValue && boolValue)
+                return trueText;
+
+            return falseText;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+            => throw new NotImplementedException();
+    }
 }

@@ -162,6 +162,27 @@ namespace Collectivite
             _viewModel.IsMenuOpen = false;
         }
 
+        private void RolesButton_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.UpdatePageTitle("ADMINISTRATION - RÔLES");
+            NavigationService.Instance.NavigateTo(new RolesPage());
+            _viewModel.IsMenuOpen = false;
+        }
+
+        private void PermissionsButton_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.UpdatePageTitle("ADMINISTRATION - PERMISSIONS");
+            NavigationService.Instance.NavigateTo(new PermissionsPage());
+            _viewModel.IsMenuOpen = false;
+        }
+
+        private void UsersButton_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.UpdatePageTitle("ADMINISTRATION - UTILISATEURS");
+            NavigationService.Instance.NavigateTo(new UsersPage());
+            _viewModel.IsMenuOpen = false;
+        }
+
         private void NavigateToDashboard()
         {
             _viewModel.UpdatePageTitle("TABLEAU DE BORD");

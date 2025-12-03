@@ -397,8 +397,7 @@
                                         <TextBlock Text="Fiche d'Engagement" FontSize="12" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
-
-                                <Button Style="{StaticResource MenuButtonStyle}" Click="Mandat_Click">
+                               <Button Style="{StaticResource MenuButtonStyle}" Click="Mandat_Click">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="CashCheck" 
                                             VerticalAlignment="Center"
@@ -497,6 +496,70 @@
                             </StackPanel>
                         </Expander>
                         <!-- Section Gestion Comptable Fin  -->
+                        <!-- Section Administration -->
+                        <TextBlock Text="Administration" Style="{StaticResource MenuHeaderStyle}" Margin="20,10,0,5"/>
+                        <Expander Style="{StaticResource MaterialDesignExpander}" 
+                                  HorizontalAlignment="Left"
+                                  Width="250"
+                                  Margin="10,10,0,10">
+                            <Expander.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="ShieldAccount" 
+                                                            VerticalAlignment="Center"
+                                                            Width="22"
+                                                            Height="22"
+                                                            Margin="0,0,10,0"
+                                                            Foreground="Black"/>
+                                    <TextBlock Text="Sécurité" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Expander.Header>
+
+                            <StackPanel Orientation="Vertical" Margin="30,0,0,0">
+                                <StackPanel.Resources>
+                                    <Style TargetType="Button" BasedOn="{StaticResource MenuButtonStyle}">
+                                        <Setter Property="Foreground" Value="#424242"/>
+                                    </Style>
+                                </StackPanel.Resources>
+
+                                <Button Style="{StaticResource MenuButtonStyle}"
+                                        Click="RolesButton_Click">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="ShieldAccount" 
+                                                                VerticalAlignment="Center"
+                                                                Width="22"
+                                                                Height="22"
+                                                                Margin="0,0,15,0"/>
+                                        <TextBlock Text="Rôles" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <Button Style="{StaticResource MenuButtonStyle}"
+                                        Click="PermissionsButton_Click">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="KeyVariant" 
+                                                                VerticalAlignment="Center"
+                                                                Width="22"
+                                                                Height="22"
+                                                                Margin="0,0,15,0"/>
+                                        <TextBlock Text="Permissions" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <Button Style="{StaticResource MenuButtonStyle}"
+                                        Click="UsersButton_Click">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="AccountGroup" 
+                                                                VerticalAlignment="Center"
+                                                                Width="22"
+                                                                Height="22"
+                                                                Margin="0,0,15,0"/>
+                                        <TextBlock Text="Utilisateurs" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Expander>
+                        <!-- Section Administration FIN -->
+
                         <!-- Espacement final -->
                         <Border Height="20"/>
                     </StackPanel>
@@ -620,45 +683,61 @@
                                                StaysOpen="False"
                                                Margin="10,0,0,0">
                             <materialDesign:PopupBox.ToggleContent>
-                                <StackPanel Orientation="Horizontal">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
+                                    <!-- Avatar avec initiales -->
                                     <Border Background="{DynamicResource PrimaryHueMidBrush}"
-                                           Width="40"
-                                           Height="40"
-                                           CornerRadius="20"
-                                           Margin="0,0,10,0">
+                                           Width="50"
+                                           Height="50"
+                                           CornerRadius="25"
+                                           BorderBrush="#E0E0E0"
+                                           BorderThickness="2"
+                                           Margin="0,0,12,0">
                                         <TextBlock Text="{Binding UserInitials}"
-                                                 Foreground="White"
+                                                 Foreground="Blue"
                                                  FontWeight="SemiBold"
-                                                 FontSize="16"
+                                                 FontSize="18"
                                                  HorizontalAlignment="Center"
                                                  VerticalAlignment="Center"/>
                                     </Border>
-                                    <TextBlock Text="{Binding UserFullName}"
-                                             FontSize="14"
-                                             FontWeight="Medium"
-                                             VerticalAlignment="Center"/>
+                                    <!-- Nom et rôle -->
+                                    <StackPanel Orientation="Vertical" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding UserFullName}"
+                                                   Foreground="Blue"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="20"
+                                                   HorizontalAlignment="Left"
+                                                   VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding UserRole}"
+                                                   Foreground="#757575"
+                                                   FontSize="12"
+                                                   HorizontalAlignment="Left"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,2,0,0"/>
+                                    </StackPanel>
                                 </StackPanel>
                             </materialDesign:PopupBox.ToggleContent>
 
-                            <StackPanel Width="200">
+                            <StackPanel Width="240" Margin="0">
                                 <Button Style="{StaticResource MaterialDesignFlatButton}"
                                        HorizontalContentAlignment="Left"
-                                       Padding="15,10">
+                                       Padding="15,10"
+                                       Command="{Binding OpenProfileCommand}">
                                     <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="Account" 
-                                                               VerticalAlignment="Center"
-                                                               Margin="0,0,10,0"/>
-                                        <TextBlock Text="Mon profil" VerticalAlignment="Center"/>
+                                        <materialDesign:PackIcon Kind="AccountCircle"
+                                                                 VerticalAlignment="Center"
+                                                                 Margin="0,0,10,0"/>
+                                        <TextBlock Text="Profil" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
 
                                 <Button Style="{StaticResource MaterialDesignFlatButton}"
                                        HorizontalContentAlignment="Left"
-                                       Padding="15,10">
+                                       Padding="15,10"
+                                       Command="{Binding OpenSettingsCommand}">
                                     <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="Cog" 
-                                                               VerticalAlignment="Center"
-                                                               Margin="0,0,10,0"/>
+                                        <materialDesign:PackIcon Kind="Cog"
+                                                                 VerticalAlignment="Center"
+                                                                 Margin="0,0,10,0"/>
                                         <TextBlock Text="Paramètres" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>

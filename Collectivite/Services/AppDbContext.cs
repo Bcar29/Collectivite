@@ -34,6 +34,9 @@ namespace Collectivite.Services
         public DbSet<EcritureComptable> EcritureComptables { get; set; }
 
         public DbSet<AuditLog> AuditLogs { get; set; }
+        public DbSet<Role> Roles { get; set; }
+        public DbSet<Permission> Permissions { get; set; }
+        public DbSet<RolePermission> RolePermissions { get; set; }
 
         // Constructeur par défaut pour les migrations
         public AppDbContext() { }
@@ -339,6 +342,38 @@ namespace Collectivite.Services
                 .HasOne(c => c.CompteParent)
                 .WithMany(c => c.SousComptes)
                 .HasForeignKey(c => c.CompteParentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ════════════════════════════════════════════════════════
+            // ROLES & PERMISSIONS
+            // ════════════════════════════════════════════════════════
+            modelBuilder.Entity<Role>()
+                .HasIndex(r => r.Name)
+                .IsUnique();
+
+            modelBuilder.Entity<Permission>()
+                .HasIndex(p => p.Code)
+                .IsUnique();
+
+            modelBuilder.Entity<RolePermission>()
+                .HasKey(rp => new { rp.RoleId, rp.PermissionId });
+
+            modelBuilder.Entity<RolePermission>()
+                .HasOne(rp => rp.Role)
+                .WithMany(r => r.RolePermissions)
+                .HasForeignKey(rp => rp.RoleId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<RolePermission>()
+                .HasOne(rp => rp.Permission)
+                .WithMany(p => p.RolePermissions)
+                .HasForeignKey(rp => rp.PermissionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.Role)
+                .WithMany(r => r.Users)
+                .HasForeignKey(u => u.RoleId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
 

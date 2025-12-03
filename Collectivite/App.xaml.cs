@@ -17,6 +17,7 @@ namespace Collectivite
             using (var db = new AppDbContext())
             {
                 SeedNomenclature.Seed(db);
+                Utils.SeedRolesPermissions.Seed(db);
             }
         }
     }

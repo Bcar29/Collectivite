@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -204,6 +205,7 @@ namespace Collectivite.Services
             return await context.BudgetLines
                 .Include(b => b.Nommenclature)
                 .ThenInclude(n => n.Enfants)
+                .Include(b => b.Remaniements)
                 .Where(b => b.BudgetPrimitifId == budgetPrimitifId)
                 .ToListAsync();
         }
@@ -266,6 +268,9 @@ namespace Collectivite.Services
 
             return leafs.Where(n => !linkedIds.Contains(n.Id)).ToList();
         }
+
+        // ═══════════════════════════════════════════════════════════
+        // MÉTHODE DE CRÉATION (CREATE)
 
         public async Task<BudgetLine> CreateBudgetLineAsync(
             int budgetPrimitifId,

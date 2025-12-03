@@ -408,4 +408,3 @@ namespace Collectivite.ViewModels
         #endregion
     }
 }
-

@@ -1,5 +1,7 @@
 using Collectivite.Models;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -9,6 +11,7 @@ namespace Collectivite.Services
     {
         private readonly AppDbContext _context;
         private User? _currentUser;
+        private readonly HashSet<string> _currentPermissions = new(StringComparer.OrdinalIgnoreCase);
 
         public AuthService(AppDbContext context)
         {
@@ -16,6 +19,8 @@ namespace Collectivite.Services
         }
 
         public User? CurrentUser => _currentUser;
+        public IReadOnlyCollection<string> CurrentPermissions => _currentPermissions;
+        public string? CurrentRoleName => _currentUser?.Role?.Name;
 
         public async Task<(bool Success, string Message, User? User)> AuthenticateAsync(string username, string password)
         {
@@ -23,6 +28,9 @@ namespace Collectivite.Services
             {
                 var user = await _context.Users
                     .Include(u => u.Commune)
+                    .Include(u => u.Role)
+                        .ThenInclude(r => r.RolePermissions)
+                            .ThenInclude(rp => rp.Permission)
                     .FirstOrDefaultAsync(u => u.Username == username);
 
                 if (user == null)
@@ -37,6 +45,8 @@ namespace Collectivite.Services
                 }
 
                 _currentUser = user;
+                HydratePermissions(user);
+
                 return (true, "Connexion réussie!", user);
             }
             catch (Exception ex)
@@ -48,6 +58,30 @@ namespace Collectivite.Services
         public void Logout()
         {
             _currentUser = null;
+            _currentPermissions.Clear();
+        }
+
+        public bool HasPermission(string permissionCode)
+        {
+            if (string.IsNullOrWhiteSpace(permissionCode))
+                return false;
+
+            return _currentPermissions.Contains(permissionCode, StringComparer.OrdinalIgnoreCase);
+        }
+
+        private void HydratePermissions(User user)
+        {
+            _currentPermissions.Clear();
+
+            if (user.Role?.RolePermissions == null)
+                return;
+
+            foreach (var permission in user.Role.RolePermissions
+                         .Select(rp => rp.Permission?.Code)
+                         .Where(code => !string.IsNullOrWhiteSpace(code)))
+            {
+                _currentPermissions.Add(permission!);
+            }
         }
     }
 }

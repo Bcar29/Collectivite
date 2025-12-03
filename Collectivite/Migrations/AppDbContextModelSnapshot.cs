@@ -917,6 +917,36 @@ namespace Collectivite.Migrations
                     b.ToTable("OrdreRecettes");
                 });
 
+            modelBuilder.Entity("Collectivite.Models.Permission", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(300)
+                        .HasColumnType("varchar(300)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("Permissions");
+                });
+
             modelBuilder.Entity("Collectivite.Models.Recensement", b =>
                 {
                     b.Property<int>("Id")
@@ -983,6 +1013,58 @@ namespace Collectivite.Migrations
                     b.HasIndex("IdBudgetLine");
 
                     b.ToTable("Remaniements");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.Role", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(250)
+                        .HasColumnType("varchar(250)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Roles");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.RolePermission", b =>
+                {
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PermissionId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("GrantedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("RoleId", "PermissionId");
+
+                    b.HasIndex("PermissionId");
+
+                    b.ToTable("RolePermissions");
                 });
 
             modelBuilder.Entity("Collectivite.Models.Tiers", b =>
@@ -1083,6 +1165,9 @@ namespace Collectivite.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Tel")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -1094,6 +1179,8 @@ namespace Collectivite.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CommuneId");
+
+                    b.HasIndex("RoleId");
 
                     b.ToTable("Users");
                 });
@@ -1439,6 +1526,25 @@ namespace Collectivite.Migrations
                     b.Navigation("BudgetLine");
                 });
 
+            modelBuilder.Entity("Collectivite.Models.RolePermission", b =>
+                {
+                    b.HasOne("Collectivite.Models.Permission", "Permission")
+                        .WithMany("RolePermissions")
+                        .HasForeignKey("PermissionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Collectivite.Models.Role", "Role")
+                        .WithMany("RolePermissions")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Permission");
+
+                    b.Navigation("Role");
+                });
+
             modelBuilder.Entity("Collectivite.Models.User", b =>
                 {
                     b.HasOne("Collectivite.Models.Commune", "Commune")
@@ -1447,7 +1553,15 @@ namespace Collectivite.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Collectivite.Models.Role", "Role")
+                        .WithMany("Users")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("Commune");
+
+                    b.Navigation("Role");
                 });
 
             modelBuilder.Entity("Collectivite.Models.BonCommande", b =>
@@ -1535,6 +1649,18 @@ namespace Collectivite.Migrations
             modelBuilder.Entity("Collectivite.Models.OrdreRecette", b =>
                 {
                     b.Navigation("EcritureComptables");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.Permission", b =>
+                {
+                    b.Navigation("RolePermissions");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.Role", b =>
+                {
+                    b.Navigation("RolePermissions");
+
+                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("Collectivite.Models.Tiers", b =>
