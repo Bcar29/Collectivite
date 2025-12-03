@@ -269,5 +269,4 @@ namespace Collectivite.Utils
             throw new NotImplementedException();
         }
     }
-
 }
