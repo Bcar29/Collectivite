@@ -313,7 +313,6 @@ namespace Collectivite.Services
         public static  async Task RecalculateRealisation(AppDbContext context, int childNomenclatureId, int budgetPrimitifId)
         {
             
-
             // Charger toute la hiérarchie une seule fois
             var allNodes = await context.Nommenclatures.ToListAsync();
 
