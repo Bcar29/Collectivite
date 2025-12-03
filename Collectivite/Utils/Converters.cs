@@ -187,7 +187,7 @@ namespace Collectivite.Utils
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
             => throw new NotImplementedException();
     }
-}
+
     // ═══════════════════════════════════════════════════════════════════════
     // NOUVEAUX CONVERTERS (ajoutés pour la gestion des nomenclatures)
     // ═══════════════════════════════════════════════════════════════════════
@@ -270,4 +270,6 @@ namespace Collectivite.Utils
         }
     }
 
+
+}
 

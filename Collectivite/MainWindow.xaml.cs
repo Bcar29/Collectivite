@@ -314,6 +314,14 @@ namespace Collectivite
             _viewModel.IsMenuOpen = false;
         }
 
+        // Navigation vers la page Grand Livre 
+        private void GrandLivreButton_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.UpdatePageTitle("COMPTABILITÉ - GRAND LIVRE");
+            MainContentFrame.Navigate(new Views.GrandLivrePage());
+            _viewModel.IsMenuOpen = false;
+        }
+
 
 
         // Méthode temporaire pour afficher un placeholder
