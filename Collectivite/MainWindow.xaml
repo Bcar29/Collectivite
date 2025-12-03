@@ -165,7 +165,10 @@
 
                             </StackPanel>
                         </Expander>
+
+
                         <!-- Section Configuration FIN -->
+
 
                         <Button Style="{StaticResource MenuButtonStyle}"
                             Click="CompteComptable_Click">
@@ -230,7 +233,7 @@
                                             </Style>
                                         </StackPanel.Resources>
 
-                                        <Button Style="{StaticResource MenuButtonStyle}" Click="BudgetLineButton_Click">
+                                        <Button x:Name="BtnSaisie" Style="{StaticResource MenuButtonStyle}" Click="BtnSaisie_Click">
                                             <StackPanel Orientation="Horizontal">
                                                 <materialDesign:PackIcon Kind="FormatListBulleted" 
                                                    VerticalAlignment="Center"
@@ -241,7 +244,7 @@
                                             </StackPanel>
                                         </Button>
 
-                                        <Button Style="{StaticResource MenuButtonStyle}" Click="BudgetPrimitifButton_Click">
+                                        <Button  Style="{StaticResource MenuButtonStyle}" Click="Sythese_Click">
                                             <StackPanel Orientation="Horizontal">
                                                 <materialDesign:PackIcon Kind="FileDocument" 
                                                     VerticalAlignment="Center"
@@ -256,7 +259,7 @@
                                 </Expander>
                                 <!-- Budge Preparatoire fin-->
 
-                                <Button Style="{StaticResource MenuButtonStyle}"  Click="BudgetPrimitifButton_Click"> 
+                                <Button x:Name="BtnBudgetPrimitif" Style="{StaticResource MenuButtonStyle}"  Click="BtnBudgetPrimitif_Click"> 
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="FileDocument" 
                                                 VerticalAlignment="Center"
@@ -424,7 +427,6 @@
                                     </StackPanel>
                                 </Button>
 
-
                             </StackPanel>
                         </Expander>
                         <!-- Section Saisie des Pièces Fin -->
@@ -466,7 +468,7 @@
                                     </StackPanel>
                                 </Button>
 
-                                <Button Style="{StaticResource MenuButtonStyle}">
+                                <Button Style="{StaticResource MenuButtonStyle}" Click="LivreJournalButton_Click">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="BookOpen" 
                                            VerticalAlignment="Center"
@@ -503,6 +505,7 @@
                             </StackPanel>
                         </Expander>
                         <!-- Section Gestion Comptable Fin  -->
+
                         <!-- Espacement final -->
                         <Border Height="20"/>
                     </StackPanel>

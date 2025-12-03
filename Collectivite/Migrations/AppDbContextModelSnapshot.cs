@@ -235,7 +235,7 @@ namespace Collectivite.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("CompteParentId")
+                    b.Property<int?>("ContrePartieId")
                         .HasColumnType("int");
 
                     b.Property<string>("IntituleCompte")
@@ -250,7 +250,7 @@ namespace Collectivite.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CompteParentId");
+                    b.HasIndex("ContrePartieId");
 
                     b.ToTable("CompteComptables");
                 });
@@ -1162,12 +1162,12 @@ namespace Collectivite.Migrations
 
             modelBuilder.Entity("Collectivite.Models.CompteComptable", b =>
                 {
-                    b.HasOne("Collectivite.Models.CompteComptable", "CompteParent")
+                    b.HasOne("Collectivite.Models.CompteComptable", "ContrePartie")
                         .WithMany("SousComptes")
-                        .HasForeignKey("CompteParentId")
+                        .HasForeignKey("ContrePartieId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.Navigation("CompteParent");
+                    b.Navigation("ContrePartie");
                 });
 
             modelBuilder.Entity("Collectivite.Models.Contrats", b =>

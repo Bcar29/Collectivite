@@ -20,10 +20,13 @@ namespace Collectivite.Models
         public int TiersId { get; set; }
         public Tiers Tiers { get; set; } = null!;
 
-        
 
         public string Objet { get; set; } = null!;
+
         [Required(ErrorMessage = " l'objet du contrat est obligatoire")]
+
+
+
 
         [Range(0, double.MaxValue, ErrorMessage = "Le montant doit être positif.")]
         public double MontantContrat { get; set; }

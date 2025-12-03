@@ -19,6 +19,8 @@ namespace Collectivite.Views.Pages
 {
     /// <summary>
     /// Logique d'interaction pour CompteComptablePage.xaml
+    /// Version adaptée avec support des nomenclatures budgétaires
+    /// Solution 1 : Code-behind minimal (RECOMMANDÉ)
     /// </summary>
     public partial class CompteComptablePage : Page
     {
@@ -26,12 +28,19 @@ namespace Collectivite.Views.Pages
         {
             InitializeComponent();
 
+            // Création des instances (votre approche actuelle)
             var context = new AppDbContext();
             var compteComptableService = new CompteComptableService(context);
-            var viewModel = new CompteComptableViewModel(compteComptableService);
+            var nomenclatureService = new NommenclatureService(context);
+
+            // Création du ViewModel avec les 2 services
+            var viewModel = new CompteComptableViewModel(compteComptableService, nomenclatureService);
 
             // ⚠️ IMPORTANT : Définir le DataContext pour le binding
             DataContext = viewModel;
+
+            // Note: Le constructeur du ViewModel charge déjà les comptes automatiquement
+            // Les nomenclatures sont chargées automatiquement via les PropertyChanged des filtres
         }
     }
 }

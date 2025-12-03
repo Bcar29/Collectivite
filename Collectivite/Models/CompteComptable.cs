@@ -24,10 +24,10 @@ namespace Collectivite.Models
         public string IntituleCompte { get; set; } = null!;
 
         // Relation réflexive
-        public int? CompteParentId { get; set; }
+        public int? ContrePartieId { get; set; }
 
-        [ForeignKey("CompteParentId")]
-        public virtual CompteComptable? CompteParent { get; set; }
+        [ForeignKey("ContrePartieId")]
+        public virtual CompteComptable? ContrePartie { get; set; }
 
         public virtual ICollection<CompteComptable> SousComptes { get; set; } = new List<CompteComptable>();
     }

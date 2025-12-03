@@ -196,10 +196,12 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<(bool Success, string Message, Mandat? Mandat)> CreateMandatAsync(Mandat mandat)
         {
-            using var context = CreateContext();
+            using AppDbContext context = CreateContext();
+            //using var context = CreateContext();
 
             try
             {
+
                 // Validations
                 if (string.IsNullOrWhiteSpace(mandat.NumeroMandat))
                     return (false, "Le numéro du mandat est obligatoire.", null);
@@ -223,6 +225,26 @@ namespace Collectivite.Services
                 var engagement = await context.Engagements.FindAsync(mandat.EngagementId);
                 if (engagement == null)
                     return (false, "Engagement introuvable.", null);
+
+                // Vérifier que la ligne budgétaire associée existe et recupérer sa nomenclature
+                var budgetLine = await context.BudgetLines
+                    .Include(bl => bl.Nommenclature)
+                    .Select(bl => new { bl.Id, bl.Nommenclature.CodeNomenclature })
+                    .FirstOrDefaultAsync();
+                if (budgetLine == null)
+                    return (false, "La ligne budgétaire spécifiée dans l'engagement n'existe pas.", null);
+
+                if (string.IsNullOrWhiteSpace(budgetLine.CodeNomenclature))
+                    return (false, "La ligne budgétaire spécifiée dans l'engagement ne possède pas de nomenclature.", null);
+
+                // Vérifier si la nomenclature existe dans la table CompteComptable
+                var compteComptableExists = await context.CompteComptables
+                    .AnyAsync(cc => cc.NumeroCompte == budgetLine.CodeNomenclature);
+
+                if (!compteComptableExists)
+                    return (false, $"La nomenclature '{budgetLine.CodeNomenclature}' de la ligne budgétaire n'a pas de ContrePartie dans les Comptes Comptables.", null);
+
+
 
                 // Vérifier l'unicité du numéro de mandat
                 var existingMandat = await context.Mandats

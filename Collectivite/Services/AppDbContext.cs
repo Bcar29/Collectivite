@@ -336,9 +336,9 @@ namespace Collectivite.Services
 
             // COMPTE COMPTABLE
             modelBuilder.Entity<CompteComptable>()
-                .HasOne(c => c.CompteParent)
+                .HasOne(c => c.ContrePartie)
                 .WithMany(c => c.SousComptes)
-                .HasForeignKey(c => c.CompteParentId)
+                .HasForeignKey(c => c.ContrePartieId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
 

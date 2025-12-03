@@ -136,6 +136,31 @@ namespace Collectivite.Services
             }
         }
 
+        /// <summary>
+        /// Vérifie si un budget primitif est activé (validé) pour l'exercice donné
+        /// </summary>
+        /// <param name="exerciceId">ID de l'exercice</param>
+        /// <returns>True si un budget validé existe pour cet exercice, False sinon</returns>
+        public async Task<bool> EstActif(int exerciceId)
+        {
+            try
+            {
+                using var context = CreateContext();
+
+                var budget = await context.BudgetsPrimitifs
+                    .FirstOrDefaultAsync(b => b.ExerciceId == exerciceId);
+
+                if (budget == null)
+                    return false;
+
+                return budget.Status == BudgetPrimitif.Statusbudget.VALIDATED;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         // ═══════════════════════════════════════════════════════════
         // APPROUVER LE BUDGET PRIMITIF
         // ═══════════════════════════════════════════════════════════
