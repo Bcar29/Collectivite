@@ -101,7 +101,8 @@ namespace Collectivite.Services
                         bp.MontantRecette += line.MontantPrevu;
                         await context.SaveChangesAsync();
 
-                    }else if (line.Nommenclature.Nature == NatureType.Depense)
+                    }
+                    else if (line.Nommenclature.Nature == NatureType.Depense)
                     {
                         bp.MontantDepense -= oldMontant;
                         bp.MontantDepense += line.MontantPrevu;
@@ -277,6 +278,7 @@ namespace Collectivite.Services
 
         // ═══════════════════════════════════════════════════════════
         // MÉTHODE DE CRÉATION (CREATE)
+        // ═══════════════════════════════════════════════════════════
 
         public async Task<BudgetLine> CreateBudgetLineAsync(
             int budgetPrimitifId,
@@ -335,7 +337,7 @@ namespace Collectivite.Services
         /// <summary>
         /// Recalcule les montants de tous les parents jusqu'à la racine
         /// </summary>
-        private async Task  RecalculateAncestorsAsync(int childNomenclatureId, int budgetPrimitifId)
+        private async Task RecalculateAncestorsAsync(int childNomenclatureId, int budgetPrimitifId)
         {
             using var context = CreateContext();
             var child = await context.Nommenclatures
@@ -390,6 +392,46 @@ namespace Collectivite.Services
                 if (parent == null) break;
                 parentId = parent.ParentId;
             }
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // 🆕 NOUVELLES MÉTHODES POUR LA HIÉRARCHIE
+        // ═══════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Détermine le niveau hiérarchique d'une nomenclature
+        /// 0 = Chapitre, 1 = Article, 2 = Paragraphe, 3 = Sous-paragraphe
+        /// </summary>
+        public int GetNomenclatureLevel(Nommenclature nomenclature)
+        {
+            if (!string.IsNullOrWhiteSpace(nomenclature.SousParagraphe))
+                return 3;
+            if (!string.IsNullOrWhiteSpace(nomenclature.Paragraphe))
+                return 2;
+            if (!string.IsNullOrWhiteSpace(nomenclature.Article))
+                return 1;
+            if (!string.IsNullOrWhiteSpace(nomenclature.Chapitre))
+                return 0;
+            return 0;
+        }
+
+        /// <summary>
+        /// Récupère toutes les nomenclatures avec leur hiérarchie complète
+        /// </summary>
+        public async Task<List<Nommenclature>> GetNomenclaturesWithHierarchyAsync(
+            NatureType nature,
+            SectionType section)
+        {
+            using var context = CreateContext();
+            return await context.Nommenclatures
+                .Include(n => n.Parent)
+                .Include(n => n.Enfants)
+                .Where(n => n.Nature == nature && n.Section == section)
+                .OrderBy(n => n.Chapitre)
+                .ThenBy(n => n.Article)
+                .ThenBy(n => n.Paragraphe)
+                .ThenBy(n => n.SousParagraphe)
+                .ToListAsync();
         }
     }
 }

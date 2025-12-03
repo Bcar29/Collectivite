@@ -8,9 +8,168 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Collectivite.ViewModels
 {
+    // ═══════════════════════════════════════════════════════════
+    // 🆕 CLASSE VIEWMODEL POUR LA HIÉRARCHIE
+    // ═══════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// ViewModel pour affichage hiérarchique des lignes budgétaires
+    /// </summary>
+    public class BudgetLineHierarchyViewModel : INotifyPropertyChanged
+    {
+        private bool _isExpanded;
+        private bool _isVisible = true;
+
+        public BudgetLine BudgetLine { get; set; }
+        public ObservableCollection<BudgetLineHierarchyViewModel> Children { get; set; }
+        public BudgetLineHierarchyViewModel? Parent { get; set; }
+
+        /// <summary>
+        /// Niveau hiérarchique (0=Chapitre, 1=Article, 2=Paragraphe, 3=SousParagraphe)
+        /// </summary>
+        public int Level { get; set; }
+
+        /// <summary>
+        /// Indique si l'élément est plié ou déplié
+        /// </summary>
+        public bool IsExpanded
+        {
+            get => _isExpanded;
+            set
+            {
+                if (_isExpanded != value)
+                {
+                    _isExpanded = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(ExpanderIcon));
+                    UpdateChildrenVisibility();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Contrôle la visibilité de la ligne
+        /// </summary>
+        public bool IsVisible
+        {
+            get => _isVisible;
+            set
+            {
+                if (_isVisible != value)
+                {
+                    _isVisible = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Indique si l'élément a des enfants
+        /// </summary>
+        public bool HasChildren => Children != null && Children.Count > 0;
+
+        /// <summary>
+        /// Indentation basée sur le niveau
+        /// </summary>
+        public Thickness IndentationMargin => new Thickness(Level * 20, 0, 0, 0);
+
+        /// <summary>
+        /// Couleur de fond selon le niveau
+        /// </summary>
+        public string BackgroundColor
+        {
+            get
+            {
+                return Level switch
+                {
+                    0 => "#FFCDD2", // Rouge clair (Chapitre)
+                    1 => "#FFF9C4", // Jaune clair (Article)
+                    2 => "#C8E6C9", // Vert clair (Paragraphe)
+                    _ => "Transparent" // Sous-paragraphe
+                };
+            }
+        }
+
+        /// <summary>
+        /// Icône de pliage/dépliage
+        /// </summary>
+        public string ExpanderIcon
+        {
+            get
+            {
+                if (!HasChildren) return "";
+                return IsExpanded ? "ChevronDown" : "ChevronRight";
+            }
+        }
+
+        /// <summary>
+        /// Poids de la police selon le niveau
+        /// </summary>
+        public FontWeight TextFontWeight
+        {
+            get
+            {
+                return Level switch
+                {
+                    0 => FontWeights.Bold,      // Chapitre
+                    1 => FontWeights.SemiBold,  // Article
+                    2 => FontWeights.Medium,    // Paragraphe
+                    _ => FontWeights.Normal     // Sous-paragraphe
+                };
+            }
+        }
+
+        public BudgetLineHierarchyViewModel(BudgetLine budgetLine, int level)
+        {
+            BudgetLine = budgetLine;
+            Level = level;
+            Children = new ObservableCollection<BudgetLineHierarchyViewModel>();
+            _isExpanded = false; // Par défaut tout est plié
+        }
+
+        /// <summary>
+        /// Bascule l'état plié/déplié
+        /// </summary>
+        public void ToggleExpanded()
+        {
+            IsExpanded = !IsExpanded;
+        }
+
+        /// <summary>
+        /// Met à jour la visibilité des enfants
+        /// </summary>
+        private void UpdateChildrenVisibility()
+        {
+            if (Children == null) return;
+
+            foreach (var child in Children)
+            {
+                child.IsVisible = IsExpanded;
+                if (!IsExpanded)
+                {
+                    // Si on replie, on replie aussi tous les descendants
+                    child.IsExpanded = false;
+                }
+            }
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // VIEWMODEL PRINCIPAL
+    // ═══════════════════════════════════════════════════════════
+
     public class BudgetLinesViewModel : ViewModelBase, IDisposable
     {
         private readonly BudgetLineService _service;
@@ -25,11 +184,14 @@ namespace Collectivite.ViewModels
         private bool _isDisposed;
         private readonly ExerciceService _exerciceService;
 
+        // 🆕 Collections pour la hiérarchie
+        private List<BudgetLineHierarchyViewModel> _fullHierarchy = new();
+
         // ═══════════════════════════════════════════════════════════
         // PROPRIÉTÉS - GÉNÉRAL
         // ═══════════════════════════════════════════════════════════
 
-        public ObservableCollection<BudgetLine> DisplayedLines { get; } = new();
+        public ObservableCollection<BudgetLineHierarchyViewModel> DisplayedLines { get; } = new();
 
         private int _selectedTabIndex = 0;
         public int SelectedTabIndex
@@ -108,6 +270,7 @@ namespace Collectivite.ViewModels
         public ICommand RefreshCommand { get; }
         public ICommand SaveDialogCommand { get; }
         public ICommand CancelDialogCommand { get; }
+        public ICommand ToggleExpandCommand { get; } // 🆕
 
         // ═══════════════════════════════════════════════════════════
         // CONSTRUCTEUR
@@ -116,7 +279,6 @@ namespace Collectivite.ViewModels
         public BudgetLinesViewModel(BudgetLineService service)
         {
             _service = service;
-            //_budgetPrimitifId = budgetPrimitifId;
             _exerciceService = ExerciceService.Instance;
 
             // S'abonner aux changements d'exercice
@@ -128,12 +290,125 @@ namespace Collectivite.ViewModels
             DeleteCommand = new RelayCommand<BudgetLine>(async line => await DeleteLineAsync(line));
             RefreshCommand = new RelayCommand(async _ => await LoadForSelectedTabAsync());
 
+            // 🆕 Commande pour plier/déplier
+            ToggleExpandCommand = new RelayCommand<BudgetLineHierarchyViewModel>(ToggleExpand);
+
             // Commandes du dialog
             SaveDialogCommand = new RelayCommand(async _ => await SaveDialogAsync(), _ => CanSaveDialog());
             CancelDialogCommand = new RelayCommand(_ => CloseDialog());
 
             // Charger les données initiales
             _ = InitializeAsync();
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // 🆕 GESTION DE LA HIÉRARCHIE - TOGGLE
+        // ═══════════════════════════════════════════════════════════
+
+        private void ToggleExpand(BudgetLineHierarchyViewModel? item)
+        {
+            if (item == null) return;
+
+            item.ToggleExpanded();
+            RefreshDisplayedLines();
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // 🆕 CONSTRUCTION DE LA HIÉRARCHIE
+        // ═══════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Construit la hiérarchie des lignes budgétaires basée sur la nomenclature
+        /// </summary>
+        private List<BudgetLineHierarchyViewModel> BuildHierarchy(
+            List<BudgetLine> budgetLines,
+            NatureType nature,
+            SectionType section)
+        {
+            // Filtrer les lignes selon nature et section
+            var filteredLines = budgetLines
+                .Where(bl => bl.Nommenclature.Nature == nature &&
+                            bl.Nommenclature.Section == section)
+                .ToList();
+
+            // Identifier les chapitres (ParentId == null)
+            var chapitres = filteredLines
+                .Where(bl => bl.Nommenclature.ParentId == null)
+                .Select(bl => CreateViewModel(bl, 0, filteredLines))
+                .OrderBy(vm => vm.BudgetLine.Nommenclature.Chapitre)
+                .ToList();
+
+            return chapitres;
+        }
+
+        /// <summary>
+        /// Crée un ViewModel avec ses enfants récursivement
+        /// </summary>
+        private BudgetLineHierarchyViewModel CreateViewModel(
+            BudgetLine budgetLine,
+            int level,
+            List<BudgetLine> allLines)
+        {
+            var viewModel = new BudgetLineHierarchyViewModel(budgetLine, level);
+
+            // Trouver les enfants directs basés sur la nomenclature
+            var children = allLines
+                .Where(bl => bl.Nommenclature.ParentId == budgetLine.Nommenclature.Id)
+                .Select(bl => CreateViewModel(bl, level + 1, allLines))
+                .OrderBy(vm => GetOrderKey(vm.BudgetLine.Nommenclature))
+                .ToList();
+
+            foreach (var child in children)
+            {
+                child.Parent = viewModel;
+                viewModel.Children.Add(child);
+            }
+
+            return viewModel;
+        }
+
+        /// <summary>
+        /// Génère une clé de tri pour la nomenclature
+        /// </summary>
+        private string GetOrderKey(Nommenclature n)
+        {
+            return $"{n.Chapitre ?? ""}|{n.Article ?? ""}|{n.Paragraphe ?? ""}|{n.SousParagraphe ?? ""}";
+        }
+
+        /// <summary>
+        /// Aplatit la hiérarchie pour l'affichage dans la DataGrid
+        /// </summary>
+        private List<BudgetLineHierarchyViewModel> FlattenHierarchy(
+            IEnumerable<BudgetLineHierarchyViewModel> hierarchy)
+        {
+            var result = new List<BudgetLineHierarchyViewModel>();
+
+            foreach (var item in hierarchy)
+            {
+                result.Add(item);
+                if (item.IsExpanded && item.HasChildren)
+                {
+                    result.AddRange(FlattenHierarchy(item.Children));
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Rafraîchit l'affichage aplati
+        /// </summary>
+        private void RefreshDisplayedLines()
+        {
+            var flatList = FlattenHierarchy(_fullHierarchy)
+                .Where(vm => vm.IsVisible)
+                .ToList();
+
+            DisplayedLines.Clear();
+            foreach (var item in flatList)
+            {
+                DisplayedLines.Add(item);
+            }
         }
 
         // ═══════════════════════════════════════════════════════════
@@ -163,7 +438,6 @@ namespace Collectivite.ViewModels
             IsLoading = true;
             try
             {
-                //await LoadBudgetPrimitifAsync();
                 await LoadBudgetPrimitifForCurrentExerciceAsync();
                 await LoadForSelectedTabAsync();
             }
@@ -228,7 +502,7 @@ namespace Collectivite.ViewModels
         }
 
         // ═══════════════════════════════════════════════════════════
-        // CHARGEMENT DES DONNÉES
+        // CHARGEMENT DES DONNÉES AVEC HIÉRARCHIE
         // ═══════════════════════════════════════════════════════════
 
         private (NatureType nature, SectionType section) TabToFilter(int tabIndex)
@@ -251,27 +525,18 @@ namespace Collectivite.ViewModels
                 if (_budgetPrimitifId == 0)
                 {
                     DisplayedLines.Clear();
+                    _fullHierarchy.Clear();
                     return;
                 }
 
                 var filter = TabToFilter(SelectedTabIndex);
                 var all = await _service.GetBudgetLinesForBudgetPrimitifAsync(_budgetPrimitifId);
 
-                var filtered = all
-                    .Where(b => b.Nommenclature != null &&
-                                b.Nommenclature.Nature == filter.nature &&
-                                b.Nommenclature.Section == filter.section)
-                    .OrderBy(b => b.Nommenclature.code())
-                    //.ThenBy(b => b.Nommenclature.Article)
-                    //.ThenBy(b => b.Nommenclature.Paragraphe)
-                    //.ThenBy(b => b.Nommenclature.SousParagraphe)
-                    .ToList();
+                // 🆕 Construire la hiérarchie au lieu de simplement filtrer
+                _fullHierarchy = BuildHierarchy(all, filter.nature, filter.section);
 
-                DisplayedLines.Clear();
-                foreach (var line in filtered)
-                {
-                    DisplayedLines.Add(line);
-                }
+                // 🆕 Afficher la vue aplatie
+                RefreshDisplayedLines();
             }
             catch (Exception ex)
             {

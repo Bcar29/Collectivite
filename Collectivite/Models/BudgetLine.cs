@@ -243,23 +243,6 @@ namespace Collectivite.Models
             return Remaniements?.Count ?? 0;
         }
 
-        //public decimal MontantRealise(BudgetLine budgetLine)
-        //{
-        //    if (budgetLine.Nommenclature.Enfants != null)
-        //    {
-        //        foreach (var item in budgetLine.Nommenclature.Enfants)
-        //        {
-        //            if (item == null) continue;
-        //            BudgetLine bl = 
-        //            MontantRealise(item.);
-        //        }
-        //    }
-        //    else
-        //    {
-
-        //    }
-        //}
-
         #endregion
     }
 }
