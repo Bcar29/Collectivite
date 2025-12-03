@@ -31,9 +31,9 @@ namespace Collectivite.ViewModels
         private bool _showFilters;
 
         // Totaux
-        private double _totalDebit;
-        private double _totalCredit;
-        private double _difference;
+        private decimal _totalDebit;
+        private decimal _totalCredit;
+        private decimal _difference;
 
         public LivreJournalViewModel(EcritureComptableService ecritureService, CompteComptableService compteService)
         {
@@ -139,25 +139,25 @@ namespace Collectivite.ViewModels
         }
 
         // Totaux
-        public double TotalDebit
+        public decimal TotalDebit
         {
             get => _totalDebit;
             set => SetProperty(ref _totalDebit, value);
         }
 
-        public double TotalCredit
+        public decimal TotalCredit
         {
             get => _totalCredit;
             set => SetProperty(ref _totalCredit, value);
         }
 
-        public double Difference
+        public decimal Difference
         {
             get => _difference;
             set => SetProperty(ref _difference, value);
         }
 
-        public bool IsEquilibre => Math.Abs(Difference) < 0.01;
+        public bool IsEquilibre => TotalCredit == TotalDebit;
 
         #endregion
 

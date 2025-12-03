@@ -276,24 +276,22 @@ namespace Collectivite.Services
                 context.Mandats.Add(newMandat);
                 await context.SaveChangesAsync();
 
-                
-                
-                var budgetLine = await context.Engagements
+                var bl = await context.Engagements
                     .Where(e => e.Id == newMandat!.EngagementId)
                     .Select(e => e.BudgetLine)
                     .FirstOrDefaultAsync();
 
-                if (budgetLine != null)
+                if (bl != null)
                 {
-                    budgetLine.MontantActu -= newMandat!.MontantNet;
+                    bl.MontantActu -= newMandat!.MontantNet;
                     await context.SaveChangesAsync();
 
                     // 🔥 recalcul hiérarchique
                     using var ctx = CreateContext();
                     await OrdreRecetteService.RecalculateRealisation(
                         ctx,
-                        budgetLine.NommenclatureId,
-                        budgetLine.BudgetPrimitifId
+                        bl.NommenclatureId,
+                        bl.BudgetPrimitifId
                     );
                 }
                 // Recharger avec les relations

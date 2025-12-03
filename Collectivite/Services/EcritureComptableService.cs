@@ -200,7 +200,7 @@ namespace Collectivite.Services
         }
 
         // Calculer le solde d'un compte sur une période
-        public async Task<(double SoldeDebiteur, double SoldeCrediteur, double Solde)> CalculerSoldeCompteAsync(
+        public async Task<(decimal SoldeDebiteur, decimal SoldeCrediteur, decimal Solde)> CalculerSoldeCompteAsync(
             int compteId, DateOnly? dateDebut = null, DateOnly? dateFin = null)
         {
             var query = _appDbContext.EcritureComptables.AsQueryable();
@@ -215,15 +215,15 @@ namespace Collectivite.Services
                 .Where(e => e.CompteDebitId == compteId || e.CompteCreditId == compteId)
                 .ToListAsync();
 
-            double totalDebit = ecritures.Where(e => e.CompteDebitId == compteId).Sum(e => e.Montant);
-            double totalCredit = ecritures.Where(e => e.CompteCreditId == compteId).Sum(e => e.Montant);
-            double solde = totalDebit - totalCredit;
+            decimal totalDebit = ecritures.Where(e => e.CompteDebitId == compteId).Sum(e => e.Montant);
+            decimal totalCredit = ecritures.Where(e => e.CompteCreditId == compteId).Sum(e => e.Montant);
+            decimal solde = totalDebit - totalCredit;
 
             return (totalDebit, totalCredit, solde);
         }
 
         // Vérifier l'équilibre sur une période
-        public async Task<(bool IsEquilibre, double TotalDebit, double TotalCredit)> VerifierEquilibreAsync(
+        public async Task<(bool IsEquilibre, decimal TotalDebit, decimal TotalCredit)> VerifierEquilibreAsync(
             DateOnly? dateDebut = null, DateOnly? dateFin = null)
         {
             var query = _appDbContext.EcritureComptables.AsQueryable();
@@ -235,10 +235,10 @@ namespace Collectivite.Services
                 query = query.Where(e => e.DateEcriture <= dateFin.Value);
 
             var totalMontant = await query.SumAsync(e => e.Montant);
-            double totalDebit = totalMontant;
-            double totalCredit = totalMontant;
+            decimal totalDebit = totalMontant;
+            decimal totalCredit = totalMontant;
 
-            return (Math.Abs(totalDebit - totalCredit) < 0.01, totalDebit, totalCredit);
+            return (totalDebit == totalCredit, totalDebit, totalCredit);
         }
     }
 }

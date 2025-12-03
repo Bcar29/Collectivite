@@ -577,8 +577,8 @@ namespace Collectivite.Migrations
                     b.Property<int?>("MandatId")
                         .HasColumnType("int");
 
-                    b.Property<double>("Montant")
-                        .HasColumnType("double");
+                    b.Property<decimal>("Montant")
+                        .HasColumnType("decimal(65,30)");
 
                     b.Property<int?>("OrdreRecetteId")
                         .HasColumnType("int");
@@ -895,8 +895,8 @@ namespace Collectivite.Migrations
                     b.Property<int>("ExerciceId")
                         .HasColumnType("int");
 
-                    b.Property<double>("MontantOrdre")
-                        .HasColumnType("double");
+                    b.Property<decimal>("MontantOrdre")
+                        .HasColumnType("decimal(65,30)");
 
                     b.Property<string>("MontantOrdreLettre")
                         .IsRequired()

@@ -57,7 +57,7 @@ namespace Collectivite.Utils
 
                 EcritureComptable ecriture;
 
-                if (lb.Nommenclature.Nature == NatureType.Recette)
+                if (lb.Nommenclature.Nature == NatureType.Recette && or != null)
                 {
                     // Traitement pour les recettes
                     ecriture = new EcritureComptable
@@ -69,7 +69,7 @@ namespace Collectivite.Utils
                         OrdreRecetteId = or.Id
                     };
                 }
-                else if (lb.Nommenclature.Nature == NatureType.Depense)
+                else if (lb.Nommenclature.Nature == NatureType.Depense && md != null)
                 {
                     // Traitement pour les dépenses
                     ecriture = new EcritureComptable

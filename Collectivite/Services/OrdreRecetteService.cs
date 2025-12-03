@@ -292,20 +292,20 @@ namespace Collectivite.Services
 
 
                 // --- Mise à jour du montant réalisé ---
-                var budgetLine = await context.BudgetLines
+                var bl = await context.BudgetLines
                     .FirstOrDefaultAsync(b => b.Id == newOrdre.BudgetLineId);
 
-                if (budgetLine != null)
+                if (bl != null)
                 {
-                    budgetLine.MontantRealise += newOrdre.MontantOrdre;
+                    bl.MontantRealise += newOrdre.MontantOrdre;
                     await context.SaveChangesAsync();
 
                     // 🔥 recalcul hiérarchique
                     using var ctx = CreateContext();
                     await RecalculateRealisation(
                         ctx,
-                        budgetLine.NommenclatureId,
-                        budgetLine.BudgetPrimitifId
+                        bl.NommenclatureId,
+                        bl.BudgetPrimitifId
                     );
                 }
 
