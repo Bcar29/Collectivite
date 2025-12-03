@@ -47,7 +47,7 @@ namespace Collectivite.ViewModels
         public string Chapitre => OrdreRecette?.BudgetLine?.Nommenclature?.Chapitre ?? "N/A";
         public string Article => OrdreRecette?.BudgetLine?.Nommenclature?.Article ?? "N/A";
         public string Comptable => OrdreRecette?.Comptable ?? "N/A";
-        public string Tiers => OrdreRecette?.Tiers?.Nom ?? "Non spécifié";
+        public new string Tiers => OrdreRecette?.Tiers?.Nom ?? "Non spécifié";
         public string Motifs => OrdreRecette?.Motifs ?? "Aucun motif";
         public string MontantChiffres => OrdreRecette != null ? $"{OrdreRecette.MontantOrdre:N0} GNF" : "0 GNF";
         public string MontantLettres => OrdreRecette?.MontantOrdreLettre ?? "";

@@ -41,16 +41,17 @@ namespace Collectivite.Models
         /// </summary>
         [Required(ErrorMessage = "Le montant prévu est obligatoire")]
         [Range(0, int.MaxValue, ErrorMessage = "Le montant prévu doit être un nombre positif")]
-        public required int MontantPrevu { get; set; }
+        public required decimal MontantPrevu { get; set; }
 
         /// <summary>
         /// Montant actuel (peut être modifié par les remaniements)
         /// </summary>
         [Range(0, int.MaxValue, ErrorMessage = "Le montant actuel doit être un nombre positif")]
-        public int MontantActu { get; set; }
+        public decimal MontantActu { get; set; }
+        public decimal MontantRealise { get; set; }
+        public decimal MontantEntreSortie { get; set; }// montant recouvrement ou paiement 
 
-
-        #endregion
+        #endregion 
 
         #region Navigation
 
@@ -157,6 +158,45 @@ namespace Collectivite.Models
             }
         }
 
+        [NotMapped]
+        public decimal TauxRealisation
+        {
+            get
+            {
+                if (MontantDefinitif > 0)
+                    return (MontantRealise/MontantDefinitif)*100;
+                return 0;
+            }
+        }
+
+        [NotMapped]
+        public decimal TauxEntreSortie
+        {
+            get
+            {
+                if (MontantRealise > 0 )
+                    return (MontantEntreSortie/MontantRealise)*100;
+                return 0;
+            }
+        }
+
+        [NotMapped]
+        public decimal ResteRealise
+        {
+            get
+            {
+                return MontantDefinitif - MontantRealise;
+            }
+        }
+        [NotMapped]
+        public decimal ResteEntreSortie
+        {
+            get
+            {
+                return  MontantRealise - MontantEntreSortie;
+            }
+        }
+
         #endregion
 
         #region Constructeurs
@@ -202,6 +242,23 @@ namespace Collectivite.Models
         {
             return Remaniements?.Count ?? 0;
         }
+
+        //public decimal MontantRealise(BudgetLine budgetLine)
+        //{
+        //    if (budgetLine.Nommenclature.Enfants != null)
+        //    {
+        //        foreach (var item in budgetLine.Nommenclature.Enfants)
+        //        {
+        //            if (item == null) continue;
+        //            BudgetLine bl = 
+        //            MontantRealise(item.);
+        //        }
+        //    }
+        //    else
+        //    {
+
+        //    }
+        //}
 
         #endregion
     }

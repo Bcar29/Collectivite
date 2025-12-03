@@ -13,7 +13,7 @@ namespace Collectivite.Services
     public class EngagementService
     {
         // ✅ Créer un nouveau DbContext pour chaque opération
-        private AppDbContext CreateContext()
+        public static AppDbContext CreateContext()
         {
             return new AppDbContext();
         }
@@ -193,9 +193,9 @@ namespace Collectivite.Services
                     return (false, "Impossible de créer un engagement sur un exercice clôturé.", null);
 
                 // Vérifier que le tiers existe
-                var tiersExists = await context.Tiers.AnyAsync(t => t.Id == engagement.TiersId);
-                if (!tiersExists)
-                    return (false, "Le tiers spécifié n'existe pas.", null);
+                //var tiersExists = await context.Tiers.AnyAsync(t => t.Id == engagement.TiersId);
+                //if (!tiersExists)
+                //    return (false, "Le tiers spécifié n'existe pas.", null);
 
                 // Vérifier que la ligne budgétaire existe
                 var budgetLineExists = await context.BudgetLines.AnyAsync(bl => bl.Id == engagement.BudgetLineId);
@@ -223,7 +223,8 @@ namespace Collectivite.Services
                     FichierJoin = engagement.FichierJoin,
                     FichierName = engagement.FichierName,
                     ContratId = engagement.ContratId,
-                    FactureId = engagement.FactureId
+                    FactureId = engagement.FactureId,
+                    MontantLettre = engagement.MontantLettre
 
                 };
 
@@ -396,8 +397,8 @@ namespace Collectivite.Services
     public class EngagementStatistiques
     {
         public int TotalEngagements { get; set; }
-        public double MontantTotal { get; set; }
-        public double MontantMoyen { get; set; }
-        public Dictionary<string, double> Top10Tiers { get; set; } = new();
+        public decimal MontantTotal { get; set; }
+        public decimal MontantMoyen { get; set; }
+        public Dictionary<string, decimal> Top10Tiers { get; set; } = new();
     }
 }

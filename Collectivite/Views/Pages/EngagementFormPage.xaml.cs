@@ -23,7 +23,12 @@ namespace Collectivite.Views.Pages
             // On attend que la Page soit entièrement chargée
            DataContext = _viewModel;
         }
+        private void Page_Unloaded(object sender, RoutedEventArgs e)
+        {
+            // Disposer le ViewModel
+            _viewModel?.Dispose();
+        }
 
-        
+
     }
 }

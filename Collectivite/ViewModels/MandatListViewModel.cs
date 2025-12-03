@@ -11,24 +11,28 @@ using System.Windows.Input;
 
 namespace Collectivite.ViewModels
 {
-    public class MandatListViewModel : ViewModelBase
+    public class MandatListViewModel : ViewModelBase, IDisposable
     {
         private bool _isLoading;
         private Mandat? _selectedMandat;
+        private readonly ExerciceService _exerciceService;
 
         // Filtres
         private string? _filtreNumeroMandat;
         private string? _filtreBordereau;
         private TypeMois? _filtreMois;
         private int? _filtreEngagementId;
-        private double? _filtreMontantMin;
-        private double? _filtreMontantMax;
+        private decimal? _filtreMontantMin;
+        private decimal? _filtreMontantMax;
         private DateTime? _filtreDateEmissionDebut;
         private DateTime? _filtreDateEmissionFin;
         private bool? _filtreEstPaye;
+        private bool _isDisposed;
 
         public MandatListViewModel()
         {
+            _exerciceService = ExerciceService.Instance;
+            _exerciceService.ExerciceChanged += OnExerciceChanged;
             // Commandes
             LoadDataCommand = new RelayCommand(async _ => await LoadDataAsync());
             ApplyFiltersCommand = new RelayCommand(async _ => await ApplyFiltersAsync());
@@ -61,9 +65,9 @@ namespace Collectivite.ViewModels
             set => SetProperty(ref _selectedMandat, value);
         }
 
-        public double TotalMandats => Mandats.Sum(m => m.MontantNet);
-        public double TotalPayes => Mandats.Where(m => m.DatePaiement != null).Sum(m => m.MontantNet);
-        public double TotalNonPayes => Mandats.Where(m => m.DatePaiement == null).Sum(m => m.MontantNet);
+        public decimal TotalMandats => Mandats.Sum(m => m.MontantNet);
+        public decimal TotalPayes => Mandats.Where(m => m.DatePaiement != null).Sum(m => m.MontantNet);
+        public decimal TotalNonPayes => Mandats.Where(m => m.DatePaiement == null).Sum(m => m.MontantNet);
         public int NombreMandats => Mandats.Count;
         public int NombrePayes => Mandats.Count(m => m.DatePaiement != null);
         public int NombreNonPayes => Mandats.Count(m => m.DatePaiement == null);
@@ -96,13 +100,13 @@ namespace Collectivite.ViewModels
             set => SetProperty(ref _filtreEngagementId, value);
         }
 
-        public double? FiltreMontantMin
+        public decimal? FiltreMontantMin
         {
             get => _filtreMontantMin;
             set => SetProperty(ref _filtreMontantMin, value);
         }
 
-        public double? FiltreMontantMax
+        public decimal? FiltreMontantMax
         {
             get => _filtreMontantMax;
             set => SetProperty(ref _filtreMontantMax, value);
@@ -146,7 +150,14 @@ namespace Collectivite.ViewModels
         #endregion
 
         #region Methods
-
+        private async void OnExerciceChanged(object? sender, Exercice exercice)
+        {
+            await Application.Current.Dispatcher.InvokeAsync(async () =>
+            {
+                //System.Diagnostics.Debug.WriteLine($"Rechargement des budgets pour l'exercice : {exercice.Libelle}");
+                await LoadDataAsync();
+            });
+        }
         private async System.Threading.Tasks.Task LoadDataAsync()
         {
             IsLoading = true;
@@ -409,6 +420,19 @@ namespace Collectivite.ViewModels
             OnPropertyChanged(nameof(NombrePayes));
             OnPropertyChanged(nameof(NombreNonPayes));
         }
+
+        /// <summary>
+        /// Nettoyer les ressources et se désabonner des événements
+        /// </summary>
+        public void Dispose()
+        {
+            if (!_isDisposed)
+            {
+                _exerciceService.ExerciceChanged -= OnExerciceChanged;
+                _isDisposed = true;
+            }
+        }
+
 
         #endregion
     }

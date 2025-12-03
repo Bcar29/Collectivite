@@ -1,4 +1,5 @@
 ﻿using Collectivite.Models;
+using Collectivite.ViewModels;
 using MaterialDesignThemes.Wpf;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -15,6 +16,7 @@ namespace Collectivite.Services
     {
         private static ExerciceService? _instance;
         private Exercice? _currentExercice;
+
 
         // Singleton
         public static ExerciceService Instance => _instance ??= new ExerciceService();
@@ -167,6 +169,8 @@ namespace Collectivite.Services
                 context.BudgetsPrimitifs.Add(budgetPrimitif);
                 await context.SaveChangesAsync();
 
+                
+
                 return (true, "Exercice créé avec succès.", exercice);
             }
             catch (Exception ex)
@@ -228,12 +232,12 @@ namespace Collectivite.Services
                 }
 
                 // Vérifier les dépendances (par exemple, BudgetsPrimitifs liés)
-                //var hasDependencies = await context.BudgetsPrimitifs
-                //    .AnyAsync(bp => bp.ExerciceId == exerciceId);
-                //if (hasDependencies)
-                //{
-                //    return (false, "Impossible de supprimer l'exercice car il a des dépendances.");
-                //}
+                var hasDependencies = await context.BudgetsPrimitifs
+                    .AnyAsync(bp => bp.ExerciceId == exerciceId);
+                if (hasDependencies)
+                {
+                    return (false, "Impossible de supprimer l'exercice car il a des dépendances.");
+                }
 
                 context.Exercices.Remove(exercice);
                 await context.SaveChangesAsync();

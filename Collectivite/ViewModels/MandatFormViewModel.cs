@@ -74,6 +74,7 @@ namespace Collectivite.ViewModels
             CalculerMontantNetCommand = new RelayCommand(_ => CalculerMontantNet());
             SaveCommand = new RelayCommand(async _ => await SaveAsync(), _ => CanSave());
             CancelCommand = new RelayCommand(_ => Cancel());
+            ConvertMontantToLettresCommand = new RelayCommand(_ => ConvertMontantToLettres());
 
             // Charger les données
             LoadDataCommand.Execute(null);
@@ -114,6 +115,7 @@ namespace Collectivite.ViewModels
         public ICommand CalculerMontantNetCommand { get; }
         public ICommand SaveCommand { get; }
         public ICommand CancelCommand { get; }
+        public ICommand ConvertMontantToLettresCommand { get; }
 
         #endregion
 
@@ -270,6 +272,15 @@ namespace Collectivite.ViewModels
                 }
             }
         }
+
+         private void ConvertMontantToLettres()
+         {
+            if (Mandat.MontantNet > 0)
+            {
+                Mandat.MontantLettre = Convertir.ConvertirNombreEnLettres((long)Mandat.MontantNet);
+                OnPropertyChanged(nameof(Mandat));
+            }
+         }
 
         #endregion
 

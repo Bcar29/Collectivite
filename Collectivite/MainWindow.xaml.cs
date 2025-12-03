@@ -36,6 +36,14 @@ namespace Collectivite
             // Naviguer vers le tableau de bord par défaut
             NavigateToDashboard();
         }
+        private void Window_Unloaded(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is MainViewModel viewModel)
+            {
+                viewModel.Dispose();
+                //System.Diagnostics.Debug.WriteLine("BudgetLinesViewModel disposed");
+            }
+        }
 
         private void DashboardButton_Click(object sender, RoutedEventArgs e)
         {
@@ -92,6 +100,20 @@ namespace Collectivite
             _viewModel.UpdatePageTitle("GESTION BUDGÉTAIRE - BUDGET LINE");
 
              NavigationService.Instance.NavigateTo(new Views.Pages.BudgetLinesPage());
+            _viewModel.IsMenuOpen = false;
+        }
+        private void CompteAdministratif_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.UpdatePageTitle("GESTION BUDGÉTAIRE - COMPTE ADMINISTRATIF");
+
+             NavigationService.Instance.NavigateTo(new Views.Pages.CompteAdministratifPage());
+            _viewModel.IsMenuOpen = false;
+        }
+        private void CompteGestion_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.UpdatePageTitle("GESTION COMPTABLE - COMPTE DE GESTION");
+
+             NavigationService.Instance.NavigateTo(new Views.Pages.CompteGestionPage());
             _viewModel.IsMenuOpen = false;
         }
 

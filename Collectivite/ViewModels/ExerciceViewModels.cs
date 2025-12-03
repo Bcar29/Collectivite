@@ -1,6 +1,7 @@
 ﻿using Collectivite.Models;
 using Collectivite.Services;
 using Collectivite.Utils;
+using Org.BouncyCastle.Bcpg.Sig;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -221,6 +222,9 @@ namespace Collectivite.ViewModels
                         IsDialogOpen = false;
                         await LoadDataAsync();
 
+                        //Notifier le changement(MainViewModel se rafraîchira automatiquement)
+                        GlobalEvents.NotifyExercicesListChanged();
+
                         string titre = "modification d'exercice";
                         string description = $"{DialogExercice.Libelle} par {"alfa"} le {DateTime.Now:dd/MM/yyyy HH:mm}";
 
@@ -244,6 +248,9 @@ namespace Collectivite.ViewModels
                             MessageBoxButton.OK, MessageBoxImage.Information);
                         IsDialogOpen = false;
                         await LoadDataAsync();
+
+                         //Notifier le changement(MainViewModel se rafraîchira automatiquement)
+                         GlobalEvents.NotifyExercicesListChanged();
 
                         string titre = "Exercice crée";
                         string description = $"{DialogExercice.Libelle} par {"alfa"} le {DateTime.Now:dd/MM/yyyy HH:mm}";
@@ -294,6 +301,9 @@ namespace Collectivite.ViewModels
                     success ? "Succès" : "Erreur",
                     MessageBoxButton.OK,
                     success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+
+                //Notifier le changement(MainViewModel se rafraîchira automatiquement)
+                GlobalEvents.NotifyExercicesListChanged();
 
                 if (success)
                 {

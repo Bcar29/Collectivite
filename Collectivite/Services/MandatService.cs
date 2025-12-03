@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace Collectivite.Services
 {
@@ -40,8 +41,15 @@ namespace Collectivite.Services
         public async Task<List<Mandat>> GetAllMandatsAsync()
         {
             using var context = CreateContext();
+            var exerciceService = ExerciceService.Instance;
+
+            if (exerciceService.CurrentExercice == null)
+            {
+                return new List<Mandat>();
+            }
 
             return await context.Mandats
+                .Where(m => m.Engagement.ExerciceId == exerciceService.CurrentExercice.Id)
                 .Include(m => m.Engagement)
                     .ThenInclude(e => e.BudgetLine)
                         .ThenInclude(bl => bl.Nommenclature)
@@ -98,8 +106,8 @@ namespace Collectivite.Services
             string? bordereau = null,
             TypeMois? mois = null,
             int? engagementId = null,
-            double? montantMin = null,
-            double? montantMax = null,
+            decimal? montantMin = null,
+            decimal? montantMax = null,
             DateTime? dateEmissionDebut = null,
             DateTime? dateEmissionFin = null,
             bool? estPaye = null)
@@ -246,8 +254,29 @@ namespace Collectivite.Services
                 context.Mandats.Add(newMandat);
                 await context.SaveChangesAsync();
 
+                
+                
+                var budgetLine = await context.Engagements
+                    .Where(e => e.Id == newMandat!.EngagementId)
+                    .Select(e => e.BudgetLine)
+                    .FirstOrDefaultAsync();
+
+                if (budgetLine != null)
+                {
+                    budgetLine.MontantActu -= newMandat!.MontantNet;
+                    await context.SaveChangesAsync();
+
+                    // 🔥 recalcul hiérarchique
+                    using var ctx = CreateContext();
+                    await OrdreRecetteService.RecalculateRealisation(
+                        ctx,
+                        budgetLine.NommenclatureId,
+                        budgetLine.BudgetPrimitifId
+                    );
+                }
                 // Recharger avec les relations
                 var savedMandat = await GetMandatByIdAsync(newMandat.Id);
+
 
                 return (true, "✅ Mandat créé avec succès.", savedMandat);
             }
@@ -419,7 +448,7 @@ namespace Collectivite.Services
         /// <summary>
         /// Obtient le total des mandats par mois
         /// </summary>
-        public async Task<Dictionary<TypeMois, double>> GetTotalParMoisAsync()
+        public async Task<Dictionary<TypeMois, decimal>> GetTotalParMoisAsync()
         {
             using var context = CreateContext();
 
@@ -432,7 +461,7 @@ namespace Collectivite.Services
         /// <summary>
         /// Obtient le total des mandats payés et non payés
         /// </summary>
-        public async Task<(double TotalPaye, double TotalNonPaye)> GetStatutsPaiementAsync()
+        public async Task<(decimal TotalPaye, decimal TotalNonPaye)> GetStatutsPaiementAsync()
         {
             using var context = CreateContext();
 

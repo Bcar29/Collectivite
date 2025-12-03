@@ -12,6 +12,7 @@
         Title="Gestion Budgétaire et Comptable"
         Height="800" 
         Width="1400"
+        Unloaded="Window_Unloaded"
         WindowStartupLocation="CenterScreen"
         WindowState="Maximized">
 
@@ -277,7 +278,8 @@
                                     </StackPanel>
                                 </Button>
 
-                                <Button Style="{StaticResource MenuButtonStyle}">
+                                <Button Style="{StaticResource MenuButtonStyle}"
+                                        Click="CompteAdministratif_Click">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="FileChart" 
                                            VerticalAlignment="Center"
@@ -453,7 +455,7 @@
                                     </Style>
                                 </StackPanel.Resources>
 
-                                <Button Style="{StaticResource MenuButtonStyle}">
+                                <Button Style="{StaticResource MenuButtonStyle}" Click="CompteGestion_Click">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="Book" 
                                            VerticalAlignment="Center"

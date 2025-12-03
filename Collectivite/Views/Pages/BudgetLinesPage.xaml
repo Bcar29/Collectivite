@@ -3,6 +3,7 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
       xmlns:Utils="clr-namespace:Collectivite.Utils"
+      Unloaded="Page_Unloaded"
       Background="#F5F5F5">
 
     <Page.Resources>
@@ -492,4 +493,5 @@
         </materialDesign:DialogHost>
 
     </Grid>
+
 </Page>

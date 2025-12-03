@@ -3,9 +3,11 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
       xmlns:local="clr-namespace:Collectivite.Models"
+      xmlns:utils="clr-namespace:Collectivite.Utils"
       Language="fr-FR"
       Background="#F5F5F5"
       Title="Gestion des Mandats"
+      Unloaded="Page_Unloaded"
       x:Name="MandatListPageRoot">
 
     <Page.Resources>
