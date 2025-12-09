@@ -21,6 +21,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<List<BonCommande>> GetAllBonCommandesAsync()
         {
+            if (!SessionManager.HasPermission("BonCommande.View"))
+                throw new UnauthorizedAccessException("Permission BonCommande.View requise pour consulter les bons de commande.");
+
             var exerciceService = ExerciceService.Instance;
 
             if (exerciceService.CurrentExercice == null)
@@ -45,6 +48,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<BonCommande?> GetBonCommandeByIdAsync(int id)
         {
+            if (!SessionManager.HasPermission("BonCommande.View"))
+                throw new UnauthorizedAccessException("Permission BonCommande.View requise pour consulter ce bon de commande.");
+
             using var context = CreateContext();
 
             return await context.BonCommandes
@@ -65,6 +71,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<List<BonCommande>> GetBonCommandesByEngagementAsync(int engagementId)
         {
+            if (!SessionManager.HasPermission("BonCommande.View"))
+                throw new UnauthorizedAccessException("Permission BonCommande.View requise pour consulter les bons de commande.");
+
             using var context = CreateContext();
 
             return await context.BonCommandes
@@ -87,6 +96,9 @@ namespace Collectivite.Services
             List<DetailBonCommande> details)
         {
             using var context = CreateContext();
+
+            if (!SessionManager.HasPermission("BonCommande.Create"))
+                return (false, "Permission BonCommande.Create requise pour créer un bon de commande.", null);
 
             try
             {
@@ -172,6 +184,9 @@ namespace Collectivite.Services
         {
             using var context = CreateContext();
 
+            if (!SessionManager.HasPermission("BonCommande.Edit"))
+                return (false, "Permission BonCommande.Edit requise pour modifier un bon de commande.");
+
             try
             {
                 var existingBon = await context.BonCommandes
@@ -231,6 +246,9 @@ namespace Collectivite.Services
         public async Task<(bool Success, string Message)> DeleteBonCommandeAsync(int id)
         {
             using var context = CreateContext();
+
+            if (!SessionManager.HasPermission("BonCommande.Delete"))
+                return (false, "Permission BonCommande.Delete requise pour supprimer un bon de commande.");
 
             try
             {

@@ -1,4 +1,5 @@
 ﻿using Collectivite.Models;
+using Collectivite.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Win32;
 using System;
@@ -52,6 +53,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<List<DocumentTiers>> GetDocumentsByTiersAsync(int tiersId)
         {
+            if (!SessionManager.HasPermission("DocumentTiers.View"))
+                throw new UnauthorizedAccessException("Permission DocumentTiers.View requise pour consulter les documents.");
+
             using var context = CreateContext();
 
             return await context.DocumentTiers
@@ -66,6 +70,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<DocumentTiers?> GetDocumentByIdAsync(int id)
         {
+            if (!SessionManager.HasPermission("DocumentTiers.View"))
+                throw new UnauthorizedAccessException("Permission DocumentTiers.View requise pour consulter ce document.");
+
             using var context = CreateContext();
 
             return await context.DocumentTiers
@@ -78,6 +85,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<List<DocumentTiers>> GetDocumentsByTypeAsync(int tiersId, TypeDocument type)
         {
+            if (!SessionManager.HasPermission("DocumentTiers.View"))
+                throw new UnauthorizedAccessException("Permission DocumentTiers.View requise pour consulter les documents.");
+
             using var context = CreateContext();
 
             return await context.DocumentTiers
@@ -92,6 +102,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<List<DocumentTiers>> GetDocumentsExpiresAsync(int tiersId)
         {
+            if (!SessionManager.HasPermission("DocumentTiers.View"))
+                throw new UnauthorizedAccessException("Permission DocumentTiers.View requise pour consulter les documents expirés.");
+
             using var context = CreateContext();
 
             return await context.DocumentTiers
@@ -108,6 +121,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<List<DocumentTiers>> GetDocumentsExpireBientotAsync(int tiersId)
         {
+            if (!SessionManager.HasPermission("DocumentTiers.View"))
+                throw new UnauthorizedAccessException("Permission DocumentTiers.View requise pour consulter les documents proches de l'expiration.");
+
             using var context = CreateContext();
 
             var dateLimit = DateTime.Now.AddDays(30);
@@ -127,6 +143,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<bool> DocumentExistsAsync(int tiersId, TypeDocument type)
         {
+            if (!SessionManager.HasPermission("DocumentTiers.View"))
+                throw new UnauthorizedAccessException("Permission DocumentTiers.View requise pour vérifier l'existence d'un document.");
+
             using var context = CreateContext();
 
             return await context.DocumentTiers
@@ -146,6 +165,8 @@ namespace Collectivite.Services
         {
             try
             {
+                if (!SessionManager.HasPermission("DocumentTiers.Create"))
+                    return (false, "Permission DocumentTiers.Create requise pour ajouter un document.", null);
                 // Ouvrir la boîte de dialogue de sélection de fichier
                 var openFileDialog = new OpenFileDialog
                 {
@@ -192,6 +213,9 @@ namespace Collectivite.Services
             DateTime? dateEmission = null,
             string? description = null)
         {
+            if (!SessionManager.HasPermission("DocumentTiers.Create"))
+                return (false, "Permission DocumentTiers.Create requise pour ajouter un document.", null);
+
             using var context = CreateContext();
 
             try
@@ -302,6 +326,9 @@ namespace Collectivite.Services
             DateTime? dateEmission = null,
             string? description = null)
         {
+            if (!SessionManager.HasPermission("DocumentTiers.Edit"))
+                return (false, "Permission DocumentTiers.Edit requise pour modifier un document.");
+
             using var context = CreateContext();
 
             try
@@ -341,6 +368,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<(bool Success, string Message)> ReplaceDocumentAsync(int documentId)
         {
+            if (!SessionManager.HasPermission("DocumentTiers.Edit"))
+                return (false, "Permission DocumentTiers.Edit requise pour remplacer un document.");
+
             using var context = CreateContext();
 
             try
@@ -414,6 +444,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<(bool Success, string Message)> ToggleValiditeAsync(int documentId)
         {
+            if (!SessionManager.HasPermission("DocumentTiers.Edit"))
+                return (false, "Permission DocumentTiers.Edit requise pour modifier la validité d'un document.");
+
             using var context = CreateContext();
 
             try
@@ -446,6 +479,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<(bool Success, string Message)> DeleteDocumentAsync(int documentId)
         {
+            if (!SessionManager.HasPermission("DocumentTiers.Delete"))
+                return (false, "Permission DocumentTiers.Delete requise pour supprimer un document.");
+
             using var context = CreateContext();
 
             try
@@ -494,6 +530,8 @@ namespace Collectivite.Services
         {
             try
             {
+                if (!SessionManager.HasPermission("DocumentTiers.View"))
+                    return (false, "Permission DocumentTiers.View requise pour ouvrir le document.");
                 if (document == null)
                 {
                     return (false, "Document null.");
@@ -562,6 +600,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<(bool AllPresent, List<TypeDocument> MissingDocuments)> CheckDocumentsObligatoiresAsync(int tiersId)
         {
+            if (!SessionManager.HasPermission("DocumentTiers.View"))
+                throw new UnauthorizedAccessException("Permission DocumentTiers.View requise pour vérifier les documents obligatoires.");
+
             using var context = CreateContext();
 
             try

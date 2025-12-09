@@ -65,7 +65,8 @@
                     <Button Style="{StaticResource MaterialDesignRaisedButton}"
                     Height="40"
                     Command="{Binding OppenAddContratCommand}"
-                    HorizontalAlignment="Right">
+                    HorizontalAlignment="Right"
+                    Visibility="{Binding DataContext.CanCreateContrat, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="Plus" 
                                            VerticalAlignment="Center"
@@ -92,7 +93,6 @@
                       SelectionMode="Single"
                       materialDesign:DataGridAssist.CellPadding="13 8 8 8"
                       materialDesign:DataGridAssist.ColumnHeaderPadding="8">
-
                         <DataGrid.Columns>
 
                             <!-- Numero contrat -->
@@ -182,26 +182,28 @@
                                           HorizontalAlignment="Center">
 
                                             <!-- Bouton Modifier -->
-                                            <Button Style="{StaticResource MaterialDesignIconButton}"
-                                          ToolTip="Modifier"
-                                          Command="{Binding DataContext.OppenEditContratCommand, 
+                                                <Button Style="{StaticResource MaterialDesignIconButton}"
+                                              ToolTip="Modifier"
+                                              Command="{Binding DataContext.OppenEditContratCommand, 
                                                   RelativeSource={RelativeSource AncestorType=Page}}"
-                                          CommandParameter="{Binding}"
-                                          Margin="4,0">
+                                              CommandParameter="{Binding}"
+                                              Margin="4,0"
+                                              Visibility="{Binding DataContext.CanEditContrat, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
                                                 <materialDesign:PackIcon Kind="Pencil" 
-                                                               Foreground="#1976D2"/>
-                                            </Button>
+                                                           Foreground="#1976D2"/>
+                                                </Button>
 
                                             <!-- Bouton Supprimer -->
-                                            <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                 ToolTip="Supprimer"
-                                                 Command="{Binding DataContext.DeleteContratCommand, 
-                                                  RelativeSource={RelativeSource AncestorType=Page}}"
-                                                 CommandParameter="{Binding}"
-                                                 Margin="4,0">
-                                                <materialDesign:PackIcon Kind="Delete" 
+                                                <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                    ToolTip="Supprimer"
+                                                    Command="{Binding DataContext.DeleteContratCommand, 
+                                                    RelativeSource={RelativeSource AncestorType=Page}}"
+                                                    CommandParameter="{Binding}"
+                                                    Margin="4,0"
+                                                    Visibility="{Binding DataContext.CanDeleteContrat, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
+                                                   <materialDesign:PackIcon Kind="Delete" 
                                                                Foreground="#F44336"/>
-                                            </Button>
+                                                </Button>
 
                                             <!-- ✅ Bouton Détail (NOUVEAU) 
                                             <Button Style="{StaticResource MaterialDesignIconButton}"

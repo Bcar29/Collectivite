@@ -54,8 +54,9 @@
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
-                    <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                        <Button Style="{StaticResource MaterialDesignRaisedButton}"
                             Command="{Binding NavigateToAddCommand}"
+                            Visibility="{Binding CanCreateOrdreRecette, Converter={StaticResource BoolToVis}}"
                             Height="36"
                             Margin="0,0,10,0">
                         <StackPanel Orientation="Horizontal">
@@ -343,18 +344,21 @@
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                             <Button Style="{StaticResource MaterialDesignIconButton}"
+                                        Visibility="{Binding DataContext.CanViewOrdreRecette, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}"
                                         Command="{Binding DataContext.NavigateToDetailCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                         CommandParameter="{Binding}"
                                         ToolTip="Voir détails">
                                                 <materialDesign:PackIcon Kind="Eye" Foreground="#4CAF50"/>
                                             </Button>
                                             <Button Style="{StaticResource MaterialDesignIconButton}"
+                                        Visibility="{Binding DataContext.CanEditOrdreRecette, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}"
                                         Command="{Binding DataContext.NavigateToEditCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                         CommandParameter="{Binding}"
                                         ToolTip="Modifier">
                                                 <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2"/>
                                             </Button>
                                             <Button Style="{StaticResource MaterialDesignIconButton}"
+                                        Visibility="{Binding DataContext.CanDeleteOrdreRecette, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}"
                                         Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                         CommandParameter="{Binding}"
                                         ToolTip="Supprimer">

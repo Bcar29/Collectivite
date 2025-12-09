@@ -15,6 +15,7 @@ namespace Collectivite.ViewModels
     /// </summary>
     public class RemaniementViewModel : ViewModelBase
     {
+        private string _accessDeniedMessage = "Vous n'avez pas la permission pour cette action.";
         private bool _isLoading;
         private bool _isDialogOpen;
         private Remaniement _dialogRemaniement;
@@ -45,6 +46,11 @@ namespace Collectivite.ViewModels
 
             LoadDataCommand.Execute(null);
         }
+
+        // Permissions dynamiques
+        public bool CanViewRemaniement => SessionManager.HasPermission("Remaniement.View");
+        public bool CanCreateRemaniement => SessionManager.HasPermission("Remaniement.Create");
+        public bool CanDeleteRemaniement => SessionManager.HasPermission("Remaniement.Delete");
 
         #region Collections exposées
 
@@ -153,6 +159,18 @@ namespace Collectivite.ViewModels
 
             try
             {
+                if (!CanViewRemaniement)
+                {
+                    MessageBox.Show(
+                        "Accès refusé : vous n'avez pas la permission de consulter les remaniements.",
+                        "Accès refusé",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+
+                    BudgetLines.Clear();
+                    return;
+                }
+
                 var service = new RemaniementService();
                 var budgetLines = await service.GetBudgetLinesForValidatedBudgetAsync();
 
@@ -265,6 +283,16 @@ namespace Collectivite.ViewModels
                     return;
                 }
 
+                if (!CanCreateRemaniement)
+                {
+                    MessageBox.Show(
+                        _accessDeniedMessage + "\nPermission requise : Remaniement.Create",
+                        "Accès refusé",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    return;
+                }
+
                 var service = new RemaniementService();
                 var budgetLineId = DialogRemaniement.IdBudgetLine;
 
@@ -368,6 +396,16 @@ namespace Collectivite.ViewModels
 
             if (confirm != MessageBoxResult.Yes)
                 return;
+
+            if (!CanDeleteRemaniement)
+            {
+                MessageBox.Show(
+                    _accessDeniedMessage + "\nPermission requise : Remaniement.Delete",
+                    "Accès refusé",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
 
             IsLoading = true;
 

@@ -101,9 +101,10 @@
 
                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
                     <Button Style="{StaticResource MaterialDesignRaisedButton}"
-                            Command="{Binding OpenAddTiersDialogCommand}"
-                            Height="36"
-                            Margin="0,0,10,0">
+                        Command="{Binding OpenAddTiersDialogCommand}"
+                        Visibility="{Binding CanCreateTiers, Converter={StaticResource BoolToVis}}"
+                        Height="36"
+                        Margin="0,0,10,0">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="Plus" Margin="0,0,5,0" />
                             <TextBlock Text="Nouveau Tiers" />
@@ -411,13 +412,14 @@
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                   <Button Style="{StaticResource MaterialDesignIconButton}"
                                                             Command="{Binding DataContext.OpenEditTiersDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                                             CommandParameter="{Binding}"
+                                                            Visibility="{Binding DataContext.CanEditTiers, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}"
                                                             ToolTip="Modifier">
                                                         <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2"/>
                                                     </Button>
-                                                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                        <Button Style="{StaticResource MaterialDesignIconButton}"
                                                             Command="{Binding DataContext.ToggleActifCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                                             CommandParameter="{Binding}"
                                                             Margin="4,0">
@@ -544,9 +546,10 @@
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                  <Button Style="{StaticResource MaterialDesignIconButton}"
                                                             Command="{Binding DataContext.OpenEditTiersDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                                             CommandParameter="{Binding}"
+                                                            Visibility="{Binding DataContext.CanEditTiers, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}"
                                                             ToolTip="Modifier">
                                                         <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2"/>
                                                     </Button>
@@ -687,7 +690,8 @@
                                     <Button Style="{StaticResource MaterialDesignRaisedButton}"
                                            Command="{Binding OpenAddDocumentDialogCommand}"
                                            Height="32"
-                                           Margin="0,0,5,0">
+                                           Margin="0,0,5,0"
+                                           Visibility="{Binding CanCreateDocumentTiers, Converter={StaticResource BoolToVis}}">
                                         <StackPanel Orientation="Horizontal">
                                             <materialDesign:PackIcon Kind="Plus" Width="16" Height="16" Margin="0,0,5,0"/>
                                             <TextBlock Text="Ajouter" FontSize="12"/>
@@ -697,16 +701,18 @@
                                     <Button Style="{StaticResource MaterialDesignOutlinedButton}"
                                            Command="{Binding CheckDocumentsObligatoiresCommand}"
                                            Height="32"
-                                           Margin="0,0,5,0">
+                                           Margin="0,0,5,0"
+                                           Visibility="{Binding CanViewDocumentTiers, Converter={StaticResource BoolToVis}}">
                                         <StackPanel Orientation="Horizontal">
                                             <materialDesign:PackIcon Kind="CheckCircle" Width="16" Height="16" Margin="0,0,5,0"/>
                                             <TextBlock Text="Vérifier" FontSize="12"/>
                                         </StackPanel>
                                     </Button>
 
-                                    <Button Style="{StaticResource MaterialDesignOutlinedButton}"
-                                           Command="{Binding ViewDocumentsExpiresCommand}"
-                                           Height="32">
+                                     <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                                         Command="{Binding ViewDocumentsExpiresCommand}"
+                                         Height="32"
+                                         Visibility="{Binding CanViewDocumentTiers, Converter={StaticResource BoolToVis}}">
                                         <StackPanel Orientation="Horizontal">
                                             <materialDesign:PackIcon Kind="CalendarAlert" Width="16" Height="16" Margin="0,0,5,0"/>
                                             <TextBlock Text="Expirations" FontSize="12"/>
@@ -837,33 +843,36 @@
                                                                    Orientation="Horizontal" 
                                                                    VerticalAlignment="Center"
                                                                    Margin="10">
-                                                            <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                                   Command="{Binding DataContext.OpenDocumentCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                                   CommandParameter="{Binding}"
-                                                                   ToolTip="Ouvrir"
-                                                                   Width="30" Height="30">
+                                                                <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                                    Command="{Binding DataContext.OpenDocumentCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                                    CommandParameter="{Binding}"
+                                                                    ToolTip="Ouvrir"
+                                                                    Width="30" Height="30"
+                                                                    Visibility="{Binding DataContext.CanViewDocumentTiers, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
                                                                 <materialDesign:PackIcon Kind="Eye" 
                                                                                        Width="18" Height="18"
                                                                                        Foreground="#1976D2"/>
                                                             </Button>
 
-                                                            <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                                   Command="{Binding DataContext.OpenEditDocumentDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                                   CommandParameter="{Binding}"
-                                                                   ToolTip="Modifier les infos"
-                                                                   Width="30" Height="30"
-                                                                   Margin="2,0">
+                                                                <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                                    Command="{Binding DataContext.OpenEditDocumentDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                                    CommandParameter="{Binding}"
+                                                                    ToolTip="Modifier les infos"
+                                                                    Width="30" Height="30"
+                                                                    Margin="2,0"
+                                                                    Visibility="{Binding DataContext.CanEditDocumentTiers, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
                                                                 <materialDesign:PackIcon Kind="Pencil" 
                                                                                        Width="18" Height="18"
                                                                                        Foreground="#FF9800"/>
                                                             </Button>
 
-                                                            <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                                   Command="{Binding DataContext.ReplaceDocumentCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                                   CommandParameter="{Binding}"
-                                                                   ToolTip="Remplacer le fichier"
-                                                                   Width="30" Height="30"
-                                                                   Margin="2,0">
+                                                                <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                                    Command="{Binding DataContext.ReplaceDocumentCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                                    CommandParameter="{Binding}"
+                                                                    ToolTip="Remplacer le fichier"
+                                                                    Width="30" Height="30"
+                                                                    Margin="2,0"
+                                                                    Visibility="{Binding DataContext.CanEditDocumentTiers, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
                                                                 <materialDesign:PackIcon Kind="FileReplace" 
                                                                                        Width="18" Height="18"
                                                                                        Foreground="#9C27B0"/>
@@ -873,7 +882,8 @@
                                                                    Command="{Binding DataContext.ToggleDocumentValiditeCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                                                    CommandParameter="{Binding}"
                                                                    Width="30" Height="30"
-                                                                   Margin="2,0">
+                                                                   Margin="2,0"
+                                                                   Visibility="{Binding DataContext.CanEditDocumentTiers, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
                                                                 <Button.ToolTip>
                                                                     <TextBlock>
                                                                         <TextBlock.Style>
@@ -904,12 +914,13 @@
                                                                 </materialDesign:PackIcon>
                                                             </Button>
 
-                                                            <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                                   Command="{Binding DataContext.DeleteDocumentCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                                   CommandParameter="{Binding}"
-                                                                   ToolTip="Supprimer"
-                                                                   Width="30" Height="30"
-                                                                   Margin="2,0">
+                                                                <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                                    Command="{Binding DataContext.DeleteDocumentCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                                    CommandParameter="{Binding}"
+                                                                    ToolTip="Supprimer"
+                                                                    Width="30" Height="30"
+                                                                    Margin="2,0"
+                                                                    Visibility="{Binding DataContext.CanDeleteDocumentTiers, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
                                                                 <materialDesign:PackIcon Kind="Delete" 
                                                                                        Width="18" Height="18"
                                                                                        Foreground="#F44336"/>
@@ -973,12 +984,13 @@
                                     <RowDefinition Height="*"/>
                                 </Grid.RowDefinitions>
 
-                                <!-- Bouton ajouter compte -->
-                                <Button Grid.Row="0" 
-                                       Style="{StaticResource MaterialDesignRaisedButton}"
-                                       Command="{Binding OpenAddCompteDialogCommand}"
-                                       Height="32"
-                                       Margin="0,0,0,10">
+                                    <!-- Bouton ajouter compte -->
+                                    <Button Grid.Row="0" 
+                                        Style="{StaticResource MaterialDesignRaisedButton}"
+                                        Command="{Binding OpenAddCompteDialogCommand}"
+                                        Visibility="{Binding CanCreateCompteBancaire, Converter={StaticResource BoolToVis}}"
+                                        Height="32"
+                                        Margin="0,0,0,10">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="Plus" Width="16" Height="16" Margin="0,0,5,0"/>
                                         <TextBlock Text="Ajouter un compte" FontSize="12"/>
@@ -1016,19 +1028,18 @@
                                                         <StackPanel Grid.Column="1" 
                                                                    Orientation="Horizontal" 
                                                                    VerticalAlignment="Center">
-                                                            <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                                   Command="{Binding DataContext.OpenEditCompteDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                                   CommandParameter="{Binding}"
-                                                                   ToolTip="Modifier"
-                                                                   Width="30" Height="30">
-                                                                <materialDesign:PackIcon Kind="Pencil" 
-                                                                                       Width="18" Height="18"
-                                                                                       Foreground="#1976D2"/>
+                                                                <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                                    Command="{Binding DataContext.OpenEditCompteDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                                    CommandParameter="{Binding}"
+                                                                    Visibility="{Binding DataContext.CanEditCompteBancaire, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}"
+                                                                    ToolTip="Modifier">
+                                                                <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2"/>
                                                             </Button>
 
-                                                            <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                                <Button Style="{StaticResource MaterialDesignIconButton}"
                                                                    Command="{Binding DataContext.DeleteCompteCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                                                    CommandParameter="{Binding}"
+                                                                   Visibility="{Binding DataContext.CanDeleteCompteBancaire, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}"
                                                                    ToolTip="Supprimer"
                                                                    Width="30" Height="30"
                                                                    Margin="5,0,0,0">

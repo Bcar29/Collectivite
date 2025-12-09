@@ -16,9 +16,14 @@ namespace Collectivite.ViewModels
 
         private bool _isLoading;
         private bool _isDialogOpen;
+        private bool _isPermissionsDialogOpen; // NOUVEAU : Dialog d'affichage des permissions
         private bool _isEditMode;
         private Role _dialogRole = CreateEmptyRole();
         private Role? _selectedRole;
+        private string _permissionFilterText = string.Empty;
+
+        // Stocke toutes les permissions chargées pour pouvoir les filtrer dans le modal
+        private readonly ObservableCollection<PermissionSelectionViewModel> _allPermissionSelections = new();
 
         public RolesViewModel()
         {
@@ -28,6 +33,10 @@ namespace Collectivite.ViewModels
             SaveCommand = new RelayCommand(async _ => await SaveAsync(), _ => CanSave());
             DeleteCommand = new RelayCommand<Role>(async role => await DeleteAsync(role));
             CloseDialogCommand = new RelayCommand(_ => CloseDialog());
+            
+            // NOUVELLES COMMANDES : Affichage des permissions
+            ShowPermissionsCommand = new RelayCommand<Role>(ShowPermissions, role => role != null);
+            ClosePermissionsDialogCommand = new RelayCommand(_ => ClosePermissionsDialog());
 
             LoadCommand.Execute(null);
         }
@@ -45,6 +54,30 @@ namespace Collectivite.ViewModels
         {
             get => _isDialogOpen;
             set => SetProperty(ref _isDialogOpen, value);
+        }
+
+        /// <summary>
+        /// NOUVEAU : Contrôle l'ouverture du dialog d'affichage des permissions
+        /// </summary>
+        public bool IsPermissionsDialogOpen
+        {
+            get => _isPermissionsDialogOpen;
+            set => SetProperty(ref _isPermissionsDialogOpen, value);
+        }
+
+        /// <summary>
+        /// Texte de filtre pour la liste des permissions dans le modal (par nom, code ou description).
+        /// </summary>
+        public string PermissionFilterText
+        {
+            get => _permissionFilterText;
+            set
+            {
+                if (SetProperty(ref _permissionFilterText, value))
+                {
+                    ApplyPermissionFilter();
+                }
+            }
         }
 
         public Role? SelectedRole
@@ -73,6 +106,10 @@ namespace Collectivite.ViewModels
         public ICommand SaveCommand { get; }
         public ICommand DeleteCommand { get; }
         public ICommand CloseDialogCommand { get; }
+        
+        // NOUVELLES COMMANDES
+        public ICommand ShowPermissionsCommand { get; }
+        public ICommand ClosePermissionsDialogCommand { get; }
 
         private async System.Threading.Tasks.Task LoadAsync()
         {
@@ -142,18 +179,48 @@ namespace Collectivite.ViewModels
         private async void LoadPermissionSelections(string[] checkedCodes)
         {
             PermissionSelections.Clear();
+            _allPermissionSelections.Clear();
+            PermissionFilterText = string.Empty;
 
             var permissions = await _permissionService.GetAllAsync();
             foreach (var permission in permissions)
             {
-                PermissionSelections.Add(new PermissionSelectionViewModel
+                var vm = new PermissionSelectionViewModel
                 {
                     PermissionId = permission.Id,
                     Code = permission.Code,
                     Name = permission.Name,
                     Description = permission.Description,
                     IsSelected = checkedCodes.Contains(permission.Code ?? "", StringComparer.OrdinalIgnoreCase)
-                });
+                };
+
+                _allPermissionSelections.Add(vm);
+            }
+
+            ApplyPermissionFilter();
+        }
+
+        /// <summary>
+        /// Applique le filtre sur les permissions visibles dans le modal à partir de _allPermissionSelections.
+        /// </summary>
+        private void ApplyPermissionFilter()
+        {
+            PermissionSelections.Clear();
+
+            var filter = _permissionFilterText?.Trim();
+            var source = _allPermissionSelections.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(filter))
+            {
+                source = source.Where(p =>
+                    (!string.IsNullOrEmpty(p.Name) && p.Name.Contains(filter, StringComparison.OrdinalIgnoreCase)) ||
+                    (!string.IsNullOrEmpty(p.Code) && p.Code.Contains(filter, StringComparison.OrdinalIgnoreCase)) ||
+                    (!string.IsNullOrEmpty(p.Description) && p.Description.Contains(filter, StringComparison.OrdinalIgnoreCase)));
+            }
+
+            foreach (var vm in source)
+            {
+                PermissionSelections.Add(vm);
             }
         }
 
@@ -168,7 +235,9 @@ namespace Collectivite.ViewModels
 
             try
             {
-                var selectedPermissionIds = PermissionSelections
+                // FIX IMPORTANT : Utiliser _allPermissionSelections au lieu de PermissionSelections
+                // car PermissionSelections peut être filtré et ne contenir que les permissions visibles
+                var selectedPermissionIds = _allPermissionSelections
                     .Where(p => p.IsSelected)
                     .Select(p => p.PermissionId)
                     .ToList();
@@ -218,7 +287,8 @@ namespace Collectivite.ViewModels
             if (role == null) return;
 
             var confirm = MessageBox.Show(
-                $"Supprimer le rôle '{role.Name}' ?",
+                $"Supprimer le rôle '{role.Name}' ?\n\n" +
+                "Attention : Cette action est irréversible.",
                 "Confirmation",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Warning);
@@ -256,6 +326,32 @@ namespace Collectivite.ViewModels
         {
             IsDialogOpen = false;
         }
+
+        // ========================================
+        // NOUVELLES MÉTHODES : Affichage des permissions
+        // ========================================
+
+        /// <summary>
+        /// Affiche le dialog avec le détail des permissions d'un rôle
+        /// </summary>
+        private void ShowPermissions(Role? role)
+        {
+            if (role == null) return;
+
+            // Définir le rôle sélectionné pour l'affichage
+            SelectedRole = role;
+
+            // Ouvrir le dialog des permissions
+            IsPermissionsDialogOpen = true;
+        }
+
+        /// <summary>
+        /// Ferme le dialog des permissions
+        /// </summary>
+        private void ClosePermissionsDialog()
+        {
+            IsPermissionsDialogOpen = false;
+        }
     }
 
     public class PermissionSelectionViewModel : ViewModelBase
@@ -274,4 +370,3 @@ namespace Collectivite.ViewModels
         }
     }
 }
-

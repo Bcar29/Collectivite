@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
+using Collectivite.Utils;
 
 namespace Collectivite.Services
 {
@@ -22,6 +23,9 @@ namespace Collectivite.Services
         // Recuperer tous les contrats 
         public async Task<List<Contrats>> GetAllContratsAsync()
         {
+            if (!SessionManager.HasPermission("Contrats.View"))
+                throw new UnauthorizedAccessException("Permission Contrats.View requise pour consulter les contrats.");
+
             return await _appDbContext.Contrats
                 .AsNoTracking()  // ✅ Ne pas tracker
                 .Include(e => e.Exercice)
@@ -34,6 +38,9 @@ namespace Collectivite.Services
 
             try
             {
+                if (!SessionManager.HasPermission("Contrats.Create"))
+                    return (false, "Permission Contrats.Create requise pour créer un contrat.", null);
+
                 var existe = await _appDbContext.Contrats
                     .AnyAsync(c => c.NumeroContrat == contrats.NumeroContrat);
                 if (existe)
@@ -56,6 +63,9 @@ namespace Collectivite.Services
         {
             try
             {
+                if (!SessionManager.HasPermission("Contrats.Edit"))
+                    return (false, "Permission Contrats.Edit requise pour modifier un contrat.");
+
                 // ══════════════════════════════════════════════════════════
                 // ✅ ÉTAPE 1 : DÉTACHER TOUTES LES ENTITÉS TRACKÉES
                 // ══════════════════════════════════════════════════════════
@@ -122,6 +132,9 @@ namespace Collectivite.Services
         {
             try
             {
+                if (!SessionManager.HasPermission("Contrats.Delete"))
+                    return (false, "Permission Contrats.Delete requise pour supprimer un contrat.");
+
                 var existingContrat = await _appDbContext.Contrats
                     .FirstOrDefaultAsync(c => c.Id == contratId);
                 if (existingContrat == null)

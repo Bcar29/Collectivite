@@ -53,10 +53,11 @@
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                        <Button Style="{StaticResource MaterialDesignRaisedButton}"
                             Height="40"
                             Click="BtnAdd_Click"
-                            Margin="0,0,10,0">
+                            Margin="0,0,10,0"
+                            Visibility="{Binding CanCreateEngagement, Converter={StaticResource BoolToVis}}">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="Plus" 
                                                    VerticalAlignment="Center"
@@ -183,36 +184,39 @@
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
 
-                                            <!-- Bouton Détails -->
-                                            <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                  ToolTip="Voir les détails"
-                                                  Click="BtnDetail_Click"
-                                                  Tag="{Binding Id}"
-                                                  Margin="4,0">
-                                                <materialDesign:PackIcon Kind="Eye" 
-                                                                       Foreground="#4CAF50"/>
-                                            </Button>
+                                                                                        <!-- Bouton Détails -->
+                                                                                        <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                                                                    ToolTip="Voir les détails"
+                                                                                                    Click="BtnDetail_Click"
+                                                                                                    Tag="{Binding Id}"
+                                                                                                    Margin="4,0"
+                                                                                                    Visibility="{Binding DataContext.CanViewEngagement, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
+                                                                                                <materialDesign:PackIcon Kind="Eye" 
+                                                                                                                                             Foreground="#4CAF50"/>
+                                                                                        </Button>
 
-                                            <!-- Bouton Modifier -->
-                                            <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                  ToolTip="Modifier"
-                                                  Click="BtnEdit_Click"
-                                                  Tag="{Binding Id}"
-                                                  Margin="4,0">
-                                                <materialDesign:PackIcon Kind="Pencil" 
-                                                                       Foreground="#1976D2"/>
-                                            </Button>
+                                                                                        <!-- Bouton Modifier -->
+                                                                                        <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                                                                    ToolTip="Modifier"
+                                                                                                    Click="BtnEdit_Click"
+                                                                                                    Tag="{Binding Id}"
+                                                                                                    Margin="4,0"
+                                                                                                    Visibility="{Binding DataContext.CanEditEngagement, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
+                                                                                                <materialDesign:PackIcon Kind="Pencil" 
+                                                                                                                                             Foreground="#1976D2"/>
+                                                                                        </Button>
 
-                                            <!-- Bouton Supprimer -->
-                                            <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                <!-- Bouton Supprimer -->
+                                                <Button Style="{StaticResource MaterialDesignIconButton}"
                                                   ToolTip="Supprimer"
                                                   Command="{Binding DataContext.DeleteCommand, 
-                                                          RelativeSource={RelativeSource AncestorType=Page}}"
+                                                      RelativeSource={RelativeSource AncestorType=Page}}"
                                                   CommandParameter="{Binding}"
-                                                  Margin="4,0">
+                                                  Margin="4,0"
+                                                  Visibility="{Binding DataContext.CanDeleteEngagement, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
                                                 <materialDesign:PackIcon Kind="Delete" 
-                                                                       Foreground="#F44336"/>
-                                            </Button>
+                                                               Foreground="#F44336"/>
+                                                </Button>
 
                                         </StackPanel>
                                     </DataTemplate>

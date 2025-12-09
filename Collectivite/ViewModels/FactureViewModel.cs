@@ -1,6 +1,7 @@
 ﻿using Collectivite.Models;
 using Collectivite.Services;
 using Collectivite.Utils;
+using Collectivite.Services;
 using Microsoft.Win32;
 using System;
 using System.Collections.ObjectModel;
@@ -17,6 +18,7 @@ namespace Collectivite.ViewModels
 {
     public class FactureViewModel : ViewModelBase
     {
+        // private readonly string _accessDeniedMessage = "Vous n'avez pas la permission pour cette action.";
         private bool _isLoading;
         private Facture? _selectedFacture;
         private bool _isDialogOpen;
@@ -64,6 +66,15 @@ namespace Collectivite.ViewModels
             // Charger les données
             LoadDataCommand.Execute(null);
         }
+
+        #region Permissions
+
+        public bool CanViewFacture => SessionManager.HasPermission("Facture.View");
+        public bool CanCreateFacture => SessionManager.HasPermission("Facture.Create");
+        public bool CanEditFacture => SessionManager.HasPermission("Facture.Edit");
+        public bool CanDeleteFacture => SessionManager.HasPermission("Facture.Delete");
+
+        #endregion
 
         #region Properties
 
@@ -542,6 +553,15 @@ private void Imprimer(Facture? facture)
 
             try
             {
+                if (!CanViewFacture)
+                {
+                    MessageBox.Show("Accès refusé : vous n'avez pas la permission de consulter les factures.",
+                        "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    Factures.Clear();
+                    IsLoading = false;
+                    return;
+                }
+
                 var factureService = new FactureService();
                 var factures = await factureService.GetAllFacturesAsync();
 
@@ -597,6 +617,13 @@ private void Imprimer(Facture? facture)
 
         private void OpenAddDialog()
         {
+            if (!CanCreateFacture)
+            {
+                MessageBox.Show("Accès refusé : vous n'avez pas la permission de créer des factures.",
+                    "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             IsEditMode = false;
 
             DialogFacture = new Facture
@@ -620,6 +647,12 @@ private void Imprimer(Facture? facture)
         private void OpenEditDialog(Facture? facture)
         {
             if (facture == null) return;
+            if (!CanEditFacture)
+            {
+                MessageBox.Show("Accès refusé : vous n'avez pas la permission de modifier les factures.",
+                    "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
             IsEditMode = true;
 
@@ -672,6 +705,26 @@ private void Imprimer(Facture? facture)
 
         private async System.Threading.Tasks.Task SaveAsync()
         {
+            // Vérifier permissions
+            if (IsEditMode)
+            {
+                if (!CanEditFacture)
+                {
+                    MessageBox.Show("Accès refusé : vous n'avez pas la permission de modifier les factures.",
+                        "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+            }
+            else
+            {
+                if (!CanCreateFacture)
+                {
+                    MessageBox.Show("Accès refusé : vous n'avez pas la permission de créer des factures.",
+                        "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+            }
+
             IsLoading = true;
 
             try
@@ -743,6 +796,13 @@ private void Imprimer(Facture? facture)
         private async System.Threading.Tasks.Task DeleteAsync(Facture? facture)
         {
             if (facture == null) return;
+
+            if (!CanDeleteFacture)
+            {
+                MessageBox.Show("Accès refusé : vous n'avez pas la permission de supprimer les factures.",
+                    "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
             var result = MessageBox.Show(
                 $"⚠️ Supprimer la facture '{facture.NumeroFacture}' ?\n\n" +

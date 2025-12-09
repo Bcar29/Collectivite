@@ -17,6 +17,7 @@ namespace Collectivite.ViewModels
         private bool _isDialogOpen;
         private Commune _dialogCommune;
         private bool _isEditMode;
+        private string _accessDeniedMessage = "Vous n'avez pas la permission pour cette action.";
 
         public CommuneViewModel(CommuneService commune)
         {
@@ -44,6 +45,12 @@ namespace Collectivite.ViewModels
 
         #region Properties 
         public ObservableCollection<Commune> Communes { get; } = [];
+
+        // Permissions dynamiques
+        public bool CanViewCommune => SessionManager.HasPermission("Commune.View");
+        public bool CanCreateCommune => SessionManager.HasPermission("Commune.Create");
+        public bool CanEditCommune => SessionManager.HasPermission("Commune.Edit");
+        public bool CanDeleteCommune => SessionManager.HasPermission("Commune.Delete");
 
         public bool IsLoading
         {
@@ -105,6 +112,17 @@ namespace Collectivite.ViewModels
 
         public async System.Threading.Tasks.Task LoadCommuneAsync()
         {
+            if (!CanViewCommune)
+            {
+                MessageBox.Show(
+                    "Accès refusé : vous n'avez pas la permission de consulter les communes.",
+                    "Accès refusé",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                Communes.Clear();
+                return;
+            }
+
             IsLoading = true;
             try
             {
@@ -132,6 +150,16 @@ namespace Collectivite.ViewModels
 
         private void OpenAddCommune()
         {
+            if (!CanCreateCommune)
+            {
+                MessageBox.Show(
+                    _accessDeniedMessage + "\nPermission requise : Commune.Create",
+                    "Accès refusé",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
             IsEditMode = false;
             DialogCommune = new Commune
             {
@@ -151,6 +179,16 @@ namespace Collectivite.ViewModels
         {
             if (commune == null)
                 return;
+
+            if (!CanEditCommune)
+            {
+                MessageBox.Show(
+                    _accessDeniedMessage + "\nPermission requise : Commune.Edit",
+                    "Accès refusé",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
 
             IsEditMode = true;
             DialogCommune = new Commune
@@ -206,6 +244,26 @@ namespace Collectivite.ViewModels
 
         private async System.Threading.Tasks.Task SaveCommuneAsync()
         {
+            if (IsEditMode && !CanEditCommune)
+            {
+                MessageBox.Show(
+                    _accessDeniedMessage + "\nPermission requise : Commune.Edit",
+                    "Accès refusé",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!IsEditMode && !CanCreateCommune)
+            {
+                MessageBox.Show(
+                    _accessDeniedMessage + "\nPermission requise : Commune.Create",
+                    "Accès refusé",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
             IsLoading = true;
 
             try
@@ -263,6 +321,16 @@ namespace Collectivite.ViewModels
         {
             if (commune == null)
                 return;
+
+            if (!CanDeleteCommune)
+            {
+                MessageBox.Show(
+                    _accessDeniedMessage + "\nPermission requise : Commune.Delete",
+                    "Accès refusé",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
 
             var result = MessageBox.Show(
                 $"Êtes-vous sûr de vouloir supprimer la commune {commune.Nom} ?",

@@ -155,12 +155,12 @@
                                                     Binding="{Binding MontantActu, StringFormat={}{0:N0} GNF}"
                                                     Width="160"/>
 
-                             <DataGridTemplateColumn Header="Actions" Width="160">
+                            <DataGridTemplateColumn Header="Actions" Width="160">
     <DataGridTemplateColumn.CellTemplate>
         <DataTemplate>
-            <StackPanel Orientation="Horizontal"
-                        HorizontalAlignment="Center"
-                        Visibility="{Binding Nommenclature.Enfants, Converter={StaticResource CollectionHasItemsToVisibilityConverter}}">
+                        <StackPanel Orientation="Horizontal"
+                                    HorizontalAlignment="Center"
+                                    Visibility="{Binding Nommenclature.Enfants, Converter={StaticResource CollectionHasItemsToVisibilityConverter}}">
                         
 
                 <!-- Bouton Ajouter -->
@@ -169,7 +169,8 @@
                         Command="{Binding DataContext.OpenAddDialogCommand, 
                                   RelativeSource={RelativeSource AncestorType=Page}}"
                         CommandParameter="{Binding}"
-                        Margin="4,0">
+                        Margin="4,0"
+                        Visibility="{Binding DataContext.CanCreateRemaniement, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
                     <materialDesign:PackIcon Kind="PlusCircle"
                                              Foreground="#4CAF50"/>
                 </Button>

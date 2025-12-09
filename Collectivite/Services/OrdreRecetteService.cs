@@ -1,4 +1,5 @@
 ﻿using Collectivite.Models;
+using Collectivite.Utils;
 using Microsoft.EntityFrameworkCore;
 using Org.BouncyCastle.Asn1;
 using System;
@@ -22,6 +23,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<List<OrdreRecette>> GetAllOrdresRecetteAsync()
         {
+            if (!SessionManager.HasPermission("OrdreRecette.View"))
+                throw new UnauthorizedAccessException("Permission OrdreRecette.View requise pour consulter les ordres de recette.");
+
             using var context = CreateContext();
             var exerciceService = ExerciceService.Instance;
 
@@ -47,6 +51,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<OrdreRecette?> GetOrdreRecetteByIdAsync(int id)
         {
+            if (!SessionManager.HasPermission("OrdreRecette.View"))
+                throw new UnauthorizedAccessException("Permission OrdreRecette.View requise pour consulter cet ordre de recette.");
+
             using var context = CreateContext();
 
             return await context.OrdreRecettes
@@ -72,6 +79,9 @@ namespace Collectivite.Services
             decimal? montantMin = null,
             decimal? montantMax = null)
         {
+            if (!SessionManager.HasPermission("OrdreRecette.View"))
+                throw new UnauthorizedAccessException("Permission OrdreRecette.View requise pour consulter les ordres de recette.");
+
             using var context = CreateContext();
 
             var query = context.OrdreRecettes
@@ -137,6 +147,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<List<OrdreRecette>> GetOrdresRecetteByExerciceAsync(int exerciceId)
         {
+            if (!SessionManager.HasPermission("OrdreRecette.View"))
+                throw new UnauthorizedAccessException("Permission OrdreRecette.View requise pour consulter les ordres de recette.");
+
             using var context = CreateContext();
 
             return await context.OrdreRecettes
@@ -155,6 +168,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<List<OrdreRecette>> GetOrdresRecetteByCommuneAsync(int communeId)
         {
+            if (!SessionManager.HasPermission("OrdreRecette.View"))
+                throw new UnauthorizedAccessException("Permission OrdreRecette.View requise pour consulter les ordres de recette.");
+
             using var context = CreateContext();
 
             return await context.OrdreRecettes
@@ -173,6 +189,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<List<BudgetLine>> GetBudgetLinesSansEnfantsAsync()
         {
+            if (!SessionManager.HasPermission("OrdreRecette.View"))
+                throw new UnauthorizedAccessException("Permission OrdreRecette.View requise pour consulter les lignes budgétaires.");
+
             using var context = CreateContext();
             var exerciceService = ExerciceService.Instance;
 
@@ -216,6 +235,9 @@ namespace Collectivite.Services
             OrdreRecette ordreRecette)
         {
             using AppDbContext context = CreateContext();
+
+            if (!SessionManager.HasPermission("OrdreRecette.Create"))
+                return (false, "Permission OrdreRecette.Create requise pour créer un ordre de recette.", null);
             //using var context = CreateContext();
             try
             {
@@ -385,6 +407,9 @@ namespace Collectivite.Services
         {
             using var context = CreateContext();
 
+            if (!SessionManager.HasPermission("OrdreRecette.Edit"))
+                return (false, "Permission OrdreRecette.Edit requise pour modifier un ordre de recette.");
+
             try
             {
                 var existingOrdre = await context.OrdreRecettes.FindAsync(ordreRecette.Id);
@@ -436,6 +461,9 @@ namespace Collectivite.Services
         public async Task<(bool Success, string Message)> DeleteOrdreRecetteAsync(int id)
         {
             using var context = CreateContext();
+
+            if (!SessionManager.HasPermission("OrdreRecette.Delete"))
+                return (false, "Permission OrdreRecette.Delete requise pour supprimer un ordre de recette.");
 
             try
             {

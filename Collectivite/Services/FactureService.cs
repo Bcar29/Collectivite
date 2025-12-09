@@ -21,6 +21,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<List<Facture>> GetAllFacturesAsync()
         {
+            if (!SessionManager.HasPermission("Facture.View"))
+                throw new UnauthorizedAccessException("Permission Facture.View requise pour consulter les factures.");
+
             using var context = CreateContext();
 
             return await context.Factures
@@ -38,6 +41,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<Facture?> GetFactureByIdAsync(int id)
         {
+            if (!SessionManager.HasPermission("Facture.View"))
+                throw new UnauthorizedAccessException("Permission Facture.View requise pour consulter cette facture.");
+
             using var context = CreateContext();
 
             return await context.Factures
@@ -54,6 +60,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<List<Facture>> GetFacturesByStatusAsync(StatusFact status)
         {
+            if (!SessionManager.HasPermission("Facture.View"))
+                throw new UnauthorizedAccessException("Permission Facture.View requise pour consulter les factures.");
+
             using var context = CreateContext();
 
             return await context.Factures
@@ -71,6 +80,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<List<Facture>> GetFacturesByTiersAsync(int tiersId)
         {
+            if (!SessionManager.HasPermission("Facture.View"))
+                throw new UnauthorizedAccessException("Permission Facture.View requise pour consulter les factures.");
+
             using var context = CreateContext();
 
             return await context.Factures
@@ -95,6 +107,9 @@ namespace Collectivite.Services
             List<DetailsFacture> details)
         {
             using var context = CreateContext();
+
+            if (!SessionManager.HasPermission("Facture.Create"))
+                return (false, "Permission Facture.Create requise pour créer une facture.", null);
 
             try
             {
@@ -184,6 +199,9 @@ namespace Collectivite.Services
         {
             using var context = CreateContext();
 
+            if (!SessionManager.HasPermission("Facture.Edit"))
+                return (false, "Permission Facture.Edit requise pour modifier une facture.");
+
             try
             {
                 var existingFacture = await context.Factures
@@ -252,6 +270,9 @@ namespace Collectivite.Services
         public async Task<(bool Success, string Message)> DeleteFactureAsync(int id)
         {
             using var context = CreateContext();
+
+            if (!SessionManager.HasPermission("Facture.Delete"))
+                return (false, "Permission Facture.Delete requise pour supprimer une facture.");
 
             try
             {

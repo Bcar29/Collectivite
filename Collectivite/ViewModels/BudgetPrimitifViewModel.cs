@@ -83,6 +83,22 @@ namespace Collectivite.ViewModels
         public ObservableCollection<BudgetPrimitif> BudgetPrimitifs { get; } = new();
         public ObservableCollection<Exercice> Exercices { get; } = new();
 
+        /// <summary>
+        /// Permission fonctionnelle pour valider un budget primitif.
+        /// </summary>
+        public bool CanValidateBudget => SessionManager.HasPermission("Budget.Validate");
+
+        /// <summary>
+        /// Permission fonctionnelle pour approuver un budget primitif.
+        /// </summary>
+        public bool CanApproveBudget => SessionManager.HasPermission("Budget.Approve");
+
+        // Permissions CRUD pour BudgetPrimitif (aligné avec la logique Commune)
+        public bool CanViewBudgetPrimitif => SessionManager.HasPermission("BudgetPrimitif.View");
+        public bool CanCreateBudgetPrimitif => SessionManager.HasPermission("BudgetPrimitif.Create");
+        public bool CanEditBudgetPrimitif => SessionManager.HasPermission("BudgetPrimitif.Edit");
+        public bool CanDeleteBudgetPrimitif => SessionManager.HasPermission("BudgetPrimitif.Delete");
+
         public bool IsLoading
         {
             get => _isLoading;
@@ -222,6 +238,16 @@ namespace Collectivite.ViewModels
             IsLoading = true;
             try
             {
+                if (!CanViewBudgetPrimitif)
+                {
+                    BudgetPrimitifs.Clear();
+                    MessageBox.Show(
+                        "Accès refusé : vous n'avez pas la permission de consulter les budgets primitifs.",
+                        "Accès refusé",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    return;
+                }
                 // Vérifier qu'un exercice est sélectionné
                 if (_exerciceService.CurrentExercice == null)
                 {
@@ -304,6 +330,16 @@ namespace Collectivite.ViewModels
             {
                 if (IsEditMode)
                 {
+                    if (!CanEditBudgetPrimitif)
+                    {
+                        MessageBox.Show(
+                            "Accès refusé : permission requise BudgetPrimitif.Edit",
+                            "Accès refusé",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Warning);
+                        return;
+                    }
+
                     var (success, message) = await _budgetPrimitifService.UpdateBudgetPrimitifAsync(DialogBudgetPrimitif);
                     if (success)
                     {
@@ -323,6 +359,16 @@ namespace Collectivite.ViewModels
                 else
                 {
                     //creation
+                    if (!CanCreateBudgetPrimitif)
+                    {
+                        MessageBox.Show(
+                            "Accès refusé : permission requise BudgetPrimitif.Create",
+                            "Accès refusé",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Warning);
+                        return;
+                    }
+
                     var (success, message, _) = await _budgetPrimitifService.CreateBudgetPrimitifAsync(DialogBudgetPrimitif);
                     if (success)
                     {
@@ -359,6 +405,16 @@ namespace Collectivite.ViewModels
         {
             if (budgetPrimitif == null) return;
 
+            if (!CanDeleteBudgetPrimitif)
+            {
+                MessageBox.Show(
+                    "Accès refusé : permission requise BudgetPrimitif.Delete",
+                    "Accès refusé",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
             var result = MessageBox.Show(
                 $"Êtes-vous sûr de vouloir supprimer le budget de '{budgetPrimitif.Exercice.Libelle}' ?",
                 "Confirmation de suppression",
@@ -389,6 +445,19 @@ namespace Collectivite.ViewModels
         private void OpenApprovalDialog(BudgetPrimitif? budget)
         {
             if (budget == null) return;
+
+            // Sécurité fonctionnelle : seule une personne avec la permission
+            // \"Budget.Approve\" (ex. le Maire) peut ouvrir la fenêtre d'approbation.
+            if (!CanApproveBudget)
+            {
+                MessageBox.Show(
+                    "Vous n'avez pas la permission d'approuver le budget primitif.\n" +
+                    "Veuillez contacter l'administrateur de votre commune (Maire).",
+                    "Accès refusé",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
 
             // Vérifier si le budget est déjà approuvé
             if (budget.Status == BudgetPrimitif.Statusbudget.APPROVED || budget.Status == BudgetPrimitif.Statusbudget.VALIDATED)
@@ -424,6 +493,19 @@ namespace Collectivite.ViewModels
         private void OpenValidationDialog(BudgetPrimitif? budget)
         {
             if (budget == null) return;
+
+            // Sécurité fonctionnelle : seule une personne avec la permission
+            // \"Budget.Validate\" (ex. le Maire) peut ouvrir la fenêtre de validation.
+            if (!CanValidateBudget)
+            {
+                MessageBox.Show(
+                    "Vous n'avez pas la permission de valider le budget primitif.\n" +
+                    "Veuillez contacter l'administrateur de votre commune (Maire).",
+                    "Accès refusé",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
 
             // Vérifier si le budget est déjà validé
             if (budget.Status == BudgetPrimitif.Statusbudget.VALIDATED)
@@ -466,12 +548,17 @@ namespace Collectivite.ViewModels
 
         private bool CanConfirmValidation()
         {
-            return _budgetToValidate != null;
+            // On ne peut confirmer la validation que si :
+            // 1) un budget est sélectionné pour validation
+            // 2) l'utilisateur courant possède la permission fonctionnelle
+            return _budgetToValidate != null && CanValidateBudget;
         }
 
         private bool CanConfirmApproval()
         {
-            return _budgetToApprove != null;
+            // 1) un budget est sélectionné pour approbation
+            // 2) l'utilisateur courant possède la permission fonctionnelle
+            return _budgetToApprove != null && CanApproveBudget;
         }
 
         private async Task ConfirmApprovalAsync()

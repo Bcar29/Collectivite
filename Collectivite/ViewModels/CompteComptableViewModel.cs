@@ -20,6 +20,7 @@ namespace Collectivite.ViewModels
         private bool _isDialogOpen;
         private CompteComptable _dialogCompte;
         private bool _isEditMode;
+        private string _accessDeniedMessage = "Vous n'avez pas la permission pour cette action.";
 
         // Nouvelles propriétés pour la gestion des nomenclatures
         private NatureType _natureSelectionnee = NatureType.Recette;
@@ -63,6 +64,11 @@ namespace Collectivite.ViewModels
 
         // Nouvelle collection pour les nomenclatures
         public ObservableCollection<Nommenclature> NomenclaturesDisponibles { get; } = [];
+
+        public bool CanViewCompteComptable => SessionManager.HasPermission("CompteComptable.View");
+        public bool CanCreateCompteComptable => SessionManager.HasPermission("CompteComptable.Create");
+        public bool CanEditCompteComptable => SessionManager.HasPermission("CompteComptable.Edit");
+        public bool CanDeleteCompteComptable => SessionManager.HasPermission("CompteComptable.Delete");
 
         public bool IsLoading
         {
@@ -178,6 +184,18 @@ namespace Collectivite.ViewModels
         // Charger tous les comptes
         public async System.Threading.Tasks.Task LoadCompteAsync()
         {
+            if (!CanViewCompteComptable)
+            {
+                MessageBox.Show(
+                    "Accès refusé : vous n'avez pas la permission de consulter les comptes comptables.",
+                    "Accès refusé",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+
+                CompteComptables.Clear();
+                return;
+            }
+
             IsLoading = true;
             try
             {
@@ -202,6 +220,18 @@ namespace Collectivite.ViewModels
         // Charger uniquement les comptes racines (sans parent)
         public async System.Threading.Tasks.Task LoadComptesRacinesAsync()
         {
+            if (!CanViewCompteComptable)
+            {
+                MessageBox.Show(
+                    "Accès refusé : vous n'avez pas la permission de consulter les comptes comptables.",
+                    "Accès refusé",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+
+                CompteComptables.Clear();
+                return;
+            }
+
             IsLoading = true;
             try
             {
@@ -228,6 +258,18 @@ namespace Collectivite.ViewModels
         {
             if (!parentId.HasValue)
                 return;
+
+            if (!CanViewCompteComptable)
+            {
+                MessageBox.Show(
+                    "Accès refusé : vous n'avez pas la permission de consulter les comptes comptables.",
+                    "Accès refusé",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+
+                CompteComptables.Clear();
+                return;
+            }
 
             IsLoading = true;
             try
@@ -331,7 +373,18 @@ namespace Collectivite.ViewModels
 
         private async Task OpenAddCompte()
         {
+            if (!CanCreateCompteComptable)
+            {
+                MessageBox.Show(
+                    _accessDeniedMessage + "\nPermission requise : CompteComptable.Create",
+                    "Accès refusé",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
             IsEditMode = false;
+
             DialogCompte = new CompteComptable
             {
                 NumeroCompte = "",
@@ -345,7 +398,7 @@ namespace Collectivite.ViewModels
             NatureSelectionnee = NatureType.Recette;
             SectionSelectionnee = SectionType.Fonctionnement;
 
-           await LoadComptesForParentSelectionAsync();
+            await LoadComptesForParentSelectionAsync();
             LoadNomenclaturesCommand.Execute(null);
 
             OnPropertyChanged(nameof(DialogCompte));
@@ -357,7 +410,18 @@ namespace Collectivite.ViewModels
             if (compte == null)
                 return;
 
+            if (!CanEditCompteComptable)
+            {
+                MessageBox.Show(
+                    _accessDeniedMessage + "\nPermission requise : CompteComptable.Edit",
+                    "Accès refusé",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
             IsEditMode = true;
+
             DialogCompte = new CompteComptable
             {
                 Id = compte.Id,
@@ -370,7 +434,7 @@ namespace Collectivite.ViewModels
             IsNommenclatureMode = false;
             NommenclatureSelectionnee = null;
 
-           await  LoadComptesForParentSelectionAsync();
+            await LoadComptesForParentSelectionAsync();
             OnPropertyChanged(nameof(DialogCompte));
             IsDialogOpen = true;
         }
@@ -383,6 +447,26 @@ namespace Collectivite.ViewModels
 
         private async System.Threading.Tasks.Task SaveCompteAsync()
         {
+            if (IsEditMode && !CanEditCompteComptable)
+            {
+                MessageBox.Show(
+                    _accessDeniedMessage + "\nPermission requise : CompteComptable.Edit",
+                    "Accès refusé",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!IsEditMode && !CanCreateCompteComptable)
+            {
+                MessageBox.Show(
+                    _accessDeniedMessage + "\nPermission requise : CompteComptable.Create",
+                    "Accès refusé",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
             IsLoading = true;
 
             try
@@ -446,6 +530,16 @@ namespace Collectivite.ViewModels
         {
             if (compte == null)
                 return;
+
+            if (!CanDeleteCompteComptable)
+            {
+                MessageBox.Show(
+                    _accessDeniedMessage + "\nPermission requise : CompteComptable.Delete",
+                    "Accès refusé",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
 
             var result = MessageBox.Show(
                 $"Êtes-vous sûr de vouloir supprimer le compte {compte.NumeroCompte} - {compte.IntituleCompte} ?\n\n" +

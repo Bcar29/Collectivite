@@ -113,7 +113,8 @@
                               Height="32"
                               Command="{Binding DataContext.OppenEditNommenclatureCommand, 
                                       RelativeSource={RelativeSource AncestorType=Page}}"
-                              CommandParameter="{Binding Nommenclature}">
+                              CommandParameter="{Binding Nommenclature}"
+                              IsEnabled="{Binding DataContext.CanEditNommenclature, RelativeSource={RelativeSource AncestorType=Page}}">
                             <materialDesign:PackIcon Kind="Pencil" 
                                                    Width="18"
                                                    Height="18"
@@ -128,7 +129,8 @@
                               Command="{Binding DataContext.DeleteNommenclatureCommand, 
                                       RelativeSource={RelativeSource AncestorType=Page}}"
                               CommandParameter="{Binding Nommenclature}"
-                              Margin="4,0,0,0">
+                              Margin="4,0,0,0"
+                              IsEnabled="{Binding DataContext.CanDeleteNommenclature, RelativeSource={RelativeSource AncestorType=Page}}">
                             <materialDesign:PackIcon Kind="Delete" 
                                                    Width="18"
                                                    Height="18"
@@ -189,7 +191,8 @@
                 <Button Style="{StaticResource MaterialDesignRaisedButton}"
                         Height="40"
                         Command="{Binding OppenAddNommenclatureCommand}"
-                        HorizontalAlignment="Right">
+                        HorizontalAlignment="Right"
+                        IsEnabled="{Binding CanCreateNommenclature}">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="Plus" 
                                                VerticalAlignment="Center"
@@ -203,7 +206,8 @@
             <!-- ═══════════════════════════════════════════════════════════
                  ONGLETS PRINCIPAUX : RECETTE / DÉPENSE
                  ═══════════════════════════════════════════════════════════ -->
-            <materialDesign:Card UniformCornerRadius="8">
+            <materialDesign:Card UniformCornerRadius="8"
+                               Visibility="{Binding CanViewNommenclature, Converter={StaticResource BoolToVis}}">
                 <TabControl Style="{StaticResource MaterialDesignNavigationRailTabControl}"
                           materialDesign:ColorZoneAssist.Mode="PrimaryMid">
 

@@ -194,6 +194,29 @@ namespace Collectivite.ViewModels
         public bool IsPersonnePhysique => DialogTiers?.Categorie == CategorieJuridique.PersonnePhysique;
         public bool IsPersonneMorale => DialogTiers?.Categorie == CategorieJuridique.PersonneMorale;
 
+        // ══════════════════════════════════════════════════════════════
+        // ✅ PROPRIÉTÉS PERMISSIONS
+        // ══════════════════════════════════════════════════════════════
+
+        public bool CanViewTiers => SessionManager.HasPermission("Tiers.View");
+        public bool CanCreateTiers => SessionManager.HasPermission("Tiers.Create");
+        public bool CanEditTiers => SessionManager.HasPermission("Tiers.Edit");
+        public bool CanDeleteTiers => SessionManager.HasPermission("Tiers.Delete");
+
+        // Permissions for CompteBancaire (actions are exposed in Tiers page)
+        public bool CanViewCompteBancaire => SessionManager.HasPermission("CompteBancaire.View");
+        public bool CanCreateCompteBancaire => SessionManager.HasPermission("CompteBancaire.Create");
+        public bool CanEditCompteBancaire => SessionManager.HasPermission("CompteBancaire.Edit");
+        public bool CanDeleteCompteBancaire => SessionManager.HasPermission("CompteBancaire.Delete");
+
+        // Permissions for DocumentTiers (actions are exposed in Tiers page)
+        public bool CanViewDocumentTiers => SessionManager.HasPermission("DocumentTiers.View");
+        public bool CanCreateDocumentTiers => SessionManager.HasPermission("DocumentTiers.Create");
+        public bool CanEditDocumentTiers => SessionManager.HasPermission("DocumentTiers.Edit");
+        public bool CanDeleteDocumentTiers => SessionManager.HasPermission("DocumentTiers.Delete");
+
+        private readonly string _accessDeniedMessage = "Vous n'avez pas la permission pour cette action.";
+
         #endregion
 
         #region Properties - Comptes
@@ -354,6 +377,18 @@ namespace Collectivite.ViewModels
 
         private async System.Threading.Tasks.Task LoadDataAsync()
         {
+            // ✅ VÉRIFICATION PERMISSION
+            if (!CanViewTiers)
+            {
+                MessageBox.Show(
+                    "Accès refusé : vous n'avez pas la permission de consulter les tiers.",
+                    "Accès refusé",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                Tiers.Clear();
+                return;
+            }
+
             IsLoading = true;
 
             try
@@ -368,6 +403,15 @@ namespace Collectivite.ViewModels
                 }
 
                 ApplyFilter();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                MessageBox.Show(
+                    "Accès refusé : vous n'avez pas la permission de consulter les tiers.",
+                    "Accès refusé",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                Tiers.Clear();
             }
             catch (Exception ex)
             {
@@ -420,6 +464,15 @@ namespace Collectivite.ViewModels
 
                 ApplyFilter();
             }
+            catch (UnauthorizedAccessException)
+            {
+                MessageBox.Show(
+                    "Accès refusé : vous n'avez pas la permission de consulter les tiers.",
+                    "Accès refusé",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                Tiers.Clear();
+            }
             catch (Exception ex)
             {
                 MessageBox.Show($"Erreur lors de la recherche : {ex.Message}",
@@ -430,6 +483,7 @@ namespace Collectivite.ViewModels
                 IsLoading = false;
             }
         }
+
         private void ValidateIBAN()
         {
             if (DialogCompte == null || string.IsNullOrWhiteSpace(DialogCompte.IBAN))
@@ -461,6 +515,17 @@ namespace Collectivite.ViewModels
 
         private void OpenAddTiersDialog()
         {
+            // ✅ VÉRIFICATION PERMISSION
+            if (!CanCreateTiers)
+            {
+                MessageBox.Show(
+                    _accessDeniedMessage + "\nPermission requise : Tiers.Create",
+                    "Accès refusé",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
             try
             {
                 IsEditMode = false;
@@ -486,6 +551,17 @@ namespace Collectivite.ViewModels
         private void OpenEditTiersDialog(Tiers? tiers)
         {
             if (tiers == null) return;
+
+            // ✅ VÉRIFICATION PERMISSION
+            if (!CanEditTiers)
+            {
+                MessageBox.Show(
+                    _accessDeniedMessage + "\nPermission requise : Tiers.Edit",
+                    "Accès refusé",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
 
             try
             {
@@ -543,6 +619,27 @@ namespace Collectivite.ViewModels
 
         private async System.Threading.Tasks.Task SaveTiersAsync()
         {
+            // ✅ VÉRIFICATION PERMISSION
+            if (IsEditMode && !CanEditTiers)
+            {
+                MessageBox.Show(
+                    _accessDeniedMessage + "\nPermission requise : Tiers.Edit",
+                    "Accès refusé",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!IsEditMode && !CanCreateTiers)
+            {
+                MessageBox.Show(
+                    _accessDeniedMessage + "\nPermission requise : Tiers.Create",
+                    "Accès refusé",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
             IsLoading = true;
 
             try
@@ -604,6 +701,17 @@ namespace Collectivite.ViewModels
         {
             if (tiers == null) return;
 
+            // ✅ VÉRIFICATION PERMISSION
+            if (!CanDeleteTiers)
+            {
+                MessageBox.Show(
+                    _accessDeniedMessage + "\nPermission requise : Tiers.Delete",
+                    "Accès refusé",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
             var result = MessageBox.Show(
                 $"Êtes-vous sûr de vouloir supprimer le tiers '{tiers.NomComplet}' ?\n\n" +
                 "⚠️ Cette action supprimera également tous les documents et comptes bancaires associés.",
@@ -636,6 +744,17 @@ namespace Collectivite.ViewModels
         {
             if (tiers == null) return;
 
+            // ✅ VÉRIFICATION PERMISSION
+            if (!CanEditTiers)
+            {
+                MessageBox.Show(
+                    _accessDeniedMessage + "\nPermission requise : Tiers.Edit",
+                    "Accès refusé",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
             var action = tiers.IsActif ? "désactiver" : "activer";
             var result = MessageBox.Show(
                 $"Voulez-vous {action} le tiers '{tiers.NomComplet}' ?",
@@ -665,7 +784,6 @@ namespace Collectivite.ViewModels
         }
 
         #endregion
-
         #region Methods - Comptes
 
         private async void LoadComptesOfSelectedTiers()
@@ -673,6 +791,13 @@ namespace Collectivite.ViewModels
             ComptesOfSelectedTiers.Clear();
 
             if (SelectedTiers == null) return;
+
+            if (!CanViewCompteBancaire)
+            {
+                // Option: keep the list empty and show a notice
+                MessageBox.Show("Accès refusé : vous n'avez pas la permission de consulter les comptes bancaires.", "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
             try
             {
@@ -700,6 +825,12 @@ namespace Collectivite.ViewModels
                 return;
             }
 
+            if (!CanCreateCompteBancaire)
+            {
+                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             IsCompteEditMode = false;
             DialogCompte = new CompteBancaire
             {
@@ -714,6 +845,12 @@ namespace Collectivite.ViewModels
         private void OpenEditCompteDialog(CompteBancaire? compte)
         {
             if (compte == null) return;
+
+            if (!CanEditCompteBancaire)
+            {
+                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
             IsCompteEditMode = true;
             DialogCompte = new CompteBancaire
@@ -747,6 +884,23 @@ namespace Collectivite.ViewModels
 
         private async System.Threading.Tasks.Task SaveCompteAsync()
         {
+            if (IsCompteEditMode)
+            {
+                if (!CanEditCompteBancaire)
+                {
+                    MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+            }
+            else
+            {
+                if (!CanCreateCompteBancaire)
+                {
+                    MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+            }
+
             IsLoading = true;
 
             try
@@ -835,6 +989,12 @@ namespace Collectivite.ViewModels
         {
             if (compte == null) return;
 
+            if (!CanDeleteCompteBancaire)
+            {
+                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             var result = MessageBox.Show(
                 $"Êtes-vous sûr de vouloir supprimer ce compte bancaire ?\n\n" +
                 $"Banque : {compte.Banque}\n" +
@@ -874,6 +1034,13 @@ namespace Collectivite.ViewModels
 
             if (SelectedTiers == null) return;
 
+            if (!CanViewDocumentTiers)
+            {
+                // Do not attempt to load documents if user has no view permission
+                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             try
             {
                 var documentService = new DocumentTiersService();
@@ -903,12 +1070,24 @@ namespace Collectivite.ViewModels
                 return;
             }
 
+            if (!CanCreateDocumentTiers)
+            {
+                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             IsDocumentDialogOpen = true;
         }
 
         private async System.Threading.Tasks.Task AddDocumentAsync(TypeDocument? type)
         {
             if (SelectedTiers == null || type == null) return;
+
+            if (!CanCreateDocumentTiers)
+            {
+                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
             IsLoading = true;
             IsDocumentDialogOpen = false;
@@ -967,6 +1146,12 @@ namespace Collectivite.ViewModels
         {
             if (SelectedDocument == null) return;
 
+            if (!CanEditDocumentTiers)
+            {
+                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             IsLoading = true;
 
             try
@@ -1016,6 +1201,11 @@ namespace Collectivite.ViewModels
         private async System.Threading.Tasks.Task ReplaceDocumentAsync(DocumentTiers? document)
         {
             if (document == null) return;
+            if (!CanEditDocumentTiers)
+            {
+                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
             var result = MessageBox.Show(
                 $"Voulez-vous remplacer le fichier du document '{document.TypeDisplay}' ?",
@@ -1047,6 +1237,12 @@ namespace Collectivite.ViewModels
         private async System.Threading.Tasks.Task CheckDocumentsObligatoiresAsync()
         {
             if (SelectedTiers == null) return;
+
+            if (!CanViewDocumentTiers)
+            {
+                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
             IsLoading = true;
 
@@ -1089,6 +1285,12 @@ namespace Collectivite.ViewModels
         private async System.Threading.Tasks.Task ViewDocumentsExpiresAsync()
         {
             if (SelectedTiers == null) return;
+
+            if (!CanViewDocumentTiers)
+            {
+                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
             IsLoading = true;
 
@@ -1141,6 +1343,11 @@ namespace Collectivite.ViewModels
         private async System.Threading.Tasks.Task DeleteDocumentAsync(DocumentTiers? document)
         {
             if (document == null) return;
+            if (!CanDeleteDocumentTiers)
+            {
+                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
             var result = MessageBox.Show(
                 $"Êtes-vous sûr de vouloir supprimer ce document ?\n\n" +
@@ -1175,6 +1382,12 @@ namespace Collectivite.ViewModels
         {
             if (document == null) return;
 
+            if (!CanViewDocumentTiers)
+            {
+                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             var documentService = new DocumentTiersService();
             var (success, message) = documentService.OpenDocument(document);
 
@@ -1188,6 +1401,12 @@ namespace Collectivite.ViewModels
         private async System.Threading.Tasks.Task ToggleDocumentValiditeAsync(DocumentTiers? document)
         {
             if (document == null) return;
+
+            if (!CanEditDocumentTiers)
+            {
+                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
             IsLoading = true;
 

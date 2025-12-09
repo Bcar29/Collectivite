@@ -1,4 +1,5 @@
 ﻿using Collectivite.Models;
+using Collectivite.Utils;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -25,6 +26,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<List<Engagement>> GetAllEngagementsAsync()
         {
+            if (!SessionManager.HasPermission("Engagement.View"))
+                throw new UnauthorizedAccessException("Permission Engagement.View requise pour consulter les engagements.");
+
             using var context = CreateContext();
             var exerciceService = ExerciceService.Instance;
 
@@ -53,6 +57,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<Engagement?> GetEngagementByIdAsync(int id)
         {
+            if (!SessionManager.HasPermission("Engagement.View"))
+                throw new UnauthorizedAccessException("Permission Engagement.View requise pour consulter cet engagement.");
+
             using var context = CreateContext();
 
             return await context.Engagements
@@ -74,6 +81,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<List<Engagement>> GetEngagementsByExerciceAsync(int exerciceId)
         {
+            if (!SessionManager.HasPermission("Engagement.View"))
+                throw new UnauthorizedAccessException("Permission Engagement.View requise pour consulter les engagements.");
+
             using var context = CreateContext();
 
             return await context.Engagements
@@ -93,6 +103,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<List<Engagement>> GetEngagementsByTiersAsync(int tiersId)
         {
+            if (!SessionManager.HasPermission("Engagement.View"))
+                throw new UnauthorizedAccessException("Permission Engagement.View requise pour consulter les engagements.");
+
             using var context = CreateContext();
 
             return await context.Engagements
@@ -112,6 +125,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<List<Engagement>> GetEngagementsByBudgetLineAsync(int budgetLineId)
         {
+            if (!SessionManager.HasPermission("Engagement.View"))
+                throw new UnauthorizedAccessException("Permission Engagement.View requise pour consulter les engagements.");
+
             using var context = CreateContext();
 
             return await context.Engagements
@@ -131,6 +147,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<List<Engagement>> SearchEngagementsAsync(string searchTerm)
         {
+            if (!SessionManager.HasPermission("Engagement.View"))
+                throw new UnauthorizedAccessException("Permission Engagement.View requise pour rechercher des engagements.");
+
             using var context = CreateContext();
 
             if (string.IsNullOrWhiteSpace(searchTerm))
@@ -162,6 +181,9 @@ namespace Collectivite.Services
         public async Task<(bool Success, string Message, Engagement? Engagement)> CreateEngagementAsync(Engagement engagement)
         {
             using var context = CreateContext();
+
+            if (!SessionManager.HasPermission("Engagement.Create"))
+                return (false, "Permission Engagement.Create requise pour créer un engagement.", null);
 
             try
             {
@@ -258,6 +280,9 @@ namespace Collectivite.Services
         {
             using var context = CreateContext();
 
+            if (!SessionManager.HasPermission("Engagement.Edit"))
+                return (false, "Permission Engagement.Edit requise pour modifier un engagement.");
+
             try
             {
                 var existingEngagement = await context.Engagements.FindAsync(engagement.Id);
@@ -311,6 +336,9 @@ namespace Collectivite.Services
         public async Task<(bool Success, string Message)> DeleteEngagementAsync(int id)
         {
             using var context = CreateContext();
+
+            if (!SessionManager.HasPermission("Engagement.Delete"))
+                return (false, "Permission Engagement.Delete requise pour supprimer un engagement.");
 
             try
             {
