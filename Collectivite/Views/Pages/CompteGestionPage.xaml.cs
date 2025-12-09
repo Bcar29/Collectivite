@@ -22,10 +22,11 @@ namespace Collectivite.Views.Pages
     /// </summary>
     public partial class CompteGestionPage : Page
     {
-        public CompteGestionPage()
+        public CompteGestionPage(AuthService authService)
         {
             InitializeComponent();
-            DataContext = new BudgetLinesViewModel(new BudgetLineService());
+            var auditService = new AuditService();
+            DataContext = new BudgetLinesViewModel(new BudgetLineService(), authService, auditService);
         }
 
         private void Page_Unloaded(object sender, RoutedEventArgs e)

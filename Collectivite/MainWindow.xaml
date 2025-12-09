@@ -779,7 +779,9 @@
             <Border DockPanel.Dock="Top" Background="#F5F5F5">
                 <Frame x:Name="MainContentFrame"
                        NavigationUIVisibility="Hidden"/>
+                
             </Border>
+            
         </DockPanel>
     </materialDesign:DrawerHost>
 </Window>

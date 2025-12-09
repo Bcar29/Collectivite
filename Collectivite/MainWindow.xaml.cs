@@ -55,9 +55,20 @@ namespace Collectivite
             _viewModel = new MainViewModel(_authService);
             DataContext = _viewModel;
 
-            // Naviguer vers le tableau de bord par défaut
+            // 🆕 Charger l'exercice AVANT de naviguer
+            Loaded += async (s, e) => await InitializeAsync();
+        }
+
+        private async Task InitializeAsync()
+        {
+            // Charger les exercices d'abord
+            await _viewModel.LoadExercicesAsync();
+
+            // Ensuite naviguer vers le tableau de bord
             NavigateToDashboard();
         }
+        public AuthService AuthService => _authService;
+
         private void Window_Unloaded(object sender, RoutedEventArgs e)
         {
             if (DataContext is MainViewModel viewModel)
@@ -84,7 +95,7 @@ namespace Collectivite
         private void ExerciceButton_Click(object sender, RoutedEventArgs e)
         {
             _viewModel.UpdatePageTitle("CONFIGURATION - EXERCICE");
-             NavigationService.Instance.NavigateTo(new Views.Pages.ExercicePage());
+             NavigationService.Instance.NavigateTo(new Views.Pages.ExercicePage(_authService));
             _viewModel.IsMenuOpen = false;
         }
 
@@ -121,21 +132,21 @@ namespace Collectivite
         {
             _viewModel.UpdatePageTitle("GESTION BUDGÉTAIRE - LIGNE BUDGETAIRE");
 
-             NavigationService.Instance.NavigateTo(new Views.Pages.BudgetLinesPage());
+             NavigationService.Instance.NavigateTo(new Views.Pages.BudgetLinesPage(_authService));
             _viewModel.IsMenuOpen = false;
         }
         private void CompteAdministratif_Click(object sender, RoutedEventArgs e)
         {
             _viewModel.UpdatePageTitle("GESTION BUDGÉTAIRE - COMPTE ADMINISTRATIF");
 
-             NavigationService.Instance.NavigateTo(new Views.Pages.CompteAdministratifPage());
+             NavigationService.Instance.NavigateTo(new Views.Pages.CompteAdministratifPage(_authService));
             _viewModel.IsMenuOpen = false;
         }
         private void CompteGestion_Click(object sender, RoutedEventArgs e)
         {
             _viewModel.UpdatePageTitle("GESTION COMPTABLE - COMPTE DE GESTION");
 
-             NavigationService.Instance.NavigateTo(new Views.Pages.CompteGestionPage());
+             NavigationService.Instance.NavigateTo(new Views.Pages.CompteGestionPage(_authService));
             _viewModel.IsMenuOpen = false;
         }
 
@@ -299,7 +310,7 @@ namespace Collectivite
             // Continuer avec la page des lignes de budget
             _viewModel.UpdatePageTitle("GESTION BUDGÉTAIRE - BUDGET LINE");
 
-            NavigationService.Instance.NavigateTo(new Views.Pages.BudgetLinesPage());
+            NavigationService.Instance.NavigateTo(new Views.Pages.BudgetLinesPage(_authService));
             _viewModel.IsMenuOpen = false;
 
         }
@@ -328,8 +339,7 @@ namespace Collectivite
             
             // Continuer avec la page de la liste des lignes de budget
             _viewModel.UpdatePageTitle("GESTION BUDGÉTAIRE - BUDGET PRIMITIF");
-
-            NavigationService.Instance.NavigateTo(new Views.Pages.ListeBudgetLinePage());
+            NavigationService.Instance.NavigateTo(new Views.Pages.BudgetLinesPage(_authService));
             _viewModel.IsMenuOpen = false;
         }
 

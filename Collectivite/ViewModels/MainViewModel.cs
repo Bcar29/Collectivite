@@ -60,7 +60,7 @@ namespace Collectivite.ViewModels
         public ObservableCollection<Exercice> Exercices { get; } = new();
 
         public ICommand SelectExerciceCommand { get; }
-
+        #region proprites
         public string CurrentPageTitle
         {
             get => _currentPageTitle;
@@ -127,16 +127,18 @@ namespace Collectivite.ViewModels
             set => SetProperty(ref _isMenuOpen, value);
         }
 
+        #endregion
         public ICommand LogoutCommand { get; }
         public ICommand OpenProfileCommand { get; }
         public ICommand OpenSettingsCommand { get; }
         public ICommand OpenMenuCommand { get; }
         public ICommand CloseMenuCommand { get; }
 
+        #region methodes
         /// <summary>
         /// Charge tous les exercices depuis la base de données
         /// </summary>
-        public  async Task LoadExercicesAsync()
+        public async Task LoadExercicesAsync()
         {
             try
             {
@@ -355,7 +357,7 @@ namespace Collectivite.ViewModels
         //    GlobalEvents.ExercicesListChanged -= OnExercicesListChanged;
         //    base.OnDispose();
         //}
-
+        #endregion
 
     }
 }

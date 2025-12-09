@@ -22,11 +22,12 @@ namespace Collectivite.Views.Pages
     /// </summary>
     public partial class ListeBudgetLinePage : Page
     {
-        public ListeBudgetLinePage()
+        public ListeBudgetLinePage(AuthService authService)
         {
             InitializeComponent();
             // On attend que la Page soit entièrement chargée
-            DataContext = new BudgetLinesViewModel(new BudgetLineService());
+            var auditService = new AuditService();
+            DataContext = new BudgetLinesViewModel(new BudgetLineService(), authService, auditService);
         }
 
         private void Page_Unloaded(object sender, RoutedEventArgs e)

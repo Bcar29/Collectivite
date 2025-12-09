@@ -13,8 +13,7 @@ namespace Collectivite.Services
             {
                 if (_authService == null)
                 {
-                    var context = new AppDbContext();
-                    _authService = new AuthService(context);
+                    _authService = new AuthService();
                 }
 
                 return _authService;

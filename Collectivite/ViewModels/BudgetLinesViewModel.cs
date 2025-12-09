@@ -183,10 +183,13 @@ namespace Collectivite.ViewModels
         private string _montantPrevu = "0";
         private bool _isDisposed;
         private readonly ExerciceService _exerciceService;
+        private readonly AuditService _auditService;
+        private readonly AuthService _authService;
 
         // 🆕 Collections pour la hiérarchie
         private List<BudgetLineHierarchyViewModel> _fullHierarchy = new();
 
+        #region proprietes
         // ═══════════════════════════════════════════════════════════
         // PROPRIÉTÉS - GÉNÉRAL
         // ═══════════════════════════════════════════════════════════
@@ -214,6 +217,63 @@ namespace Collectivite.ViewModels
 
         public bool IsBudgetValidated => _budgetPrimitif?.Status == BudgetPrimitif.Statusbudget.VALIDATED;
         public bool CanModifyBudget => !IsBudgetValidated;
+
+        //propriete des totaux 
+        private decimal _totalRecetteFonctionnement;
+        public decimal TotalRecetteFonctionnement
+        {
+            get => _totalRecetteFonctionnement;
+            set => SetProperty(ref _totalRecetteFonctionnement, value);
+        }
+
+        private decimal _totalRecetteInvestissement;
+        public decimal TotalRecetteInvestissement
+        {
+            get => _totalRecetteInvestissement;
+            set => SetProperty(ref _totalRecetteInvestissement, value);
+        }
+
+        private decimal _totalRecetteReelsInvestissement;
+        public decimal TotalRecetteReelsInvestissement
+        {
+            get => _totalRecetteReelsInvestissement;
+            set => SetProperty(ref _totalRecetteReelsInvestissement, value);
+        }
+
+        private decimal _totalGeneralRecettesReels;
+        public decimal TotalGeneralRecettesReels
+        {
+            get => _totalGeneralRecettesReels;
+            set => SetProperty(ref _totalGeneralRecettesReels, value);
+        }
+
+        private decimal _totalDepenseFonctionnement;
+        public decimal TotalDepenseFonctionnement
+        {
+            get => _totalDepenseFonctionnement;
+            set => SetProperty(ref _totalDepenseFonctionnement, value);
+        }
+
+        private decimal _totalDepenseReelsFonctionnement;
+        public decimal TotalDepenseReelsFonctionnement
+        {
+            get => _totalDepenseReelsFonctionnement;
+            set => SetProperty(ref _totalDepenseReelsFonctionnement, value);
+        }
+
+        private decimal _totalDepenseInvestissement;
+        public decimal TotalDepenseInvestissement
+        {
+            get => _totalDepenseInvestissement;
+            set => SetProperty(ref _totalDepenseInvestissement, value);
+        }
+
+        private decimal _totalGeneralDepensesReels;
+        public decimal TotalGeneralDepensesReels
+        {
+            get => _totalGeneralDepensesReels;
+            set => SetProperty(ref _totalGeneralDepensesReels, value);
+        }
 
         // ═══════════════════════════════════════════════════════════
         // PROPRIÉTÉS - DIALOG
@@ -259,7 +319,7 @@ namespace Collectivite.ViewModels
         }
 
         public string NomenclatureLibelle => _currentLine?.Nommenclature?.Intitule ?? "N/A";
-
+        #endregion
         // ═══════════════════════════════════════════════════════════
         // COMMANDES
         // ═══════════════════════════════════════════════════════════
@@ -276,10 +336,13 @@ namespace Collectivite.ViewModels
         // CONSTRUCTEUR
         // ═══════════════════════════════════════════════════════════
 
-        public BudgetLinesViewModel(BudgetLineService service)
+        public BudgetLinesViewModel(BudgetLineService service, AuthService authService, AuditService auditService)
         {
             _service = service;
             _exerciceService = ExerciceService.Instance;
+            _authService = authService;
+            _auditService = auditService;
+
 
             // S'abonner aux changements d'exercice
             _exerciceService.ExerciceChanged += OnExerciceChanged;
@@ -426,6 +489,7 @@ namespace Collectivite.ViewModels
 
                 // Recharger les lignes budgétaires
                 await LoadForSelectedTabAsync();
+
             });
         }
 
@@ -532,6 +596,14 @@ namespace Collectivite.ViewModels
                 var filter = TabToFilter(SelectedTabIndex);
                 var all = await _service.GetBudgetLinesForBudgetPrimitifAsync(_budgetPrimitifId);
 
+                TotalRecetteFonctionnement = _service.TotalRecetteFonctionnement(all);
+                TotalRecetteInvestissement = _service.TotalRecetteInvestissement(all);
+                TotalRecetteReelsInvestissement = _service.TotalRecetteReelInvestissement(all);
+                TotalGeneralRecettesReels = _service.TotalGeneralRecetteReel(all);
+                TotalDepenseFonctionnement = _service.TotalDepenseFonctionnement(all);
+                TotalDepenseReelsFonctionnement = _service.TotalDepenseReelFonctionnement(all);
+                TotalDepenseInvestissement = _service.TotalDepenseInvestissement(all);
+                TotalGeneralDepensesReels = _service.TotalGeneralDepenseReel(all);
                 // 🆕 Construire la hiérarchie au lieu de simplement filtrer
                 _fullHierarchy = BuildHierarchy(all, filter.nature, filter.section);
 
@@ -702,9 +774,10 @@ namespace Collectivite.ViewModels
                     // Mode édition
                     if (_currentLine == null) return;
 
-                    var (success, message, _) = await _service.UpdateBudgetLineAsync(
+                    var (success, message, bl) = await _service.UpdateBudgetLineAsync(
                         _currentLine.Id,
                         montant);
+                    
 
                     MessageBox.Show(message,
                         success ? "Succès" : "Erreur",
@@ -713,6 +786,11 @@ namespace Collectivite.ViewModels
 
                     if (success)
                     {
+                        var username = _authService.CurrentUser?.Username ?? "Utilisateur inconnu";
+                        await _auditService.LogAsync(
+                                   "Prevision modifié ",
+                                   $"{bl?.Nommenclature.code()} montant : {bl?.MontantPrevu} {username} le {DateTime.Now:dd/MM/yyyy HH:mm}",
+                                   username);
                         await LoadForSelectedTabAsync();
                     }
                 }
@@ -735,6 +813,12 @@ namespace Collectivite.ViewModels
                         _budgetPrimitifId,
                         SelectedNomenclature.Id,
                         montant);
+
+                    var username = _authService.CurrentUser?.Username ?? "Utilisateur inconnu";
+                    await _auditService.LogAsync(
+                                "Nouvelle Prevision ",
+                                $"{newLine.Nommenclature.code()} montant : {newLine.MontantPrevu} {username} le {DateTime.Now:dd/MM/yyyy HH:mm}",
+                                username);
 
                     MessageBox.Show(
                         $"✅ Ligne budgétaire créée avec succès.\n\n" +
@@ -835,5 +919,6 @@ namespace Collectivite.ViewModels
                 _isDisposed = true;
             }
         }
+    
     }
 }
