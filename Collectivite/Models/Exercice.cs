@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.RegularExpressions;
 
 namespace Collectivite.Models
 {
@@ -17,27 +18,35 @@ namespace Collectivite.Models
 
         [Required(ErrorMessage = "La date de début est obligatoire")]
         public DateOnly DateDebut { get; set; }
+
         public DateOnly DateFin { get; set; }
         public bool EstCloture { get; set; }
+
         public BudgetPrimitif? BudgetPrimitif { get; set; }
-        // ══════════════════════════════════════════════════
-        // RELATION AVEC DETAILCOMMUNE (One-to-One)
-        // ══════════════════════════════════════════════════
+
         [ForeignKey("DetailCommune")]
-        //[Required]
         public int? IdDetailCommune { get; set; }
 
-        // Propriété de navigation vers DetailCommune
         public DetailCommune? DetailCommune { get; set; } = null!;
 
         public ICollection<Contrats>? Contrats { get; set; }
-
         public ICollection<Engagement>? Engagements { get; set; }
-
         public ICollection<Recensement>? Recensements { get; set; }
-        //public ICollection<Facture>? Factures { get; set; }
 
 
+        // ⭐ MÉTHODE POUR EXTRAIRE L'ANNÉE DU LIBELLÉ ⭐
+        public int? GetAnnee()
+        {
+            if (string.IsNullOrWhiteSpace(Libelle))
+                return null;
 
+            // Cherche un nombre dans le libellé
+            var match = Regex.Match(Libelle, @"\d+");
+
+            if (match.Success && int.TryParse(match.Value, out int annee))
+                return annee;
+
+            return null;
+        }
     }
 }

@@ -26,7 +26,7 @@ namespace Collectivite.Utils
 
         public static void Seed(AppDbContext db)
         {
-            db.Database.Migrate();
+            //db.Database.Migrate();
 
             // Permissions
             foreach (var permission in DefaultPermissions)

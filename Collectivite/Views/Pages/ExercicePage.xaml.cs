@@ -6,17 +6,14 @@ namespace Collectivite.Views.Pages
 {
     public partial class ExercicePage : Page
     {
-        public ExercicePage()
+        public ExercicePage(AuthService authService)
         {
             InitializeComponent();
 
-            // Initialiser le ViewModel
-            //var context = new AppDbContext();
             var exerciceService = new ExerciceService();
-            var auditorService = new AuditService();
-            var viewModel = new ExerciceViewModel(exerciceService, auditorService);
+            var auditService = new AuditService();
 
-            DataContext = viewModel;
+            DataContext = new ExerciceViewModel(exerciceService, auditService, authService);
         }
     }
 }

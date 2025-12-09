@@ -143,7 +143,7 @@
                 <!-- Footer -->
                 <StackPanel Grid.Row="2" 
                           VerticalAlignment="Bottom">
-                    <TextBlock Text="© 2025 Gestion Municipale"
+                    <TextBlock Text="© 2025 Gestion Communale"
                              HorizontalAlignment="Center"
                              FontSize="12"
                              Foreground="{DynamicResource MaterialDesignBodyLight}"/>
@@ -175,27 +175,32 @@
                                   HorizontalAlignment="Center"
                                   Margin="40">
                             <materialDesign:PackIcon Kind="CityVariant"
-                                                   Width="100"
-                                                   Height="100"
-                                                   Foreground="White"
-                                                   HorizontalAlignment="Center"
-                                                   Margin="0,0,0,20"/>
-                            
-                            <TextBlock Text="Gestion Municipale"
-                                     FontSize="36"
-                                     FontWeight="Bold"
-                                     Foreground="White"
-                                     HorizontalAlignment="Center"
-                                     TextAlignment="Center"/>
-                            
-                            <TextBlock Text="Solution complète de gestion budgétaire et comptable"
-                                     FontSize="16"
-                                     Foreground="White"
-                                     HorizontalAlignment="Center"
-                                     TextAlignment="Center"
-                                     Margin="0,15,0,0"
-                                     TextWrapping="Wrap"
-                                     Opacity="0.9"/>
+                                  Width="100"
+                                  Height="100"
+                                  Foreground="White"
+                                  HorizontalAlignment="Center"
+                                  Margin="0,0,0,20"/>
+
+                            <TextBlock Text="Plateforme de Gestion Budgetaire "
+                                  FontSize="15"
+                                  FontWeight="Bold"
+                                  Foreground="White"
+                                  TextAlignment="Center"
+                                  Margin="0,15,0,0"/>
+                            <TextBlock Text="et Comptable des Collectivités"
+                                  FontSize="15"
+                                  FontWeight="Bold"
+                                  Foreground="White"
+                                  TextAlignment="Center"
+                                  Opacity="0.9"
+                                  Margin="0,5,0,0"/>
+                            <TextBlock Text="Locales"
+                                  FontSize="15"
+                                  FontWeight="Bold"
+                                  Foreground="White"
+                                  TextAlignment="Center"
+                                  Opacity="0.9"
+                                  Margin="0,5,0,0"/>
                         </StackPanel>
                     </Grid>
                 </Border>

@@ -9,13 +9,12 @@ namespace Collectivite.Services
 {
     public class AuthService
     {
-        private readonly AppDbContext _context;
         private User? _currentUser;
         private readonly HashSet<string> _currentPermissions = new(StringComparer.OrdinalIgnoreCase);
 
-        public AuthService(AppDbContext context)
+        private AppDbContext CreateContext()
         {
-            _context = context;
+            return new AppDbContext();
         }
 
         public User? CurrentUser => _currentUser;
@@ -26,7 +25,8 @@ namespace Collectivite.Services
         {
             try
             {
-                var user = await _context.Users
+                using var context = CreateContext();
+                var user = await context.Users
                     .Include(u => u.Commune)
                     .Include(u => u.Role)
                         .ThenInclude(r => r.RolePermissions)
