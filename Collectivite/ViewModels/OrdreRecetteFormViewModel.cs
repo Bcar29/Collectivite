@@ -313,15 +313,7 @@ namespace Collectivite.ViewModels
 
         private void NavigateBack()
         {
-            var mainWindow = Application.Current.MainWindow;
-            if (mainWindow != null)
-            {
-                var frame = mainWindow.FindName("MainContentFrame") as System.Windows.Controls.Frame;
-                if (frame != null && frame.CanGoBack)
-                {
-                    frame.GoBack();
-                }
-            }
+            NavigationService.Instance.GoBack();
         }
 
         private void ConvertMontantToLettres()

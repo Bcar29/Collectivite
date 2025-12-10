@@ -457,16 +457,8 @@ namespace Collectivite.ViewModels
                 MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
+            NavigationService.Instance.NavigateTo(new Views.Pages.OrdreRecetteFormPage());
 
-            var mainWindow = Application.Current.MainWindow;
-            if (mainWindow != null)
-            {
-                var frame = mainWindow.FindName("MainContentFrame") as System.Windows.Controls.Frame;
-                if (frame != null)
-                {
-                    frame.Navigate(new OrdreRecetteFormPage());
-                }
-            }
         }
 
         private void NavigateToEdit(OrdreRecette? ordreRecette)
@@ -477,16 +469,7 @@ namespace Collectivite.ViewModels
                 MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-
-            var mainWindow = Application.Current.MainWindow;
-            if (mainWindow != null)
-            {
-                var frame = mainWindow.FindName("MainContentFrame") as System.Windows.Controls.Frame;
-                if (frame != null)
-                {
-                    frame.Navigate(new OrdreRecetteFormPage(ordreRecette.Id));
-                }
-            }
+            NavigationService.Instance.NavigateTo(new Views.Pages.OrdreRecetteFormPage(ordreRecette.Id));
         }
 
         private void NavigateToDetail(OrdreRecette? ordreRecette)
@@ -497,16 +480,8 @@ namespace Collectivite.ViewModels
                 MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-
-            var mainWindow = Application.Current.MainWindow;
-            if (mainWindow != null)
-            {
-                var frame = mainWindow.FindName("MainContentFrame") as System.Windows.Controls.Frame;
-                if (frame != null)
-                {
-                    frame.Navigate(new OrdreRecetteDetailPage(ordreRecette.Id));
-                }
-            }
+            NavigationService.Instance.NavigateTo(new Views.Pages.OrdreRecetteDetailPage(ordreRecette.Id));
+            
         }
         #endregion
 

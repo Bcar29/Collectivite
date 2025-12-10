@@ -3,27 +3,25 @@ using Collectivite.Services;
 using Collectivite.Utils;
 using System;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 
 namespace Collectivite.ViewModels
 {
-    public class BonCommandeListViewModel : ViewModelBase
+    public class ExpressionBesoinListViewModel : ViewModelBase
     {
-        // private readonly string _accessDeniedMessage = "Vous n'avez pas la permission pour cette action.";
         private bool _isLoading;
-        private BonCommande? _selectedBonCommande;
+        private ExpressionBesoin? _selectedExpressionBesoin;
 
-        public BonCommandeListViewModel()
+        public ExpressionBesoinListViewModel()
         {
             // Commandes
             LoadDataCommand = new RelayCommand(async _ => await LoadDataAsync());
             OpenAddPageCommand = new RelayCommand(_ => OpenAddPage());
-            GoFowardCommande = new RelayCommand(_ => NavigateFront());
-            OpenEditPageCommand = new RelayCommand<BonCommande>(bc => OpenEditPage(bc));
-            OpenDetailsPageCommand = new RelayCommand<BonCommande>(bc => OpenDetailsPage(bc));
-            DeleteCommand = new RelayCommand<BonCommande>(async bc => await DeleteAsync(bc));
+            GoForwardCommand = new RelayCommand(_ => NavigateFront());
+            OpenEditPageCommand = new RelayCommand<ExpressionBesoin>(eb => OpenEditPage(eb));
+            OpenDetailsPageCommand = new RelayCommand<ExpressionBesoin>(eb => OpenDetailsPage(eb));
+            DeleteCommand = new RelayCommand<ExpressionBesoin>(async eb => await DeleteAsync(eb));
 
             // Charger les données
             LoadDataCommand.Execute(null);
@@ -31,16 +29,16 @@ namespace Collectivite.ViewModels
 
         #region Permissions
 
-        public bool CanViewBonCommande => SessionManager.HasPermission("BonCommande.View");
-        public bool CanCreateBonCommande => SessionManager.HasPermission("BonCommande.Create");
-        public bool CanEditBonCommande => SessionManager.HasPermission("BonCommande.Edit");
-        public bool CanDeleteBonCommande => SessionManager.HasPermission("BonCommande.Delete");
+        public bool CanViewExpressionBesoin => SessionManager.HasPermission("ExpressionBesoin.View");
+        public bool CanCreateExpressionBesoin => SessionManager.HasPermission("ExpressionBesoin.Create");
+        public bool CanEditExpressionBesoin => SessionManager.HasPermission("ExpressionBesoin.Edit");
+        public bool CanDeleteExpressionBesoin => SessionManager.HasPermission("ExpressionBesoin.Delete");
 
         #endregion
 
         #region Properties
 
-        public ObservableCollection<BonCommande> BonCommandes { get; } = new();
+        public ObservableCollection<ExpressionBesoin> ExpressionBesoins { get; } = new();
 
         public bool IsLoading
         {
@@ -48,10 +46,10 @@ namespace Collectivite.ViewModels
             set => SetProperty(ref _isLoading, value);
         }
 
-        public BonCommande? SelectedBonCommande
+        public ExpressionBesoin? SelectedExpressionBesoin
         {
-            get => _selectedBonCommande;
-            set => SetProperty(ref _selectedBonCommande, value);
+            get => _selectedExpressionBesoin;
+            set => SetProperty(ref _selectedExpressionBesoin, value);
         }
 
         #endregion
@@ -63,7 +61,7 @@ namespace Collectivite.ViewModels
         public ICommand OpenEditPageCommand { get; }
         public ICommand OpenDetailsPageCommand { get; }
         public ICommand DeleteCommand { get; }
-        public ICommand GoFowardCommande { get; }
+        public ICommand GoForwardCommand { get; }
 
         #endregion
 
@@ -75,21 +73,21 @@ namespace Collectivite.ViewModels
 
             try
             {
-                if (!CanViewBonCommande)
+                if (!CanViewExpressionBesoin)
                 {
-                    MessageBox.Show("Accès refusé : vous n'avez pas la permission de consulter les bons de commande.",
+                    MessageBox.Show("Accès refusé : vous n'avez pas la permission de consulter les expressions de besoin.",
                         "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    BonCommandes.Clear();
+                    ExpressionBesoins.Clear();
                     return;
                 }
 
-                var service = new BonCommandeService();
-                var bonCommandes = await service.GetAllBonCommandesAsync();
+                var service = new ExpressionBesoinService();
+                var expressionBesoins = await service.GetAllExpressionBesoinsAsync();
 
-                BonCommandes.Clear();
-                foreach (var bc in bonCommandes)
+                ExpressionBesoins.Clear();
+                foreach (var eb in expressionBesoins)
                 {
-                    BonCommandes.Add(bc);
+                    ExpressionBesoins.Add(eb);
                 }
             }
             catch (Exception ex)
@@ -105,53 +103,51 @@ namespace Collectivite.ViewModels
 
         private void OpenAddPage()
         {
-            if (!CanCreateBonCommande)
+            if (!CanCreateExpressionBesoin)
             {
-                MessageBox.Show("Accès refusé : vous n'avez pas la permission de créer des bons de commande.",
+                MessageBox.Show("Accès refusé : vous n'avez pas la permission de créer des expressions de besoin.",
                     "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-            NavigationService.Instance.NavigateTo(new Views.Pages.BonCommandeFormPage());
-           
+            NavigationService.Instance.NavigateTo(new Views.Pages.ExpressionBesoinFormPage());
         }
 
-        private void OpenEditPage(BonCommande? bonCommande)
+        private void OpenEditPage(ExpressionBesoin? expressionBesoin)
         {
-            if (bonCommande == null) return;
-            if (!CanEditBonCommande)
+            if (expressionBesoin == null) return;
+            if (!CanEditExpressionBesoin)
             {
-                MessageBox.Show("Accès refusé : vous n'avez pas la permission de modifier des bons de commande.",
+                MessageBox.Show("Accès refusé : vous n'avez pas la permission de modifier des expressions de besoin.",
                     "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-            NavigationService.Instance.NavigateTo(new Views.Pages.BonCommandeFormPage(bonCommande.Id));
-            
+            NavigationService.Instance.NavigateTo(new Views.Pages.ExpressionBesoinFormPage(expressionBesoin.Id));
         }
 
-        private void OpenDetailsPage(BonCommande? bonCommande)
+        private void OpenDetailsPage(ExpressionBesoin? expressionBesoin)
         {
-            if (bonCommande == null) return;
-            if (!CanViewBonCommande)
+            if (expressionBesoin == null) return;
+            if (!CanViewExpressionBesoin)
             {
-                MessageBox.Show("Accès refusé : vous n'avez pas la permission de consulter les bons de commande.",
+                MessageBox.Show("Accès refusé : vous n'avez pas la permission de consulter les expressions de besoin.",
                     "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-            NavigationService.Instance.NavigateTo(new Views.Pages.BonCommandeDetailsPage(bonCommande.Id));
+            NavigationService.Instance.NavigateTo(new Views.Pages.ExpressionBesoinDetailsPage(expressionBesoin.Id));
         }
 
-        private async System.Threading.Tasks.Task DeleteAsync(BonCommande? bonCommande)
+        private async System.Threading.Tasks.Task DeleteAsync(ExpressionBesoin? expressionBesoin)
         {
-            if (bonCommande == null) return;
-            if (!CanDeleteBonCommande)
+            if (expressionBesoin == null) return;
+            if (!CanDeleteExpressionBesoin)
             {
-                MessageBox.Show("Accès refusé : vous n'avez pas la permission de supprimer des bons de commande.",
+                MessageBox.Show("Accès refusé : vous n'avez pas la permission de supprimer des expressions de besoin.",
                     "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             var result = MessageBox.Show(
-                $"⚠️ Supprimer le bon de commande '{bonCommande.Numero}' ?\n\n" +
+                $"⚠️ Supprimer l'expression de besoin '{expressionBesoin.Numero}' ?\n\n" +
                 $"Cette action supprimera également tous les détails associés.\n" +
                 $"Cette action est irréversible.",
                 "Confirmation",
@@ -164,8 +160,8 @@ namespace Collectivite.ViewModels
 
             try
             {
-                var service = new BonCommandeService();
-                var (success, message) = await service.DeleteBonCommandeAsync(bonCommande.Id);
+                var service = new ExpressionBesoinService();
+                var (success, message) = await service.DeleteExpressionBesoinAsync(expressionBesoin.Id);
 
                 MessageBox.Show(message,
                     success ? "Succès" : "Erreur",
@@ -192,6 +188,7 @@ namespace Collectivite.ViewModels
         {
             NavigationService.Instance.GoForward();
         }
+
         #endregion
     }
 }

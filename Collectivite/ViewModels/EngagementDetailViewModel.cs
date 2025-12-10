@@ -183,22 +183,7 @@ namespace Collectivite.ViewModels
 
         private void NavigateBack()
         {
-            var mainWindow = Application.Current.MainWindow;
-            if (mainWindow != null)
-            {
-                var frame = mainWindow.FindName("MainContentFrame") as System.Windows.Controls.Frame;
-                if (frame != null)
-                {
-                    if (frame.CanGoBack)
-                    {
-                        frame.GoBack();
-                    }
-                    else
-                    {
-                        frame.Navigate(new Views.Pages.EngagementPage());
-                    }
-                }
-            }
+            NavigationService.Instance.GoBack();
         }
 
         #endregion

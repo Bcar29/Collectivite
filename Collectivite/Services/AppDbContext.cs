@@ -34,6 +34,8 @@ namespace Collectivite.Services
         public DbSet<CompteComptable> CompteComptables { get; set; }
         public DbSet<EcritureComptable> EcritureComptables { get; set; }
         public DbSet<Mouvement> Mouvements { get; set; }
+        public DbSet<ExpressionBesoin> ExpressionBesoins { get; set; }
+        public DbSet<DetailExpressionBesoin> DetailExpressionBesoins { get; set; }
 
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<Role> Roles { get; set; }
@@ -212,7 +214,7 @@ namespace Collectivite.Services
                 .WithMany(c => c.Factures)
                 .HasForeignKey(f => f.ContratId)
                 .OnDelete(DeleteBehavior.Cascade);
-
+            
             // ════════════════════════════════════════════════════════
             // 🔟 Engagements : multiples relations
             // ════════════════════════════════════════════════════════
@@ -407,7 +409,34 @@ namespace Collectivite.Services
                 .HasForeignKey(m => m.idMandat)
                 .OnDelete(DeleteBehavior.SetNull);
 
-            
+
+            // ════════════════════════════════════════════════════════
+            // 12️⃣ Expression de Besoin ↔ Exercice (N → 1)
+            // ════════════════════════════════════════════════════════
+            modelBuilder.Entity<ExpressionBesoin>()
+                .HasOne(eb => eb.Exercice)
+                .WithMany()
+                .HasForeignKey(eb => eb.ExerciceId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ════════════════════════════════════════════════════════
+            // 13️⃣ Expression de Besoin ↔ Détails (1 → N)
+            // ════════════════════════════════════════════════════════
+            modelBuilder.Entity<DetailExpressionBesoin>()
+                .HasOne(deb => deb.ExpressionBesoin)
+                .WithMany(eb => eb.Details)
+                .HasForeignKey(deb => deb.ExpressionBesoinId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // ════════════════════════════════════════════════════════
+            // 14️⃣ Détail Expression de Besoin ↔ Nomenclature (N → 1)
+            // ════════════════════════════════════════════════════════
+            modelBuilder.Entity<DetailExpressionBesoin>()
+                .HasOne(deb => deb.Nommenclature)
+                .WithMany()
+                .HasForeignKey(deb => deb.NommenclatureId)
+                .OnDelete(DeleteBehavior.Restrict);
+
         }
 
     }

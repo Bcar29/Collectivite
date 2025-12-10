@@ -157,6 +157,12 @@ namespace Collectivite
             NavigationService.Instance.NavigateTo(new Views.Pages.BonCommandeListPage());
             _viewModel.IsMenuOpen = false;
         }
+        private void ExpressionBesoin_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.UpdatePageTitle("SAISIE DES PIECES - BON-COMMANDE");
+            NavigationService.Instance.NavigateTo(new Views.Pages.ExpressionBesoinListPage());
+            _viewModel.IsMenuOpen = false;
+        }
         
 
         private void OrdreRecette_Click(object sender, RoutedEventArgs e)
