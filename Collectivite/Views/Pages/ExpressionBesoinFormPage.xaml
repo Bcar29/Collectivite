@@ -1,0 +1,235 @@
+﻿<Page x:Class="Collectivite.Views.Pages.ExpressionBesoinFormPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+      Language="fr-FR"
+      Background="#F5F5F5"
+      Title="Formulaire Expression de Besoin">
+
+    <Page.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </Page.Resources>
+
+    <Grid>
+        <!-- Overlay de chargement -->
+        <Grid Background="#80000000" 
+              Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"
+              Panel.ZIndex="999">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}"
+                           Value="0"
+                           IsIndeterminate="True"
+                           Width="60"
+                           Height="60"/>
+                <TextBlock Text="Chargement..." 
+                           Foreground="White"
+                           FontSize="16"
+                           Margin="0,20,0,0"
+                           HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Contenu principal -->
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <Grid Margin="20" MaxWidth="1200">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- En-tête -->
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+                    <materialDesign:PackIcon Kind="ClipboardTextOutline" 
+                                             Width="32" 
+                                             Height="32"
+                                             Foreground="#1976D2"
+                                             VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding PageTitle}" 
+                               FontSize="24"
+                               FontWeight="SemiBold"
+                               Margin="10,0,0,0"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Section 1 : Informations de l'Expression de Besoin -->
+                <materialDesign:Card Grid.Row="1" Padding="20" Margin="0,0,0,20">
+                    <StackPanel>
+                        <TextBlock Text="Informations de l'Expression de Besoin"
+                                   FontSize="18"
+                                   FontWeight="SemiBold"
+                                   Margin="0,0,0,20"/>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="20"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Numéro -->
+                            <TextBox Grid.Row="0" Grid.Column="0"
+                                     materialDesign:HintAssist.Hint="N° Expression de Besoin *"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     Text="{Binding ExpressionBesoin.Numero, UpdateSourceTrigger=PropertyChanged}"
+                                     Margin="0,0,0,15"/>
+
+                            <!-- Date -->
+                            <DatePicker Grid.Row="0" Grid.Column="2"
+                                        materialDesign:HintAssist.Hint="Date de création *"
+                                        Style="{StaticResource MaterialDesignOutlinedDatePicker}"
+                                        SelectedDate="{Binding ExpressionBesoin.DateCreation}"
+                                        Margin="0,0,0,15"/>
+
+                            <!-- Exercice -->
+                            <ComboBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
+                                      materialDesign:HintAssist.Hint="Exercice *"
+                                      Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                      ItemsSource="{Binding Exercices}"
+                                      SelectedValue="{Binding ExpressionBesoin.ExerciceId}"
+                                      SelectedValuePath="Id"
+                                      DisplayMemberPath="Annee"
+                                      Margin="0,0,0,15"/>
+                        </Grid>
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <!-- Section 2 : Détails de l'Expression de Besoin -->
+                <materialDesign:Card Grid.Row="2" Padding="20" Margin="0,0,0,20">
+                    <StackPanel>
+                        <!-- Titre section -->
+                        <DockPanel Margin="0,0,0,20">
+                            <TextBlock Text="Détails de l'Expression de Besoin"
+                                       FontSize="18"
+                                       FontWeight="SemiBold"
+                                       DockPanel.Dock="Left"/>
+                            <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                                    Command="{Binding AddDetailCommand}"
+                                    Height="36"
+                                    Margin="20,0,0,0"
+                                    DockPanel.Dock="Right">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Plus" 
+                                                           Width="18" 
+                                                           Height="18"
+                                                           Margin="0,0,5,0"/>
+                                    <TextBlock Text="Ajouter une ligne"/>
+                                </StackPanel>
+                            </Button>
+                        </DockPanel>
+
+                        <!-- Liste des détails -->
+                        <ItemsControl ItemsSource="{Binding Details}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="#F5F5F5" 
+                                            CornerRadius="8"
+                                            Padding="15"
+                                            Margin="0,0,0,15">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="2*"/>
+                                                <ColumnDefinition Width="15"/>
+                                                <ColumnDefinition Width="2*"/>
+                                                <ColumnDefinition Width="15"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="15"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <!-- Nomenclature -->
+                                            <ComboBox Grid.Column="0"
+                                                  materialDesign:HintAssist.Hint="Nomenclature *"
+                                                  Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                                  ItemsSource="{Binding DataContext.Nommenclatures, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                  SelectedValue="{Binding NommenclatureId}"
+                                                  SelectedValuePath="Id">
+                                                <ComboBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Text="{Binding CodeNomenclature}" 
+                                                                   FontWeight="SemiBold" 
+                                                                   Foreground="#1976D2"
+                                                                   Margin="0,0,10,0"/>
+                                                            <TextBlock Text="-" 
+                                                               Margin="0,0,5,0"
+                                                               Foreground="#666"/>
+                                                            <TextBlock Text="{Binding Intitule}"
+                                                                Foreground="#333"/>
+                                                        </StackPanel>
+                                                    </DataTemplate>
+                                                </ComboBox.ItemTemplate>
+                                            </ComboBox>
+
+                                            <!-- Désignation -->
+                                            <TextBox Grid.Column="2"
+                                                     materialDesign:HintAssist.Hint="Désignation *"
+                                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                     Text="{Binding Designation, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                            <!-- Quantité -->
+                                            <TextBox Grid.Column="4"
+                                                     materialDesign:HintAssist.Hint="Quantité *"
+                                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                     Text="{Binding Quantite, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                            <!-- Supprimer -->
+                                            <Button Grid.Column="6"
+                                                    Style="{StaticResource MaterialDesignIconButton}"
+                                                    Command="{Binding DataContext.RemoveDetailCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                    CommandParameter="{Binding}"
+                                                    ToolTip="Supprimer cette ligne">
+                                                <materialDesign:PackIcon Kind="Delete" Foreground="#F44336"/>
+                                            </Button>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <!-- Message si aucun détail -->
+                        <Border Background="#FFF3E0" 
+                                CornerRadius="8"
+                                Padding="15"
+                                Visibility="{Binding Details.Count, Converter={StaticResource BoolToVis}}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Information" 
+                                                       Width="24" 
+                                                       Height="24"
+                                                       Foreground="#FF9800"
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,10,0"/>
+                                <TextBlock Text="Aucun détail ajouté. Cliquez sur 'Ajouter une ligne' pour commencer."
+                                           VerticalAlignment="Center"
+                                           Foreground="#666"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <!-- Buttons -->
+                <StackPanel Grid.Row="3" 
+                            Orientation="Horizontal" 
+                            HorizontalAlignment="Right"
+                            Margin="0,10,0,0">
+                    <Button Style="{StaticResource MaterialDesignFlatButton}"
+                            Content="Annuler"
+                            Command="{Binding CancelCommand}"
+                            Margin="0,0,10,0"
+                            Width="120"
+                            Height="40"/>
+                    <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                            Content="Enregistrer"
+                            Command="{Binding SaveCommand}"
+                            Width="150"
+                            Height="40"/>
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
+    </Grid>
+</Page>

@@ -10,7 +10,7 @@ namespace Collectivite.Models
         public int Id { get; set; }
 
         [Required]
-        [MaxLength(10)]
+        [MaxLength(20)]
         public string Numero { get; set; } = null!;
         public byte[] FichierJoin { get; set; } = null!;
         public int EngagementId { get; set; }

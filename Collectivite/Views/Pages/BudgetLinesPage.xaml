@@ -4,6 +4,7 @@
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
       xmlns:Utils="clr-namespace:Collectivite.Utils"
       Unloaded="Page_Unloaded"
+      Language="fr-FR"
       Background="#F5F5F5">
 
     <Page.Resources>
@@ -167,7 +168,7 @@
                                 <DataGridTextColumn Header="Paragraphe" Binding="{Binding BudgetLine.Nommenclature.Paragraphe}" Width="100"/>
                                 <DataGridTextColumn Header="Sous-Paragraphe" Binding="{Binding BudgetLine.Nommenclature.SousParagraphe}" Width="150"/>
                                 <DataGridTextColumn Header="Intitulé" Binding="{Binding BudgetLine.Nommenclature.Intitule}" Width="*"/>
-                                <DataGridTextColumn Header="Montant prévu" Binding="{Binding BudgetLine.MontantPrevu, StringFormat=N0}" Width="150"/>
+                                <DataGridTextColumn Header="Montant prévu" Binding="{Binding BudgetLine.MontantPrevu, StringFormat={}{0:N3} GNF}" Width="150"/>
 
                                 <DataGridTemplateColumn Header="Actions" Width="150">
                                     <DataGridTemplateColumn.CellTemplate>
@@ -198,17 +199,28 @@
 
                     <!-- Totaux Recette Fonctionnement -->
                     <materialDesign:Card Grid.Row="1" Margin="0,10,0,0" Padding="15">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="Information" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                            <TextBlock VerticalAlignment="Center" Margin="0,0,20,0">
-                        <Run Text="Total Recettes de Fonctionnement:" FontWeight="Bold"/>
-                            </TextBlock>
-                            <TextBlock Text="{Binding TotalRecetteFonctionnement, StringFormat='{}{0:N2} GNF'}" 
-                              FontWeight="Bold" 
-                              FontSize="16"
-                              Foreground="{DynamicResource PrimaryHueMidBrush}"
-                              VerticalAlignment="Center"/>
-                        </StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Margin="0,0,0,10">
+                                <materialDesign:PackIcon Kind="Information" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                <TextBlock Text="Total Recettes de Fonctionnement:" FontWeight="Bold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <TextBlock Grid.Row="0" Grid.Column="1" 
+                                   Text="{Binding TotalRecetteFonctionnement, StringFormat='{}{0:N2} GNF'}" 
+                                   FontWeight="Bold" 
+                                   FontSize="16"
+                                   Foreground="{DynamicResource PrimaryHueMidBrush}"
+                                   HorizontalAlignment="Right"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,0,10"/>
+                        </Grid>
                     </materialDesign:Card>
                 </Grid>
             </TabItem>
@@ -278,7 +290,7 @@
                                 <DataGridTextColumn Header="Paragraphe" Binding="{Binding BudgetLine.Nommenclature.Paragraphe}" Width="100"/>
                                 <DataGridTextColumn Header="Sous-Paragraphe" Binding="{Binding BudgetLine.Nommenclature.SousParagraphe}" Width="150"/>
                                 <DataGridTextColumn Header="Intitulé" Binding="{Binding BudgetLine.Nommenclature.Intitule}" Width="*"/>
-                                <DataGridTextColumn Header="Montant prévu" Binding="{Binding BudgetLine.MontantPrevu, StringFormat=N0}" Width="150"/>
+                                <DataGridTextColumn Header="Montant prévu" Binding="{Binding BudgetLine.MontantPrevu, StringFormat={}{0:N3} GNF}" Width="150"/>
 
                                 <DataGridTemplateColumn Header="Actions" Width="150">
                                     <DataGridTemplateColumn.CellTemplate>
@@ -430,7 +442,7 @@
                                 <DataGridTextColumn Header="Paragraphe" Binding="{Binding BudgetLine.Nommenclature.Paragraphe}" Width="100"/>
                                 <DataGridTextColumn Header="Sous-Paragraphe" Binding="{Binding BudgetLine.Nommenclature.SousParagraphe}" Width="150"/>
                                 <DataGridTextColumn Header="Intitulé" Binding="{Binding BudgetLine.Nommenclature.Intitule}" Width="*"/>
-                                <DataGridTextColumn Header="Montant prévu" Binding="{Binding BudgetLine.MontantPrevu, StringFormat=N0}" Width="150"/>
+                                <DataGridTextColumn Header="Montant prévu" Binding="{Binding BudgetLine.MontantPrevu, StringFormat={}{0:N3} GNF}" Width="150"/>
 
                                 <DataGridTemplateColumn Header="Actions" Width="150">
                                     <DataGridTemplateColumn.CellTemplate>
@@ -567,7 +579,7 @@
                                 <DataGridTextColumn Header="Paragraphe" Binding="{Binding BudgetLine.Nommenclature.Paragraphe}" Width="100"/>
                                 <DataGridTextColumn Header="Sous-Paragraphe" Binding="{Binding BudgetLine.Nommenclature.SousParagraphe}" Width="150"/>
                                 <DataGridTextColumn Header="Intitulé" Binding="{Binding BudgetLine.Nommenclature.Intitule}" Width="*"/>
-                                <DataGridTextColumn Header="Montant prévu" Binding="{Binding BudgetLine.MontantPrevu, StringFormat=N0}" Width="150"/>
+                                <DataGridTextColumn Header="Montant prévu" Binding="{Binding BudgetLine.MontantPrevu, StringFormat={}{0:N3} GNF}" Width="150"/>
 
                                 <DataGridTemplateColumn Header="Actions" Width="150">
                                     <DataGridTemplateColumn.CellTemplate>

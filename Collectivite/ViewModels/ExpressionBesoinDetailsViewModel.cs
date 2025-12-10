@@ -3,21 +3,20 @@ using Collectivite.Services;
 using Collectivite.Utils;
 using System;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 
 namespace Collectivite.ViewModels
 {
-    public class BonCommandeDetailsViewModel : ViewModelBase
+    public class ExpressionBesoinDetailsViewModel : ViewModelBase
     {
         private bool _isLoading;
-        private BonCommande? _bonCommande;
-        private int _bonCommandeId;
+        private ExpressionBesoin? _expressionBesoin;
+        private int _expressionBesoinId;
 
-        public BonCommandeDetailsViewModel(int bonCommandeId)
+        public ExpressionBesoinDetailsViewModel(int expressionBesoinId)
         {
-            _bonCommandeId = bonCommandeId;
+            _expressionBesoinId = expressionBesoinId;
 
             // Commandes
             LoadDataCommand = new RelayCommand(async _ => await LoadDataAsync());
@@ -29,7 +28,7 @@ namespace Collectivite.ViewModels
 
         #region Properties
 
-        public ObservableCollection<DetailBonCommande> Details { get; } = new();
+        public ObservableCollection<DetailExpressionBesoin> Details { get; } = new();
 
         public bool IsLoading
         {
@@ -37,13 +36,11 @@ namespace Collectivite.ViewModels
             set => SetProperty(ref _isLoading, value);
         }
 
-        public BonCommande? BonCommande
+        public ExpressionBesoin? ExpressionBesoin
         {
-            get => _bonCommande;
-            set => SetProperty(ref _bonCommande, value);
+            get => _expressionBesoin;
+            set => SetProperty(ref _expressionBesoin, value);
         }
-
-        public double MontantTotal => Details.Sum(d => d.Total);
 
         #endregion
 
@@ -62,27 +59,25 @@ namespace Collectivite.ViewModels
 
             try
             {
-                var service = new BonCommandeService();
-                var bonCommande = await service.GetBonCommandeByIdAsync(_bonCommandeId);
+                var service = new ExpressionBesoinService();
+                var expressionBesoin = await service.GetExpressionBesoinByIdAsync(_expressionBesoinId);
 
-                if (bonCommande != null)
+                if (expressionBesoin != null)
                 {
-                    BonCommande = bonCommande;
+                    ExpressionBesoin = expressionBesoin;
 
                     Details.Clear();
-                    if (bonCommande.Details != null)
+                    if (expressionBesoin.Details != null)
                     {
-                        foreach (var detail in bonCommande.Details)
+                        foreach (var detail in expressionBesoin.Details)
                         {
                             Details.Add(detail);
                         }
                     }
-
-                    OnPropertyChanged(nameof(MontantTotal));
                 }
                 else
                 {
-                    MessageBox.Show("Bon de commande introuvable.", "Erreur",
+                    MessageBox.Show("Expression de besoin introuvable.", "Erreur",
                         MessageBoxButton.OK, MessageBoxImage.Warning);
                     GoBack();
                 }

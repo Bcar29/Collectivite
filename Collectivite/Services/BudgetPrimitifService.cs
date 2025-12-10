@@ -215,6 +215,17 @@ namespace Collectivite.Services
                 if (budget.Status != BudgetPrimitif.Statusbudget.DRAFT)
                     return (false, "❌ Ce budget ne peut pas être approuvé. Il doit être en mode DRAFT.");
 
+                // Vérification 6 : Les montants des recettes et dépenses doivent être égaux
+                if (budget.MontantRecette != budget.MontantDepense)
+                {
+                    return (false,
+                        $"❌ Impossible de valider le budget. Les montants des recettes et dépenses doivent être égaux.\n\n" +
+                        $"Montant des recettes : {budget.MontantRecette:N0} GNF\n" +
+                        $"Montant des dépenses : {budget.MontantDepense:N0} GNF\n" +
+                        $"Différence : {Math.Abs(budget.MontantRecette - budget.MontantDepense):N0} GNF\n\n" +
+                        $"Veuillez équilibrer le budget avant de le valider.");
+                }
+
                 // Vérification 2 : La date d'approbation doit être dans l'exercice budgétaire
                 if (budget.Exercice != null)
                 {

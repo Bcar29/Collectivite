@@ -360,30 +360,13 @@ namespace Collectivite.ViewModels
 
         private void Cancel()
         {
-            var result = MessageBox.Show(
-                "Voulez-vous vraiment annuler ? Les modifications non enregistrées seront perdues.",
-                "Confirmation",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
-
-            if (result == MessageBoxResult.Yes)
-            {
+          
                 NavigateBack();
-            }
         }
 
         private void NavigateBack()
         {
-            // Navigation vers la page principale
-            var mainWindow = Application.Current.MainWindow;
-            if (mainWindow != null)
-            {
-                var frame = mainWindow.FindName("MainContentFrame") as System.Windows.Controls.Frame;
-                if (frame != null)
-                {
-                    frame.GoBack();
-                }
-            }
+            NavigationService.Instance.GoBack();
         }
 
         private void ChooseFile()

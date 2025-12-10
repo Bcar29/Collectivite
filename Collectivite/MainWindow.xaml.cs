@@ -124,6 +124,9 @@ namespace Collectivite
         // COMPTE COMPTABLE CLICK
         private void CompteComptable_Click(object sender, RoutedEventArgs e)
         {
+
+            _viewModel.UpdatePageTitle("CONFIGURATION - PLAN COMPTABLES");
+
             if (!SessionManager.HasPermission("CompteComptable.View"))
             {
                 MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section.",
@@ -133,7 +136,7 @@ namespace Collectivite
                 return;
             }
 
-            _viewModel.UpdatePageTitle("CONFIGURATION - COMPTES COMPTABLES");
+
             NavigationService.Instance.NavigateTo(new Views.Pages.CompteComptablePage());
             _viewModel.IsMenuOpen = false;
         }
@@ -157,7 +160,7 @@ namespace Collectivite
         
         private void Sythese_Click(object sender, RoutedEventArgs e)
         {
-            _viewModel.UpdatePageTitle("CONFIGURATION - SYNTHESE");
+            _viewModel.UpdatePageTitle("GESTION BUDGETAIRE - SYNTHESE");
              NavigationService.Instance.NavigateTo(new Views.Pages.BudgetPrimitifPage());
             _viewModel.IsMenuOpen = false;
         }
@@ -197,6 +200,8 @@ namespace Collectivite
 
         private void BonCommande_Click(object sender, RoutedEventArgs e)
         {
+            _viewModel.UpdatePageTitle("SAISIE DES PIECES - BON-COMMANDE");
+
             if (!SessionManager.HasPermission("BonCommande.View"))
             {
                 MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section.",
@@ -206,14 +211,21 @@ namespace Collectivite
                 return;
             }
 
-            _viewModel.UpdatePageTitle("GESTION BUDGÉTAIRE - BON-COMMANDE");
             NavigationService.Instance.NavigateTo(new Views.Pages.BonCommandeListPage());
+            _viewModel.IsMenuOpen = false;
+        }
+        private void ExpressionBesoin_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.UpdatePageTitle("SAISIE DES PIECES - BON-COMMANDE");
+            NavigationService.Instance.NavigateTo(new Views.Pages.ExpressionBesoinListPage());
             _viewModel.IsMenuOpen = false;
         }
         
 
         private void OrdreRecette_Click(object sender, RoutedEventArgs e)
         {
+
+            _viewModel.UpdatePageTitle("SAISIE DES PIECES - ORDRE RECETTE");
             if (!SessionManager.HasPermission("OrdreRecette.View"))
             {
                 MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section.",
@@ -223,12 +235,13 @@ namespace Collectivite
                 return;
             }
 
-            _viewModel.UpdatePageTitle("GESTION BUDGÉTAIRE - ORDRE RECETTE");
             NavigationService.Instance.NavigateTo(new Views.Pages.OrdreRecettePage());
             _viewModel.IsMenuOpen = false;
         }
         private void FicheEngagement_Click(object sender, RoutedEventArgs e)
         {
+            _viewModel.UpdatePageTitle("SAISIE DES PIECES - FICHE D'ENGAGEMENT");
+
             if (!SessionManager.HasPermission("Engagement.View"))
             {
                 MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section.",
@@ -238,13 +251,16 @@ namespace Collectivite
                 return;
             }
 
-            _viewModel.UpdatePageTitle("GESTION BUDGÉTAIRE - FICHE D'ENGAGEMENT");
+
             NavigationService.Instance.NavigateTo(new Views.Pages.EngagementPage());
             _viewModel.IsMenuOpen = false;
         }
 
         private void Mandat_Click(object sender, RoutedEventArgs e)
         {
+
+            _viewModel.UpdatePageTitle("SAISIE DES PIECES - FICHE DE MANDAT");
+
             if (!SessionManager.HasPermission("Mandat.View"))
             {
                 MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section.",
@@ -254,13 +270,14 @@ namespace Collectivite
                 return;
             }
 
-            _viewModel.UpdatePageTitle("GESTION BUDGÉTAIRE - FICHE DE MANDAT");
             NavigationService.Instance.NavigateTo(new Views.Pages.MandatListPage());
             _viewModel.IsMenuOpen = false;
         }
 
         private void RemaniementButton_Click(object sender, RoutedEventArgs e)
         {
+
+            _viewModel.UpdatePageTitle("GESTION BUDGETAIRE - BUDGET REMANIE");
             if (!SessionManager.HasPermission("Remaniement.View"))
             {
                 MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section.",
@@ -270,7 +287,7 @@ namespace Collectivite
                 return;
             }
 
-            _viewModel.UpdatePageTitle("CONFIGURATION - BUDGET REMANIE");
+
             NavigationService.Instance.NavigateTo(new Views.Pages.RemaniementPage());
             _viewModel.IsMenuOpen = false;
         }
@@ -302,6 +319,8 @@ namespace Collectivite
 
         private void FactureButton_Click(object sender, RoutedEventArgs e)
         {
+
+            _viewModel.UpdatePageTitle("SAISIE DES PIECES - FACTURES ET DETAILS");
             if (!SessionManager.HasPermission("Facture.View"))
             {
                 MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section.",
@@ -311,7 +330,6 @@ namespace Collectivite
                 return;
             }
 
-            _viewModel.UpdatePageTitle("CONFIGURATION - FACTURES ET DETAILS");
             NavigationService.Instance.NavigateTo(new Views.Pages.FacturePage());
             _viewModel.IsMenuOpen = false;
         }
@@ -423,7 +441,7 @@ namespace Collectivite
             }
 
             // Continuer avec la page des lignes de budget
-            _viewModel.UpdatePageTitle("GESTION BUDGÉTAIRE - LIGNES BUDGETAIRES");
+            _viewModel.UpdatePageTitle("GESTION BUDGÉTAIRE - SAISIE PREVISIONS");
 
             NavigationService.Instance.NavigateTo(new Views.Pages.BudgetLinesPage(_authService));
             _viewModel.IsMenuOpen = false;
