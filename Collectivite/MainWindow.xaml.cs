@@ -307,7 +307,7 @@ namespace Collectivite
             }
 
             // Continuer avec la page des lignes de budget
-            _viewModel.UpdatePageTitle("GESTION BUDGÉTAIRE - BUDGET LINE");
+            _viewModel.UpdatePageTitle("GESTION BUDGÉTAIRE - LIGNES BUDGETAIRES");
 
             NavigationService.Instance.NavigateTo(new Views.Pages.BudgetLinesPage(_authService));
             _viewModel.IsMenuOpen = false;

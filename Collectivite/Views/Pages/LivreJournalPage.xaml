@@ -17,8 +17,8 @@
 
         <!-- Style pour les en-têtes du DataGrid -->
         <Style x:Key="DataGridHeaderStyle"
-       TargetType="DataGridColumnHeader"
-       BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">
+               TargetType="DataGridColumnHeader"
+               BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">
             <Setter Property="Background" Value="{DynamicResource MaterialDesignDarkBackground}"/>
             <Setter Property="Foreground" Value= "DarkSlateBlue"/>
             <Setter Property="FontWeight" Value="Bold"/>
@@ -28,7 +28,6 @@
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Padding" Value="10,5"/>
         </Style>
-
 
         <Style x:Key="DataGridCellCenterStyle" TargetType="DataGridCell">
             <Setter Property="TextBlock.TextAlignment" Value="Center"/>
@@ -70,6 +69,7 @@
             </StackPanel>
 
             <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                <!-- Bouton Filtres -->
                 <Button Style="{StaticResource MaterialDesignRaisedButton}"
                         Command="{Binding ToggleFiltersCommand}"
                         Margin="0,0,10,0"
@@ -80,6 +80,7 @@
                     </StackPanel>
                 </Button>
 
+                <!-- Bouton Vérifier -->
                 <Button Style="{StaticResource MaterialDesignRaisedButton}"
                         Command="{Binding VerifierEquilibreCommand}"
                         Margin="0,0,10,0"
@@ -90,17 +91,33 @@
                     </StackPanel>
                 </Button>
 
+                <!-- Bouton Export Excel -->
                 <Button Style="{StaticResource MaterialDesignRaisedButton}"
-                        Command="{Binding ExportCommand}"
-                        Margin="0,0,10,0"
-                        Background="{DynamicResource SecondaryHueMidBrush}"
-                        ToolTip="Exporter le journal">
+                        Command="{Binding ExportExcelCommand}"
+                        Margin="0,0,5,0"
+                        Background="#217346"
+                        BorderBrush="#217346"
+                        ToolTip="Exporter en Excel">
                     <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="FileExport" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                        <TextBlock Text="Exporter"/>
+                        <materialDesign:PackIcon Kind="MicrosoftExcel" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                        <TextBlock Text="Excel"/>
                     </StackPanel>
                 </Button>
 
+                <!-- Bouton Export PDF -->
+                <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                        Command="{Binding ExportPdfCommand}"
+                        Margin="0,0,10,0"
+                        Background="#D32F2F"
+                        BorderBrush="#D32F2F"
+                        ToolTip="Exporter en PDF">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="FilePdfBox" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                        <TextBlock Text="PDF"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Bouton Nouvelle Écriture -->
                 <Button Style="{StaticResource MaterialDesignRaisedButton}"
                         Command="{Binding OpenAddEcritureCommand}"
                         Background="{DynamicResource PrimaryHueMidBrush}"
@@ -114,7 +131,8 @@
         </Grid>
 
         <!-- Filtres -->
-        <materialDesign:Card Grid.Row="1" Margin="0,0,0,10" Visibility="{Binding ShowFilters, Converter={StaticResource BooleanToVisibilityConverter}}">
+        <materialDesign:Card Grid.Row="1" Margin="0,0,0,10" 
+                             Visibility="{Binding ShowFilters, Converter={StaticResource BooleanToVisibilityConverter}}">
             <Expander Header="Filtres de recherche" IsExpanded="True" Padding="15">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -202,13 +220,10 @@
                             <DataTemplate>
                                 <StackPanel>
                                     <TextBlock Text="{Binding CompteDebit.NumeroCompte}" 
-                                           FontWeight="Bold" 
-                                           FontSize="13"
-                                           Margin="0,0,0,7"
-                           
-                                           TextAlignment="Center"/>
-
-                                    <!-- ligne vide pour équilibrer la hauteur -->
+                                               FontWeight="Bold" 
+                                               FontSize="13"
+                                               Margin="0,0,0,7"
+                                               TextAlignment="Center"/>
                                     <TextBlock Text="" Height="30"/>
                                 </StackPanel>
                             </DataTemplate>
@@ -220,37 +235,30 @@
                             <DataTemplate>
                                 <StackPanel>
                                     <TextBlock Text="" Height="30"/>
-                                    <!-- ligne vide au-dessus -->
-
                                     <TextBlock Text="{Binding CompteCredit.NumeroCompte}" 
-                           FontWeight="Bold" 
-                           FontSize="13"
-                           TextAlignment="Center"/>
+                                               FontWeight="Bold" 
+                                               FontSize="13"
+                                               TextAlignment="Center"/>
                                 </StackPanel>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
-
 
                     <!-- Libellés -->
                     <DataGridTemplateColumn Header="Libellés" Width="*" HeaderStyle="{StaticResource DataGridHeaderStyle}">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel>
-                                    <!-- Ligne Débit -->
                                     <TextBlock FontSize="13">
-                    <Run Text="{Binding CompteDebit.IntituleCompte}" />
+                                        <Run Text="{Binding CompteDebit.IntituleCompte}" />
                                     </TextBlock>
-
-                                    <!-- Ligne Crédit -->
                                     <TextBlock FontSize="13" Margin="0,10,0,0">
-                    <Run Text="{Binding CompteCredit.IntituleCompte}" />
+                                        <Run Text="{Binding CompteCredit.IntituleCompte}" />
                                     </TextBlock>
                                 </StackPanel>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
-
 
                     <!-- Montant Débit Crédit-->
                     <DataGridTemplateColumn Header="Débit" Width="100" HeaderStyle="{StaticResource DataGridHeaderStyle}">
@@ -258,11 +266,10 @@
                             <DataTemplate>
                                 <StackPanel>
                                     <TextBlock Text="{Binding Montant, StringFormat=N0}"
-                           TextAlignment="Right"
-                           FontWeight="Bold" 
-                           FontSize="13"/>
-
-                                    <!-- Ligne vide pour aligner -->
+                                               TextAlignment="Right"
+                                               FontWeight="Bold" 
+                                               FontSize="13"
+                                               Foreground="#388E3C"/>
                                     <TextBlock Text="" Height="30"/>
                                 </StackPanel>
                             </DataTemplate>
@@ -274,17 +281,15 @@
                             <DataTemplate>
                                 <StackPanel>
                                     <TextBlock Text="" Height="30"/>
-                                    <!-- Vide au-dessus -->
-
                                     <TextBlock Text="{Binding Montant, StringFormat=N0}"
-                                       TextAlignment="Right"
-                                       FontWeight="Bold" 
-                                       FontSize="13"/>
+                                               TextAlignment="Right"
+                                               FontWeight="Bold" 
+                                               FontSize="13"
+                                               Foreground="#D32F2F"/>
                                 </StackPanel>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
-
 
                     <!-- Date -->
                     <DataGridTextColumn Header="Date" 
@@ -294,7 +299,7 @@
                                         CellStyle="{StaticResource DataGridCellCenterStyle}"/>
 
                     <!-- Actions 
-                    <DataGridTemplateColumn Header="Actions" Width="120" HeaderStyle="{StaticResource DataGridHeaderStyle}">
+                    <DataGridTemplateColumn Header="Actions" Width="100" HeaderStyle="{StaticResource DataGridHeaderStyle}">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
@@ -303,7 +308,7 @@
                                             CommandParameter="{Binding}"
                                             ToolTip="Modifier"
                                             Margin="2">
-                                        <materialDesign:PackIcon Kind="Pencil" Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                                        <materialDesign:PackIcon Kind="Pencil" Foreground="#FF9800"/>
                                     </Button>
 
                                     <Button Style="{StaticResource MaterialDesignIconButton}"
@@ -316,7 +321,8 @@
                                 </StackPanel>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>-->
+                    </DataGridTemplateColumn>
+                    -->
                 </DataGrid.Columns>
             </DataGrid>
         </materialDesign:Card>
@@ -342,25 +348,25 @@
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="30,0,0,0">
                     <TextBlock Text="Total Débit:" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                    <TextBlock Text="{Binding TotalDebit, StringFormat='{}{0:N2}'}" 
+                    <TextBlock Text="{Binding TotalDebit, StringFormat='{}{0:N0} GNF'}" 
                                FontWeight="Bold" 
                                FontSize="16"
-                               Foreground="{DynamicResource PrimaryHueMidBrush}"
+                               Foreground="#388E3C"
                                VerticalAlignment="Center"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="30,0,0,0">
                     <TextBlock Text="Total Crédit:" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                    <TextBlock Text="{Binding TotalCredit, StringFormat='{}{0:N2}'}" 
+                    <TextBlock Text="{Binding TotalCredit, StringFormat='{}{0:N0} GNF'}" 
                                FontWeight="Bold" 
                                FontSize="16"
-                               Foreground="{DynamicResource SecondaryHueMidBrush}"
+                               Foreground="#D32F2F"
                                VerticalAlignment="Center"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="3" Orientation="Horizontal" Margin="30,0,0,0">
                     <TextBlock Text="Différence:" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                    <TextBlock Text="{Binding Difference, StringFormat='{}{0:N2}'}" 
+                    <TextBlock Text="{Binding Difference, StringFormat='{}{0:N0} GNF'}" 
                                FontWeight="Bold" 
                                FontSize="16"
                                VerticalAlignment="Center">
@@ -416,7 +422,7 @@
 
                         <!-- Formulaire -->
                         <StackPanel Grid.Row="1" Margin="0,0,0,20">
-                            <!-- Date - UTILISE LE CONVERTER -->
+                            <!-- Date -->
                             <DatePicker materialDesign:HintAssist.Hint="Date de l'écriture*"
                                         Style="{StaticResource MaterialDesignOutlinedDatePicker}"
                                         SelectedDate="{Binding DialogEcriture.DateEcriture, Mode=TwoWay, Converter={StaticResource DateOnlyToDateTimeConverter}}"
@@ -431,13 +437,11 @@
                                       Margin="0,0,0,15">
                                 <ComboBox.ItemTemplate>
                                     <DataTemplate>
-                                        <StackPanel>
-                                            <TextBlock>
-                                                <Run Text="{Binding NumeroCompte, Mode=OneWay}" FontWeight="Bold"/>
-                                                <Run Text=" - "/>
-                                                <Run Text="{Binding IntituleCompte, Mode=OneWay}"/>
-                                            </TextBlock>
-                                        </StackPanel>
+                                        <TextBlock>
+                                            <Run Text="{Binding NumeroCompte, Mode=OneWay}" FontWeight="Bold"/>
+                                            <Run Text=" - "/>
+                                            <Run Text="{Binding IntituleCompte, Mode=OneWay}"/>
+                                        </TextBlock>
                                     </DataTemplate>
                                 </ComboBox.ItemTemplate>
                             </ComboBox>
@@ -451,13 +455,11 @@
                                       Margin="0,0,0,15">
                                 <ComboBox.ItemTemplate>
                                     <DataTemplate>
-                                        <StackPanel>
-                                            <TextBlock>
-                                                <Run Text="{Binding NumeroCompte, Mode=OneWay}" FontWeight="Bold"/>
-                                                <Run Text=" - "/>
-                                                <Run Text="{Binding IntituleCompte, Mode=OneWay}"/>
-                                            </TextBlock>
-                                        </StackPanel>
+                                        <TextBlock>
+                                            <Run Text="{Binding NumeroCompte, Mode=OneWay}" FontWeight="Bold"/>
+                                            <Run Text=" - "/>
+                                            <Run Text="{Binding IntituleCompte, Mode=OneWay}"/>
+                                        </TextBlock>
                                     </DataTemplate>
                                 </ComboBox.ItemTemplate>
                             </ComboBox>
@@ -465,7 +467,7 @@
                             <!-- Montant -->
                             <TextBox materialDesign:HintAssist.Hint="Montant*"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                     Text="{Binding DialogEcriture.Montant, Mode=TwoWay, StringFormat=N2}"
+                                     Text="{Binding DialogEcriture.Montant, Mode=TwoWay, StringFormat=N0}"
                                      Margin="0,0,0,15"/>
 
                             <TextBlock Text="* Champs obligatoires" 
@@ -484,7 +486,6 @@
                             <Button Content="Enregistrer" 
                                     Command="{Binding SaveEcritureCommand}"
                                     Style="{StaticResource MaterialDesignRaisedButton}"
-                                    
                                     Width="120"/>
                         </StackPanel>
                     </Grid>

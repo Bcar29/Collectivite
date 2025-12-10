@@ -35,6 +35,7 @@ namespace Collectivite.ViewModels
             SaveCommuneCommand = new RelayCommand(async _ => await SaveCommuneAsync(), _ => CanSaveCommune());
             CancelCommuneCommand = new RelayCommand(_ => CancelCommune());
             DeleteCommuneCommand = new RelayCommand<Commune>(async commune => await DeleteCommuneAsync(commune));
+            
 
             // ✅ NOUVELLE COMMANDE : Ouvrir les détails
             OpenDetailCommuneCommand = new RelayCommand<Commune>(commune => OpenDetailCommune(commune));
@@ -205,6 +206,8 @@ namespace Collectivite.ViewModels
 
             IsDialogOpen = true;
         }
+
+        
 
         // ══════════════════════════════════════════════════════════
         // ✅ NOUVELLE MÉTHODE : OUVRIR LES DÉTAILS D'UNE COMMUNE

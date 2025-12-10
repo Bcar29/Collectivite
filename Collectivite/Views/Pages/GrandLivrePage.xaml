@@ -113,7 +113,7 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Filtre Année -->
+                <!-- Filtre Année 
                 <StackPanel Grid.Column="0" Margin="0,0,16,0">
                     <TextBlock Text="Année" FontSize="11" Foreground="#666666" Margin="0,0,0,4"/>
                     <ComboBox Width="100" 
@@ -121,7 +121,7 @@
                               SelectedItem="{Binding AnneeSelectionnee}"
                               Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
                 </StackPanel>
-
+                 -->
                 <!-- Filtre Mois -->
                 <StackPanel Grid.Column="1" Margin="0,0,16,0">
                     <TextBlock Text="Mois" FontSize="11" Foreground="#666666" Margin="0,0,0,4"/>
@@ -203,7 +203,7 @@
 
         <!-- Contenu principal - Liste des comptes en grille -->
         <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" 
-                      HorizontalScrollBarVisibility="Disabled">
+              HorizontalScrollBarVisibility="Disabled">
             <ItemsControl ItemsSource="{Binding Comptes}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -214,7 +214,7 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Border Style="{StaticResource CompteCardStyle}" 
-                                Width="280" MinHeight="200">
+                        Width="280" MinHeight="200" MaxHeight="350">
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
@@ -226,60 +226,67 @@
                                 <!-- En-tête du compte -->
                                 <StackPanel Grid.Row="0" Margin="0,0,0,8">
                                     <TextBlock Text="{Binding NumeroCompte}" 
-                                               FontSize="18" FontWeight="Bold" 
-                                               Foreground="#1976D2"
-                                               HorizontalAlignment="Center"/>
+                                       FontSize="18" FontWeight="Bold" 
+                                       Foreground="#1976D2"
+                                       HorizontalAlignment="Center"/>
                                     <TextBlock Text="{Binding IntituleCompte}" 
-                                               FontSize="11" Foreground="#666666"
-                                               TextWrapping="Wrap" TextAlignment="Center"
-                                               MaxHeight="36"/>
+                                       FontSize="11" Foreground="#666666"
+                                       TextWrapping="Wrap" TextAlignment="Center"
+                                       MaxHeight="36"/>
                                 </StackPanel>
 
                                 <Separator Grid.Row="1" Margin="0,4"/>
 
-                                <!-- Liste des mouvements -->
-                                <Grid Grid.Row="2">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
+                                <!-- Liste des mouvements avec ScrollViewer -->
+                                <ScrollViewer Grid.Row="2" 
+                                      VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      MaxHeight="150">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
 
-                                    <!-- Colonne Débit -->
-                                    <StackPanel Grid.Column="0">
-                                        <TextBlock Text="Débit" Style="{StaticResource HeaderTextStyle}"
-                                                   HorizontalAlignment="Center"/>
-                                        <ItemsControl ItemsSource="{Binding Mouvements}" MaxHeight="100">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <TextBlock Text="{Binding DebitFormate}" 
-                                                               Style="{StaticResource MontantTextStyle}"
-                                                               Foreground="#388E3C"
-                                                               HorizontalAlignment="Center"/>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                    </StackPanel>
+                                        <!-- Colonne Débit -->
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="Débit" Style="{StaticResource HeaderTextStyle}"
+                                               HorizontalAlignment="Center"/>
+                                            <ItemsControl ItemsSource="{Binding Mouvements}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock Text="{Binding DebitFormate}" 
+                                                           Style="{StaticResource MontantTextStyle}"
+                                                           Foreground="#388E3C"
+                                                           HorizontalAlignment="Center"
+                                                           Margin="0,2"/>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
 
-                                    <!-- Colonne Crédit -->
-                                    <StackPanel Grid.Column="1">
-                                        <TextBlock Text="Crédit" Style="{StaticResource HeaderTextStyle}"
-                                                   HorizontalAlignment="Center"/>
-                                        <ItemsControl ItemsSource="{Binding Mouvements}" MaxHeight="100">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <TextBlock Text="{Binding CreditFormate}" 
-                                                               Style="{StaticResource MontantTextStyle}"
-                                                               Foreground="#D32F2F"
-                                                               HorizontalAlignment="Center"/>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                    </StackPanel>
-                                </Grid>
+                                        <!-- Colonne Crédit -->
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock Text="Crédit" Style="{StaticResource HeaderTextStyle}"
+                                               HorizontalAlignment="Center"/>
+                                            <ItemsControl ItemsSource="{Binding Mouvements}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock Text="{Binding CreditFormate}" 
+                                                           Style="{StaticResource MontantTextStyle}"
+                                                           Foreground="#D32F2F"
+                                                           HorizontalAlignment="Center"
+                                                           Margin="0,2"/>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </Grid>
+                                </ScrollViewer>
 
                                 <!-- Totaux -->
                                 <Border Grid.Row="3" Background="#F5F5F5" 
-                                        CornerRadius="4" Padding="8" Margin="0,8,0,0">
+                                CornerRadius="4" Padding="8" Margin="0,8,0,0">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
@@ -291,18 +298,18 @@
                                         </Grid.RowDefinitions>
 
                                         <TextBlock Grid.Row="0" Grid.Column="0" 
-                                                   Text="{Binding TotalDebitFormate}" 
-                                                   FontWeight="Bold" Foreground="#388E3C"
-                                                   HorizontalAlignment="Center"/>
+                                           Text="{Binding TotalDebitFormate}" 
+                                           FontWeight="Bold" Foreground="#388E3C"
+                                           HorizontalAlignment="Center"/>
                                         <TextBlock Grid.Row="0" Grid.Column="1" 
-                                                   Text="{Binding TotalCreditFormate}" 
-                                                   FontWeight="Bold" Foreground="#D32F2F"
-                                                   HorizontalAlignment="Center"/>
+                                           Text="{Binding TotalCreditFormate}" 
+                                           FontWeight="Bold" Foreground="#D32F2F"
+                                           HorizontalAlignment="Center"/>
 
                                         <TextBlock Grid.Row="1" Grid.ColumnSpan="2" 
-                                                   Text="{Binding SoldeFormate}" 
-                                                   FontSize="11" Foreground="#666666"
-                                                   HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                           Text="{Binding SoldeFormate}" 
+                                           FontSize="11" Foreground="#666666"
+                                           HorizontalAlignment="Center" Margin="0,4,0,0"/>
                                     </Grid>
                                 </Border>
                             </Grid>
@@ -311,6 +318,7 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
         </ScrollViewer>
+
 
         <!-- Message si pas de données -->
         <StackPanel Grid.Row="3" 

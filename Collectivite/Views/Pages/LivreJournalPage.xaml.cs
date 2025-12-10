@@ -1,20 +1,29 @@
-﻿using System.Windows.Controls;
-using Collectivite.Services;
-using Collectivite.ViewModels;
+﻿using Collectivite.ViewModels;
+using System.Windows;
+using System.Windows.Controls;
+
 namespace Collectivite.Views.Pages
 {
+    /// <summary>
+    /// Page de gestion du Livre Journal
+    /// </summary>
     public partial class LivreJournalPage : Page
     {
+        private readonly LivreJournalViewModel _viewModel;
+
         public LivreJournalPage()
         {
             InitializeComponent();
-            
-            var context = new AppDbContext();
-            var ecritureComptableService = new EcritureComptableService(context);
-            var compteComptableService = new CompteComptableService(context);
 
-            var viewModel = new LivreJournalViewModel(ecritureComptableService, compteComptableService);
-            DataContext = viewModel;
+            _viewModel = new LivreJournalViewModel();
+            DataContext = _viewModel;
+
+            Loaded += Page_Loaded;
+        }
+
+        private async void Page_Loaded(object sender, RoutedEventArgs e)
+        {
+            await _viewModel.LoadDataAsync();
         }
     }
 }

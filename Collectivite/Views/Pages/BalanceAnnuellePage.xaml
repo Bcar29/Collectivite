@@ -168,7 +168,7 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Filtre Année -->
+                <!-- Filtre Année 
                 <StackPanel Grid.Column="0" Margin="0,0,20,0">
                     <TextBlock Text="Année" FontSize="12" Foreground="#64748B" FontWeight="Medium" Margin="0,0,0,6"/>
                     <ComboBox Width="120" 
@@ -176,7 +176,7 @@
                               SelectedItem="{Binding AnneeSelectionnee}"
                               Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
                 </StackPanel>
-
+                 -->
                 <!-- Filtre Classe -->
                 <StackPanel Grid.Column="1" Margin="0,0,20,0">
                     <TextBlock Text="Classe de compte" FontSize="12" Foreground="#64748B" FontWeight="Medium" Margin="0,0,0,6"/>

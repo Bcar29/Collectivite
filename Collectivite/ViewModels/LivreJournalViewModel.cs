@@ -1,436 +1,574 @@
-﻿using Collectivite.Models;
+﻿
+using Collectivite.Models;
 using Collectivite.Services;
-using Collectivite.Utils;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Win32;
 using System;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using System.Threading.Tasks;
 
 namespace Collectivite.ViewModels
 {
     /// <summary>
-    /// Version corrigée avec meilleurs logs et gestion DateTime pour DatePicker
+    /// ViewModel pour la page Livre Journal
     /// </summary>
-    public class LivreJournalViewModel : ViewModelBase
+    public class LivreJournalViewModel : INotifyPropertyChanged
     {
-        private readonly EcritureComptableService _ecritureService;
-        private readonly CompteComptableService _compteService;
+        private readonly LivreJournalExportService _exportService;
 
-        private bool _isLoading;
-        private EcritureComptable? _selectedEcriture;
-        private bool _isDialogOpen;
-        private EcritureComptable _dialogEcriture;
-        private bool _isEditMode;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
-        // Filtres - Utilisation de DateTime pour compatibilité avec DatePicker
-        private DateTime? _dateDebutDateTime;
-        private DateTime? _dateFinDateTime;
-        private CompteComptable? _compteFiltre;
-        private bool _showFilters;
-
-        // Totaux
-        private decimal _totalDebit;
-        private decimal _totalCredit;
-        private decimal _difference;
-
-        public LivreJournalViewModel(EcritureComptableService ecritureService, CompteComptableService compteService)
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
-            System.Diagnostics.Debug.WriteLine("🚀 Initialisation du LivreJournalViewModel");
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
 
-            _ecritureService = ecritureService;
-            _compteService = compteService;
+        protected bool SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+        {
+            if (Equals(field, value)) return false;
+            field = value;
+            OnPropertyChanged(propertyName);
+            return true;
+        }
 
-            _dialogEcriture = new EcritureComptable
+        #region Propriétés - Données
+
+        private ObservableCollection<EcritureComptable> _ecritures = new();
+        public ObservableCollection<EcritureComptable> Ecritures
+        {
+            get => _ecritures;
+            set
             {
-                DateEcriture = DateOnly.FromDateTime(DateTime.Today),
-                Montant = 0
-            };
-
-            // Initialiser les dates de filtre (mois en cours)
-            var today = DateTime.Today;
-            _dateDebutDateTime = new DateTime(today.Year, today.Month, 1);
-            _dateFinDateTime = today;
-
-            System.Diagnostics.Debug.WriteLine($"📅 Dates initialisées : {_dateDebutDateTime:dd/MM/yyyy} - {_dateFinDateTime:dd/MM/yyyy}");
-
-            // Commandes
-            LoadEcrituresCommand = new RelayCommand(async _ => await LoadEcrituresAsync());
-            LoadComptesCommand = new RelayCommand(async _ => await LoadComptesAsync());
-            OpenAddEcritureCommand = new RelayCommand(_ => OpenAddEcriture());
-            OpenEditEcritureCommand = new RelayCommand<EcritureComptable>(ecriture => OpenEditEcriture(ecriture));
-            SaveEcritureCommand = new RelayCommand(async _ => await SaveEcritureAsync(), _ => CanSaveEcriture());
-            CancelEcritureCommand = new RelayCommand(_ => CancelEcriture());
-            DeleteEcritureCommand = new RelayCommand<EcritureComptable>(async ecriture => await DeleteEcritureAsync(ecriture));
-            ApplyFiltersCommand = new RelayCommand(async _ => await ApplyFiltersAsync());
-            ClearFiltersCommand = new RelayCommand(async _ => await ClearFiltersAsync());
-            ToggleFiltersCommand = new RelayCommand(_ => ShowFilters = !ShowFilters);
-            ExportCommand = new RelayCommand(_ => ExportLivreJournal());
-            VerifierEquilibreCommand = new RelayCommand(async _ => await VerifierEquilibreAsync());
-
-            System.Diagnostics.Debug.WriteLine("✅ Commandes initialisées");
-
-            // Charger les données au démarrage
-            System.Diagnostics.Debug.WriteLine("🔄 Lancement de InitializeAsync...");
-            _ = InitializeAsync();
+                if (SetProperty(ref _ecritures, value))
+                {
+                    CalculerTotaux();
+                }
+            }
         }
 
-        #region Properties
-
-        public ObservableCollection<EcritureComptable> Ecritures { get; } = new();
-        public ObservableCollection<CompteComptable> ComptesDisponibles { get; } = new();
-
-        public bool IsLoading
-        {
-            get => _isLoading;
-            set => SetProperty(ref _isLoading, value);
-        }
-
+        private EcritureComptable? _selectedEcriture;
         public EcritureComptable? SelectedEcriture
         {
             get => _selectedEcriture;
             set => SetProperty(ref _selectedEcriture, value);
         }
 
-        public bool IsDialogOpen
+        private ObservableCollection<CompteComptable> _comptesDisponibles = new();
+        public ObservableCollection<CompteComptable> ComptesDisponibles
         {
-            get => _isDialogOpen;
-            set => SetProperty(ref _isDialogOpen, value);
+            get => _comptesDisponibles;
+            set => SetProperty(ref _comptesDisponibles, value);
         }
 
-        public EcritureComptable DialogEcriture
-        {
-            get => _dialogEcriture;
-            set => SetProperty(ref _dialogEcriture, value);
-        }
+        #endregion
 
-        public bool IsEditMode
-        {
-            get => _isEditMode;
-            set => SetProperty(ref _isEditMode, value);
-        }
+        #region Propriétés - Filtres
 
-        public string DialogTitle => IsEditMode ? "Modifier l'Écriture" : "Nouvelle Écriture";
-
-        // Filtres - DateTime pour DatePicker
-        public DateTime? DateDebutDateTime
-        {
-            get => _dateDebutDateTime;
-            set => SetProperty(ref _dateDebutDateTime, value);
-        }
-
-        public DateTime? DateFinDateTime
-        {
-            get => _dateFinDateTime;
-            set => SetProperty(ref _dateFinDateTime, value);
-        }
-
-        public CompteComptable? CompteFiltre
-        {
-            get => _compteFiltre;
-            set => SetProperty(ref _compteFiltre, value);
-        }
-
+        private bool _showFilters;
         public bool ShowFilters
         {
             get => _showFilters;
             set => SetProperty(ref _showFilters, value);
         }
 
-        // Totaux
+        private DateTime? _dateDebutDateTime;
+        public DateTime? DateDebutDateTime
+        {
+            get => _dateDebutDateTime;
+            set => SetProperty(ref _dateDebutDateTime, value);
+        }
+
+        private DateTime? _dateFinDateTime;
+        public DateTime? DateFinDateTime
+        {
+            get => _dateFinDateTime;
+            set => SetProperty(ref _dateFinDateTime, value);
+        }
+
+        private CompteComptable? _compteFiltre;
+        public CompteComptable? CompteFiltre
+        {
+            get => _compteFiltre;
+            set => SetProperty(ref _compteFiltre, value);
+        }
+
+        #endregion
+
+        #region Propriétés - Totaux
+
+        private decimal _totalDebit;
         public decimal TotalDebit
         {
             get => _totalDebit;
             set => SetProperty(ref _totalDebit, value);
         }
 
+        private decimal _totalCredit;
         public decimal TotalCredit
         {
             get => _totalCredit;
             set => SetProperty(ref _totalCredit, value);
         }
 
+        private decimal _difference;
         public decimal Difference
         {
             get => _difference;
             set => SetProperty(ref _difference, value);
         }
 
-        public bool IsEquilibre => TotalCredit == TotalDebit;
+        private bool _isEquilibre;
+        public bool IsEquilibre
+        {
+            get => _isEquilibre;
+            set => SetProperty(ref _isEquilibre, value);
+        }
 
         #endregion
 
-        #region Commands
+        #region Propriétés - Dialog
 
-        public ICommand LoadEcrituresCommand { get; }
-        public ICommand LoadComptesCommand { get; }
+        private bool _isDialogOpen;
+        public bool IsDialogOpen
+        {
+            get => _isDialogOpen;
+            set => SetProperty(ref _isDialogOpen, value);
+        }
+
+        private string _dialogTitle = "Nouvelle Écriture";
+        public string DialogTitle
+        {
+            get => _dialogTitle;
+            set => SetProperty(ref _dialogTitle, value);
+        }
+
+        private EcritureComptable _dialogEcriture = new();
+        public EcritureComptable DialogEcriture
+        {
+            get => _dialogEcriture;
+            set => SetProperty(ref _dialogEcriture, value);
+        }
+
+        #endregion
+
+        #region Propriétés - État
+
+        private bool _isLoading;
+        public bool IsLoading
+        {
+            get => _isLoading;
+            set => SetProperty(ref _isLoading, value);
+        }
+
+        #endregion
+
+        #region Commandes
+
+        public ICommand LoadDataCommand { get; }
+        public ICommand ToggleFiltersCommand { get; }
+        public ICommand ApplyFiltersCommand { get; }
+        public ICommand ClearFiltersCommand { get; }
+        public ICommand VerifierEquilibreCommand { get; }
+        public ICommand ExportCommand { get; }
+        public ICommand ExportExcelCommand { get; }
+        public ICommand ExportPdfCommand { get; }
         public ICommand OpenAddEcritureCommand { get; }
         public ICommand OpenEditEcritureCommand { get; }
         public ICommand SaveEcritureCommand { get; }
         public ICommand CancelEcritureCommand { get; }
         public ICommand DeleteEcritureCommand { get; }
-        public ICommand ApplyFiltersCommand { get; }
-        public ICommand ClearFiltersCommand { get; }
-        public ICommand ToggleFiltersCommand { get; }
-        public ICommand ExportCommand { get; }
-        public ICommand VerifierEquilibreCommand { get; }
 
         #endregion
 
-        #region Methods
-
-        private async Task InitializeAsync()
+        public LivreJournalViewModel()
         {
-            System.Diagnostics.Debug.WriteLine("🔄 InitializeAsync - Début");
-            try
-            {
-                await LoadComptesAsync();
-                await LoadEcrituresAsync();
-                System.Diagnostics.Debug.WriteLine("✅ InitializeAsync - Terminé avec succès");
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"❌ InitializeAsync - Erreur : {ex.Message}");
-                MessageBox.Show($"Erreur d'initialisation : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            _exportService = new LivreJournalExportService();
+
+            // Initialiser les commandes
+            LoadDataCommand = new RelayCommandAsync(LoadDataAsync);
+            ToggleFiltersCommand = new RelayCommandSync(() => ShowFilters = !ShowFilters);
+            ApplyFiltersCommand = new RelayCommandAsync(ApplyFiltersAsync);
+            ClearFiltersCommand = new RelayCommandAsync(ClearFiltersAsync);
+            VerifierEquilibreCommand = new RelayCommandSync(VerifierEquilibre);
+
+            // Commandes d'export
+            ExportCommand = new RelayCommandSync(ShowExportMenu);
+            ExportExcelCommand = new RelayCommandAsync(ExportToExcelAsync);
+            ExportPdfCommand = new RelayCommandAsync(ExportToPdfAsync);
+
+            // Commandes dialog
+            OpenAddEcritureCommand = new RelayCommandSync(OpenAddEcriture);
+            OpenEditEcritureCommand = new RelayCommandWithParam<EcritureComptable>(OpenEditEcriture);
+            SaveEcritureCommand = new RelayCommandAsync(SaveEcritureAsync);
+            CancelEcritureCommand = new RelayCommandSync(() => IsDialogOpen = false);
+            DeleteEcritureCommand = new RelayCommandWithParamAsync<EcritureComptable>(DeleteEcritureAsync);
         }
 
-        // Charger toutes les écritures
-        public async Task LoadEcrituresAsync()
-        {
-            IsLoading = true;
-            System.Diagnostics.Debug.WriteLine("📊 LoadEcrituresAsync - Début");
+        #region Méthodes - Chargement
 
+        public async Task LoadDataAsync()
+        {
             try
             {
-                List<EcritureComptable> ecritures;
+                IsLoading = true;
 
-                // Convertir DateTime en DateOnly pour le service
-                DateOnly? dateDebut = DateDebutDateTime.HasValue
-                    ? DateOnly.FromDateTime(DateDebutDateTime.Value)
-                    : null;
-                DateOnly? dateFin = DateFinDateTime.HasValue
-                    ? DateOnly.FromDateTime(DateFinDateTime.Value)
-                    : null;
+                using var context = new AppDbContext();
 
-                // Appliquer les filtres si définis
-                if (dateDebut.HasValue && dateFin.HasValue)
-                {
-                    System.Diagnostics.Debug.WriteLine($"📅 Filtrage par période : {dateDebut} à {dateFin}");
-                    ecritures = await _ecritureService.GetEcrituresByPeriodeAsync(dateDebut.Value, dateFin.Value);
-                }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine("📋 Chargement de toutes les écritures");
-                    ecritures = await _ecritureService.GetEcrituresComptablesAsync();
-                }
+                // Charger les comptes
+                var comptes = await context.CompteComptables
+                    .OrderBy(c => c.NumeroCompte)
+                    .ToListAsync();
+                ComptesDisponibles = new ObservableCollection<CompteComptable>(comptes);
 
-                System.Diagnostics.Debug.WriteLine($"✅ {ecritures.Count} écritures récupérées de la base");
-
-                // Filtrer par compte si nécessaire
-                if (CompteFiltre != null && CompteFiltre.Id > 0)
-                {
-                    System.Diagnostics.Debug.WriteLine($"🔍 Filtrage par compte : {CompteFiltre.NumeroCompte}");
-                    ecritures = ecritures.Where(e =>
-                        e.CompteDebitId == CompteFiltre.Id ||
-                        e.CompteCreditId == CompteFiltre.Id).ToList();
-                    System.Diagnostics.Debug.WriteLine($"   → {ecritures.Count} écritures après filtrage");
-                }
-
-                Ecritures.Clear();
-                System.Diagnostics.Debug.WriteLine("🔄 Ajout des écritures à la collection...");
-
-                foreach (var ecriture in ecritures)
-                {
-                    Ecritures.Add(ecriture);
-                }
-
-                System.Diagnostics.Debug.WriteLine($"✅ Collection Ecritures.Count = {Ecritures.Count}");
-
-                CalculerTotaux();
-
-                if (Ecritures.Count == 0)
-                {
-                    System.Diagnostics.Debug.WriteLine("⚠️ Aucune écriture à afficher");
-                    System.Diagnostics.Debug.WriteLine("   Raisons possibles :");
-                    System.Diagnostics.Debug.WriteLine("   1. La base de données est vide");
-                    System.Diagnostics.Debug.WriteLine("   2. Les filtres excluent toutes les écritures");
-                    System.Diagnostics.Debug.WriteLine("   3. Problème de chargement");
-                }
+                // Charger les écritures
+                await ApplyFiltersAsync();
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"❌ ERREUR dans LoadEcrituresAsync : {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"   Stack Trace : {ex.StackTrace}");
-
-                MessageBox.Show($"Erreur lors du chargement des écritures : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erreur de chargement:\n{ex.Message}", "Erreur",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
                 IsLoading = false;
-                System.Diagnostics.Debug.WriteLine("📊 LoadEcrituresAsync - Fin");
             }
         }
 
-        // Charger les comptes disponibles
-        public async Task LoadComptesAsync()
+        #endregion
+
+        #region Méthodes - Filtres
+
+        public async Task ApplyFiltersAsync()
         {
-            System.Diagnostics.Debug.WriteLine("💼 LoadComptesAsync - Début");
             try
             {
-                var comptes = await _compteService.GetCompteComptablesAsync();
-                System.Diagnostics.Debug.WriteLine($"✅ {comptes.Count} comptes récupérés");
+                IsLoading = true;
 
-                ComptesDisponibles.Clear();
+                using var context = new AppDbContext();
 
-                // Ajouter une option vide pour le filtre
-                ComptesDisponibles.Add(new CompteComptable
+                var query = context.EcritureComptables
+                    .Include(e => e.CompteDebit)
+                    .Include(e => e.CompteCredit)
+                    .AsQueryable();
+
+                // Filtre par date début
+                if (DateDebutDateTime.HasValue)
                 {
-                    Id = 0,
-                    NumeroCompte = "",
-                    IntituleCompte = "-- Tous les comptes --"
-                });
-
-                foreach (var compte in comptes)
-                {
-                    ComptesDisponibles.Add(compte);
+                    var dateDebut = DateOnly.FromDateTime(DateDebutDateTime.Value);
+                    query = query.Where(e => e.DateEcriture >= dateDebut);
                 }
 
-                System.Diagnostics.Debug.WriteLine($"✅ ComptesDisponibles.Count = {ComptesDisponibles.Count}");
-
-                if (comptes.Count == 0)
+                // Filtre par date fin
+                if (DateFinDateTime.HasValue)
                 {
-                    System.Diagnostics.Debug.WriteLine("⚠️ ATTENTION : Aucun compte trouvé !");
-                    System.Diagnostics.Debug.WriteLine("   → Créez d'abord des comptes dans le Plan Comptable");
+                    var dateFin = DateOnly.FromDateTime(DateFinDateTime.Value);
+                    query = query.Where(e => e.DateEcriture <= dateFin);
+                }
+
+                // Filtre par compte
+                if (CompteFiltre != null)
+                {
+                    query = query.Where(e =>
+                        e.CompteDebitId == CompteFiltre.Id ||
+                        e.CompteCreditId == CompteFiltre.Id);
+                }
+
+                var ecritures = await query
+                    .OrderBy(e => e.DateEcriture)
+                    .ThenBy(e => e.Id)
+                    .ToListAsync();
+
+                Ecritures = new ObservableCollection<EcritureComptable>(ecritures);
+                CalculerTotaux();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'application des filtres:\n{ex.Message}", "Erreur",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        public async Task ClearFiltersAsync()
+        {
+            DateDebutDateTime = null;
+            DateFinDateTime = null;
+            CompteFiltre = null;
+            await ApplyFiltersAsync();
+        }
+
+        #endregion
+
+        #region Méthodes - Calculs
+
+        private void CalculerTotaux()
+        {
+            TotalDebit = Ecritures?.Sum(e => e.Montant) ?? 0;
+            TotalCredit = Ecritures?.Sum(e => e.Montant) ?? 0;
+            Difference = TotalDebit - TotalCredit;
+            IsEquilibre = Math.Abs(Difference) < 0.01m;
+        }
+
+        private void VerifierEquilibre()
+        {
+            CalculerTotaux();
+
+            string message = IsEquilibre
+                ? $"✓ Le journal est équilibré.\n\nTotal Débit: {TotalDebit:N0} GNF\nTotal Crédit: {TotalCredit:N0} GNF"
+                : $"✗ Le journal n'est PAS équilibré!\n\nTotal Débit: {TotalDebit:N0} GNF\nTotal Crédit: {TotalCredit:N0} GNF\nDifférence: {Difference:N0} GNF";
+
+            MessageBox.Show(message, "Vérification de l'équilibre",
+                MessageBoxButton.OK,
+                IsEquilibre ? MessageBoxImage.Information : MessageBoxImage.Warning);
+        }
+
+        #endregion
+
+        #region Méthodes - Export
+
+        private void ShowExportMenu()
+        {
+            // Afficher un dialogue pour choisir le format
+            var result = MessageBox.Show(
+                "Choisissez le format d'export:\n\n" +
+                "• Cliquez 'Oui' pour Excel (.xlsx)\n" +
+                "• Cliquez 'Non' pour PDF (.pdf)\n" +
+                "• Cliquez 'Annuler' pour annuler",
+                "Export du Livre Journal",
+                MessageBoxButton.YesNoCancel,
+                MessageBoxImage.Question);
+
+            switch (result)
+            {
+                case MessageBoxResult.Yes:
+                    _ = ExportToExcelAsync();
+                    break;
+                case MessageBoxResult.No:
+                    _ = ExportToPdfAsync();
+                    break;
+            }
+        }
+
+        public async Task ExportToExcelAsync()
+        {
+            if (Ecritures == null || !Ecritures.Any())
+            {
+                MessageBox.Show("Aucune écriture à exporter.", "Information",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            try
+            {
+                IsLoading = true;
+
+                // Dialogue de sauvegarde
+                var saveDialog = new SaveFileDialog
+                {
+                    Filter = "Fichiers Excel (*.xlsx)|*.xlsx",
+                    FileName = $"LivreJournal_{DateTime.Now:yyyyMMdd}",
+                    Title = "Enregistrer le Livre Journal en Excel"
+                };
+
+                if (saveDialog.ShowDialog() == true)
+                {
+                    await Task.Run(() =>
+                    {
+                        // Exporter vers un fichier temporaire
+                        string tempPath = _exportService.ExportToExcel(
+                            Ecritures.ToList(),
+                            DateDebutDateTime,
+                            DateFinDateTime);
+
+                        // Copier vers la destination choisie
+                        File.Copy(tempPath, saveDialog.FileName, true);
+
+                        // Supprimer le fichier temporaire
+                        File.Delete(tempPath);
+                    });
+
+                    var result = MessageBox.Show(
+                        $"Export Excel réussi!\n\nFichier: {saveDialog.FileName}\n\nVoulez-vous ouvrir le fichier?",
+                        "Export réussi",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Information);
+
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        _exportService.OpenFile(saveDialog.FileName);
+                    }
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"❌ Erreur dans LoadComptesAsync : {ex.Message}");
-                MessageBox.Show($"Erreur lors du chargement des comptes : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erreur lors de l'export Excel:\n{ex.Message}", "Erreur",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsLoading = false;
             }
         }
 
-        // Calculer les totaux
-        private void CalculerTotaux()
+        public async Task ExportToPdfAsync()
         {
-            System.Diagnostics.Debug.WriteLine("🧮 Calcul des totaux...");
-            TotalDebit = Ecritures.Sum(e => e.Montant);
-            TotalCredit = Ecritures.Sum(e => e.Montant);
-            Difference = TotalDebit - TotalCredit;
-            OnPropertyChanged(nameof(IsEquilibre));
-
-            System.Diagnostics.Debug.WriteLine($"   Total Débit: {TotalDebit:N2}");
-            System.Diagnostics.Debug.WriteLine($"   Total Crédit: {TotalCredit:N2}");
-            System.Diagnostics.Debug.WriteLine($"   Différence: {Difference:N2}");
-            System.Diagnostics.Debug.WriteLine($"   Équilibré: {IsEquilibre}");
-        }
-
-        // Ouvrir le dialogue pour ajouter une écriture
-        private void OpenAddEcriture()
-        {
-            System.Diagnostics.Debug.WriteLine("➕ Ouverture dialogue nouvelle écriture");
-            IsEditMode = false;
-            DialogEcriture = new EcritureComptable
+            if (Ecritures == null || !Ecritures.Any())
             {
-                DateEcriture = DateOnly.FromDateTime(DateTime.Today),
-                Montant = 0,
-                CompteDebitId = 0,
-                CompteCreditId = 0
-            };
-
-            OnPropertyChanged(nameof(DialogEcriture));
-            IsDialogOpen = true;
-        }
-
-        // Ouvrir le dialogue pour modifier une écriture
-        private void OpenEditEcriture(EcritureComptable? ecriture)
-        {
-            if (ecriture == null)
-            {
-                System.Diagnostics.Debug.WriteLine("⚠️ OpenEditEcriture appelé avec null");
+                MessageBox.Show("Aucune écriture à exporter.", "Information",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
-            System.Diagnostics.Debug.WriteLine($"✏️ Ouverture dialogue édition écriture ID: {ecriture.Id}");
-            IsEditMode = true;
+            try
+            {
+                IsLoading = true;
+
+                // Dialogue de sauvegarde
+                var saveDialog = new SaveFileDialog
+                {
+                    Filter = "Fichiers PDF (*.pdf)|*.pdf",
+                    FileName = $"LivreJournal_{DateTime.Now:yyyyMMdd}",
+                    Title = "Enregistrer le Livre Journal en PDF"
+                };
+
+                if (saveDialog.ShowDialog() == true)
+                {
+                    await Task.Run(() =>
+                    {
+                        // Exporter vers un fichier temporaire
+                        string tempPath = _exportService.ExportToPdf(
+                            Ecritures.ToList(),
+                            DateDebutDateTime,
+                            DateFinDateTime);
+
+                        // Copier vers la destination choisie
+                        File.Copy(tempPath, saveDialog.FileName, true);
+
+                        // Supprimer le fichier temporaire
+                        File.Delete(tempPath);
+                    });
+
+                    var result = MessageBox.Show(
+                        $"Export PDF réussi!\n\nFichier: {saveDialog.FileName}\n\nVoulez-vous ouvrir le fichier?",
+                        "Export réussi",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Information);
+
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        _exportService.OpenFile(saveDialog.FileName);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'export PDF:\n{ex.Message}", "Erreur",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        #endregion
+
+        #region Méthodes - Dialog CRUD
+
+        private void OpenAddEcriture()
+        {
+            DialogTitle = "Nouvelle Écriture";
+            DialogEcriture = new EcritureComptable
+            {
+                DateEcriture = DateOnly.FromDateTime(DateTime.Today)
+            };
+            IsDialogOpen = true;
+        }
+
+        private void OpenEditEcriture(EcritureComptable? ecriture)
+        {
+            if (ecriture == null) return;
+
+            DialogTitle = "Modifier l'Écriture";
             DialogEcriture = new EcritureComptable
             {
                 Id = ecriture.Id,
                 DateEcriture = ecriture.DateEcriture,
                 CompteDebitId = ecriture.CompteDebitId,
                 CompteCreditId = ecriture.CompteCreditId,
-                Montant = ecriture.Montant,
-                OrdreRecetteId = ecriture.OrdreRecetteId,
-                MandatId = ecriture.MandatId
+                Montant = ecriture.Montant
             };
-
-            OnPropertyChanged(nameof(DialogEcriture));
             IsDialogOpen = true;
         }
 
-        // Vérifier si on peut sauvegarder
-        private bool CanSaveEcriture()
+        public async Task SaveEcritureAsync()
         {
-            return DialogEcriture.CompteDebitId > 0 &&
-                   DialogEcriture.CompteCreditId > 0 &&
-                   DialogEcriture.CompteDebitId != DialogEcriture.CompteCreditId &&
-                   DialogEcriture.Montant > 0;
-        }
-
-        // Sauvegarder l'écriture
-        private async Task SaveEcritureAsync()
-        {
-            System.Diagnostics.Debug.WriteLine($"💾 Sauvegarde écriture (Mode: {(IsEditMode ? "Édition" : "Création")})");
-            IsLoading = true;
-
             try
             {
-                if (IsEditMode)
+                // Validation
+                if (DialogEcriture.CompteDebitId <= 0 || DialogEcriture.CompteCreditId <= 0)
                 {
-                    var (success, message) = await _ecritureService.UpdateEcritureAsync(DialogEcriture);
-                    if (success)
-                    {
-                        System.Diagnostics.Debug.WriteLine("✅ Écriture mise à jour");
-                        MessageBox.Show("Écriture mise à jour avec succès",
-                            "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
-                        IsDialogOpen = false;
-                        await LoadEcrituresAsync();
-                    }
-                    else
-                    {
-                        System.Diagnostics.Debug.WriteLine($"❌ Échec mise à jour : {message}");
-                        MessageBox.Show(message, "Erreur",
-                            MessageBoxButton.OK, MessageBoxImage.Error);
-                    }
+                    MessageBox.Show("Veuillez sélectionner les comptes débit et crédit.", "Validation",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                if (DialogEcriture.Montant <= 0)
+                {
+                    MessageBox.Show("Le montant doit être supérieur à zéro.", "Validation",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                if (DialogEcriture.CompteDebitId == DialogEcriture.CompteCreditId)
+                {
+                    MessageBox.Show("Les comptes débit et crédit doivent être différents.", "Validation",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                IsLoading = true;
+
+                using var context = new AppDbContext();
+
+                if (DialogEcriture.Id == 0)
+                {
+                    // Création
+                    context.EcritureComptables.Add(DialogEcriture);
                 }
                 else
                 {
-                    var (success, message, _) = await _ecritureService.CreateEcritureAsync(DialogEcriture);
-                    if (success)
+                    // Modification
+                    var existingEcriture = await context.EcritureComptables.FindAsync(DialogEcriture.Id);
+                    if (existingEcriture != null)
                     {
-                        System.Diagnostics.Debug.WriteLine("✅ Écriture créée");
-                        MessageBox.Show(message, "Succès",
-                            MessageBoxButton.OK, MessageBoxImage.Information);
-                        IsDialogOpen = false;
-                        await LoadEcrituresAsync();
-                    }
-                    else
-                    {
-                        System.Diagnostics.Debug.WriteLine($"❌ Échec création : {message}");
-                        MessageBox.Show(message, "Erreur",
-                            MessageBoxButton.OK, MessageBoxImage.Error);
+                        existingEcriture.DateEcriture = DialogEcriture.DateEcriture;
+                        existingEcriture.CompteDebitId = DialogEcriture.CompteDebitId;
+                        existingEcriture.CompteCreditId = DialogEcriture.CompteCreditId;
+                        existingEcriture.Montant = DialogEcriture.Montant;
                     }
                 }
+
+                await context.SaveChangesAsync();
+                IsDialogOpen = false;
+                await ApplyFiltersAsync();
+
+                MessageBox.Show("Écriture enregistrée avec succès.", "Succès",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"❌ Exception : {ex.Message}");
-                MessageBox.Show($"Erreur lors de l'enregistrement de l'écriture : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erreur lors de l'enregistrement:\n{ex.Message}", "Erreur",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -438,113 +576,51 @@ namespace Collectivite.ViewModels
             }
         }
 
-        // Annuler l'édition
-        private void CancelEcriture()
+        public async Task DeleteEcritureAsync(EcritureComptable? ecriture)
         {
-            System.Diagnostics.Debug.WriteLine("❌ Annulation dialogue");
-            IsDialogOpen = false;
-        }
-
-        // Supprimer une écriture
-        private async Task DeleteEcritureAsync(EcritureComptable? ecriture)
-        {
-            if (ecriture == null)
-                return;
-
-            System.Diagnostics.Debug.WriteLine($"🗑️ Demande suppression écriture ID: {ecriture.Id}");
+            if (ecriture == null) return;
 
             var result = MessageBox.Show(
-                $"Êtes-vous sûr de vouloir supprimer cette écriture du {ecriture.DateEcriture:dd/MM/yyyy} ?\n" +
-                $"Débit: {ecriture.CompteDebit?.NumeroCompte} - {ecriture.CompteDebit?.IntituleCompte}\n" +
-                $"Crédit: {ecriture.CompteCredit?.NumeroCompte} - {ecriture.CompteCredit?.IntituleCompte}\n" +
-                $"Montant: {ecriture.Montant:N2}",
-                "Confirmation de suppression",
+                $"Êtes-vous sûr de vouloir supprimer cette écriture?\n\n" +
+                $"Date: {ecriture.DateEcriture:dd/MM/yyyy}\n" +
+                $"Montant: {ecriture.Montant:N0} GNF",
+                "Confirmation",
                 MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
+                MessageBoxImage.Warning);
 
             if (result == MessageBoxResult.Yes)
             {
-                IsLoading = true;
-
-                var (success, message) = await _ecritureService.DeleteEcritureAsync(ecriture.Id);
-
-                if (success)
+                try
                 {
-                    System.Diagnostics.Debug.WriteLine("✅ Écriture supprimée");
-                    MessageBox.Show(message, "Succès",
+                    IsLoading = true;
+
+                    using var context = new AppDbContext();
+                    var ecritureToDelete = await context.EcritureComptables.FindAsync(ecriture.Id);
+                    if (ecritureToDelete != null)
+                    {
+                        context.EcritureComptables.Remove(ecritureToDelete);
+                        await context.SaveChangesAsync();
+                    }
+
+                    await ApplyFiltersAsync();
+
+                    MessageBox.Show("Écriture supprimée avec succès.", "Succès",
                         MessageBoxButton.OK, MessageBoxImage.Information);
-                    await LoadEcrituresAsync();
                 }
-                else
+                catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"❌ Échec suppression : {message}");
-                    MessageBox.Show(message, "Erreur",
+                    MessageBox.Show($"Erreur lors de la suppression:\n{ex.Message}", "Erreur",
                         MessageBoxButton.OK, MessageBoxImage.Error);
                 }
-
-                IsLoading = false;
+                finally
+                {
+                    IsLoading = false;
+                }
             }
-        }
-
-        // Appliquer les filtres
-        private async Task ApplyFiltersAsync()
-        {
-            System.Diagnostics.Debug.WriteLine("🔍 Application des filtres");
-            await LoadEcrituresAsync();
-        }
-
-        // Effacer les filtres
-        private async Task ClearFiltersAsync()
-        {
-            System.Diagnostics.Debug.WriteLine("🔄 Réinitialisation des filtres");
-            var today = DateTime.Today;
-            DateDebutDateTime = new DateTime(today.Year, today.Month, 1);
-            DateFinDateTime = today;
-            CompteFiltre = null;
-            await LoadEcrituresAsync();
-        }
-
-        // Vérifier l'équilibre
-        private async Task VerifierEquilibreAsync()
-        {
-            System.Diagnostics.Debug.WriteLine("⚖️ Vérification de l'équilibre");
-            try
-            {
-                DateOnly? dateDebut = DateDebutDateTime.HasValue
-                    ? DateOnly.FromDateTime(DateDebutDateTime.Value)
-                    : null;
-                DateOnly? dateFin = DateFinDateTime.HasValue
-                    ? DateOnly.FromDateTime(DateFinDateTime.Value)
-                    : null;
-
-                var (isEquilibre, totalDebit, totalCredit) = await _ecritureService.VerifierEquilibreAsync(
-                    dateDebut, dateFin);
-
-                string message = isEquilibre
-                    ? $"✓ Le journal est équilibré !\n\nTotal Débit: {totalDebit:N2}\nTotal Crédit: {totalCredit:N2}"
-                    : $"✗ Le journal n'est pas équilibré !\n\nTotal Débit: {totalDebit:N2}\nTotal Crédit: {totalCredit:N2}\nDifférence: {Math.Abs(totalDebit - totalCredit):N2}";
-
-                MessageBox.Show(message, "Vérification de l'équilibre",
-                    MessageBoxButton.OK,
-                    isEquilibre ? MessageBoxImage.Information : MessageBoxImage.Warning);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"❌ Erreur vérification : {ex.Message}");
-                MessageBox.Show($"Erreur lors de la vérification : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        // Exporter le livre journal
-        private void ExportLivreJournal()
-        {
-            System.Diagnostics.Debug.WriteLine("📤 Export demandé");
-            MessageBox.Show("Fonctionnalité d'export en cours de développement.\n" +
-                          "Vous pourrez exporter en Excel, PDF ou CSV.",
-                "Export", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         #endregion
     }
+
+    
 }

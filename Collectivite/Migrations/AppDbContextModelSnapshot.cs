@@ -166,6 +166,9 @@ namespace Collectivite.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("CommuneType")
+                        .HasColumnType("int");
+
                     b.Property<DateOnly>("DateCreation")
                         .HasColumnType("date");
 
@@ -179,6 +182,14 @@ namespace Collectivite.Migrations
                         .HasColumnType("double");
 
                     b.Property<string>("Nom")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Prefecture")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Region")
                         .IsRequired()
                         .HasColumnType("longtext");
 
@@ -877,7 +888,7 @@ namespace Collectivite.Migrations
 
                     b.HasIndex("idOrdreRecette");
 
-                    b.ToTable("Mouvement");
+                    b.ToTable("mouvement", (string)null);
                 });
 
             modelBuilder.Entity("Collectivite.Models.Nommenclature", b =>

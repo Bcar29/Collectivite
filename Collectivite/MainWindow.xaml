@@ -568,9 +568,7 @@
                                     </StackPanel>
                                 </Button>
                                 
-                                <Button Content="🔍 DIAGNOSTIC" 
-                                    Click="BoutonDiagnostic_Click"
-                                    Background="Orange"/>
+                                
                             </StackPanel>
                         </Expander>
                         <!-- Section Gestion Comptable Fin  -->
