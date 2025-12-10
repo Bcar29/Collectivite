@@ -300,7 +300,7 @@ namespace Collectivite.ViewModels
                 RechercheTexte = RechercheTexte,
                 DateDebut = DateDebut,
                 DateFin = DateFin,
-                IncluреComptesVides = AfficherComptesVides
+                InclureComptesVides = AfficherComptesVides
             };
         }
 

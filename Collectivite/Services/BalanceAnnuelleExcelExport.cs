@@ -1,0 +1,338 @@
+﻿using ClosedXML.Excel;
+using Collectivite.Services;
+using System;
+using System.Collections.Generic;
+using System.IO;
+
+namespace Collectivite.Services
+{
+    public class BalanceAnnuelleExcelExporter
+    {
+        // ═══════════════════════════════════════
+        // PALETTE DE COULEURS
+        // ═══════════════════════════════════════
+
+        private static readonly XLColor VertEmeraude = XLColor.FromHtml("#059669");
+        private static readonly XLColor RougeCoral = XLColor.FromHtml("#DC2626");
+        private static readonly XLColor BleuIndigo = XLColor.FromHtml("#4F46E5");
+
+        private static readonly XLColor VertClair = XLColor.FromHtml("#D1FAE5");
+        private static readonly XLColor VertClairAccent = XLColor.FromHtml("#A7F3D0");
+        private static readonly XLColor RougeClair = XLColor.FromHtml("#FEE2E2");
+        private static readonly XLColor RougeClairAccent = XLColor.FromHtml("#FECACA");
+        private static readonly XLColor BleuClair = XLColor.FromHtml("#E0E7FF");
+
+        private static readonly XLColor VertTresClair = XLColor.FromHtml("#F0FDF4");
+        private static readonly XLColor RougeTresClair = XLColor.FromHtml("#FEF2F2");
+
+        private static readonly XLColor TexteVertFonce = XLColor.FromHtml("#065F46");
+        private static readonly XLColor TexteRougeFonce = XLColor.FromHtml("#991B1B");
+        private static readonly XLColor TexteBleuFonce = XLColor.FromHtml("#3730A3");
+        private static readonly XLColor TexteVert = XLColor.FromHtml("#059669");
+        private static readonly XLColor TexteRouge = XLColor.FromHtml("#DC2626");
+
+        private static readonly XLColor GrisArdoise = XLColor.FromHtml("#1E293B");
+        private static readonly XLColor VertLumineux = XLColor.FromHtml("#34D399");
+        private static readonly XLColor RougeLumineux = XLColor.FromHtml("#F87171");
+
+        private static readonly XLColor GrisClair = XLColor.FromHtml("#F1F5F9");
+        private static readonly XLColor GrisTexte = XLColor.FromHtml("#64748B");
+        private static readonly XLColor GrisFonce = XLColor.FromHtml("#475569");
+        private static readonly XLColor GrisBordure = XLColor.FromHtml("#E2E8F0");
+
+        /// <summary>
+        /// Exporte la Balance Annuelle en fichier Excel
+        /// </summary>
+        public static byte[] Exporter(List<BalanceAnnuelleLigneDTO> lignes, BalanceAnnuelleTotauxDTO totaux, BalanceAnnuelleFiltreDTO filtre)
+        {
+            using var workbook = new XLWorkbook();
+            var ws = workbook.Worksheets.Add("Balance Annuelle");
+
+            int row = 1;
+
+            // ═══════════════════════════════════════
+            // TITRE
+            // ═══════════════════════════════════════
+            ws.Cell(row, 1).Value = "BALANCE DES COMPTES";
+            ws.Cell(row, 1).Style.Font.Bold = true;
+            ws.Cell(row, 1).Style.Font.FontSize = 18;
+            ws.Cell(row, 1).Style.Font.FontColor = GrisArdoise;
+            ws.Range(row, 1, row, 10).Merge();
+            ws.Cell(row, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            row++;
+
+            // Sous-titre avec année
+            ws.Cell(row, 1).Value = $"BALANCE ANNUELLE {filtre.Annee}";
+            ws.Cell(row, 1).Style.Font.Bold = true;
+            ws.Cell(row, 1).Style.Font.FontSize = 13;
+            ws.Cell(row, 1).Style.Font.FontColor = GrisFonce;
+            ws.Range(row, 1, row, 10).Merge();
+            ws.Cell(row, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            row += 2;
+
+            // ═══════════════════════════════════════
+            // EN-TÊTE NIVEAU 1 (groupes de colonnes)
+            // ═══════════════════════════════════════
+
+            // Colonnes vides pour N° et Intitulé
+            ws.Range(row, 1, row, 2).Merge();
+            ws.Cell(row, 1).Style.Fill.BackgroundColor = GrisClair;
+            ws.Cell(row, 1).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+            ws.Cell(row, 1).Style.Border.OutsideBorderColor = GrisBordure;
+
+            // Débit - Vert émeraude (3 colonnes)
+            ws.Range(row, 3, row, 5).Merge();
+            ws.Cell(row, 3).Value = "DÉBIT";
+            ws.Cell(row, 3).Style.Fill.BackgroundColor = VertEmeraude;
+            ws.Cell(row, 3).Style.Font.FontColor = XLColor.White;
+            ws.Cell(row, 3).Style.Font.Bold = true;
+            ws.Cell(row, 3).Style.Font.FontSize = 12;
+            ws.Cell(row, 3).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            ws.Cell(row, 3).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+
+            // Crédit - Rouge coral (3 colonnes)
+            ws.Range(row, 6, row, 8).Merge();
+            ws.Cell(row, 6).Value = "CRÉDIT";
+            ws.Cell(row, 6).Style.Fill.BackgroundColor = RougeCoral;
+            ws.Cell(row, 6).Style.Font.FontColor = XLColor.White;
+            ws.Cell(row, 6).Style.Font.Bold = true;
+            ws.Cell(row, 6).Style.Font.FontSize = 12;
+            ws.Cell(row, 6).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            ws.Cell(row, 6).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+
+            // Solde - Bleu indigo (2 colonnes)
+            ws.Range(row, 9, row, 10).Merge();
+            ws.Cell(row, 9).Value = "SOLDE";
+            ws.Cell(row, 9).Style.Fill.BackgroundColor = BleuIndigo;
+            ws.Cell(row, 9).Style.Font.FontColor = XLColor.White;
+            ws.Cell(row, 9).Style.Font.Bold = true;
+            ws.Cell(row, 9).Style.Font.FontSize = 12;
+            ws.Cell(row, 9).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            ws.Cell(row, 9).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+
+            row++;
+
+            // ═══════════════════════════════════════
+            // EN-TÊTE NIVEAU 2 (sous-colonnes)
+            // ═══════════════════════════════════════
+            var headers = new[] {
+                "N° Comptes", "Intitulés",
+                "Balance\nEntrée", "Mouv\nAnnuel", "Total",
+                "Balance\nEntrée", "Mouv\nAnnuel", "Total",
+                "Débiteur", "Créditeur"
+            };
+
+            for (int i = 0; i < headers.Length; i++)
+            {
+                var cell = ws.Cell(row, i + 1);
+                cell.Value = headers[i];
+                cell.Style.Font.Bold = true;
+                cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                cell.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+                cell.Style.Alignment.WrapText = true;
+                cell.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+
+                // Colonnes N° et Intitulés
+                if (i < 2)
+                {
+                    cell.Style.Fill.BackgroundColor = GrisClair;
+                    cell.Style.Font.FontColor = GrisFonce;
+                    cell.Style.Border.OutsideBorderColor = GrisBordure;
+                }
+                // Colonnes Débit (vert clair)
+                else if (i >= 2 && i <= 3)
+                {
+                    cell.Style.Fill.BackgroundColor = VertClair;
+                    cell.Style.Font.FontColor = TexteVertFonce;
+                }
+                // Colonne Total Débit (vert accent)
+                else if (i == 4)
+                {
+                    cell.Style.Fill.BackgroundColor = VertClairAccent;
+                    cell.Style.Font.FontColor = TexteVertFonce;
+                }
+                // Colonnes Crédit (rouge clair)
+                else if (i >= 5 && i <= 6)
+                {
+                    cell.Style.Fill.BackgroundColor = RougeClair;
+                    cell.Style.Font.FontColor = TexteRougeFonce;
+                }
+                // Colonne Total Crédit (rouge accent)
+                else if (i == 7)
+                {
+                    cell.Style.Fill.BackgroundColor = RougeClairAccent;
+                    cell.Style.Font.FontColor = TexteRougeFonce;
+                }
+                // Colonnes Solde (bleu clair)
+                else
+                {
+                    cell.Style.Fill.BackgroundColor = BleuClair;
+                    cell.Style.Font.FontColor = TexteBleuFonce;
+                }
+            }
+            ws.Row(row).Height = 35;
+            row++;
+
+            // ═══════════════════════════════════════
+            // DONNÉES
+            // ═══════════════════════════════════════
+            bool alternate = false;
+            foreach (var ligne in lignes)
+            {
+                var bgColor = alternate ? XLColor.FromHtml("#F8FAFC") : XLColor.White;
+
+                // N° Compte
+                ws.Cell(row, 1).Value = ligne.NumeroCompte;
+                ws.Cell(row, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                ws.Cell(row, 1).Style.Font.Bold = true;
+                ws.Cell(row, 1).Style.Font.FontColor = GrisArdoise;
+                ws.Cell(row, 1).Style.Fill.BackgroundColor = bgColor;
+
+                // Intitulé
+                ws.Cell(row, 2).Value = ligne.IntituleCompte;
+                ws.Cell(row, 2).Style.Font.FontColor = GrisFonce;
+                ws.Cell(row, 2).Style.Fill.BackgroundColor = bgColor;
+
+                // Débit - Balance Entrée, Mouv Annuel
+                ws.Cell(row, 3).Style.Fill.BackgroundColor = bgColor;
+                ws.Cell(row, 3).Style.Font.FontColor = GrisTexte;
+                if (ligne.DebitBalanceEntree > 0)
+                    ws.Cell(row, 3).Value = ligne.DebitBalanceEntree;
+
+                ws.Cell(row, 4).Style.Fill.BackgroundColor = bgColor;
+                ws.Cell(row, 4).Style.Font.FontColor = GrisTexte;
+                if (ligne.DebitMouvAnnuel > 0)
+                    ws.Cell(row, 4).Value = ligne.DebitMouvAnnuel;
+
+                // Total Débit
+                ws.Cell(row, 5).Style.Fill.BackgroundColor = VertTresClair;
+                if (ligne.DebitTotal > 0)
+                {
+                    ws.Cell(row, 5).Value = ligne.DebitTotal;
+                    ws.Cell(row, 5).Style.Font.Bold = true;
+                    ws.Cell(row, 5).Style.Font.FontColor = TexteVert;
+                }
+
+                // Crédit - Balance Entrée, Mouv Annuel
+                ws.Cell(row, 6).Style.Fill.BackgroundColor = bgColor;
+                ws.Cell(row, 6).Style.Font.FontColor = GrisTexte;
+                if (ligne.CreditBalanceEntree > 0)
+                    ws.Cell(row, 6).Value = ligne.CreditBalanceEntree;
+
+                ws.Cell(row, 7).Style.Fill.BackgroundColor = bgColor;
+                ws.Cell(row, 7).Style.Font.FontColor = GrisTexte;
+                if (ligne.CreditMouvAnnuel > 0)
+                    ws.Cell(row, 7).Value = ligne.CreditMouvAnnuel;
+
+                // Total Crédit
+                ws.Cell(row, 8).Style.Fill.BackgroundColor = RougeTresClair;
+                if (ligne.CreditTotal > 0)
+                {
+                    ws.Cell(row, 8).Value = ligne.CreditTotal;
+                    ws.Cell(row, 8).Style.Font.Bold = true;
+                    ws.Cell(row, 8).Style.Font.FontColor = TexteRouge;
+                }
+
+                // Solde Débiteur
+                ws.Cell(row, 9).Style.Fill.BackgroundColor = VertTresClair;
+                if (ligne.SoldeDebiteur > 0)
+                {
+                    ws.Cell(row, 9).Value = ligne.SoldeDebiteur;
+                    ws.Cell(row, 9).Style.Font.FontColor = TexteVert;
+                    ws.Cell(row, 9).Style.Font.Bold = true;
+                }
+
+                // Solde Créditeur
+                ws.Cell(row, 10).Style.Fill.BackgroundColor = RougeTresClair;
+                if (ligne.SoldeCrebiteur > 0)
+                {
+                    ws.Cell(row, 10).Value = ligne.SoldeCrebiteur;
+                    ws.Cell(row, 10).Style.Font.FontColor = TexteRouge;
+                    ws.Cell(row, 10).Style.Font.Bold = true;
+                }
+
+                // Format des nombres et bordures
+                for (int col = 1; col <= 10; col++)
+                {
+                    if (col >= 3)
+                        ws.Cell(row, col).Style.NumberFormat.Format = "#,##0";
+                    ws.Cell(row, col).Style.Alignment.Horizontal = col <= 2 ?
+                        (col == 1 ? XLAlignmentHorizontalValues.Center : XLAlignmentHorizontalValues.Left) :
+                        XLAlignmentHorizontalValues.Right;
+                    ws.Cell(row, col).Style.Border.OutsideBorder = XLBorderStyleValues.Hair;
+                    ws.Cell(row, col).Style.Border.OutsideBorderColor = GrisBordure;
+                }
+
+                alternate = !alternate;
+                row++;
+            }
+
+            // ═══════════════════════════════════════
+            // LIGNE DE TOTAUX
+            // ═══════════════════════════════════════
+            ws.Range(row, 1, row, 2).Merge();
+            ws.Cell(row, 1).Value = "TOTAUX";
+            ws.Cell(row, 1).Style.Font.Bold = true;
+            ws.Cell(row, 1).Style.Font.FontSize = 11;
+            ws.Cell(row, 1).Style.Fill.BackgroundColor = GrisArdoise;
+            ws.Cell(row, 1).Style.Font.FontColor = XLColor.White;
+            ws.Cell(row, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+            // Totaux Débit
+            ws.Cell(row, 3).Value = totaux.TotalDebitBalanceEntree;
+            ws.Cell(row, 4).Value = totaux.TotalDebitMouvAnnuel;
+            ws.Cell(row, 5).Value = totaux.TotalDebit;
+            ws.Cell(row, 5).Style.Font.FontColor = VertLumineux;
+
+            // Totaux Crédit
+            ws.Cell(row, 6).Value = totaux.TotalCreditBalanceEntree;
+            ws.Cell(row, 7).Value = totaux.TotalCreditMouvAnnuel;
+            ws.Cell(row, 8).Value = totaux.TotalCredit;
+            ws.Cell(row, 8).Style.Font.FontColor = RougeLumineux;
+
+            // Totaux Solde
+            ws.Cell(row, 9).Value = totaux.TotalSoldeDebiteur;
+            ws.Cell(row, 9).Style.Font.FontColor = VertLumineux;
+            ws.Cell(row, 10).Value = totaux.TotalSoldeCrebiteur;
+            ws.Cell(row, 10).Style.Font.FontColor = RougeLumineux;
+
+            // Format des totaux
+            for (int col = 1; col <= 10; col++)
+            {
+                var cell = ws.Cell(row, col);
+                cell.Style.Font.Bold = true;
+                if (col >= 3)
+                {
+                    cell.Style.NumberFormat.Format = "#,##0";
+                    if (col != 5 && col != 8 && col != 9 && col != 10)
+                        cell.Style.Font.FontColor = XLColor.FromHtml("#94A3B8");
+                }
+                cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                cell.Style.Fill.BackgroundColor = GrisArdoise;
+                cell.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+            }
+            ws.Cell(row, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+            // ═══════════════════════════════════════
+            // AJUSTEMENT DES COLONNES
+            // ═══════════════════════════════════════
+            ws.Column(1).Width = 14;
+            ws.Column(2).Width = 30;
+            for (int col = 3; col <= 10; col++)
+                ws.Column(col).Width = 15;
+
+            // ═══════════════════════════════════════
+            // PIED DE PAGE
+            // ═══════════════════════════════════════
+            row += 2;
+            ws.Cell(row, 1).Value = $"Édité le : {DateTime.Now:dd/MM/yyyy à HH:mm}";
+            ws.Cell(row, 1).Style.Font.Italic = true;
+            ws.Cell(row, 1).Style.Font.FontSize = 9;
+            ws.Cell(row, 1).Style.Font.FontColor = GrisTexte;
+
+            using var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+            return stream.ToArray();
+        }
+    }
+}

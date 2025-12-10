@@ -234,7 +234,7 @@ namespace Collectivite.Services
 
                 return (true,
                     $"✅ Budget primitif approuvé avec succès.\n\n" +
-                    $"Exercice : {budget.Exercice?.Libelle ?? "N/A"}\n" +
+                    $"Exercice : {budget.Exercice?.Libelle ?? "Non défini"}\n" +
                     $"Date d'approbation : {dateApprobation:dd/MM/yyyy}\n" +
                     $"Montant total : {budget.MontantTotal:N0} GNF");
             }
@@ -338,7 +338,7 @@ namespace Collectivite.Services
 
                 return (true,
                     $"✅ Budget primitif validé avec succès.\n\n" +
-                    $"Exercice : {budget.Exercice?.Libelle ?? "N/A"}\n" +
+                    $"Exercice : {budget.Exercice?.Libelle ?? "Non défini"}\n" +
                     $"Date de validation : {dateValidation:dd/MM/yyyy}\n" +
                     $"Montant total : {budget.MontantTotal:N0} GNF\n\n" +
                     $"⚠️ Le budget ne pourra plus être modifié.");

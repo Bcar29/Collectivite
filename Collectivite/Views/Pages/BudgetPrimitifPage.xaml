@@ -450,6 +450,7 @@
             </materialDesign:DialogHost.DialogContent>
         </materialDesign:DialogHost>
 
+        
         <!-- ═══════════════════════════════════════════════════════════
              DIALOGHOST - VALIDATION DU BUDGET
          ═══════════════════════════════════════════════════════════ -->

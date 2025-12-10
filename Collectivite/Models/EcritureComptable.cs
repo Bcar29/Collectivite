@@ -42,5 +42,10 @@ namespace Collectivite.Models
 
         [ForeignKey(nameof(MandatId))]
         public Mandat? Mandat { get; set; }
+
+        // L’écriture peut être liée à un mouvement
+        public int? MouvementId { get; set; }
+        [ForeignKey(nameof(MouvementId))]
+        public Mouvement? Mouvement { get; set; }
     }
 }
