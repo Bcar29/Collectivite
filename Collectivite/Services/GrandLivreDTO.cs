@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Collectivite.Services
 {
@@ -64,7 +65,7 @@ namespace Collectivite.Services
         public string? RechercheTexte { get; set; }
         public DateOnly? DateDebut { get; set; }
         public DateOnly? DateFin { get; set; }
-        public bool IncluреComptesVides { get; set; } = false;
+        public bool InclureComptesVides { get; set; } = false;
     }
 
     /// <summary>

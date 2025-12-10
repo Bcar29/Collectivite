@@ -1,6 +1,7 @@
 ﻿using Collectivite.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using System.ComponentModel;
 using System.IO;
 using System.Windows.Media.Imaging;
 
@@ -32,6 +33,7 @@ namespace Collectivite.Services
         public DbSet<OrdreRecette> OrdreRecettes { get; set; }
         public DbSet<CompteComptable> CompteComptables { get; set; }
         public DbSet<EcritureComptable> EcritureComptables { get; set; }
+        public DbSet<Mouvement> Mouvements { get; set; }
 
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<Role> Roles { get; set; }
@@ -337,6 +339,12 @@ namespace Collectivite.Services
                 .HasForeignKey(ec => ec.MandatId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<EcritureComptable>()
+                .HasOne(ec => ec.Mouvement)
+                .WithMany()
+                .HasForeignKey(ec => ec.MouvementId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             // COMPTE COMPTABLE
             modelBuilder.Entity<CompteComptable>()
                 .HasOne(c => c.ContrePartie)
@@ -375,6 +383,31 @@ namespace Collectivite.Services
                 .WithMany(r => r.Users)
                 .HasForeignKey(u => u.RoleId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // --- RELATIONS MOUVEMENT/MANDAT/ORDRE_RECETTE/COMPTECOMPTABLES---
+            modelBuilder.Entity<Mouvement>().ToTable("mouvement");
+            // Mouvement → CompteComptable (obligatoire)
+            modelBuilder.Entity<Mouvement>()
+                .HasOne(m => m.CompteComptable)
+                .WithMany() // ou .WithMany(c => c.Mouvements)
+                .HasForeignKey(m => m.idCompteComptable)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Mouvement → OrdreRecette (optionnel)
+            modelBuilder.Entity<Mouvement>()
+                .HasOne(m => m.OrdreRecette)
+                .WithMany() // ou .WithMany(o => o.Mouvements)
+                .HasForeignKey(m => m.idOrdreRecette)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // Mouvement → Mandat (optionnel)
+            modelBuilder.Entity<Mouvement>()
+                .HasOne(m => m.Mandat)
+                .WithMany() // ou .WithMany(md => md.Mouvements)
+                .HasForeignKey(m => m.idMandat)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            
         }
 
     }

@@ -1,3 +1,5 @@
+using Collectivite.Services;
+using Collectivite.Views.Pages ;
 using System;
 using System.Globalization;
 using System.Windows;
@@ -6,7 +8,188 @@ using System.Windows.Media;
 
 namespace Collectivite.Utils
 {
-   
+    /// <summary>
+    /// Converter pour le badge de couleur selon le mode de règlement
+    /// </summary>
+    public class ModeReglementToBadgeColorConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            string mode = value?.ToString() ?? "";
+
+            return mode.ToLower() switch
+            {
+                "espèces" or "especes" => new SolidColorBrush(Color.FromRgb(76, 175, 80)),    // Vert #4CAF50
+                "virement" => new SolidColorBrush(Color.FromRgb(25, 118, 210)),              // Bleu #1976D2
+                "chèque" or "cheque" => new SolidColorBrush(Color.FromRgb(255, 152, 0)),     // Orange #FF9800
+                _ => new SolidColorBrush(Color.FromRgb(158, 158, 158))                        // Gris #9E9E9E
+            };
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+    /// <summary>
+    /// Converter pour afficher quand la liste est vide (Count = 0)
+    /// </summary>
+    public class ZeroToVisibleConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is int count)
+            {
+                return count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            }
+            return Visibility.Collapsed;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+    /// <summary>
+    /// Converter de base pour ModeReglement vers bool
+    /// </summary>
+    public abstract class ModeReglementToBoolConverterBase : IValueConverter
+    {
+        protected abstract ModeReglement TargetMode { get; }
+
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is ModeReglement mode)
+            {
+                return mode == TargetMode;
+            }
+            return false;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is bool isChecked && isChecked)
+            {
+                return TargetMode;
+            }
+            return Binding.DoNothing;
+        }
+    }
+
+    /// <summary>
+    /// Converter qui retourne Visible si count = 0, sinon Collapsed
+    /// </summary>
+    public class CountZeroToVisibilityConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is int count)
+            {
+                // Visible SEULEMENT si count = 0
+                return count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            }
+            return Visibility.Collapsed;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+    /// <summary>
+    /// Affiche l'élément UNIQUEMENT si la collection est vide (Count = 0)
+    /// Utiliser pour l'info box "Aucun élément"
+    /// </summary>
+    public class EmptyCollectionToVisibilityConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is int count)
+            {
+                // Visible si count = 0 (liste vide)
+                return count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            }
+            return Visibility.Collapsed;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    /// <summary>
+    /// Affiche l'élément UNIQUEMENT si la collection contient des éléments (Count > 0)
+    /// Utiliser pour le DataGrid
+    /// </summary>
+    public class NonEmptyCollectionToVisibilityConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is int count)
+            {
+                // Visible si count > 0 (liste non vide)
+                return count > 0 ? Visibility.Visible : Visibility.Collapsed;
+            }
+            return Visibility.Collapsed;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    /// <summary>
+    /// Converter générique pour ModeReglement avec propriété TargetMode configurable
+    /// </summary>
+    public class ModeReglementToBoolConverter : IValueConverter
+    {
+        public ModeReglement TargetMode { get; set; }
+
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is ModeReglement mode)
+            {
+                return mode == TargetMode;
+            }
+            return false;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is bool isChecked && isChecked)
+            {
+                return TargetMode;
+            }
+            return Binding.DoNothing;
+        }
+    }
+
+    /// <summary>
+    /// Converter pour le mode Espèces
+    /// </summary>
+    public class EspeceToBoolConverter : ModeReglementToBoolConverterBase
+    {
+        protected override ModeReglement TargetMode => ModeReglement.Espece;
+    }
+
+    /// <summary>
+    /// Converter pour le mode Virement
+    /// </summary>
+    public class VirementToBoolConverter : ModeReglementToBoolConverterBase
+    {
+        protected override ModeReglement TargetMode => ModeReglement.Virement;
+    }
+
+    /// <summary>
+    /// Converter pour le mode Chèque
+    /// </summary>
+    public class ChequeToBoolConverter : ModeReglementToBoolConverterBase
+    {
+        protected override ModeReglement TargetMode => ModeReglement.Cheque;
+    }
+
     /// <summary>
     /// Convertit une chaîne de couleur hexadécimale en SolidColorBrush
     /// </summary>

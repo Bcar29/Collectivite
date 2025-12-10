@@ -1,13 +1,12 @@
 using Collectivite.Services;
+using Collectivite.Tests;
 using Collectivite.ViewModels;
-using System.Windows;
-using System.Windows.Controls;
-
-
+using Collectivite.Views;
 // Ajoutez cette ligne pour inclure le namespace contenant CommunePage
 using Collectivite.Views.Pages;
-using Collectivite.Views;
 using System.util;
+using System.Windows;
+using System.Windows.Controls;
 
 namespace Collectivite
 {
@@ -322,7 +321,42 @@ namespace Collectivite
             _viewModel.IsMenuOpen = false;
         }
 
+        // Navigation vers la page Balance Mensuelle  
+        private void BalanceButton_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.UpdatePageTitle("COMPTABILITÉ - BALANCE MENSUELLE");
+            MainContentFrame.Navigate(new Views.BalancePage());
+            _viewModel.IsMenuOpen = false;
+        }
+        // Navigation vers la page Balance Annuelle  
+        private void BalanceAnnuelleButton_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.UpdatePageTitle("COMPTABILITÉ - BALANCE ANNUELLE");
+            MainContentFrame.Navigate(new Views.Pages.BalanceAnnuellePage());
+            _viewModel.IsMenuOpen = false;
+        }
 
+        // Navigation vers la page Mouvement 
+        private void MouvementButton_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.UpdatePageTitle("COMPTABILITÉ - DROITS CONSTATES");
+            MainContentFrame.Navigate(new Views.Pages.MouvementPage());
+            _viewModel.IsMenuOpen = false;
+        }
+
+        // Navigation vers la page des Droits au comptant
+        private void DroitsAuComptantButton_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.UpdatePageTitle("COMPTABILITÉ - DROITS AU COMPTANT");
+            MainContentFrame.Navigate(new Views.Pages.DroitAuComptantPage());
+            _viewModel.IsMenuOpen = false;
+        }
+
+        // BOUTON DIAGNOSTIC
+        private async void BoutonDiagnostic_Click(object sender, RoutedEventArgs e)
+        {
+            await TestRapideMouvement.AfficherDiagnosticAsync();
+        }
 
         // Méthode temporaire pour afficher un placeholder
         private static FrameworkElement CreatePlaceholderContent(string pageName)

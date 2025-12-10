@@ -489,21 +489,89 @@
                                     </StackPanel>
                                 </Button>
 
-                                <Button Style="{StaticResource MenuButtonStyle}">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="ScaleBalance" 
+                                
+                                
+                                <!-- BALANCE debut-->
+                                <Expander Style="{StaticResource MaterialDesignExpander}" 
+                                          HorizontalAlignment="Left"
+                                          Width="230"
+                                          Margin="0,5,0,5">
+                                                        <Expander.Header>
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <materialDesign:PackIcon Kind="ScaleBalance" 
                                            VerticalAlignment="Center"
                                            Width="22"
                                            Height="22"
-                                           Margin="0,0,15,0"/>
-                                        <TextBlock Text="Balance" FontSize="12" VerticalAlignment="Center"/>
+                                           Margin="0,0,10,0"
+                                           Foreground="Black"/>
+                                            <TextBlock Text="Balance" FontSize="13" FontWeight="Bold" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Expander.Header>
+
+                                    <StackPanel Orientation="Vertical" Margin="18,0,0,0">
+                                        <StackPanel.Resources>
+                                            <Style TargetType="Button" BasedOn="{StaticResource MenuButtonStyle}">
+                                                <Setter Property="Foreground" Value="#424242"/>
+                                            </Style>
+                                        </StackPanel.Resources>
+
+                                        <Button x:Name="BtnBalanceMensuelle" Style="{StaticResource MenuButtonStyle}" Click="BalanceButton_Click">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="FileDocument" 
+                                                   VerticalAlignment="Center"
+                                                   Width="22"
+                                                   Height="22"
+                                                   Margin="0,0,15,0"/>
+                                                <TextBlock Text="Balance mensuelle" FontSize="12" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Button>
+
+                                        <Button  Style="{StaticResource MenuButtonStyle}" Click="BalanceAnnuelleButton_Click">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="FileDocument" 
+                                                    VerticalAlignment="Center"
+                                                    Width="22"
+                                                    Height="22"
+                                                    Margin="0,0,15,0"/>
+                                                <TextBlock Text="Balance Annuelle" FontSize="12" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Button>
+
+                                    </StackPanel>
+                                </Expander>
+                                <!-- Balance fin-->
+
+                                <Button Style="{StaticResource MenuButtonStyle}" Click="MouvementButton_Click">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="BookOpen" 
+                                            VerticalAlignment="Center"
+                                            Width="22"
+                                            Height="22"
+                                            Margin="0,0,15,0"/>
+                                        <TextBlock Text="Droits Constatés" FontSize="12" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
+                                
 
-
+                                <Button Style="{StaticResource MenuButtonStyle}" Click="DroitsAuComptantButton_Click">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="BookOpen" 
+                                            VerticalAlignment="Center"
+                                            Width="22"
+                                            Height="22"
+                                            Margin="0,0,15,0"/>
+                                        <TextBlock Text="Droit Au Comptant" FontSize="12" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                
+                                <Button Content="🔍 DIAGNOSTIC" 
+                                    Click="BoutonDiagnostic_Click"
+                                    Background="Orange"/>
                             </StackPanel>
                         </Expander>
                         <!-- Section Gestion Comptable Fin  -->
+                        
+                        
                         <!-- Section Administration -->
                         <TextBlock Text="Administration" Style="{StaticResource MenuHeaderStyle}" Margin="20,10,0,5"/>
                         <Expander Style="{StaticResource MaterialDesignExpander}" 

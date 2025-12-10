@@ -1,5 +1,6 @@
 ﻿
 using Collectivite.Models;
+using Collectivite.Services;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -127,7 +128,8 @@ namespace Collectivite.Services
                 }
 
                 // Filtrer les comptes vides si demandé
-                if (filtre?.IncluреComptesVides == false && compteGL.Mouvements.Count == 0)
+                // ✅ Correct
+                if (filtre?.InclureComptesVides == false && compteGL.Mouvements.Count == 0)
                 {
                     continue;
                 }
@@ -220,13 +222,28 @@ namespace Collectivite.Services
         /// <summary>
         /// Exporte le Grand Livre en Excel
         /// </summary>
+        //public async Task<byte[]> ExportExcelAsync(GrandLivreFiltreDTO? filtre = null)
+        //{
+        //    var grandLivre = await GetGrandLivreAsync(filtre);
+        //    return GrandLivreExcelExporter.Exporter(grandLivre, filtre);
+        //}
+
+        ///// <summary>
+        ///// Exporte le Grand Livre en PDF
+        ///// </summary>
+        //public async Task<byte[]> ExportPdfAsync(GrandLivreFiltreDTO? filtre = null)
+        //{
+        //    var grandLivre = await GetGrandLivreAsync(filtre);
+        //    return GrandLivrePdfExporter.Exporter(grandLivre, filtre);
+        //}
+
+        /// <summary>
+        /// Exporte le Grand Livre en Excel
+        /// </summary>
         public async Task<byte[]> ExportExcelAsync(GrandLivreFiltreDTO? filtre = null)
         {
-            // TODO: Implémenter avec ClosedXML ou EPPlus
             var grandLivre = await GetGrandLivreAsync(filtre);
-
-            // Placeholder - à implémenter avec une bibliothèque Excel
-            throw new NotImplementedException("Export Excel à implémenter avec ClosedXML ou EPPlus");
+            return GrandLivreExcelExporter.Exporter(grandLivre, filtre);
         }
 
         /// <summary>
@@ -234,13 +251,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<byte[]> ExportPdfAsync(GrandLivreFiltreDTO? filtre = null)
         {
-            // TODO: Implémenter avec iTextSharp ou QuestPDF
             var grandLivre = await GetGrandLivreAsync(filtre);
-
-            // Placeholder - à implémenter avec une bibliothèque PDF
-            throw new NotImplementedException("Export PDF à implémenter avec QuestPDF ou iTextSharp");
+            return GrandLivrePdfExporter.Exporter(grandLivre, filtre);
         }
-
         #region Méthodes privées
 
         private static string GetLibelleEcriture(EcritureComptable ecriture)

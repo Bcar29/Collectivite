@@ -204,7 +204,7 @@ namespace Collectivite.Services
             int compteId, DateOnly? dateDebut = null, DateOnly? dateFin = null)
         {
             var query = _appDbContext.EcritureComptables.AsQueryable();
-
+            
             if (dateDebut.HasValue)
                 query = query.Where(e => e.DateEcriture >= dateDebut.Value);
 

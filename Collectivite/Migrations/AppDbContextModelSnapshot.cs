@@ -580,6 +580,9 @@ namespace Collectivite.Migrations
                     b.Property<decimal>("Montant")
                         .HasColumnType("decimal(65,30)");
 
+                    b.Property<int?>("MouvementId")
+                        .HasColumnType("int");
+
                     b.Property<int?>("OrdreRecetteId")
                         .HasColumnType("int");
 
@@ -590,6 +593,8 @@ namespace Collectivite.Migrations
                     b.HasIndex("CompteDebitId");
 
                     b.HasIndex("MandatId");
+
+                    b.HasIndex("MouvementId");
 
                     b.HasIndex("OrdreRecetteId");
 
@@ -824,6 +829,55 @@ namespace Collectivite.Migrations
                         .IsUnique();
 
                     b.ToTable("Mandats");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.Mouvement", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("id"));
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<byte[]>("FichierJoint")
+                        .HasColumnType("longblob");
+
+                    b.Property<string>("FileName")
+                        .HasColumnType("longtext");
+
+                    b.Property<decimal>("Montant")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<string>("NumBanqueBenef")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("RefChèque")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("RefVirement")
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("idCompteComptable")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("idMandat")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("idOrdreRecette")
+                        .HasColumnType("int");
+
+                    b.HasKey("id");
+
+                    b.HasIndex("idCompteComptable");
+
+                    b.HasIndex("idMandat");
+
+                    b.HasIndex("idOrdreRecette");
+
+                    b.ToTable("Mouvement");
                 });
 
             modelBuilder.Entity("Collectivite.Models.Nommenclature", b =>
@@ -1339,6 +1393,11 @@ namespace Collectivite.Migrations
                         .HasForeignKey("MandatId")
                         .OnDelete(DeleteBehavior.Cascade);
 
+                    b.HasOne("Collectivite.Models.Mouvement", "Mouvement")
+                        .WithMany()
+                        .HasForeignKey("MouvementId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.HasOne("Collectivite.Models.OrdreRecette", "OrdreRecette")
                         .WithMany("EcritureComptables")
                         .HasForeignKey("OrdreRecetteId")
@@ -1349,6 +1408,8 @@ namespace Collectivite.Migrations
                     b.Navigation("CompteDebit");
 
                     b.Navigation("Mandat");
+
+                    b.Navigation("Mouvement");
 
                     b.Navigation("OrdreRecette");
                 });
@@ -1444,6 +1505,31 @@ namespace Collectivite.Migrations
                         .IsRequired();
 
                     b.Navigation("Engagement");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.Mouvement", b =>
+                {
+                    b.HasOne("Collectivite.Models.CompteComptable", "CompteComptable")
+                        .WithMany()
+                        .HasForeignKey("idCompteComptable")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Collectivite.Models.Mandat", "Mandat")
+                        .WithMany()
+                        .HasForeignKey("idMandat")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Collectivite.Models.OrdreRecette", "OrdreRecette")
+                        .WithMany()
+                        .HasForeignKey("idOrdreRecette")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("CompteComptable");
+
+                    b.Navigation("Mandat");
+
+                    b.Navigation("OrdreRecette");
                 });
 
             modelBuilder.Entity("Collectivite.Models.Nommenclature", b =>

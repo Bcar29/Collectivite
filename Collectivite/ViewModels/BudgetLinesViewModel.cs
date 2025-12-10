@@ -96,7 +96,7 @@ namespace Collectivite.ViewModels
             set => SetProperty(ref _montantPrevu, value);
         }
 
-        public string NomenclatureLibelle => _currentLine?.Nommenclature?.Intitule ?? "N/A";
+        public string NomenclatureLibelle => _currentLine?.Nommenclature?.Intitule ?? "Non défini";
 
         // ═══════════════════════════════════════════════════════════
         // COMMANDES
@@ -522,7 +522,7 @@ namespace Collectivite.ViewModels
 
             var result = MessageBox.Show(
                 $"Êtes-vous sûr de vouloir supprimer cette ligne ?\n\n" +
-                $"Nomenclature : {line.Nommenclature?.Intitule ?? "N/A"}\n" +
+                $"Nomenclature : {line.Nommenclature?.Intitule ?? "Non défini"}\n" +
                 $"Montant : {line.MontantPrevu:N0} GNF\n\n" +
                 $"⚠️ Les montants des parents seront recalculés automatiquement.",
                 "Confirmation",
