@@ -144,9 +144,18 @@ namespace Collectivite
         }
         private void CompteGestion_Click(object sender, RoutedEventArgs e)
         {
+            if (!SessionManager.HasPermission("GestionComptable.Access"))
+            {
+                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à la gestion comptable.",
+                               "Accès refusé",
+                               MessageBoxButton.OK,
+                               MessageBoxImage.Warning);
+                return;
+            }
+
             _viewModel.UpdatePageTitle("GESTION COMPTABLE - COMPTE DE GESTION");
 
-             NavigationService.Instance.NavigateTo(new Views.Pages.CompteGestionPage(_authService));
+            NavigationService.Instance.NavigateTo(new Views.Pages.CompteGestionPage(_authService));
             _viewModel.IsMenuOpen = false;
         }
 
@@ -346,6 +355,15 @@ namespace Collectivite
         // Navigation vers la page Livre Journal
         private void LivreJournalButton_Click(object sender, RoutedEventArgs e)
         {
+            if (!SessionManager.HasPermission("GestionComptable.Access"))
+            {
+                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à la gestion comptable.",
+                               "Accès refusé",
+                               MessageBoxButton.OK,
+                               MessageBoxImage.Warning);
+                return;
+            }
+
             _viewModel.UpdatePageTitle("COMPTABILITÉ - LIVRE JOURNAL");
             NavigationService.Instance.NavigateTo(new Views.Pages.LivreJournalPage());
             _viewModel.IsMenuOpen = false;
@@ -354,6 +372,15 @@ namespace Collectivite
         // Navigation vers la page Grand Livre 
         private void GrandLivreButton_Click(object sender, RoutedEventArgs e)
         {
+            if (!SessionManager.HasPermission("GestionComptable.Access"))
+            {
+                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à la gestion comptable.",
+                               "Accès refusé",
+                               MessageBoxButton.OK,
+                               MessageBoxImage.Warning);
+                return;
+            }
+
             _viewModel.UpdatePageTitle("COMPTABILITÉ - GRAND LIVRE");
             MainContentFrame.Navigate(new Views.GrandLivrePage());
             _viewModel.IsMenuOpen = false;

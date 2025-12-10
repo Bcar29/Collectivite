@@ -176,7 +176,11 @@ namespace Collectivite.Utils
             new Permission { Name = "Supprimer un utilisateur", Code = "User.Delete", Description = "Permet de supprimer un utilisateur." },
 
             // Administration
-            new Permission { Name = "Accès à l'administration", Code = "Administration.Access", Description = "Permet d'accéder à la section d'administration (Rôles, Permissions, Utilisateurs)." }
+            new Permission { Name = "Accès à l'administration", Code = "Administration.Access", Description = "Permet d'accéder à la section d'administration (Rôles, Permissions, Utilisateurs)." },
+
+            // Gestion comptable
+            new Permission { Name = "Accès à la gestion comptable", Code = "GestionComptable.Access", Description = "Permet d'accéder à la section de gestion comptable (Comptes de gestion, Livre journal, Grand livre, Balance)." }
+
         };
 
         private static readonly Dictionary<string, string[]> RolePermissions = new()
