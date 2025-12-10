@@ -1,4 +1,5 @@
 ﻿using Collectivite.Models;
+using Collectivite.Utils;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -19,6 +20,9 @@ namespace Collectivite.Services
         // Récupérer toutes les écritures comptables
         public async Task<List<EcritureComptable>> GetEcrituresComptablesAsync()
         {
+            if (!SessionManager.HasPermission("EcritureComptable.View"))
+                throw new UnauthorizedAccessException("Permission EcritureComptable.View requise");
+
             return await _appDbContext.EcritureComptables
                 .Include(e => e.CompteDebit)
                 .Include(e => e.CompteCredit)
@@ -33,6 +37,9 @@ namespace Collectivite.Services
         // Récupérer une écriture par ID
         public async Task<EcritureComptable?> GetEcritureByIdAsync(int id)
         {
+            if (!SessionManager.HasPermission("EcritureComptable.View"))
+                throw new UnauthorizedAccessException("Permission EcritureComptable.View requise");
+
             return await _appDbContext.EcritureComptables
                 .Include(e => e.CompteDebit)
                 .Include(e => e.CompteCredit)
@@ -45,6 +52,9 @@ namespace Collectivite.Services
         // Récupérer les écritures par période
         public async Task<List<EcritureComptable>> GetEcrituresByPeriodeAsync(DateOnly dateDebut, DateOnly dateFin)
         {
+            if (!SessionManager.HasPermission("EcritureComptable.View"))
+                throw new UnauthorizedAccessException("Permission EcritureComptable.View requise");
+
             return await _appDbContext.EcritureComptables
                 .Include(e => e.CompteDebit)
                 .Include(e => e.CompteCredit)
@@ -60,6 +70,9 @@ namespace Collectivite.Services
         // Récupérer les écritures par compte
         public async Task<List<EcritureComptable>> GetEcrituresByCompteAsync(int compteId)
         {
+            if (!SessionManager.HasPermission("EcritureComptable.View"))
+                throw new UnauthorizedAccessException("Permission EcritureComptable.View requise");
+
             return await _appDbContext.EcritureComptables
                 .Include(e => e.CompteDebit)
                 .Include(e => e.CompteCredit)
@@ -75,6 +88,11 @@ namespace Collectivite.Services
         // Créer une nouvelle écriture
         public async Task<(bool Success, string Message, EcritureComptable? Ecriture)> CreateEcritureAsync(EcritureComptable ecriture)
         {
+            if (!SessionManager.HasPermission("EcritureComptable.Create"))
+            {
+                return (false, "Permission EcritureComptable.Create requise", null);
+            }
+
             try
             {
                 // Vérifier que les comptes existent
@@ -121,6 +139,11 @@ namespace Collectivite.Services
         // Mettre à jour une écriture
         public async Task<(bool Success, string Message)> UpdateEcritureAsync(EcritureComptable ecriture)
         {
+            if (!SessionManager.HasPermission("EcritureComptable.Edit"))
+            {
+                return (false, "Permission EcritureComptable.Edit requise");
+            }
+
             try
             {
                 var existingEcriture = await _appDbContext.EcritureComptables
@@ -178,6 +201,11 @@ namespace Collectivite.Services
         // Supprimer une écriture
         public async Task<(bool Success, string Message)> DeleteEcritureAsync(int id)
         {
+            if (!SessionManager.HasPermission("EcritureComptable.Delete"))
+            {
+                return (false, "Permission EcritureComptable.Delete requise");
+            }
+
             try
             {
                 var ecriture = await _appDbContext.EcritureComptables

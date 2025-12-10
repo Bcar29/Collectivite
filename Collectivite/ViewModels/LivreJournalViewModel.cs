@@ -130,6 +130,12 @@ namespace Collectivite.ViewModels
             set => SetProperty(ref _isEquilibre, value);
         }
 
+        // Permissions
+        public bool CanViewEcritureComptable => SessionManager.HasPermission("EcritureComptable.View");
+        public bool CanCreateEcritureComptable => SessionManager.HasPermission("EcritureComptable.Create");
+        public bool CanEditEcritureComptable => SessionManager.HasPermission("EcritureComptable.Edit");
+        public bool CanDeleteEcritureComptable => SessionManager.HasPermission("EcritureComptable.Delete");
+
         #endregion
 
         #region Propriétés - Dialog
@@ -425,6 +431,11 @@ namespace Collectivite.ViewModels
             {
                 MessageBox.Show("Aucune écriture à exporter.", "Information",
                     MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+            if (!CanEditEcritureComptable)
+            {
+                MessageBox.Show("Accès refusé", "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 

@@ -437,6 +437,8 @@
 
                         <!-- Section Gestion Comptable debut-->
 
+                        <StackPanel Visibility="{Binding Converter={StaticResource PermissionToVisibilityConverter}, ConverterParameter=GestionComptable.Access}">
+
                         <Expander Style="{StaticResource MaterialDesignExpander}" 
                                           HorizontalAlignment="Left"
                                           Width="250"
@@ -571,6 +573,7 @@
                                 
                             </StackPanel>
                         </Expander>
+                        </StackPanel>
                         <!-- Section Gestion Comptable Fin  -->
                         
                         
