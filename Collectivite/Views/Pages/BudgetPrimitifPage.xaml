@@ -73,6 +73,7 @@
                               CanUserAddRows="False"
                               CanUserDeleteRows="False"
                               IsReadOnly="True"
+                              Visibility="{Binding CanViewBudgetPrimitif, Converter={StaticResource BoolToVis}}"
                               SelectionMode="Single"
                               materialDesign:DataGridAssist.CellPadding="13 8 8 8"
                               materialDesign:DataGridAssist.ColumnHeaderPadding="8">
@@ -235,13 +236,17 @@
                                         <StackPanel Orientation="Horizontal" 
                       HorizontalAlignment="Center">
 
-                                            <!-- Bouton Approuver (visible seulement si statut = DRAFT) -->
+                                            <!-- Bouton Approuver (visible seulement si statut = DRAFT)
+                                                 et activable uniquement si l'utilisateur possède la
+                                                 permission fonctionnelle Budget.Approve -->
                                             <Button Style="{StaticResource MaterialDesignIconButton}"
                       ToolTip="Approuver le budget"
                       Command="{Binding DataContext.OpenApprovalDialogCommand, 
                               RelativeSource={RelativeSource AncestorType=Page}}"
                       CommandParameter="{Binding}"
-                      Margin="4,0">
+                      Margin="4,0"
+                      IsEnabled="{Binding DataContext.CanApproveBudget,
+                                          RelativeSource={RelativeSource AncestorType=Page}}">
                                                 <Button.Visibility>
                                                     <Binding Path="Status" 
                                Converter="{StaticResource EnumToVisibilityConverter}" 
@@ -253,13 +258,17 @@
                                            Height="20"/>
                                             </Button>
 
-                                            <!-- Bouton Valider (visible seulement si statut = APPROVED) -->
+                                            <!-- Bouton Valider (visible seulement si statut = APPROVED)
+                                                 et activable uniquement si l'utilisateur possède la
+                                                 permission fonctionnelle Budget.Validate -->
                                             <Button Style="{StaticResource MaterialDesignIconButton}"
                       ToolTip="Valider le budget"
                       Command="{Binding DataContext.OpenValidationDialogCommand, 
                               RelativeSource={RelativeSource AncestorType=Page}}"
                       CommandParameter="{Binding}"
-                      Margin="4,0">
+                      Margin="4,0"
+                      IsEnabled="{Binding DataContext.CanValidateBudget,
+                                          RelativeSource={RelativeSource AncestorType=Page}}">
                                                 <Button.Visibility>
                                                     <Binding Path="Status" 
                                Converter="{StaticResource EnumToVisibilityConverter}" 
@@ -297,12 +306,13 @@
                                             </Border>
 
                                             <!-- Bouton Supprimer (visible seulement si statut = APPROVED) -->
-                                    <Button Style="{StaticResource MaterialDesignIconButton}"
+                                        <Button Style="{StaticResource MaterialDesignIconButton}"
                                           ToolTip="Supprimer"
                                           Command="{Binding DataContext.DeleteBudgetPrimitifCommand, 
-                                                  RelativeSource={RelativeSource AncestorType=Page}}"
+                                              RelativeSource={RelativeSource AncestorType=Page}}"
                                           CommandParameter="{Binding}"
-                                          Margin="4,0">
+                                          Margin="4,0"
+                                          IsEnabled="{Binding DataContext.CanDeleteBudgetPrimitif, RelativeSource={RelativeSource AncestorType=Page}}">
                                     <Button.Visibility>
                                         <Binding Path="Status" 
                                                Converter="{StaticResource EnumToVisibilityConverter}" 

@@ -1,4 +1,5 @@
 ﻿using Collectivite.ViewModels;
+using Collectivite.Services;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -20,6 +21,12 @@ namespace Collectivite.Views.Pages
 
         private void BtnAdd_Click(object sender, RoutedEventArgs e)
         {
+            if (!SessionManager.HasPermission("Engagement.Create"))
+            {
+                MessageBox.Show("Accès refusé : vous n'avez pas la permission de créer des engagements.", "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             // Navigation vers la page de formulaire
             var formPage = new EngagementFormPage();
             NavigationService?.Navigate(formPage);
@@ -29,6 +36,12 @@ namespace Collectivite.Views.Pages
         {
             if (sender is Button button && button.Tag is int engagementId)
             {
+                if (!SessionManager.HasPermission("Engagement.Edit"))
+                {
+                    MessageBox.Show("Accès refusé : vous n'avez pas la permission de modifier les engagements.", "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
                 // Navigation vers la page de formulaire en mode édition
                 var formPage = new EngagementFormPage(engagementId);
                 NavigationService?.Navigate(formPage);
@@ -39,6 +52,12 @@ namespace Collectivite.Views.Pages
         {
             if (sender is Button button && button.Tag is int engagementId)
             {
+                if (!SessionManager.HasPermission("Engagement.View"))
+                {
+                    MessageBox.Show("Accès refusé : vous n'avez pas la permission de consulter les engagements.", "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
                 // Navigation vers la page de détails
                 var detailPage = new EngagementDetailPage(engagementId);
                 NavigationService?.Navigate(detailPage);

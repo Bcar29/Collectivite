@@ -20,6 +20,7 @@ namespace Collectivite.ViewModels
         private bool _isDialogOpen;
         private Nommenclature _dialogNommenclature;
         private bool _isEditMode;
+        private string _accessDeniedMessage = "Vous n'avez pas la permission pour cette action.";
 
         public NommenclatureViewModel(NommenclatureService nommenclature)
         {
@@ -52,6 +53,11 @@ namespace Collectivite.ViewModels
         public ObservableCollection<NommenclatureTreeItemViewModel> RecetteInvestissementTree { get; } = new();
         public ObservableCollection<NommenclatureTreeItemViewModel> DepenseFonctionnementTree { get; } = new();
         public ObservableCollection<NommenclatureTreeItemViewModel> DepenseInvestissementTree { get; } = new();
+
+        public bool CanViewNommenclature => SessionManager.HasPermission("Nommenclature.View");
+        public bool CanCreateNommenclature => SessionManager.HasPermission("Nommenclature.Create");
+        public bool CanEditNommenclature => SessionManager.HasPermission("Nommenclature.Edit");
+        public bool CanDeleteNommenclature => SessionManager.HasPermission("Nommenclature.Delete");
 
         public bool IsLoading
         {
@@ -102,6 +108,22 @@ namespace Collectivite.ViewModels
 
         public async System.Threading.Tasks.Task LoadNommenclatureAsync()
         {
+            if (!CanViewNommenclature)
+            {
+                MessageBox.Show(
+                    "Accès refusé : vous n'avez pas la permission de consulter les nomenclatures.",
+                    "Accès refusé",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+
+                Nommenclatures.Clear();
+                RecetteFonctionnementTree.Clear();
+                RecetteInvestissementTree.Clear();
+                DepenseFonctionnementTree.Clear();
+                DepenseInvestissementTree.Clear();
+                return;
+            }
+
             IsLoading = true;
             try
             {
@@ -206,6 +228,16 @@ namespace Collectivite.ViewModels
 
         private void OpenAddNommenclature()
         {
+            if (!CanCreateNommenclature)
+            {
+                MessageBox.Show(
+                    _accessDeniedMessage + "\nPermission requise : Nommenclature.Create",
+                    "Accès refusé",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
             DialogNommenclature = new Nommenclature();
            
             IsEditMode = false;
@@ -216,6 +248,16 @@ namespace Collectivite.ViewModels
         {
             if (nommenclature == null)
                 return;
+
+            if (!CanEditNommenclature)
+            {
+                MessageBox.Show(
+                    _accessDeniedMessage + "\nPermission requise : Nommenclature.Edit",
+                    "Accès refusé",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
 
             IsEditMode = true;
             DialogNommenclature = new Nommenclature
@@ -240,6 +282,26 @@ namespace Collectivite.ViewModels
 
         private async System.Threading.Tasks.Task SaveNommenclatureAsync()
         {
+            if (IsEditMode && !CanEditNommenclature)
+            {
+                MessageBox.Show(
+                    _accessDeniedMessage + "\nPermission requise : Nommenclature.Edit",
+                    "Accès refusé",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!IsEditMode && !CanCreateNommenclature)
+            {
+                MessageBox.Show(
+                    _accessDeniedMessage + "\nPermission requise : Nommenclature.Create",
+                    "Accès refusé",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
             IsLoading = true;
             try
             {
@@ -296,6 +358,16 @@ namespace Collectivite.ViewModels
         {
             if (nommenclature == null)
                 return;
+
+            if (!CanDeleteNommenclature)
+            {
+                MessageBox.Show(
+                    _accessDeniedMessage + "\nPermission requise : Nommenclature.Delete",
+                    "Accès refusé",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
 
             var result = MessageBox.Show(
                 $"Êtes-vous sûr de vouloir supprimer la nomenclature '{nommenclature.Intitule}' ?\n\n" +

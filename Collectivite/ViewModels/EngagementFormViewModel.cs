@@ -18,6 +18,7 @@ namespace Collectivite.ViewModels
     /// </summary>
     public class EngagementFormViewModel : ViewModelBase
     {
+        // private readonly string _accessDeniedMessage = "Vous n'avez pas la permission pour cette action.";
         private bool _isLoading;
         private Engagement _engagement;
         private bool _isEditMode;
@@ -281,6 +282,26 @@ namespace Collectivite.ViewModels
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
                 return;
+            }
+
+            // Vérifier les permissions avant d'appeler le service
+            if (IsEditMode)
+            {
+                if (!SessionManager.HasPermission("Engagement.Edit"))
+                {
+                    MessageBox.Show("Accès refusé : vous n'avez pas la permission de modifier les engagements.",
+                        "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+            }
+            else
+            {
+                if (!SessionManager.HasPermission("Engagement.Create"))
+                {
+                    MessageBox.Show("Accès refusé : vous n'avez pas la permission de créer des engagements.",
+                        "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
             }
 
             IsLoading = true;

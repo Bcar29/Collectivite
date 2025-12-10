@@ -11,6 +11,7 @@ namespace Collectivite.ViewModels
 {
     public class BonCommandeListViewModel : ViewModelBase
     {
+        // private readonly string _accessDeniedMessage = "Vous n'avez pas la permission pour cette action.";
         private bool _isLoading;
         private BonCommande? _selectedBonCommande;
 
@@ -26,6 +27,15 @@ namespace Collectivite.ViewModels
             // Charger les données
             LoadDataCommand.Execute(null);
         }
+
+        #region Permissions
+
+        public bool CanViewBonCommande => SessionManager.HasPermission("BonCommande.View");
+        public bool CanCreateBonCommande => SessionManager.HasPermission("BonCommande.Create");
+        public bool CanEditBonCommande => SessionManager.HasPermission("BonCommande.Edit");
+        public bool CanDeleteBonCommande => SessionManager.HasPermission("BonCommande.Delete");
+
+        #endregion
 
         #region Properties
 
@@ -63,6 +73,14 @@ namespace Collectivite.ViewModels
 
             try
             {
+                if (!CanViewBonCommande)
+                {
+                    MessageBox.Show("Accès refusé : vous n'avez pas la permission de consulter les bons de commande.",
+                        "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    BonCommandes.Clear();
+                    return;
+                }
+
                 var service = new BonCommandeService();
                 var bonCommandes = await service.GetAllBonCommandesAsync();
 
@@ -85,6 +103,13 @@ namespace Collectivite.ViewModels
 
         private void OpenAddPage()
         {
+            if (!CanCreateBonCommande)
+            {
+                MessageBox.Show("Accès refusé : vous n'avez pas la permission de créer des bons de commande.",
+                    "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             var mainWindow = Application.Current.MainWindow;
             if (mainWindow != null)
             {
@@ -99,6 +124,12 @@ namespace Collectivite.ViewModels
         private void OpenEditPage(BonCommande? bonCommande)
         {
             if (bonCommande == null) return;
+            if (!CanEditBonCommande)
+            {
+                MessageBox.Show("Accès refusé : vous n'avez pas la permission de modifier des bons de commande.",
+                    "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
             var mainWindow = Application.Current.MainWindow;
             if (mainWindow != null)
@@ -114,6 +145,12 @@ namespace Collectivite.ViewModels
         private void OpenDetailsPage(BonCommande? bonCommande)
         {
             if (bonCommande == null) return;
+            if (!CanViewBonCommande)
+            {
+                MessageBox.Show("Accès refusé : vous n'avez pas la permission de consulter les bons de commande.",
+                    "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
             var mainWindow = Application.Current.MainWindow;
             if (mainWindow != null)
@@ -129,6 +166,12 @@ namespace Collectivite.ViewModels
         private async System.Threading.Tasks.Task DeleteAsync(BonCommande? bonCommande)
         {
             if (bonCommande == null) return;
+            if (!CanDeleteBonCommande)
+            {
+                MessageBox.Show("Accès refusé : vous n'avez pas la permission de supprimer des bons de commande.",
+                    "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
             var result = MessageBox.Show(
                 $"⚠️ Supprimer le bon de commande '{bonCommande.Numero}' ?\n\n" +

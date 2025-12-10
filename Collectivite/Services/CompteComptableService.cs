@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
+using Collectivite.Utils;
 
 namespace Collectivite.Services
 {
@@ -17,6 +18,9 @@ namespace Collectivite.Services
         // Récupérer tous les comptes comptables 
         public async Task<List<CompteComptable>> GetCompteComptablesAsync()
         {
+            if (!SessionManager.HasPermission("CompteComptable.View"))
+                throw new UnauthorizedAccessException("Permission CompteComptable.View requise pour consulter les comptes comptables.");
+
             return await _appDbContext.CompteComptables
                 .Include(c => c.ContrePartie)
                 .Include(c => c.SousComptes)
@@ -28,6 +32,9 @@ namespace Collectivite.Services
         // Récupérer un compte comptable par ID
         public async Task<CompteComptable?> GetCompteComptableByIdAsync(int id)
         {
+            if (!SessionManager.HasPermission("CompteComptable.View"))
+                throw new UnauthorizedAccessException("Permission CompteComptable.View requise pour consulter les comptes comptables.");
+
             return await _appDbContext.CompteComptables
                 .Include(c => c.ContrePartie)
                 .Include(c => c.SousComptes)
@@ -38,6 +45,9 @@ namespace Collectivite.Services
         // Récupérer un compte comptable par numéro
         public async Task<CompteComptable?> GetCompteComptableByNumeroAsync(string numeroCompte)
         {
+            if (!SessionManager.HasPermission("CompteComptable.View"))
+                throw new UnauthorizedAccessException("Permission CompteComptable.View requise pour consulter les comptes comptables.");
+
             return await _appDbContext.CompteComptables
                 .Include(c => c.ContrePartie)
                 .Include(c => c.SousComptes)
@@ -48,6 +58,9 @@ namespace Collectivite.Services
         // Récupérer les comptes racines (sans parent)
         public async Task<List<CompteComptable>> GetComptesRacinesAsync()
         {
+            if (!SessionManager.HasPermission("CompteComptable.View"))
+                throw new UnauthorizedAccessException("Permission CompteComptable.View requise pour consulter les comptes comptables.");
+
             return await _appDbContext.CompteComptables
                 .Where(c => c.ContrePartieId == null)
                 .Include(c => c.SousComptes)
@@ -59,6 +72,9 @@ namespace Collectivite.Services
         // Récupérer les sous-comptes d'un compte parent
         public async Task<List<CompteComptable>> GetSousComptesAsync(int contrePartieId)
         {
+            if (!SessionManager.HasPermission("CompteComptable.View"))
+                throw new UnauthorizedAccessException("Permission CompteComptable.View requise pour consulter les comptes comptables.");
+
             return await _appDbContext.CompteComptables
                 .Where(c => c.ContrePartieId == contrePartieId)
                 .Include(c => c.SousComptes)
@@ -72,6 +88,9 @@ namespace Collectivite.Services
         {
             try
             {
+                if (!SessionManager.HasPermission("CompteComptable.Create"))
+                    return (false, "Permission CompteComptable.Create requise pour créer un compte comptable.", null);
+
                 // Vérifier qu'il n'existe pas un compte avec le même numéro
                 var existeNumero = await _appDbContext.CompteComptables
                     .AnyAsync(c => c.NumeroCompte == compte.NumeroCompte);
@@ -115,6 +134,9 @@ namespace Collectivite.Services
         {
             try
             {
+                if (!SessionManager.HasPermission("CompteComptable.Edit"))
+                    return (false, "Permission CompteComptable.Edit requise pour modifier un compte comptable.");
+
                 var existingCompte = await _appDbContext.CompteComptables
                     .FirstOrDefaultAsync(c => c.Id == compte.Id);
 
@@ -181,6 +203,9 @@ namespace Collectivite.Services
         {
             try
             {
+                if (!SessionManager.HasPermission("CompteComptable.Delete"))
+                    return (false, "Permission CompteComptable.Delete requise pour supprimer un compte comptable.");
+
                 var existingCompte = await _appDbContext.CompteComptables
                     .Include(c => c.SousComptes)
                     .FirstOrDefaultAsync(c => c.Id == idCompte);

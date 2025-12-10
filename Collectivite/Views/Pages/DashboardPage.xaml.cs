@@ -1,5 +1,8 @@
 using Collectivite.Services;
 using Collectivite.ViewModels;
+using System;
+using System.ComponentModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -17,15 +20,28 @@ namespace Collectivite.Views.Pages
         {
             InitializeComponent();
             AuditService auditService = new AuditService();
-            
+
             _viewModel = new DashboardViewModel(auditService);
             DataContext = _viewModel;
 
+            // S'abonner aux changements de collections
+            _viewModel.BarChartData.CollectionChanged += (s, e) => DrawBarChart();
+            _viewModel.LineChartData.CollectionChanged += (s, e) => DrawLineChart();
+
             Loaded += DashboardPage_Loaded;
         }
-
-        private void DashboardPage_Loaded(object sender, RoutedEventArgs e)
+        private void Page_Unloaded(object sender, RoutedEventArgs e)
         {
+            if (DataContext is DashboardViewModel viewModel)
+            {
+                viewModel.Dispose();
+            }
+        }
+        private async void DashboardPage_Loaded(object sender, RoutedEventArgs e)
+        {
+            // Attendre un court instant pour que les données soient chargées
+            await System.Threading.Tasks.Task.Delay(500);
+
             // Dessiner les graphiques après le chargement de la page
             DrawBarChart();
             DrawLineChart();
@@ -35,28 +51,71 @@ namespace Collectivite.Views.Pages
 
         private void DrawBarChart()
         {
+            // Vérifier si le canvas est prêt
+            if (BarChartCanvas == null || !BarChartCanvas.IsLoaded)
+                return;
+
             BarChartCanvas.Children.Clear();
 
             var canvas = BarChartCanvas;
             double canvasWidth = canvas.ActualWidth > 0 ? canvas.ActualWidth : 600;
             double canvasHeight = canvas.ActualHeight > 0 ? canvas.ActualHeight : 300;
 
-            // Données pour le graphique
+            // Récupérer les données depuis le ViewModel
+            var barChartData = _viewModel.BarChartData.ToList();
+
+            if (barChartData.Count == 0)
+            {
+                System.Diagnostics.Debug.WriteLine("BarChartData est vide");
+                return;
+            }
+
+            System.Diagnostics.Debug.WriteLine($"BarChartData count: {barChartData.Count}");
+            foreach (var item in barChartData)
+            {
+                System.Diagnostics.Debug.WriteLine($"Category: {item.Category}, Label: {item.Label}, Value: {item.Value}");
+            }
+
+            // Organiser les données par catégorie et label
+            var recettesFonctionnement = barChartData.FirstOrDefault(d => d.Category == "Recettes" && d.Label == "Fonctionnement");
+            var recettesInvestissement = barChartData.FirstOrDefault(d => d.Category == "Recettes" && d.Label == "Investissement");
+            var depensesFonctionnement = barChartData.FirstOrDefault(d => d.Category == "Dépenses" && d.Label == "Fonctionnement");
+            var depensesInvestissement = barChartData.FirstOrDefault(d => d.Category == "Dépenses" && d.Label == "Investissement");
+
             var data = new[]
             {
-                new { Label = "Recettes\nFonctionnement", Value = 7500.0, Color = "#4CAF50", X = 80.0 },
-                new { Label = "Recettes\nInvestissement", Value = 5300.0, Color = "#4CAF50", X = 200.0 },
-                new { Label = "Dépenses\nFonctionnement", Value = 4800.0, Color = "#F44336", X = 340.0 },
-                new { Label = "Dépenses\nInvestissement", Value = 3650.0, Color = "#F44336", X = 460.0 }
+                new { Label = "Recettes\nFonctionnement", Value = recettesFonctionnement?.Value ?? 0, Color = "#4CAF50", X = 80.0 },
+                new { Label = "Recettes\nInvestissement", Value = recettesInvestissement?.Value ?? 0, Color = "#4CAF50", X = 200.0 },
+                new { Label = "Dépenses\nFonctionnement", Value = depensesFonctionnement?.Value ?? 0, Color = "#F44336", X = 340.0 },
+                new { Label = "Dépenses\nInvestissement", Value = depensesInvestissement?.Value ?? 0, Color = "#F44336", X = 460.0 }
             };
 
-            double maxValue = 8000.0;
+            System.Diagnostics.Debug.WriteLine($"Data to draw: {string.Join(", ", data.Select(d => $"{d.Label}={d.Value}"))}");
+
+            // Trouver la valeur maximale pour l'échelle
+            double maxValue = data.Max(d => d.Value);
+            if (maxValue == 0)
+            {
+                System.Diagnostics.Debug.WriteLine("MaxValue est 0, pas de données à afficher");
+                return;
+            }
+
+            // Arrondir à la centaine supérieure pour un meilleur affichage
+            maxValue = Math.Ceiling(maxValue / 100) * 100;
+            if (maxValue < 100) maxValue = 100; // Minimum pour l'échelle
+
+            System.Diagnostics.Debug.WriteLine($"MaxValue: {maxValue}");
+
             double chartHeight = canvasHeight - 60; // Espace pour les labels
 
             foreach (var item in data)
             {
+                if (item.Value == 0) continue; // Ne pas dessiner les barres avec valeur 0
+
                 double barHeight = (item.Value / maxValue) * chartHeight;
                 double barWidth = 80;
+
+                System.Diagnostics.Debug.WriteLine($"Drawing bar: {item.Label}, height={barHeight}, value={item.Value}");
 
                 // Créer la barre
                 Rectangle bar = new Rectangle
@@ -85,7 +144,7 @@ namespace Collectivite.Views.Pages
                 // Label de valeur
                 TextBlock valueLabel = new TextBlock
                 {
-                    Text = $"{item.Value:N0}M",
+                    Text = $"{item.Value:N1}M",
                     FontSize = 12,
                     FontWeight = FontWeights.SemiBold,
                     Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(item.Color)!)
@@ -107,6 +166,8 @@ namespace Collectivite.Views.Pages
                 Canvas.SetBottom(categoryLabel, 5);
                 canvas.Children.Add(categoryLabel);
             }
+
+            System.Diagnostics.Debug.WriteLine($"Total children in canvas: {canvas.Children.Count}");
         }
 
         #endregion
@@ -115,21 +176,64 @@ namespace Collectivite.Views.Pages
 
         private void DrawLineChart()
         {
+            // Vérifier si le canvas est prêt
+            if (LineChartCanvas == null || !LineChartCanvas.IsLoaded)
+                return;
+
             LineChartCanvas.Children.Clear();
 
             var canvas = LineChartCanvas;
             double canvasWidth = canvas.ActualWidth > 0 ? canvas.ActualWidth : 600;
             double canvasHeight = canvas.ActualHeight > 0 ? canvas.ActualHeight : 300;
 
-            // Données mensuelles (en millions)
-            var months = new[] { "J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D" };
-            var recettes = new[] { 800, 950, 1100, 1050, 1200, 1150, 1300, 1250, 1400, 1350, 1450, 1500 };
-            var depenses = new[] { 600, 700, 750, 800, 850, 800, 900, 850, 950, 900, 980, 1000 };
+            // Récupérer les données depuis le ViewModel
+            var lineChartData = _viewModel.LineChartData.ToList();
 
-            double maxValue = 1600;
+            if (lineChartData.Count == 0)
+            {
+                System.Diagnostics.Debug.WriteLine("LineChartData est vide");
+                return;
+            }
+
+            System.Diagnostics.Debug.WriteLine($"LineChartData count: {lineChartData.Count}");
+
+            // Séparer les recettes et dépenses
+            var recettesData = lineChartData.Where(d => d.Category == "Recettes").OrderBy(d => d.Label).ToList();
+            var depensesData = lineChartData.Where(d => d.Category == "Dépenses").OrderBy(d => d.Label).ToList();
+
+            if (recettesData.Count == 0 || depensesData.Count == 0)
+            {
+                //MessageBox.Show($"Pas assez de données: Recettes={recettesData.Count}, Dépenses={depensesData.Count}");
+                System.Diagnostics.Debug.WriteLine($"Pas assez de données: Recettes={recettesData.Count}, Dépenses={depensesData.Count}");
+                return;
+            }
+
+            // Extraire les mois et valeurs
+            var months = recettesData.Select(d => d.Label).ToArray();
+            var recettes = recettesData.Select(d => d.Value).ToArray();
+            var depenses = depensesData.Select(d => d.Value).ToArray();
+
+            System.Diagnostics.Debug.WriteLine($"Months: {string.Join(", ", months)}");
+            System.Diagnostics.Debug.WriteLine($"Recettes: {string.Join(", ", recettes)}");
+            System.Diagnostics.Debug.WriteLine($"Depenses: {string.Join(", ", depenses)}");
+
+            // Trouver la valeur maximale pour l'échelle
+            double maxValue = Math.Max(recettes.Max(), depenses.Max());
+            if (maxValue == 0)
+            {
+                System.Diagnostics.Debug.WriteLine("MaxValue est 0 pour line chart");
+                maxValue = 1;
+            }
+
+            // Arrondir à la centaine supérieure
+            maxValue = Math.Ceiling(maxValue / 100) * 100;
+            if (maxValue < 100) maxValue = 100;
+
+            System.Diagnostics.Debug.WriteLine($"Line chart MaxValue: {maxValue}");
+
             double chartHeight = canvasHeight - 40;
             double chartWidth = canvasWidth - 40;
-            double stepX = chartWidth / (months.Length - 1);
+            double stepX = months.Length > 1 ? chartWidth / (months.Length - 1) : 0;
 
             // Dessiner les axes
             DrawChartAxis(canvas, canvasWidth, canvasHeight);
@@ -139,6 +243,8 @@ namespace Collectivite.Views.Pages
 
             // Dessiner la courbe des dépenses
             DrawLine(canvas, depenses, maxValue, chartHeight, stepX, "#FF9800", months);
+
+            System.Diagnostics.Debug.WriteLine($"Line chart drawn with {canvas.Children.Count} elements");
         }
 
         private void DrawChartAxis(Canvas canvas, double width, double height)
@@ -168,16 +274,19 @@ namespace Collectivite.Views.Pages
             canvas.Children.Add(xAxis);
         }
 
-        private void DrawLine(Canvas canvas, int[] values, double maxValue, double chartHeight, 
+        private void DrawLine(Canvas canvas, double[] values, double maxValue, double chartHeight,
                             double stepX, string colorHex, string[] labels)
         {
+            if (values.Length == 0)
+                return;
+
             PathGeometry pathGeometry = new PathGeometry();
             PathFigure pathFigure = new PathFigure();
 
             for (int i = 0; i < values.Length; i++)
             {
                 double x = 30 + (i * stepX);
-                double y = chartHeight - ((values[i] / maxValue) * (chartHeight - 40));
+                double y = maxValue > 0 ? chartHeight - ((values[i] / maxValue) * (chartHeight - 40)) : chartHeight - 40;
 
                 if (i == 0)
                 {
@@ -203,7 +312,7 @@ namespace Collectivite.Views.Pages
                 canvas.Children.Add(point);
 
                 // Ajouter le label du mois (seulement tous les 2 mois pour éviter l'encombrement)
-                if (i % 2 == 0)
+                if (i < labels.Length && i % 2 == 0)
                 {
                     TextBlock label = new TextBlock
                     {

@@ -1,4 +1,5 @@
 ﻿using Collectivite.Models;
+using Collectivite.Utils;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -40,6 +41,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<List<Mandat>> GetAllMandatsAsync()
         {
+            if (!SessionManager.HasPermission("Mandat.View"))
+                throw new UnauthorizedAccessException("Permission Mandat.View requise pour consulter les mandats.");
+
             using var context = CreateContext();
             var exerciceService = ExerciceService.Instance;
 
@@ -68,6 +72,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<Mandat?> GetMandatByIdAsync(int id)
         {
+            if (!SessionManager.HasPermission("Mandat.View"))
+                throw new UnauthorizedAccessException("Permission Mandat.View requise pour consulter ce mandat.");
+
             using var context = CreateContext();
 
             return await context.Mandats
@@ -88,6 +95,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<List<Mandat>> GetMandatsByEngagementAsync(int engagementId)
         {
+            if (!SessionManager.HasPermission("Mandat.View"))
+                throw new UnauthorizedAccessException("Permission Mandat.View requise pour consulter les mandats.");
+
             using var context = CreateContext();
 
             return await context.Mandats
@@ -112,6 +122,9 @@ namespace Collectivite.Services
             DateTime? dateEmissionFin = null,
             bool? estPaye = null)
         {
+            if (!SessionManager.HasPermission("Mandat.View"))
+                throw new UnauthorizedAccessException("Permission Mandat.View requise pour consulter les mandats.");
+
             using var context = CreateContext();
 
             var query = context.Mandats
@@ -198,6 +211,9 @@ namespace Collectivite.Services
         {
             //using AppDbContext context = CreateContext();
             using var context = CreateContext();
+
+            if (!SessionManager.HasPermission("Mandat.Create"))
+                return (false, "Permission Mandat.Create requise pour créer un mandat.", null);
 
             try
             {
@@ -326,6 +342,9 @@ namespace Collectivite.Services
         {
             using var context = CreateContext();
 
+            if (!SessionManager.HasPermission("Mandat.Edit"))
+                return (false, "Permission Mandat.Edit requise pour modifier un mandat.");
+
             try
             {
                 var existingMandat = await context.Mandats.FindAsync(mandat.Id);
@@ -378,6 +397,9 @@ namespace Collectivite.Services
         {
             using var context = CreateContext();
 
+            if (!SessionManager.HasPermission("Mandat.Delete"))
+                return (false, "Permission Mandat.Delete requise pour supprimer un mandat.");
+
             try
             {
                 var mandat = await context.Mandats
@@ -416,6 +438,9 @@ namespace Collectivite.Services
         {
             using var context = CreateContext();
 
+            if (!SessionManager.HasPermission("Mandat.Edit"))
+                return (false, "Permission Mandat.Edit requise pour marquer un mandat comme payé.");
+
             try
             {
                 var mandat = await context.Mandats.FindAsync(mandatId);
@@ -443,6 +468,9 @@ namespace Collectivite.Services
         public async Task<(bool Success, string Message)> AnnulerPaiement(int mandatId)
         {
             using var context = CreateContext();
+
+            if (!SessionManager.HasPermission("Mandat.Edit"))
+                return (false, "Permission Mandat.Edit requise pour annuler le paiement d'un mandat.");
 
             try
             {

@@ -33,6 +33,10 @@ namespace Collectivite.Services
         {
             try
             {
+                // Sécurité côté service : vérification de la permission de consultation
+                if (!SessionManager.HasPermission("BudgetPrimitif.View"))
+                    throw new UnauthorizedAccessException("Permission BudgetPrimitif.View requise pour consulter les budgets primitifs.");
+
                 using var context = CreateContext();
                 var exerciceService = ExerciceService.Instance;
 
@@ -60,6 +64,11 @@ namespace Collectivite.Services
         {
             try
             {
+                // Sécurité côté service : vérifier la permission de création
+                if (!SessionManager.HasPermission("BudgetPrimitif.Create"))
+                {
+                    return (false, "Permission BudgetPrimitif.Create requise pour créer un budget primitif.", null);
+                }
                 using var context = CreateContext();
 
                 // Validation : Vérifier qu'il n'existe pas déjà un budget pour cet exercice
@@ -84,6 +93,11 @@ namespace Collectivite.Services
         {
             try
             {
+                // Sécurité côté service : vérifier la permission d'édition
+                if (!SessionManager.HasPermission("BudgetPrimitif.Edit"))
+                {
+                    return (false, "Permission BudgetPrimitif.Edit requise pour modifier un budget primitif.");
+                }
                 using var context = CreateContext();
                 var existingBudgetPrimitif = await context.BudgetsPrimitifs
                     .FirstOrDefaultAsync(b => b.Id == budgetPrimitif.Id);
@@ -118,6 +132,11 @@ namespace Collectivite.Services
         {
             try
             {
+                // Sécurité côté service : vérifier la permission de suppression
+                if (!SessionManager.HasPermission("BudgetPrimitif.Delete"))
+                {
+                    return (false, "Permission BudgetPrimitif.Delete requise pour supprimer un budget primitif.");
+                }
                 using var context = CreateContext();
 
                 var existingBudgetPrimif = await context.BudgetsPrimitifs
@@ -165,8 +184,10 @@ namespace Collectivite.Services
         // APPROUVER LE BUDGET PRIMITIF
         // ═══════════════════════════════════════════════════════════
         /// <summary>
-        /// Approuve un budget primitif et enregistre la date d'approbation
-        /// Un budget ne peut être approuvé qu'une seule fois et doit être en DRAFT
+        /// Approuve un budget primitif et enregistre la date d'approbation.
+        /// Un budget ne peut être approuvé qu'une seule fois et doit être en DRAFT.
+        /// Seuls les utilisateurs ayant la permission \"Budget.Approve\"
+        /// (ex. le Maire) peuvent effectuer cette opération.
         /// </summary>
         public async Task<(bool Success, string Message)> ApprouverBudgetPrimitif(
             int budgetPrimitifId,
@@ -174,6 +195,13 @@ namespace Collectivite.Services
         {
             try
             {
+                // Sécurité \"dure\" côté service : on vérifie la permission
+                // même si l'appel ne vient pas de l'interface WPF.
+                if (!SessionManager.HasPermission("Budget.Approve"))
+                {
+                    return (false, "Vous n'avez pas la permission d'approuver le budget primitif.");
+                }
+
                 using var context = CreateContext();
 
                 var budget = await context.BudgetsPrimitifs
@@ -229,6 +257,14 @@ namespace Collectivite.Services
         {
             try
             {
+                // Sécurité "dure" côté service : si l'utilisateur courant
+                // n'a pas la permission fonctionnelle, on bloque l'opération,
+                // même si quelqu'un essaie de contourner l'interface WPF.
+                if (!SessionManager.HasPermission("Budget.Validate"))
+                {
+                    return (false, "Vous n'avez pas la permission de valider le budget primitif.");
+                }
+
                 using var context = CreateContext();
 
                 var budget = await context.BudgetsPrimitifs
@@ -274,6 +310,17 @@ namespace Collectivite.Services
                     return (false,
                         "❌ Impossible de valider un budget sans lignes budgétaires. " +
                         "Veuillez d'abord ajouter des lignes au budget.");
+                }
+
+                // Vérification 6 : Les montants des recettes et dépenses doivent être égaux
+                if (budget.MontantRecette != budget.MontantDepense)
+                {
+                    return (false,
+                        $"❌ Impossible de valider le budget. Les montants des recettes et dépenses doivent être égaux.\n\n" +
+                        $"Montant des recettes : {budget.MontantRecette:N0} GNF\n" +
+                        $"Montant des dépenses : {budget.MontantDepense:N0} GNF\n" +
+                        $"Différence : {Math.Abs(budget.MontantRecette - budget.MontantDepense):N0} GNF\n\n" +
+                        $"Veuillez équilibrer le budget avant de le valider.");
                 }
 
                 // Validation du budget

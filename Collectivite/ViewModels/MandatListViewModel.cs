@@ -16,6 +16,7 @@ namespace Collectivite.ViewModels
         private bool _isLoading;
         private Mandat? _selectedMandat;
         private readonly ExerciceService _exerciceService;
+        private readonly string _accessDeniedMessage = "Accès refusé : vous n'avez pas la permission d'effectuer cette opération.";
 
         // Filtres
         private string? _filtreNumeroMandat;
@@ -52,6 +53,12 @@ namespace Collectivite.ViewModels
 
         public ObservableCollection<Mandat> Mandats { get; } = new();
         public ObservableCollection<Engagement> Engagements { get; } = new();
+
+        // Permissions
+        public bool CanViewMandat => SessionManager.HasPermission("Mandat.View");
+        public bool CanCreateMandat => SessionManager.HasPermission("Mandat.Create");
+        public bool CanEditMandat => SessionManager.HasPermission("Mandat.Edit");
+        public bool CanDeleteMandat => SessionManager.HasPermission("Mandat.Delete");
 
         public bool IsLoading
         {
@@ -160,6 +167,12 @@ namespace Collectivite.ViewModels
         }
         private async System.Threading.Tasks.Task LoadDataAsync()
         {
+            if (!CanViewMandat)
+            {
+                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             IsLoading = true;
 
             try
@@ -198,6 +211,12 @@ namespace Collectivite.ViewModels
 
         private async System.Threading.Tasks.Task ApplyFiltersAsync()
         {
+            if (!CanViewMandat)
+            {
+                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             IsLoading = true;
 
             try
@@ -251,6 +270,12 @@ namespace Collectivite.ViewModels
 
         private void OpenAddPage()
         {
+            if (!CanCreateMandat)
+            {
+                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             var formPage = new MandatFormPage();
             NavigationService.Instance.NavigateTo(formPage);
         }
@@ -258,6 +283,11 @@ namespace Collectivite.ViewModels
         private void OpenEditPage(Mandat? mandat)
         {
             if (mandat == null) return;
+            if (!CanEditMandat)
+            {
+                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
             var editPage = new Views.Pages.MandatFormPage(mandat.Id);
             NavigationService.Instance.NavigateTo(editPage);
@@ -266,6 +296,11 @@ namespace Collectivite.ViewModels
         private void OpenDetailPage(Mandat? mandat)
         {
             if (mandat == null) return;
+            if (!CanViewMandat)
+            {
+                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
             var detailPage = new Views.Pages.MandatDetailPage(mandat.Id);
             NavigationService.Instance.NavigateTo(detailPage);
@@ -274,6 +309,12 @@ namespace Collectivite.ViewModels
         private async System.Threading.Tasks.Task DeleteAsync(Mandat? mandat)
         {
             if (mandat == null) return;
+
+            if (!CanDeleteMandat)
+            {
+                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
             var result = MessageBox.Show(
                 $"⚠️ Supprimer le mandat '{mandat.NumeroMandat}' ?\n\n" +
@@ -317,6 +358,12 @@ namespace Collectivite.ViewModels
         private async System.Threading.Tasks.Task MarquerCommePaye(Mandat? mandat)
         {
             if (mandat == null) return;
+
+            if (!CanEditMandat)
+            {
+                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
             if (mandat.DatePaiement != null)
             {
@@ -365,6 +412,12 @@ namespace Collectivite.ViewModels
         private async System.Threading.Tasks.Task AnnulerPaiement(Mandat? mandat)
         {
             if (mandat == null) return;
+
+            if (!CanEditMandat)
+            {
+                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
             if (mandat.DatePaiement == null)
             {

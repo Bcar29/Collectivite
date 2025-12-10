@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace Collectivite.Services
 {
@@ -101,7 +102,8 @@ namespace Collectivite.Services
                         bp.MontantRecette += line.MontantPrevu;
                         await context.SaveChangesAsync();
 
-                    }else if (line.Nommenclature.Nature == NatureType.Depense)
+                    }
+                    else if (line.Nommenclature.Nature == NatureType.Depense)
                     {
                         bp.MontantDepense -= oldMontant;
                         bp.MontantDepense += line.MontantPrevu;
@@ -277,11 +279,12 @@ namespace Collectivite.Services
 
         // ═══════════════════════════════════════════════════════════
         // MÉTHODE DE CRÉATION (CREATE)
+        // ═══════════════════════════════════════════════════════════
 
         public async Task<BudgetLine> CreateBudgetLineAsync(
             int budgetPrimitifId,
             int nomenclatureId,
-            int montantPrevu)
+            decimal montantPrevu)
         {
             if (await HasChildrenAsync(nomenclatureId))
                 throw new InvalidOperationException(
@@ -313,17 +316,73 @@ namespace Collectivite.Services
             await context.Entry(newLine).Reference(b => b.Nommenclature).LoadAsync();
             await context.Entry(newLine).Reference(b => b.BudgetPrimitif).LoadAsync();
 
-            if (newLine.Nommenclature.Nature == NatureType.Recette)
+            if (newLine.Nommenclature.code() != "110" && newLine.Nommenclature.code() != "662")
             {
-                newLine.BudgetPrimitif.MontantRecette += newLine.MontantPrevu;
-            }
-            else if (newLine.Nommenclature.Nature == NatureType.Depense)
-            {
-                newLine.BudgetPrimitif.MontantDepense += newLine.MontantPrevu;
+                if (newLine.Nommenclature.Nature == NatureType.Recette)
+                {
+                    newLine.BudgetPrimitif.MontantRecette += newLine.MontantPrevu;
+                }
+                else if (newLine.Nommenclature.Nature == NatureType.Depense)
+                {
+                    newLine.BudgetPrimitif.MontantDepense += newLine.MontantPrevu;
+                }
             }
 
             // Sauvegarder les modifications sur le BudgetPrimitif
             await context.SaveChangesAsync();
+
+            //recuperer les 60% de la prevision pour l'affecter au prelèvement 
+            if (newLine.Nommenclature.Nature == NatureType.Recette && newLine.Nommenclature.Section == SectionType.Fonctionnement)
+            {
+                var N110 = await context.Nommenclatures
+                    .FirstOrDefaultAsync(n => n.Article == "110");
+                if (N110 != null)
+                {
+                    var B110 = await context.BudgetLines
+                        .FirstOrDefaultAsync(b => b.BudgetPrimitifId == budgetPrimitifId &&
+                                              b.NommenclatureId == N110.Id);
+                    if (B110 == null)
+                    {
+                        await CreateBudgetLineAsync(budgetPrimitifId, N110.Id, (newLine.MontantPrevu * (decimal)0.6));
+                    }
+                    else
+                    {
+                        B110.MontantPrevu += (newLine.MontantPrevu * (decimal)0.6);
+                        await context.SaveChangesAsync();
+
+                    }
+                     await RecalculateAncestorsAsync(N110.Id, budgetPrimitifId);
+                }
+                else
+                {
+                    MessageBox.Show("N110 est null");
+                }
+
+                var N662 = await context.Nommenclatures
+                    .FirstOrDefaultAsync(n => n.Article == "662");
+                if (N662 != null)
+                {
+                    var B662 = await context.BudgetLines
+                        .FirstOrDefaultAsync(b => b.BudgetPrimitifId == budgetPrimitifId &&
+                                              b.NommenclatureId == N662.Id);
+                    if (B662 == null)
+                    {
+                        await CreateBudgetLineAsync(budgetPrimitifId, N662.Id, (newLine.MontantPrevu * (decimal)0.6));
+                    }
+                    else
+                    {
+                        B662.MontantPrevu += (newLine.MontantPrevu * (decimal)0.6);
+                        await context.SaveChangesAsync();
+
+                    }
+                    await RecalculateAncestorsAsync(N662.Id, budgetPrimitifId);
+                }
+                else
+                {
+                    MessageBox.Show("N662 est null");
+                }
+
+            }
 
             return newLine;
         }
@@ -335,7 +394,7 @@ namespace Collectivite.Services
         /// <summary>
         /// Recalcule les montants de tous les parents jusqu'à la racine
         /// </summary>
-        private async Task  RecalculateAncestorsAsync(int childNomenclatureId, int budgetPrimitifId)
+        private async Task RecalculateAncestorsAsync(int childNomenclatureId, int budgetPrimitifId)
         {
             using var context = CreateContext();
             var child = await context.Nommenclatures
@@ -391,5 +450,117 @@ namespace Collectivite.Services
                 parentId = parent.ParentId;
             }
         }
+
+        // ═══════════════════════════════════════════════════════════
+        // 🆕 NOUVELLES MÉTHODES POUR LA HIÉRARCHIE
+        // ═══════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Détermine le niveau hiérarchique d'une nomenclature
+        /// 0 = Chapitre, 1 = Article, 2 = Paragraphe, 3 = Sous-paragraphe
+        /// </summary>
+        public int GetNomenclatureLevel(Nommenclature nomenclature)
+        {
+            if (!string.IsNullOrWhiteSpace(nomenclature.SousParagraphe))
+                return 3;
+            if (!string.IsNullOrWhiteSpace(nomenclature.Paragraphe))
+                return 2;
+            if (!string.IsNullOrWhiteSpace(nomenclature.Article))
+                return 1;
+            if (!string.IsNullOrWhiteSpace(nomenclature.Chapitre))
+                return 0;
+            return 0;
+        }
+
+        /// <summary>
+        /// Récupère toutes les nomenclatures avec leur hiérarchie complète
+        /// </summary>
+        public async Task<List<Nommenclature>> GetNomenclaturesWithHierarchyAsync(
+            NatureType nature,
+            SectionType section)
+        {
+            using var context = CreateContext();
+            return await context.Nommenclatures
+                .Include(n => n.Parent)
+                .Include(n => n.Enfants)
+                .Where(n => n.Nature == nature && n.Section == section)
+                .OrderBy(n => n.Chapitre)
+                .ThenBy(n => n.Article)
+                .ThenBy(n => n.Paragraphe)
+                .ThenBy(n => n.SousParagraphe)
+                .ToListAsync();
+        }
+
+
+        public decimal TotalRecetteFonctionnement(List<BudgetLine> lines)
+        {
+            return lines
+                .Where(bl =>
+                    bl.Nommenclature.Nature == NatureType.Recette &&
+                    bl.Nommenclature.Section == SectionType.Fonctionnement &&
+                    bl.Nommenclature.ParentId == null
+                )
+                .Sum(bl => bl.MontantPrevu);
+        }
+
+        public decimal TotalDepenseFonctionnement(List<BudgetLine> lines)
+        {
+            return lines
+                .Where(bl =>
+                    bl.Nommenclature.Nature == NatureType.Depense &&
+                    bl.Nommenclature.Section == SectionType.Fonctionnement &&
+                    bl.Nommenclature.ParentId == null
+                )
+                .Sum(bl => bl.MontantPrevu);
+        }
+
+        public decimal TotalDepenseReelFonctionnement(List<BudgetLine> lines)
+        {
+            var prelevement = TotalRecetteFonctionnement(lines) * 0.6m;
+            return TotalDepenseFonctionnement(lines) - prelevement;
+        }
+
+        public decimal TotalRecetteInvestissement(List<BudgetLine> lines)
+        {
+            return lines
+                .Where(bl =>
+                    bl.Nommenclature.Nature == NatureType.Recette &&
+                    bl.Nommenclature.Section == SectionType.Investissement &&
+                    bl.Nommenclature.ParentId == null
+                )
+                .Sum(bl => bl.MontantPrevu);
+        }
+
+        public decimal TotalRecetteReelInvestissement(List<BudgetLine> lines)
+        {
+            var prelevement = TotalRecetteFonctionnement(lines) * 0.6m;
+            return TotalRecetteInvestissement(lines) - prelevement;
+        }
+
+        public decimal TotalGeneralRecetteReel(List<BudgetLine> lines)
+        {
+            return TotalRecetteReelInvestissement(lines) + TotalRecetteFonctionnement(lines);
+        }
+
+        public decimal TotalDepenseInvestissement(List<BudgetLine> lines)
+        {
+            return lines
+                .Where(bl =>
+                    bl.Nommenclature.Nature == NatureType.Depense &&
+                    bl.Nommenclature.Section == SectionType.Investissement &&
+                    bl.Nommenclature.ParentId == null
+                )
+                .Sum(bl => bl.MontantPrevu);
+        }
+
+        public decimal TotalGeneralDepenseReel(List<BudgetLine> lines)
+        {
+            return TotalDepenseReelFonctionnement(lines)
+                 - TotalDepenseInvestissement(lines);
+        }
+
+
     }
+
+
 }

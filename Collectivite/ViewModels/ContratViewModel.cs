@@ -16,6 +16,7 @@ namespace Collectivite.ViewModels
     public  class ContratViewModel : ViewModelBase
     {
         private readonly ContratService _contratService;
+        private string _accessDeniedMessage = "Vous n'avez pas la permission pour cette action.";
         private bool _isLoading;
         private Contrats? _selectedContrat;
         private bool _isDialogOpen;
@@ -50,6 +51,11 @@ namespace Collectivite.ViewModels
         public ObservableCollection<Contrats> Contrats { get; } = new();
         public ObservableCollection<Exercice> Exercices { get; } = new();
         public ObservableCollection<Tiers> TiersList { get; } = new();
+        // Permissions dynamiques
+        public bool CanViewContrat => SessionManager.HasPermission("Contrats.View");
+        public bool CanCreateContrat => SessionManager.HasPermission("Contrats.Create");
+        public bool CanEditContrat => SessionManager.HasPermission("Contrats.Edit");
+        public bool CanDeleteContrat => SessionManager.HasPermission("Contrats.Delete");
         public bool IsLoading
         {
             get => _isLoading;
@@ -126,6 +132,18 @@ namespace Collectivite.ViewModels
             IsLoading = true;
             try
             {
+                if (!CanViewContrat)
+                {
+                    MessageBox.Show(
+                        "Accès refusé : vous n'avez pas la permission de consulter les contrats.",
+                        "Accès refusé",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+
+                    Contrats.Clear();
+                    return;
+                }
+
                 var contrat = await _contratService.GetAllContratsAsync();
                 Contrats.Clear();
                 foreach (var _contrat in contrat)
@@ -169,6 +187,15 @@ namespace Collectivite.ViewModels
 
         public async System.Threading.Tasks.Task OpenAddContrat()
         {
+            if (!CanCreateContrat)
+            {
+                MessageBox.Show(
+                    _accessDeniedMessage + "\nPermission requise : Contrats.Create",
+                    "Accès refusé",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
             try
             {
                 var exercices = await _contratService.GetAllExercie();
@@ -191,6 +218,15 @@ namespace Collectivite.ViewModels
         {
             if (contrats == null)
                 return;
+            if (!CanEditContrat)
+            {
+                MessageBox.Show(
+                    _accessDeniedMessage + "\nPermission requise : Contrats.Edit",
+                    "Accès refusé",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
             IsEditMode = true;
             DialogContrat = new Contrats
             {
@@ -222,7 +258,18 @@ namespace Collectivite.ViewModels
             {
                 if (IsEditMode)
                 {
+                    if (!CanEditContrat)
+                    {
+                        MessageBox.Show(
+                            _accessDeniedMessage + "\nPermission requise : Contrats.Edit",
+                            "Accès refusé",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Warning);
+                        return;
+                    }
+
                     var (success, message) = await _contratService.UpdateContratsAsync(DialogContrat);
+
                     if (success)
                     {
                         MessageBox.Show("Contrat mis à jour avec succès.", "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -236,27 +283,33 @@ namespace Collectivite.ViewModels
                 }
                 else
                 {
+                    if (!CanCreateContrat)
+                    {
+                        MessageBox.Show(
+                            _accessDeniedMessage + "\nPermission requise : Contrats.Create",
+                            "Accès refusé",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Warning);
+                        return;
+                    }
+
                     // 1. Mettre à jour les vraies valeurs du modèle :
                     DialogContrat.DateSignature = DateOnly.FromDateTime(DialogContratDateSignature);
                     DialogContrat.DateEcheance = DateOnly.FromDateTime(DialogContratDateEcheance);
 
-                    // 2. Affichage
-                          //MessageBox.Show($"{DialogContrat.NumeroContrat} {DialogContrat.MontantContrat} {DialogContratDateEcheance} {DialogContrat.ExerciceId} {DialogContratDateSignature} {DialogContrat.Objet}", "info");
-
                     //creation
-                    var (success, message, _) = await _contratService.CreateContratAsync(DialogContrat);
-                    if (success)
+                    var (successCreate, messageCreate, _) = await _contratService.CreateContratAsync(DialogContrat);
+                    if (successCreate)
                     {
-                        MessageBox.Show(message, "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+                        MessageBox.Show(messageCreate, "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
                         await LoadContratAsync();
                         IsDialogOpen = false;
                     }
                     else
                     {
-                        MessageBox.Show(message, "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show(messageCreate, "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
-
             }
             catch (Exception ex)
             {
@@ -279,6 +332,16 @@ namespace Collectivite.ViewModels
             var result = MessageBox.Show($"Êtes-vous sûr de vouloir supprimer ce contrat de  '{contrats.Exercice.Libelle}' ?", "Confirmation de suppression", MessageBoxButton.YesNo, MessageBoxImage.Question);
             if (result == MessageBoxResult.Yes)
             {
+                if (!CanDeleteContrat)
+                {
+                    MessageBox.Show(
+                        _accessDeniedMessage + "\nPermission requise : Contrats.Delete",
+                        "Accès refusé",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    return;
+                }
+
                 IsLoading = true;
                 var (success, message) = await _contratService.DeleteContratAsync(contrats.Id);
                 if (success)
@@ -292,6 +355,18 @@ namespace Collectivite.ViewModels
                 }
                 IsLoading = false;
             }
+        }
+
+        // small wrappers to avoid duplicating service calls that exist in the service
+        private async System.Threading.Tasks.Task<List<Exercice>> _contrat_service_GetAllExercieWrapper()
+        {
+            return await _contratService.GetAllExercie();
+        }
+
+        private async System.Threading.Tasks.Task<(bool, string)> _contrat_service_UpdateAsyncWrapper(Contrats c)
+        {
+            var (s, m) = await _contratService.UpdateContratsAsync(c);
+            return (s, m);
         }
 
         #endregion

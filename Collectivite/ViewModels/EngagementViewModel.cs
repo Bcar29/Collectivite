@@ -13,6 +13,7 @@ namespace Collectivite.ViewModels
     /// </summary>
     public class EngagementViewModel : ViewModelBase, IDisposable
     {
+        // private readonly string _accessDeniedMessage = "Vous n'avez pas la permission pour cette action.";
         private bool _isLoading;
         private Engagement? _selectedEngagement;
         private string _searchText;
@@ -36,6 +37,15 @@ namespace Collectivite.ViewModels
             // Charger les données
             LoadDataCommand.Execute(null);
         }
+
+        #region Permissions
+
+        public bool CanViewEngagement => SessionManager.HasPermission("Engagement.View");
+        public bool CanCreateEngagement => SessionManager.HasPermission("Engagement.Create");
+        public bool CanEditEngagement => SessionManager.HasPermission("Engagement.Edit");
+        public bool CanDeleteEngagement => SessionManager.HasPermission("Engagement.Delete");
+
+        #endregion
 
         #region Properties
 
@@ -99,6 +109,15 @@ namespace Collectivite.ViewModels
 
             try
             {
+                if (!CanViewEngagement)
+                {
+                    MessageBox.Show("Accès refusé : vous n'avez pas la permission de consulter les engagements.",
+                        "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    Engagements.Clear();
+                    IsLoading = false;
+                    return;
+                }
+
                 var service = new EngagementService();
                 List<Engagement> engagements;
 
@@ -136,6 +155,15 @@ namespace Collectivite.ViewModels
 
             try
             {
+                if (!CanViewEngagement)
+                {
+                    MessageBox.Show("Accès refusé : vous n'avez pas la permission de consulter les engagements.",
+                        "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    Engagements.Clear();
+                    IsLoading = false;
+                    return;
+                }
+
                 var service = new EngagementService();
                 var results = await service.SearchEngagementsAsync(SearchText);
 
@@ -161,6 +189,13 @@ namespace Collectivite.ViewModels
         private async System.Threading.Tasks.Task DeleteAsync(Engagement? engagement)
         {
             if (engagement == null) return;
+
+            if (!CanDeleteEngagement)
+            {
+                MessageBox.Show("Accès refusé : vous n'avez pas la permission de supprimer les engagements.",
+                    "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
             var result = MessageBox.Show(
                 $"Êtes-vous sûr de vouloir supprimer cet engagement ?\n\n" +

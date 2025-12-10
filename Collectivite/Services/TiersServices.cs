@@ -24,6 +24,10 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<List<Tiers>> GetAllTiersAsync()
         {
+            // ✅ VÉRIFICATION PERMISSION
+            if (!SessionManager.HasPermission("Tiers.View"))
+                throw new UnauthorizedAccessException("Permission Tiers.View requise pour consulter les tiers.");
+
             using var context = CreateContext();
 
             return await context.Tiers
@@ -39,6 +43,10 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<Tiers?> GetTiersByIdAsync(int id)
         {
+            // ✅ VÉRIFICATION PERMISSION
+            if (!SessionManager.HasPermission("Tiers.View"))
+                throw new UnauthorizedAccessException("Permission Tiers.View requise.");
+
             using var context = CreateContext();
 
             return await context.Tiers
@@ -53,6 +61,10 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<List<Tiers>> GetTiersActifsAsync()
         {
+            // ✅ VÉRIFICATION PERMISSION
+            if (!SessionManager.HasPermission("Tiers.View"))
+                throw new UnauthorizedAccessException("Permission Tiers.View requise.");
+
             using var context = CreateContext();
 
             return await context.Tiers
@@ -69,6 +81,10 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<List<Tiers>> GetTiersByTypeAsync(TiersType type)
         {
+            // ✅ VÉRIFICATION PERMISSION
+            if (!SessionManager.HasPermission("Tiers.View"))
+                throw new UnauthorizedAccessException("Permission Tiers.View requise.");
+
             using var context = CreateContext();
 
             return await context.Tiers
@@ -85,6 +101,10 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<List<Tiers>> GetTiersByCategorieAsync(CategorieJuridique categorie)
         {
+            // ✅ VÉRIFICATION PERMISSION
+            if (!SessionManager.HasPermission("Tiers.View"))
+                throw new UnauthorizedAccessException("Permission Tiers.View requise.");
+
             using var context = CreateContext();
 
             return await context.Tiers
@@ -100,6 +120,10 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<List<Tiers>> SearchTiersAsync(string searchTerm)
         {
+            // ✅ VÉRIFICATION PERMISSION
+            if (!SessionManager.HasPermission("Tiers.View"))
+                throw new UnauthorizedAccessException("Permission Tiers.View requise.");
+
             using var context = CreateContext();
 
             if (string.IsNullOrWhiteSpace(searchTerm))
@@ -131,6 +155,10 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<(bool Success, string Message, Tiers? Tiers)> CreateTiersAsync(Tiers tiers)
         {
+            // ✅ VÉRIFICATION PERMISSION
+            if (!SessionManager.HasPermission("Tiers.Create"))
+                return (false, "Permission Tiers.Create requise pour créer un tiers.", null);
+
             using var context = CreateContext();
 
             try
@@ -267,6 +295,10 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<(bool Success, string Message)> UpdateTiersAsync(Tiers tiers)
         {
+            // ✅ VÉRIFICATION PERMISSION
+            if (!SessionManager.HasPermission("Tiers.Edit"))
+                return (false, "Permission Tiers.Edit requise pour modifier un tiers.");
+
             using var context = CreateContext();
 
             try
@@ -368,6 +400,10 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<(bool Success, string Message)> ToggleActifAsync(int id)
         {
+            // ✅ VÉRIFICATION PERMISSION
+            if (!SessionManager.HasPermission("Tiers.Edit"))
+                return (false, "Permission Tiers.Edit requise pour activer/désactiver un tiers.");
+
             using var context = CreateContext();
 
             try
@@ -398,6 +434,10 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<(bool Success, string Message)> DeleteTiersAsync(int id)
         {
+            // ✅ VÉRIFICATION PERMISSION
+            if (!SessionManager.HasPermission("Tiers.Delete"))
+                return (false, "Permission Tiers.Delete requise pour supprimer un tiers.");
+
             using var context = CreateContext();
 
             try
@@ -474,6 +514,10 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<Dictionary<TiersType, int>> GetTiersCountByTypeAsync()
         {
+            // ✅ VÉRIFICATION PERMISSION
+            if (!SessionManager.HasPermission("Tiers.View"))
+                throw new UnauthorizedAccessException("Permission Tiers.View requise.");
+
             using var context = CreateContext();
 
             var counts = await context.Tiers
@@ -489,6 +533,10 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<Dictionary<CategorieJuridique, int>> GetTiersCountByCategorieAsync()
         {
+            // ✅ VÉRIFICATION PERMISSION
+            if (!SessionManager.HasPermission("Tiers.View"))
+                throw new UnauthorizedAccessException("Permission Tiers.View requise.");
+
             using var context = CreateContext();
 
             var counts = await context.Tiers
@@ -504,6 +552,10 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<int> GetTiersActifsCountAsync()
         {
+            // ✅ VÉRIFICATION PERMISSION
+            if (!SessionManager.HasPermission("Tiers.View"))
+                throw new UnauthorizedAccessException("Permission Tiers.View requise.");
+
             using var context = CreateContext();
 
             return await context.Tiers.CountAsync(t => t.IsActif);

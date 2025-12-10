@@ -15,6 +15,7 @@ namespace Collectivite.ViewModels
     /// </summary>
     public class RemaniementViewModel : ViewModelBase
     {
+        private string _accessDeniedMessage = "Vous n'avez pas la permission pour cette action.";
         private bool _isLoading;
         private bool _isDialogOpen;
         private Remaniement _dialogRemaniement;
@@ -24,6 +25,9 @@ namespace Collectivite.ViewModels
         private BudgetLine? _detailBudgetLine;
 
         private readonly List<BudgetLine> _allBudgetLines = new();
+
+        // 🆕 Pour la hiérarchie
+        private List<BudgetLineHierarchyViewModel> _fullHierarchy = new();
 
         public RemaniementViewModel()
         {
@@ -43,12 +47,21 @@ namespace Collectivite.ViewModels
             DeleteCommand = new RelayCommand<Remaniement>(async rem => await DeleteAsync(rem));
             CloseDetailsCommand = new RelayCommand(_ => CloseDetailsDialog());
 
+            // 🆕 Commande pour toggle expand
+            ToggleExpandCommand = new RelayCommand<BudgetLineHierarchyViewModel>(ToggleExpand);
+
             LoadDataCommand.Execute(null);
         }
 
+        // Permissions dynamiques
+        public bool CanViewRemaniement => SessionManager.HasPermission("Remaniement.View");
+        public bool CanCreateRemaniement => SessionManager.HasPermission("Remaniement.Create");
+        public bool CanDeleteRemaniement => SessionManager.HasPermission("Remaniement.Delete");
+
         #region Collections exposées
 
-        public ObservableCollection<BudgetLine> BudgetLines { get; } = new();
+        // 🆕 Changé de ObservableCollection<BudgetLine> en ObservableCollection<BudgetLineHierarchyViewModel>
+        public ObservableCollection<BudgetLineHierarchyViewModel> BudgetLines { get; } = new();
         public ObservableCollection<Remaniement> DetailRemaniements { get; } = new();
 
         #endregion
@@ -100,10 +113,6 @@ namespace Collectivite.ViewModels
             }
         }
 
-        /// <summary>
-        /// 0 = Recette-Fonctionnement, 1 = Recette-Investissement,
-        /// 2 = Dépense-Fonctionnement, 3 = Dépense-Investissement
-        /// </summary>
         public int SelectedTabIndex
         {
             get => _selectedTabIndex;
@@ -116,8 +125,8 @@ namespace Collectivite.ViewModels
             }
         }
 
-        public int TotalRemaniements => BudgetLines.Sum(bl => bl.Remaniements?.Count ?? 0);
-        public decimal TotalVariation => BudgetLines.Sum(bl => bl.VariationTotale);
+        public int TotalRemaniements => _allBudgetLines.Sum(bl => bl.Remaniements?.Count ?? 0);
+        public decimal TotalVariation => _allBudgetLines.Sum(bl => bl.VariationTotale);
 
         public bool IsDetailDialogOpen
         {
@@ -142,6 +151,95 @@ namespace Collectivite.ViewModels
         public ICommand CancelCommand { get; }
         public ICommand DeleteCommand { get; }
         public ICommand CloseDetailsCommand { get; }
+        public ICommand ToggleExpandCommand { get; } // 🆕
+
+        #endregion
+
+        #region 🆕 Gestion de la hiérarchie
+
+        private void ToggleExpand(BudgetLineHierarchyViewModel? item)
+        {
+            if (item == null) return;
+
+            item.ToggleExpanded();
+            RefreshDisplayedLines();
+        }
+
+        private List<BudgetLineHierarchyViewModel> BuildHierarchy(
+            List<BudgetLine> budgetLines,
+            NatureType nature,
+            SectionType section)
+        {
+            var filteredLines = budgetLines
+                .Where(bl => bl.Nommenclature.Nature == nature &&
+                            bl.Nommenclature.Section == section)
+                .ToList();
+
+            var chapitres = filteredLines
+                .Where(bl => bl.Nommenclature.ParentId == null)
+                .Select(bl => CreateViewModel(bl, 0, filteredLines))
+                .OrderBy(vm => vm.BudgetLine.Nommenclature.Chapitre)
+                .ToList();
+
+            return chapitres;
+        }
+
+        private BudgetLineHierarchyViewModel CreateViewModel(
+            BudgetLine budgetLine,
+            int level,
+            List<BudgetLine> allLines)
+        {
+            var viewModel = new BudgetLineHierarchyViewModel(budgetLine, level);
+
+            var children = allLines
+                .Where(bl => bl.Nommenclature.ParentId == budgetLine.Nommenclature.Id)
+                .Select(bl => CreateViewModel(bl, level + 1, allLines))
+                .OrderBy(vm => GetOrderKey(vm.BudgetLine.Nommenclature))
+                .ToList();
+
+            foreach (var child in children)
+            {
+                child.Parent = viewModel;
+                viewModel.Children.Add(child);
+            }
+
+            return viewModel;
+        }
+
+        private string GetOrderKey(Nommenclature n)
+        {
+            return $"{n.Chapitre ?? ""}|{n.Article ?? ""}|{n.Paragraphe ?? ""}|{n.SousParagraphe ?? ""}";
+        }
+
+        private List<BudgetLineHierarchyViewModel> FlattenHierarchy(
+            IEnumerable<BudgetLineHierarchyViewModel> hierarchy)
+        {
+            var result = new List<BudgetLineHierarchyViewModel>();
+
+            foreach (var item in hierarchy)
+            {
+                result.Add(item);
+                if (item.IsExpanded && item.HasChildren)
+                {
+                    result.AddRange(FlattenHierarchy(item.Children));
+                }
+            }
+
+            return result;
+        }
+
+        private void RefreshDisplayedLines()
+        {
+            var flatList = FlattenHierarchy(_fullHierarchy)
+                .Where(vm => vm.IsVisible)
+                .ToList();
+
+            BudgetLines.Clear();
+            foreach (var item in flatList)
+            {
+                BudgetLines.Add(item);
+            }
+        }
 
         #endregion
 
@@ -153,6 +251,18 @@ namespace Collectivite.ViewModels
 
             try
             {
+                if (!CanViewRemaniement)
+                {
+                    MessageBox.Show(
+                        "Accès refusé : vous n'avez pas la permission de consulter les remaniements.",
+                        "Accès refusé",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+
+                    BudgetLines.Clear();
+                    return;
+                }
+
                 var service = new RemaniementService();
                 var budgetLines = await service.GetBudgetLinesForValidatedBudgetAsync();
 
@@ -179,43 +289,21 @@ namespace Collectivite.ViewModels
             if (!_allBudgetLines.Any())
                 return;
 
-            IEnumerable<BudgetLine> filtered = _allBudgetLines;
-
-            switch (SelectedTabIndex)
+            // 🆕 Déterminer nature et section selon l'onglet
+            (NatureType nature, SectionType section) filter = SelectedTabIndex switch
             {
-                case 0:
-                    filtered = filtered.Where(bl =>
-                        bl.Nommenclature?.Nature == NatureType.Recette &&
-                        bl.Nommenclature?.Section == SectionType.Fonctionnement);
-                    break;
-                case 1:
-                    filtered = filtered.Where(bl =>
-                        bl.Nommenclature?.Nature == NatureType.Recette &&
-                        bl.Nommenclature?.Section == SectionType.Investissement);
-                    break;
-                case 2:
-                    filtered = filtered.Where(bl =>
-                        bl.Nommenclature?.Nature == NatureType.Depense &&
-                        bl.Nommenclature?.Section == SectionType.Fonctionnement);
-                    break;
-                case 3:
-                    filtered = filtered.Where(bl =>
-                        bl.Nommenclature?.Nature == NatureType.Depense &&
-                        bl.Nommenclature?.Section == SectionType.Investissement);
-                    break;
-                default:
-                    break;
-            }
+                0 => (NatureType.Recette, SectionType.Fonctionnement),
+                1 => (NatureType.Recette, SectionType.Investissement),
+                2 => (NatureType.Depense, SectionType.Fonctionnement),
+                3 => (NatureType.Depense, SectionType.Investissement),
+                _ => (NatureType.Recette, SectionType.Fonctionnement)
+            };
 
-            foreach (var line in filtered
-                .OrderBy(bl => bl.Nommenclature.code())
-                //.ThenBy(bl => bl.Nommenclature?.Article)
-                //.ThenBy(bl => bl.Nommenclature?.Paragraphe)
-                //.ThenBy(bl => bl.Nommenclature?.SousParagraphe)
-                )
-            {
-                BudgetLines.Add(line);
-            }
+            // 🆕 Construire la hiérarchie
+            _fullHierarchy = BuildHierarchy(_allBudgetLines, filter.nature, filter.section);
+
+            // 🆕 Afficher la vue aplatie
+            RefreshDisplayedLines();
 
             OnPropertyChanged(nameof(TotalRemaniements));
             OnPropertyChanged(nameof(TotalVariation));
@@ -262,6 +350,16 @@ namespace Collectivite.ViewModels
                 {
                     MessageBox.Show("Veuillez sélectionner une ligne budgétaire.",
                         "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+
+                if (!CanCreateRemaniement)
+                {
+                    MessageBox.Show(
+                        _accessDeniedMessage + "\nPermission requise : Remaniement.Create",
+                        "Accès refusé",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
                     return;
                 }
 
@@ -368,6 +466,16 @@ namespace Collectivite.ViewModels
 
             if (confirm != MessageBoxResult.Yes)
                 return;
+
+            if (!CanDeleteRemaniement)
+            {
+                MessageBox.Show(
+                    _accessDeniedMessage + "\nPermission requise : Remaniement.Delete",
+                    "Accès refusé",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
 
             IsLoading = true;
 

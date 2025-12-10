@@ -1,6 +1,4 @@
 ﻿using Collectivite.Services;
-using System.Configuration;
-using System.Data;
 using System.Windows;
 
 namespace Collectivite
@@ -14,11 +12,16 @@ namespace Collectivite
         {
             base.OnStartup(e);
 
-            using (var db = new AppDbContext())
-            {
-                SeedNomenclature.Seed(db);
-                Utils.SeedRolesPermissions.Seed(db);
-            }
+            using var db = new AppDbContext();
+
+            // Seed strictement fonctionnel (nomenclature budgétaire)
+            SeedNomenclature.Seed(db);
+
+            // Seed optionnel des rôles/permissions :
+            // - crée un catalogue initial de permissions (CRUD par modèle, Budget.Approve, Budget.Validate, etc.)
+            // - crée quelques rôles de base (Maire, Secrétaire Général, Receveur)
+            // Le Maire reste libre de modifier/supprimer/ignorer ces éléments via l'UI.
+            Utils.SeedRolesPermissions.Seed(db);
         }
     }
 

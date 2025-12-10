@@ -18,6 +18,7 @@ namespace Collectivite.ViewModels
         private OrdreRecette _dialogOrdreRecette;
         private bool _isEditMode;
         private bool _isFilterPanelOpen;
+        private readonly string _accessDeniedMessage = "Accès refusé : vous n'avez pas la permission d'effectuer cette opération.";
 
         // Filtres
         private string _searchNumeroOrdre;
@@ -71,6 +72,12 @@ namespace Collectivite.ViewModels
         public ObservableCollection<Exercice> Exercices { get; } = new();
         public ObservableCollection<Commune> Communes { get; } = new();
         public ObservableCollection<Tiers> TiersList { get; } = new();
+
+        // Permissions
+        public bool CanViewOrdreRecette => SessionManager.HasPermission("OrdreRecette.View");
+        public bool CanCreateOrdreRecette => SessionManager.HasPermission("OrdreRecette.Create");
+        public bool CanEditOrdreRecette => SessionManager.HasPermission("OrdreRecette.Edit");
+        public bool CanDeleteOrdreRecette => SessionManager.HasPermission("OrdreRecette.Delete");
 
         public bool IsLoading
         {
@@ -189,6 +196,12 @@ namespace Collectivite.ViewModels
 
         private async System.Threading.Tasks.Task LoadDataAsync()
         {
+            if (!CanViewOrdreRecette)
+            {
+                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             IsLoading = true;
 
             try
@@ -318,6 +331,23 @@ namespace Collectivite.ViewModels
 
         private async System.Threading.Tasks.Task SaveAsync()
         {
+            if (IsEditMode)
+            {
+                if (!CanEditOrdreRecette)
+                {
+                    MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+            }
+            else
+            {
+                if (!CanCreateOrdreRecette)
+                {
+                    MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+            }
+
             IsLoading = true;
 
             try
@@ -375,6 +405,12 @@ namespace Collectivite.ViewModels
         {
             if (ordreRecette == null) return;
 
+            if (!CanDeleteOrdreRecette)
+            {
+                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             var result = MessageBox.Show(
                 $"⚠️ Supprimer l'ordre de recette '{ordreRecette.NumeroOrdre}' ?\n\n" +
                 $"Montant : {ordreRecette.MontantOrdre:N0} GNF\n" +
@@ -416,6 +452,12 @@ namespace Collectivite.ViewModels
 
         private void NavigateToAdd()
         {
+            if (!CanCreateOrdreRecette)
+            {
+                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             var mainWindow = Application.Current.MainWindow;
             if (mainWindow != null)
             {
@@ -430,6 +472,11 @@ namespace Collectivite.ViewModels
         private void NavigateToEdit(OrdreRecette? ordreRecette)
         {
             if (ordreRecette == null) return;
+            if (!CanEditOrdreRecette)
+            {
+                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
             var mainWindow = Application.Current.MainWindow;
             if (mainWindow != null)
@@ -445,6 +492,11 @@ namespace Collectivite.ViewModels
         private void NavigateToDetail(OrdreRecette? ordreRecette)
         {
             if (ordreRecette == null) return;
+            if (!CanViewOrdreRecette)
+            {
+                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
             var mainWindow = Application.Current.MainWindow;
             if (mainWindow != null)
@@ -462,6 +514,12 @@ namespace Collectivite.ViewModels
 
         private async System.Threading.Tasks.Task SearchAsync()
         {
+            if (!CanViewOrdreRecette)
+            {
+                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             IsLoading = true;
 
             try

@@ -18,6 +18,7 @@
     </Page.DataContext>
 
     <Grid>
+        <!-- Loading overlay -->
         <Grid Background="#80000000"
               Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"
               Panel.ZIndex="999">
@@ -41,6 +42,7 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
+            <!-- Header -->
             <DockPanel Margin="0,0,0,10">
                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
                     <materialDesign:PackIcon Kind="ShieldAccount"
@@ -76,6 +78,7 @@
                 </StackPanel>
             </DockPanel>
 
+            <!-- DataGrid -->
             <materialDesign:Card Grid.Row="1" Padding="0">
                 <DataGrid ItemsSource="{Binding Roles}"
                           SelectedItem="{Binding SelectedRole}"
@@ -90,28 +93,49 @@
                                             MinWidth="200"/>
                         <DataGridTextColumn Header="Statut" Width="120"
                                             Binding="{Binding IsActive, Converter={StaticResource BoolToTextConverter}, ConverterParameter='Actif;Inactif'}"/>
-                        <DataGridTemplateColumn Header="Permissions" Width="300">
+                        
+                        <!-- COLONNE PERMISSIONS : Badge + Icône œil uniquement -->
+                        <DataGridTemplateColumn Header="Permissions" Width="200">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <ItemsControl ItemsSource="{Binding RolePermissions}">
-                                        <ItemsControl.ItemsPanel>
-                                            <ItemsPanelTemplate>
-                                                <WrapPanel/>
-                                            </ItemsPanelTemplate>
-                                        </ItemsControl.ItemsPanel>
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <Border Background="#E3F2FD"
-                                                        CornerRadius="4"
-                                                        Margin="2"
-                                                        Padding="6,2">
-                                                    <TextBlock Text="{Binding Permission.Name}"
-                                                               Foreground="#1976D2"
-                                                               FontSize="11"/>
-                                                </Border>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
+                                    <StackPanel Orientation="Horizontal">
+                                        <!-- Badge avec nombre de permissions -->
+                                        <Border Background="#1976D2"
+                                                CornerRadius="12"
+                                                Padding="8,4"
+                                                Margin="0,0,8,0"
+                                                VerticalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="ShieldCheck"
+                                                                         Width="14"
+                                                                         Height="14"
+                                                                         Foreground="White"
+                                                                         Margin="0,0,4,0"
+                                                                         VerticalAlignment="Center"/>
+                                                <TextBlock Foreground="White"
+                                                           FontWeight="SemiBold"
+                                                           FontSize="12"
+                                                           VerticalAlignment="Center">
+                                                    <TextBlock.Text>
+                                                        <MultiBinding StringFormat="{}{0} permission(s)">
+                                                            <Binding Path="RolePermissions.Count"/>
+                                                        </MultiBinding>
+                                                    </TextBlock.Text>
+                                                </TextBlock>
+                                            </StackPanel>
+                                        </Border>
+                                        
+                                        <!-- Bouton ICÔNE ŒIL UNIQUEMENT (sans texte) -->
+                                        <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                Command="{Binding DataContext.ShowPermissionsCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                CommandParameter="{Binding}"
+                                                ToolTip="Voir le détail des permissions">
+                                            <materialDesign:PackIcon Kind="Eye" 
+                                                                     Width="20" 
+                                                                     Height="20"
+                                                                     Foreground="#1976D2"/>
+                                        </Button>
+                                    </StackPanel>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
@@ -141,6 +165,7 @@
             </materialDesign:Card>
         </Grid>
 
+        <!-- Dialog d'édition de rôle -->
         <materialDesign:DialogHost IsOpen="{Binding IsDialogOpen}"
                                    CloseOnClickAway="False"
                                    Panel.ZIndex="1000">
@@ -173,7 +198,12 @@
 
                     <TextBlock Text="Permissions disponibles"
                                FontWeight="SemiBold"
-                               Margin="0,0,0,10"/>
+                               Margin="0,0,0,4"/>
+
+                    <TextBox materialDesign:HintAssist.Hint="Rechercher une permission"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                             Text="{Binding PermissionFilterText, UpdateSourceTrigger=PropertyChanged}"
+                             Margin="0,0,0,8"/>
 
                     <ScrollViewer Height="220">
                         <ItemsControl ItemsSource="{Binding PermissionSelections}">
@@ -208,6 +238,128 @@
                 </StackPanel>
             </materialDesign:DialogHost.DialogContent>
         </materialDesign:DialogHost>
+
+        <!-- Dialog pour afficher les permissions d'un rôle -->
+        <materialDesign:DialogHost IsOpen="{Binding IsPermissionsDialogOpen}"
+                                   CloseOnClickAway="True"
+                                   Panel.ZIndex="1001">
+            <materialDesign:DialogHost.DialogContent>
+                <materialDesign:Card Width="500" Padding="20">
+                    <StackPanel>
+                        <!-- En-tête -->
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+                            <materialDesign:PackIcon Kind="ShieldCheck"
+                                                     Width="28"
+                                                     Height="28"
+                                                     Foreground="#1976D2"
+                                                     Margin="0,0,10,0"/>
+                            <StackPanel>
+                                <TextBlock Text="Permissions du rôle"
+                                           FontSize="18"
+                                           FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding SelectedRole.Name}"
+                                           FontSize="14"
+                                           Foreground="#666"
+                                           Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- Statistiques -->
+                        <Border Background="#E3F2FD"
+                                CornerRadius="8"
+                                Padding="12"
+                                Margin="0,0,0,15">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="InformationOutline"
+                                                         Width="20"
+                                                         Height="20"
+                                                         Foreground="#1976D2"
+                                                         Margin="0,0,8,0"
+                                                         VerticalAlignment="Center"/>
+                                <TextBlock VerticalAlignment="Center">
+                                    <Run Text="Ce rôle dispose de"/>
+                                    <Run Text="{Binding SelectedRole.RolePermissions.Count, Mode=OneWay}"
+                                         FontWeight="Bold"
+                                         Foreground="#1976D2"/>
+                                    <Run Text="permission(s)"/>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Liste des permissions -->
+                        <ScrollViewer MaxHeight="400">
+                            <ItemsControl ItemsSource="{Binding SelectedRole.RolePermissions}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderBrush="#E0E0E0"
+                                                BorderThickness="0,0,0,1"
+                                                Padding="8"
+                                                Margin="0,0,0,4">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <!-- Icône -->
+                                                <materialDesign:PackIcon Kind="CheckCircle"
+                                                                         Width="20"
+                                                                         Height="20"
+                                                                         Foreground="#4CAF50"
+                                                                         Margin="0,0,12,0"
+                                                                         VerticalAlignment="Top"/>
+
+                                                <!-- Détails de la permission -->
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Text="{Binding Permission.Name}"
+                                                               FontWeight="SemiBold"
+                                                               FontSize="13"/>
+                                                    <TextBlock Text="{Binding Permission.Code}"
+                                                               FontSize="11"
+                                                               Foreground="#1976D2"
+                                                               Margin="0,2,0,0"/>
+                                                    <TextBlock Text="{Binding Permission.Description}"
+                                                               FontSize="11"
+                                                               Foreground="#666"
+                                                               TextWrapping="Wrap"
+                                                               Margin="0,4,0,0"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+
+                        <!-- Message si aucune permission -->
+                        <TextBlock Text="Aucune permission n'est associée à ce rôle."
+                                   FontStyle="Italic"
+                                   Foreground="#999"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,20,0,0"
+                                   Visibility="{Binding SelectedRole.RolePermissions.Count, Converter={StaticResource MaterialBoolToVis}}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedRole.RolePermissions.Count}" Value="0">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+
+                        <!-- Bouton Fermer -->
+                        <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                Content="Fermer"
+                                Command="{Binding ClosePermissionsDialogCommand}"
+                                HorizontalAlignment="Right"
+                                Margin="0,20,0,0"
+                                Width="120"/>
+                    </StackPanel>
+                </materialDesign:Card>
+            </materialDesign:DialogHost.DialogContent>
+        </materialDesign:DialogHost>
     </Grid>
 </Page>
-

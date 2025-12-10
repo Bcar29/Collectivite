@@ -1,4 +1,5 @@
 ﻿using Collectivite.Models;
+using Collectivite.Utils;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -28,6 +29,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<List<CompteBancaire>> GetAllComptesAsync()
         {
+            if (!SessionManager.HasPermission("CompteBancaire.View"))
+                throw new UnauthorizedAccessException("Permission CompteBancaire.View requise pour consulter les comptes bancaires.");
+
             using var context = CreateContext();
 
             return await context.CompteBancaires
@@ -42,6 +46,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<CompteBancaire?> GetCompteByIdAsync(int id)
         {
+            if (!SessionManager.HasPermission("CompteBancaire.View"))
+                throw new UnauthorizedAccessException("Permission CompteBancaire.View requise pour consulter ce compte bancaire.");
+
             using var context = CreateContext();
 
             return await context.CompteBancaires
@@ -55,6 +62,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<List<CompteBancaire>> GetComptesByTiersAsync(int tiersId)
         {
+            if (!SessionManager.HasPermission("CompteBancaire.View"))
+                throw new UnauthorizedAccessException("Permission CompteBancaire.View requise pour consulter les comptes bancaires.");
+
             using var context = CreateContext();
 
             return await context.CompteBancaires
@@ -70,6 +80,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<CompteBancaire?> GetCompteByIBANAsync(string iban)
         {
+            if (!SessionManager.HasPermission("CompteBancaire.View"))
+                throw new UnauthorizedAccessException("Permission CompteBancaire.View requise pour consulter les comptes bancaires.");
+
             using var context = CreateContext();
 
             return await context.CompteBancaires
@@ -88,6 +101,9 @@ namespace Collectivite.Services
         public async Task<(bool Success, string Message, CompteBancaire? Compte)> CreateCompteAsync(CompteBancaire compte)
         {
             using var context = CreateContext();
+
+            if (!SessionManager.HasPermission("CompteBancaire.Create"))
+                return (false, "Permission CompteBancaire.Create requise pour créer un compte bancaire.", null);
 
             try
             {
@@ -180,6 +196,9 @@ namespace Collectivite.Services
         {
             using var context = CreateContext();
 
+            if (!SessionManager.HasPermission("CompteBancaire.Edit"))
+                return (false, "Permission CompteBancaire.Edit requise pour modifier un compte bancaire.");
+
             try
             {
                 var existingCompte = await context.CompteBancaires.FindAsync(compte.Id);
@@ -230,6 +249,9 @@ namespace Collectivite.Services
         public async Task<(bool Success, string Message)> DeleteCompteAsync(int id)
         {
             using var context = CreateContext();
+
+            if (!SessionManager.HasPermission("CompteBancaire.Delete"))
+                return (false, "Permission CompteBancaire.Delete requise pour supprimer un compte bancaire.");
 
             try
             {

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Collectivite.Utils;
 
 namespace Collectivite.Services
 {
@@ -21,6 +22,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<List<Remaniement>> GetAllRemaniementsAsync()
         {
+            if (!SessionManager.HasPermission("Remaniement.View"))
+                throw new UnauthorizedAccessException("Permission Remaniement.View requise pour consulter les remaniements.");
+
             using var context = CreateContext();
 
             // ✅ CORRECTION : NE PAS charger BudgetLine.Remaniements (cycle)
@@ -38,6 +42,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<List<BudgetLine>> GetBudgetLinesForValidatedBudgetAsync()
         {
+            if (!SessionManager.HasPermission("Remaniement.View"))
+                throw new UnauthorizedAccessException("Permission Remaniement.View requise pour consulter les lignes budgétaires pour remaniements.");
+
             using var context = CreateContext();
             var exerciceService = ExerciceService.Instance;
 
@@ -65,6 +72,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<Remaniement?> GetRemaniementByIdAsync(int id)
         {
+            if (!SessionManager.HasPermission("Remaniement.View"))
+                throw new UnauthorizedAccessException("Permission Remaniement.View requise pour consulter les remaniements.");
+
             using var context = CreateContext();
 
             // ✅ CORRECTION : NE PAS charger BudgetLine.Remaniements (cycle)
@@ -80,6 +90,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<List<Remaniement>> GetRemaniementsByBudgetLineAsync(int budgetLineId)
         {
+            if (!SessionManager.HasPermission("Remaniement.View"))
+                throw new UnauthorizedAccessException("Permission Remaniement.View requise pour consulter les remaniements.");
+
             using var context = CreateContext();
 
             return await context.Remaniements
@@ -171,6 +184,9 @@ namespace Collectivite.Services
             Remaniement remaniement,
             TypeRemaniement type)
         {
+            if (!SessionManager.HasPermission("Remaniement.Create"))
+                return (false, "Permission Remaniement.Create requise pour créer un remaniement.", null);
+
             using var context = CreateContext();
             using var transaction = await context.Database.BeginTransactionAsync();
 
@@ -317,6 +333,9 @@ namespace Collectivite.Services
 
         public async Task<(bool Success, string Message)> DeleteRemaniementAsync(int id)
         {
+            if (!SessionManager.HasPermission("Remaniement.Delete"))
+                return (false, "Permission Remaniement.Delete requise pour supprimer un remaniement.");
+
             using var context = CreateContext();
             using var transaction = await context.Database.BeginTransactionAsync();
 

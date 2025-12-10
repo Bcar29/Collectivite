@@ -59,7 +59,8 @@
                     <Button Style="{StaticResource MaterialDesignRaisedButton}"
                             Height="40"
                             Command="{Binding OppenAddCommuneCommand}"
-                            HorizontalAlignment="Right">
+                            HorizontalAlignment="Right"
+                            IsEnabled="{Binding CanCreateCommune}">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="Plus" 
                                                    VerticalAlignment="Center"
@@ -81,6 +82,7 @@
                               CanUserAddRows="False"
                               CanUserDeleteRows="False"
                               IsReadOnly="True"
+                              Visibility="{Binding CanViewCommune, Converter={StaticResource BoolToVis}}"
                               SelectionMode="Single"
                               materialDesign:DataGridAssist.CellPadding="13 8 8 8"
                               materialDesign:DataGridAssist.ColumnHeaderPadding="8">
@@ -193,7 +195,8 @@
                                                   Command="{Binding DataContext.OppenEditCommuneCommand, 
                                                           RelativeSource={RelativeSource AncestorType=Page}}"
                                                   CommandParameter="{Binding}"
-                                                  Margin="4,0">
+                                                  Margin="4,0"
+                                                  IsEnabled="{Binding DataContext.CanEditCommune, RelativeSource={RelativeSource AncestorType=Page}}">
                                                 <materialDesign:PackIcon Kind="Pencil" 
                                                                        Foreground="#1976D2"/>
                                             </Button>
@@ -204,7 +207,8 @@
                                                   Command="{Binding DataContext.DeleteCommuneCommand, 
                                                           RelativeSource={RelativeSource AncestorType=Page}}"
                                                   CommandParameter="{Binding}"
-                                                  Margin="4,0">
+                                                  Margin="4,0"
+                                                  IsEnabled="{Binding DataContext.CanDeleteCommune, RelativeSource={RelativeSource AncestorType=Page}}">
                                                 <materialDesign:PackIcon Kind="Delete" 
                                                                        Foreground="#F44336"/>
                                             </Button>

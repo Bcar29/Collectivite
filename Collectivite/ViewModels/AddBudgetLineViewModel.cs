@@ -14,6 +14,8 @@ namespace Collectivite.ViewModels
     {
         private readonly BudgetLineService _service;
         private readonly int _budgetPrimitifId;
+        private readonly AuditService _auditService;
+        private readonly AuthService _authService;
 
         public ObservableCollection<Nommenclature> AvailableNoms { get; } = new ObservableCollection<Nommenclature>();
 
@@ -34,15 +36,18 @@ namespace Collectivite.ViewModels
         public ICommand CreateCommand { get; }
         public ICommand CancelCommand { get; }
 
-        public AddBudgetLineViewModel(BudgetLineService service, int budgetPrimitifId, IEnumerable<Nommenclature> available)
+        public AddBudgetLineViewModel(BudgetLineService service, int budgetPrimitifId,  IEnumerable<Nommenclature> available, AuthService authService, AuditService auditService)
         {
             _service = service;
             _budgetPrimitifId = budgetPrimitifId;
+            _authService = authService;
 
             foreach (var n in available) AvailableNoms.Add(n);
 
             CreateCommand = new RelayCommand(async _ => await CreateAsync(), _ => SelectedNomenclature != null && Montant >= 0);
             CancelCommand = new RelayCommand(_ => CloseDialog(false));
+            _authService = authService;
+            _auditService = auditService;
         }
 
         private void CloseDialog(bool result)
@@ -72,8 +77,14 @@ namespace Collectivite.ViewModels
 
             try
             {
-                await _service.CreateBudgetLineAsync(_budgetPrimitifId, SelectedNomenclature.Id, Montant);
+                BudgetLine bl =  await _service.CreateBudgetLineAsync(_budgetPrimitifId, SelectedNomenclature.Id, Montant);
                 CloseDialog(true);
+
+                var username = _authService.CurrentUser?.Username ?? "Utilisateur inconnu";
+                await _auditService.LogAsync(
+                            "Nouvelle Prevision ",
+                            $"{bl.Nommenclature.code()} montant : {bl.MontantPrevu} {username} le {DateTime.Now:dd/MM/yyyy HH:mm}",
+                            username);
             }
             catch (Exception ex)
             {

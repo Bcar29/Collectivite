@@ -15,6 +15,9 @@ namespace Collectivite.Services
         // Recuperer toutes les communes 
         public async Task<List<Commune>> GetAllCommuneAsync()
         {
+            if (!SessionManager.HasPermission("Commune.View"))
+                throw new UnauthorizedAccessException("Permission Commune.View requise pour consulter les communes.");
+
             using var context = CreateContext();
             return await context.Communes
                 .AsNoTracking()  
@@ -27,6 +30,9 @@ namespace Collectivite.Services
         {
             try
             {
+                if (!SessionManager.HasPermission("Commune.Create"))
+                    return (false, "Permission Commune.Create requise pour créer une commune.", null);
+
                 using var context = CreateContext();
                 var existe = await context.Communes
                     .AnyAsync(c => c.Nom == commune.Nom);
@@ -50,6 +56,9 @@ namespace Collectivite.Services
         {
             try
             {
+                if (!SessionManager.HasPermission("Commune.Edit"))
+                    return (false, "Permission Commune.Edit requise pour modifier une commune.");
+
                 // ══════════════════════════════════════════════════════════
                 // ✅ ÉTAPE 1 : DÉTACHER TOUTES LES ENTITÉS TRACKÉES
                 // ══════════════════════════════════════════════════════════
@@ -112,6 +121,9 @@ namespace Collectivite.Services
         {
             try
             {
+                if (!SessionManager.HasPermission("Commune.Delete"))
+                    return (false, "Permission Commune.Delete requise pour supprimer une commune.");
+
                 using var context = CreateContext();
                 var existingCommune = await context.Communes
                     .FirstOrDefaultAsync(c => c.Id == communeId);

@@ -101,7 +101,8 @@
                     <Button Style="{StaticResource MaterialDesignRaisedButton}"
                             Command="{Binding OpenAddDialogCommand}"
                             Height="36"
-                            Margin="0,0,10,0">
+                            Margin="0,0,10,0"
+                            Visibility="{Binding CanCreateFacture, Converter={StaticResource BoolToVis}}">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="Plus" Margin="0,0,5,0"/>
                             <TextBlock Text="Nouvelle Facture"/>
@@ -579,18 +580,21 @@
 
                         <!-- Buttons -->
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                            <Button Style="{StaticResource MaterialDesignFlatButton}"
-                            Content="Annuler"
-                            Command="{Binding CancelCommand}"
-                            Margin="0,0,8,0"
-                            Width="90"
-                            Height="32"/>
-                            <Button Style="{StaticResource MaterialDesignRaisedButton}"
-                            Content="Enregistrer"
-                            Command="{Binding SaveCommand}"
-                            Width="130"
-                            Height="32"/>
-                        </StackPanel>
+                                        <Button Style="{StaticResource MaterialDesignIconButton}"
+                        Command="{Binding DataContext.OpenEditDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                        CommandParameter="{Binding}"
+                        ToolTip="Modifier"
+                        Visibility="{Binding DataContext.CanEditFacture, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
+                                            <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2"/>
+                                        </Button>
+                                        <Button Style="{StaticResource MaterialDesignIconButton}"
+                        Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                        CommandParameter="{Binding}"
+                        ToolTip="Supprimer"
+                        Visibility="{Binding DataContext.CanDeleteFacture, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
+                                            <materialDesign:PackIcon Kind="Delete" Foreground="#F44336"/>
+                                        </Button>
+                    </StackPanel>
                     </StackPanel>
                 </ScrollViewer>
             </materialDesign:DialogHost.DialogContent>

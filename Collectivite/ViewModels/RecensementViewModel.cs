@@ -11,11 +11,13 @@ namespace Collectivite.ViewModels
 {
     public class RecensementViewModel : ViewModelBase
     {
+        private readonly RecensementService _recensementService;
         private bool _isLoading;
         private Recensement? _selectedRecensement;
         private bool _isDialogOpen;
         private Recensement _dialogRecensement;
         private bool _isEditMode;
+        private string _accessDeniedMessage = "Vous n'avez pas la permission pour cette action.";
 
         // Visibilité des colonnes
         private bool _showExercice = true;
@@ -28,8 +30,10 @@ namespace Collectivite.ViewModels
         private bool _showTiers = true;
         private bool _showMontant = true;
 
-        public RecensementViewModel()
+        public RecensementViewModel(RecensementService recensementService)
         {
+            _recensementService = recensementService;
+
             _dialogRecensement = new Recensement
             {
                 MontantRecense = 0
@@ -54,6 +58,12 @@ namespace Collectivite.ViewModels
         public ObservableCollection<Exercice> Exercices { get; } = new();
         public ObservableCollection<Commune> Communes { get; } = new();
         public ObservableCollection<Tiers> TiersList { get; } = new();
+
+        // Permissions dynamiques
+        public bool CanViewRecensement => SessionManager.HasPermission("Recensement.View");
+        public bool CanCreateRecensement => SessionManager.HasPermission("Recensement.Create");
+        public bool CanEditRecensement => SessionManager.HasPermission("Recensement.Edit");
+        public bool CanDeleteRecensement => SessionManager.HasPermission("Recensement.Delete");
 
         public bool IsLoading
         {
@@ -168,10 +178,21 @@ namespace Collectivite.ViewModels
 
             try
             {
-                var recensementService = new RecensementService();
+                // Vérifier la permission de consultation
+                if (!CanViewRecensement)
+                {
+                    MessageBox.Show(
+                        "Accès refusé : vous n'avez pas la permission de consulter les recensements.",
+                        "Accès refusé",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+
+                    Recensements.Clear();
+                    return;
+                }
 
                 // Charger tous les recensements
-                var recensements = await recensementService.GetAllRecensementsAsync();
+                var recensements = await _recensementService.GetAllRecensementsAsync();
 
                 Recensements.Clear();
                 foreach (var r in recensements)
@@ -180,7 +201,7 @@ namespace Collectivite.ViewModels
                 }
 
                 // ✅ Charger TOUTES les lignes budgétaires (fiscales ET non fiscales)
-                var lignesBudgetaires = await recensementService.GetAllBudgetLinesAsync();
+                var lignesBudgetaires = await _recensement_service_GetAllBudgetLinesAsyncWrapper();
 
                 LignesBudgetaires.Clear();
                 foreach (var lb in lignesBudgetaires)
@@ -240,8 +261,24 @@ namespace Collectivite.ViewModels
             }
         }
 
+        // Petit wrapper pour appeler la méthode GetAllBudgetLinesAsync du service (évite d'instancier partout)
+        private async System.Threading.Tasks.Task<List<BudgetLine>> _recensement_service_GetAllBudgetLinesAsyncWrapper()
+        {
+            return await _recensementService.GetAllBudgetLinesAsync();
+        }
+
         private async System.Threading.Tasks.Task OpenAddDialogAsync()
         {
+            if (!CanCreateRecensement)
+            {
+                MessageBox.Show(
+                    _accessDeniedMessage + "\nPermission requise : Recensement.Create",
+                    "Accès refusé",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
             IsEditMode = false;
 
             DialogRecensement = new Recensement
@@ -253,8 +290,7 @@ namespace Collectivite.ViewModels
             IsLoading = true;
             try
             {
-                var recensementService = new RecensementService();
-                var lignesBudgetaires = await recensementService.GetAllBudgetLinesAsync();
+                var lignesBudgetaires = await _recensement_service_GetAllBudgetLinesAsyncWrapper();
 
                 LignesBudgetaires.Clear();
                 foreach (var lb in lignesBudgetaires)
@@ -295,6 +331,15 @@ namespace Collectivite.ViewModels
         private void OpenEditDialog(Recensement? recensement)
         {
             if (recensement == null) return;
+            if (!CanEditRecensement)
+            {
+                MessageBox.Show(
+                    _accessDeniedMessage + "\nPermission requise : Recensement.Edit",
+                    "Accès refusé",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
 
             IsEditMode = true;
 
@@ -327,11 +372,19 @@ namespace Collectivite.ViewModels
 
             try
             {
-                var recensementService = new RecensementService();
-
                 if (IsEditMode)
                 {
-                    var (success, message) = await recensementService.UpdateRecensementAsync(DialogRecensement);
+                    if (!CanEditRecensement)
+                    {
+                        MessageBox.Show(
+                            _accessDeniedMessage + "\nPermission requise : Recensement.Edit",
+                            "Accès refusé",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Warning);
+                        return;
+                    }
+
+                    var (success, message) = await _recensementService.UpdateRecensementAsync(DialogRecensement);
 
                     MessageBox.Show(message,
                         success ? "Succès" : "Erreur",
@@ -346,7 +399,17 @@ namespace Collectivite.ViewModels
                 }
                 else
                 {
-                    var (success, message, recensement) = await recensementService.CreateRecensementAsync(DialogRecensement);
+                    if (!CanCreateRecensement)
+                    {
+                        MessageBox.Show(
+                            _accessDeniedMessage + "\nPermission requise : Recensement.Create",
+                            "Accès refusé",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Warning);
+                        return;
+                    }
+
+                    var (success, message, recensement) = await _recensementService.CreateRecensementAsync(DialogRecensement);
 
                     MessageBox.Show(message,
                         success ? "Succès" : "Erreur",
@@ -392,12 +455,21 @@ namespace Collectivite.ViewModels
 
             if (result != MessageBoxResult.Yes) return;
 
+            if (!CanDeleteRecensement)
+            {
+                MessageBox.Show(
+                    _accessDeniedMessage + "\nPermission requise : Recensement.Delete",
+                    "Accès refusé",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
             IsLoading = true;
 
             try
             {
-                var recensementService = new RecensementService();
-                var (success, message) = await recensementService.DeleteRecensementAsync(recensement.Id);
+                var (success, message) = await _recensementService.DeleteRecensementAsync(recensement.Id);
 
                 MessageBox.Show(message,
                     success ? "Succès" : "Erreur",

@@ -14,6 +14,9 @@
         <utils:VariationToLabelConverter x:Key="VariationToLabelConverter"/>
         <utils:CollectionHasItemsToVisibilityConverter x:Key="CollectionHasItemsToVisibilityConverter"/>
 
+        <!-- 🆕 Convertisseur pour les couleurs de fond -->
+        <utils:BackgroundColorConverter x:Key="BackgroundColorConverter"/>
+
         <!-- Enum TypeRemaniement -->
         <ObjectDataProvider x:Key="TypeRemaniementValues" 
                             MethodName="GetValues" 
@@ -87,9 +90,9 @@
             <!-- TabControl avec 4 onglets -->
             <TabControl Grid.Row="1" SelectedIndex="{Binding SelectedTabIndex}">
 
-                <!-- ========================================
-                     ONGLET 1 : RECETTE - FONCTIONNEMENT
-                     ======================================== -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- ONGLET 1 : RECETTE - FONCTIONNEMENT -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
                 <TabItem>
                     <TabItem.Header>
                         <StackPanel Orientation="Horizontal">
@@ -111,39 +114,58 @@
                                   CanUserAddRows="False"
                                   IsReadOnly="True"
                                   SelectionMode="Single"
+                                  CanUserSortColumns="False"
+                                  CanUserReorderColumns="False"
+                                  HeadersVisibility="Column"
+                                  GridLinesVisibility="Horizontal"
                                   materialDesign:DataGridAssist.CellPadding="13 8 8 8">
 
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="Chapitre"
-                                                    Binding="{Binding Nommenclature.Chapitre}"
-                                                    Width="100"/>
-                                <DataGridTextColumn Header="Article"
-                                                    Binding="{Binding Nommenclature.Article}"
-                                                    Width="80"/>
-                                <DataGridTextColumn Header="Paragraphe"
-                                                    Binding="{Binding Nommenclature.Paragraphe}"
-                                                    Width="100"/>
-                                <DataGridTextColumn Header="S-Paragraphe"
-                                                    Binding="{Binding Nommenclature.SousParagraphe}"
-                                                    Width="150"/>
-                                <DataGridTextColumn Header="Intitulé"
-                                                    Binding="{Binding Nommenclature.Intitule}"
-                                                    Width="*"
-                                                    MinWidth="200"/>
-                                <DataGridTextColumn Header="Montant prévu"
-                                                    Binding="{Binding MontantPrevu, StringFormat={}{0:N0} GNF}"
-                                                    Width="150"/>
+                            <!-- 🆕 Style des lignes avec couleur de fond -->
+                            <DataGrid.RowStyle>
+                                <Style TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
+                                    <Setter Property="Background" Value="{Binding BackgroundColor, Converter={StaticResource BackgroundColorConverter}}"/>
+                                    <Setter Property="Visibility" Value="{Binding IsVisible, Converter={StaticResource BoolToVis}}"/>
+                                </Style>
+                            </DataGrid.RowStyle>
 
-                                <DataGridTemplateColumn Header="Remaniements" Width="200">
+                            <DataGrid.Columns>
+                                <!-- 🆕 Colonne avec expander et chapitre -->
+                                <DataGridTemplateColumn Header="Chapitre" Width="120">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" Margin="{Binding IndentationMargin}">
+                                                <Button Width="20" Height="20" Padding="0" Margin="0,0,5,0"
+                                                      Background="Transparent" BorderThickness="0"
+                                                      Command="{Binding DataContext.ToggleExpandCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                      CommandParameter="{Binding}"
+                                                      Visibility="{Binding HasChildren, Converter={StaticResource BoolToVis}}"
+                                                      Style="{StaticResource MaterialDesignFlatButton}">
+                                                    <materialDesign:PackIcon Kind="{Binding ExpanderIcon}" Width="16" Height="16"/>
+                                                </Button>
+                                                <TextBlock Text="{Binding BudgetLine.Nommenclature.Chapitre}" 
+                                                         VerticalAlignment="Center"
+                                                         FontWeight="{Binding TextFontWeight}"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTextColumn Header="Article" Binding="{Binding BudgetLine.Nommenclature.Article}" Width="80"/>
+                                <DataGridTextColumn Header="Paragraphe" Binding="{Binding BudgetLine.Nommenclature.Paragraphe}" Width="100"/>
+                                <DataGridTextColumn Header="S-Paragraphe" Binding="{Binding BudgetLine.Nommenclature.SousParagraphe}" Width="120"/>
+                                <DataGridTextColumn Header="Intitulé" Binding="{Binding BudgetLine.Nommenclature.Intitule}" Width="*" MinWidth="200"/>
+                                <DataGridTextColumn Header="Montant prévu" Binding="{Binding BudgetLine.MontantPrevu, StringFormat={}{0:N0} GNF}" Width="140"/>
+
+                                <DataGridTemplateColumn Header="Remaniements" Width="180">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <StackPanel>
-                                                <TextBlock Text="{Binding VariationTotale, StringFormat={}{0:N0} GNF}"
+                                                <TextBlock Text="{Binding BudgetLine.VariationTotale, StringFormat={}{0:N0} GNF}"
                                                            FontWeight="Bold"
-                                                           Foreground="{Binding VariationTotale, Converter={StaticResource VariationToBrushConverter}}"
+                                                           Foreground="{Binding BudgetLine.VariationTotale, Converter={StaticResource VariationToBrushConverter}}"
                                                            HorizontalAlignment="Right"/>
-                                                <TextBlock Text="{Binding VariationTotale, Converter={StaticResource VariationToLabelConverter}}"
-                                                           Foreground="{Binding VariationTotale, Converter={StaticResource VariationToBrushConverter}}"
+                                                <TextBlock Text="{Binding BudgetLine.VariationTotale, Converter={StaticResource VariationToLabelConverter}}"
+                                                           Foreground="{Binding BudgetLine.VariationTotale, Converter={StaticResource VariationToBrushConverter}}"
                                                            FontSize="11"
                                                            HorizontalAlignment="Right"/>
                                             </StackPanel>
@@ -151,54 +173,42 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <DataGridTextColumn Header="Montant définitif"
-                                                    Binding="{Binding MontantActu, StringFormat={}{0:N0} GNF}"
-                                                    Width="160"/>
+                                <DataGridTextColumn Header="Montant définitif" Binding="{Binding BudgetLine.MontantActu, StringFormat={}{0:N0} GNF}" Width="150"/>
 
-                             <DataGridTemplateColumn Header="Actions" Width="160">
-    <DataGridTemplateColumn.CellTemplate>
-        <DataTemplate>
-            <StackPanel Orientation="Horizontal"
-                        HorizontalAlignment="Center"
-                        Visibility="{Binding Nommenclature.Enfants, Converter={StaticResource CollectionHasItemsToVisibilityConverter}}">
-                        
+                                <DataGridTemplateColumn Header="Actions" Width="140">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal"
+                                                        HorizontalAlignment="Center"
+                                                        Visibility="{Binding BudgetLine.Nommenclature.Enfants, Converter={StaticResource CollectionHasItemsToVisibilityConverter}}">
 
-                <!-- Bouton Ajouter -->
-                <Button Style="{StaticResource MaterialDesignIconButton}"
-                        ToolTip="Ajouter un remaniement"
-                        Command="{Binding DataContext.OpenAddDialogCommand, 
-                                  RelativeSource={RelativeSource AncestorType=Page}}"
-                        CommandParameter="{Binding}"
-                        Margin="4,0">
-                    <materialDesign:PackIcon Kind="PlusCircle"
-                                             Foreground="#4CAF50"/>
-                </Button>
+                                                <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                        ToolTip="Ajouter un remaniement"
+                                                        Command="{Binding DataContext.OpenAddDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                        CommandParameter="{Binding BudgetLine}"
+                                                        Margin="4,0">
+                                                    <materialDesign:PackIcon Kind="PlusCircle" Foreground="#4CAF50"/>
+                                                </Button>
 
-                <!-- Bouton Voir détail -->
-                <Button Style="{StaticResource MaterialDesignIconButton}"
-                        ToolTip="Voir détail"
-                        Command="{Binding DataContext.OpenDetailsCommand, 
-                                  RelativeSource={RelativeSource AncestorType=Page}}"
-                        CommandParameter="{Binding}"
-                        Margin="4,0">
-                    <materialDesign:PackIcon Kind="Eye"
-                                             Foreground="#1976D2"/>
-                </Button>
-
-            </StackPanel>
-        </DataTemplate>
-    </DataGridTemplateColumn.CellTemplate>
-</DataGridTemplateColumn>
-
-
+                                                <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                        ToolTip="Voir détail"
+                                                        Command="{Binding DataContext.OpenDetailsCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                        CommandParameter="{Binding BudgetLine}"
+                                                        Margin="4,0">
+                                                    <materialDesign:PackIcon Kind="Eye" Foreground="#1976D2"/>
+                                                </Button>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
                             </DataGrid.Columns>
                         </DataGrid>
                     </materialDesign:Card>
                 </TabItem>
 
-                <!-- ========================================
-                     ONGLET 2 : RECETTE - INVESTISSEMENT
-                     ======================================== -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- ONGLET 2 : RECETTE - INVESTISSEMENT -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
                 <TabItem>
                     <TabItem.Header>
                         <StackPanel Orientation="Horizontal">
@@ -220,26 +230,56 @@
                                   CanUserAddRows="False"
                                   IsReadOnly="True"
                                   SelectionMode="Single"
+                                  CanUserSortColumns="False"
+                                  CanUserReorderColumns="False"
+                                  HeadersVisibility="Column"
+                                  GridLinesVisibility="Horizontal"
                                   materialDesign:DataGridAssist.CellPadding="13 8 8 8">
 
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="Chapitre" Binding="{Binding Nommenclature.Chapitre}" Width="100"/>
-                                <DataGridTextColumn Header="Article" Binding="{Binding Nommenclature.Article}" Width="80"/>
-                                <DataGridTextColumn Header="Paragraphe" Binding="{Binding Nommenclature.Paragraphe}" Width="100"/>
-                                <DataGridTextColumn Header="S-Paragraphe" Binding="{Binding Nommenclature.SousParagraphe}" Width="150"/>
-                                <DataGridTextColumn Header="Intitulé" Binding="{Binding Nommenclature.Intitule}" Width="*" MinWidth="200"/>
-                                <DataGridTextColumn Header="Montant prévu" Binding="{Binding MontantPrevu, StringFormat={}{0:N0} GNF}" Width="150"/>
+                            <DataGrid.RowStyle>
+                                <Style TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
+                                    <Setter Property="Background" Value="{Binding BackgroundColor, Converter={StaticResource BackgroundColorConverter}}"/>
+                                    <Setter Property="Visibility" Value="{Binding IsVisible, Converter={StaticResource BoolToVis}}"/>
+                                </Style>
+                            </DataGrid.RowStyle>
 
-                                <DataGridTemplateColumn Header="Remaniements" Width="200">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Header="Chapitre" Width="120">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" Margin="{Binding IndentationMargin}">
+                                                <Button Width="20" Height="20" Padding="0" Margin="0,0,5,0"
+                                                      Background="Transparent" BorderThickness="0"
+                                                      Command="{Binding DataContext.ToggleExpandCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                      CommandParameter="{Binding}"
+                                                      Visibility="{Binding HasChildren, Converter={StaticResource BoolToVis}}"
+                                                      Style="{StaticResource MaterialDesignFlatButton}">
+                                                    <materialDesign:PackIcon Kind="{Binding ExpanderIcon}" Width="16" Height="16"/>
+                                                </Button>
+                                                <TextBlock Text="{Binding BudgetLine.Nommenclature.Chapitre}" 
+                                                         VerticalAlignment="Center"
+                                                         FontWeight="{Binding TextFontWeight}"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTextColumn Header="Article" Binding="{Binding BudgetLine.Nommenclature.Article}" Width="80"/>
+                                <DataGridTextColumn Header="Paragraphe" Binding="{Binding BudgetLine.Nommenclature.Paragraphe}" Width="100"/>
+                                <DataGridTextColumn Header="S-Paragraphe" Binding="{Binding BudgetLine.Nommenclature.SousParagraphe}" Width="120"/>
+                                <DataGridTextColumn Header="Intitulé" Binding="{Binding BudgetLine.Nommenclature.Intitule}" Width="*" MinWidth="200"/>
+                                <DataGridTextColumn Header="Montant prévu" Binding="{Binding BudgetLine.MontantPrevu, StringFormat={}{0:N0} GNF}" Width="140"/>
+
+                                <DataGridTemplateColumn Header="Remaniements" Width="180">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <StackPanel>
-                                                <TextBlock Text="{Binding VariationTotale, StringFormat={}{0:N0} GNF}"
+                                                <TextBlock Text="{Binding BudgetLine.VariationTotale, StringFormat={}{0:N0} GNF}"
                                                            FontWeight="Bold"
-                                                           Foreground="{Binding VariationTotale, Converter={StaticResource VariationToBrushConverter}}"
+                                                           Foreground="{Binding BudgetLine.VariationTotale, Converter={StaticResource VariationToBrushConverter}}"
                                                            HorizontalAlignment="Right"/>
-                                                <TextBlock Text="{Binding VariationTotale, Converter={StaticResource VariationToLabelConverter}}"
-                                                           Foreground="{Binding VariationTotale, Converter={StaticResource VariationToBrushConverter}}"
+                                                <TextBlock Text="{Binding BudgetLine.VariationTotale, Converter={StaticResource VariationToLabelConverter}}"
+                                                           Foreground="{Binding BudgetLine.VariationTotale, Converter={StaticResource VariationToBrushConverter}}"
                                                            FontSize="11"
                                                            HorizontalAlignment="Right"/>
                                             </StackPanel>
@@ -247,52 +287,40 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <DataGridTextColumn Header="Montant définitif"
-                                                    Binding="{Binding MontantActu, StringFormat={}{0:N0} GNF}"
-                                                    Width="160"/>
+                                <DataGridTextColumn Header="Montant définitif" Binding="{Binding BudgetLine.MontantActu, StringFormat={}{0:N0} GNF}" Width="150"/>
 
-                                <DataGridTemplateColumn Header="Actions" Width="160">
-    <DataGridTemplateColumn.CellTemplate>
-        <DataTemplate>
-            <StackPanel Orientation="Horizontal"
-                        HorizontalAlignment="Center"
-                        Visibility="{Binding Nommenclature.Enfants, Converter={StaticResource CollectionHasItemsToVisibilityConverter}}">
-
-                <!-- Bouton Ajouter -->
-                <Button Style="{StaticResource MaterialDesignIconButton}"
-                        ToolTip="Ajouter un remaniement"
-                        Command="{Binding DataContext.OpenAddDialogCommand, 
-                                  RelativeSource={RelativeSource AncestorType=Page}}"
-                        CommandParameter="{Binding}"
-                        Margin="4,0">
-                    <materialDesign:PackIcon Kind="PlusCircle"
-                                             Foreground="#4CAF50"/>
-                </Button>
-
-                <!-- Bouton Voir détail -->
-                <Button Style="{StaticResource MaterialDesignIconButton}"
-                        ToolTip="Voir détail"
-                        Command="{Binding DataContext.OpenDetailsCommand, 
-                                  RelativeSource={RelativeSource AncestorType=Page}}"
-                        CommandParameter="{Binding}"
-                        Margin="4,0">
-                    <materialDesign:PackIcon Kind="Eye"
-                                             Foreground="#1976D2"/>
-                </Button>
-
-            </StackPanel>
-        </DataTemplate>
-    </DataGridTemplateColumn.CellTemplate>
-</DataGridTemplateColumn>
-
+                                <DataGridTemplateColumn Header="Actions" Width="140">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal"
+                                                        HorizontalAlignment="Center"
+                                                        Visibility="{Binding BudgetLine.Nommenclature.Enfants, Converter={StaticResource CollectionHasItemsToVisibilityConverter}}">
+                                                <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                        ToolTip="Ajouter un remaniement"
+                                                        Command="{Binding DataContext.OpenAddDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                        CommandParameter="{Binding BudgetLine}"
+                                                        Margin="4,0">
+                                                    <materialDesign:PackIcon Kind="PlusCircle" Foreground="#4CAF50"/>
+                                                </Button>
+                                                <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                        ToolTip="Voir détail"
+                                                        Command="{Binding DataContext.OpenDetailsCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                        CommandParameter="{Binding BudgetLine}"
+                                                        Margin="4,0">
+                                                    <materialDesign:PackIcon Kind="Eye" Foreground="#1976D2"/>
+                                                </Button>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
                             </DataGrid.Columns>
                         </DataGrid>
                     </materialDesign:Card>
                 </TabItem>
 
-                <!-- ========================================
-                     ONGLET 3 : DÉPENSE - FONCTIONNEMENT
-                     ======================================== -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- ONGLET 3 : DÉPENSE - FONCTIONNEMENT -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
                 <TabItem>
                     <TabItem.Header>
                         <StackPanel Orientation="Horizontal">
@@ -314,26 +342,56 @@
                                   CanUserAddRows="False"
                                   IsReadOnly="True"
                                   SelectionMode="Single"
+                                  CanUserSortColumns="False"
+                                  CanUserReorderColumns="False"
+                                  HeadersVisibility="Column"
+                                  GridLinesVisibility="Horizontal"
                                   materialDesign:DataGridAssist.CellPadding="13 8 8 8">
 
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="Chapitre" Binding="{Binding Nommenclature.Chapitre}" Width="100"/>
-                                <DataGridTextColumn Header="Article" Binding="{Binding Nommenclature.Article}" Width="80"/>
-                                <DataGridTextColumn Header="Paragraphe" Binding="{Binding Nommenclature.Paragraphe}" Width="100"/>
-                                <DataGridTextColumn Header="S-Paragraphe" Binding="{Binding Nommenclature.SousParagraphe}" Width="150"/>
-                                <DataGridTextColumn Header="Intitulé" Binding="{Binding Nommenclature.Intitule}" Width="*" MinWidth="200"/>
-                                <DataGridTextColumn Header="Montant prévu" Binding="{Binding MontantPrevu, StringFormat={}{0:N0} GNF}" Width="150"/>
+                            <DataGrid.RowStyle>
+                                <Style TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
+                                    <Setter Property="Background" Value="{Binding BackgroundColor, Converter={StaticResource BackgroundColorConverter}}"/>
+                                    <Setter Property="Visibility" Value="{Binding IsVisible, Converter={StaticResource BoolToVis}}"/>
+                                </Style>
+                            </DataGrid.RowStyle>
 
-                                <DataGridTemplateColumn Header="Remaniements" Width="200">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Header="Chapitre" Width="120">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" Margin="{Binding IndentationMargin}">
+                                                <Button Width="20" Height="20" Padding="0" Margin="0,0,5,0"
+                                                      Background="Transparent" BorderThickness="0"
+                                                      Command="{Binding DataContext.ToggleExpandCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                      CommandParameter="{Binding}"
+                                                      Visibility="{Binding HasChildren, Converter={StaticResource BoolToVis}}"
+                                                      Style="{StaticResource MaterialDesignFlatButton}">
+                                                    <materialDesign:PackIcon Kind="{Binding ExpanderIcon}" Width="16" Height="16"/>
+                                                </Button>
+                                                <TextBlock Text="{Binding BudgetLine.Nommenclature.Chapitre}" 
+                                                         VerticalAlignment="Center"
+                                                         FontWeight="{Binding TextFontWeight}"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTextColumn Header="Article" Binding="{Binding BudgetLine.Nommenclature.Article}" Width="80"/>
+                                <DataGridTextColumn Header="Paragraphe" Binding="{Binding BudgetLine.Nommenclature.Paragraphe}" Width="100"/>
+                                <DataGridTextColumn Header="S-Paragraphe" Binding="{Binding BudgetLine.Nommenclature.SousParagraphe}" Width="120"/>
+                                <DataGridTextColumn Header="Intitulé" Binding="{Binding BudgetLine.Nommenclature.Intitule}" Width="*" MinWidth="200"/>
+                                <DataGridTextColumn Header="Montant prévu" Binding="{Binding BudgetLine.MontantPrevu, StringFormat={}{0:N0} GNF}" Width="140"/>
+
+                                <DataGridTemplateColumn Header="Remaniements" Width="180">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <StackPanel>
-                                                <TextBlock Text="{Binding VariationTotale, StringFormat={}{0:N0} GNF}"
+                                                <TextBlock Text="{Binding BudgetLine.VariationTotale, StringFormat={}{0:N0} GNF}"
                                                            FontWeight="Bold"
-                                                           Foreground="{Binding VariationTotale, Converter={StaticResource VariationToBrushConverter}}"
+                                                           Foreground="{Binding BudgetLine.VariationTotale, Converter={StaticResource VariationToBrushConverter}}"
                                                            HorizontalAlignment="Right"/>
-                                                <TextBlock Text="{Binding VariationTotale, Converter={StaticResource VariationToLabelConverter}}"
-                                                           Foreground="{Binding VariationTotale, Converter={StaticResource VariationToBrushConverter}}"
+                                                <TextBlock Text="{Binding BudgetLine.VariationTotale, Converter={StaticResource VariationToLabelConverter}}"
+                                                           Foreground="{Binding BudgetLine.VariationTotale, Converter={StaticResource VariationToBrushConverter}}"
                                                            FontSize="11"
                                                            HorizontalAlignment="Right"/>
                                             </StackPanel>
@@ -341,52 +399,40 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <DataGridTextColumn Header="Montant définitif"
-                                                    Binding="{Binding MontantActu, StringFormat={}{0:N0} GNF}"
-                                                    Width="160"/>
+                                <DataGridTextColumn Header="Montant définitif" Binding="{Binding BudgetLine.MontantActu, StringFormat={}{0:N0} GNF}" Width="150"/>
 
-                                <DataGridTemplateColumn Header="Actions" Width="160">
-    <DataGridTemplateColumn.CellTemplate>
-        <DataTemplate>
-            <StackPanel Orientation="Horizontal"
-                        HorizontalAlignment="Center"
-                        Visibility="{Binding Nommenclature.Enfants, Converter={StaticResource CollectionHasItemsToVisibilityConverter}}">
-
-                <!-- Bouton Ajouter -->
-                <Button Style="{StaticResource MaterialDesignIconButton}"
-                        ToolTip="Ajouter un remaniement"
-                        Command="{Binding DataContext.OpenAddDialogCommand, 
-                                  RelativeSource={RelativeSource AncestorType=Page}}"
-                        CommandParameter="{Binding}"
-                        Margin="4,0">
-                    <materialDesign:PackIcon Kind="PlusCircle"
-                                             Foreground="#4CAF50"/>
-                </Button>
-
-                <!-- Bouton Voir détail -->
-                <Button Style="{StaticResource MaterialDesignIconButton}"
-                        ToolTip="Voir détail"
-                        Command="{Binding DataContext.OpenDetailsCommand, 
-                                  RelativeSource={RelativeSource AncestorType=Page}}"
-                        CommandParameter="{Binding}"
-                        Margin="4,0">
-                    <materialDesign:PackIcon Kind="Eye"
-                                             Foreground="#1976D2"/>
-                </Button>
-
-            </StackPanel>
-        </DataTemplate>
-    </DataGridTemplateColumn.CellTemplate>
-</DataGridTemplateColumn>
-
+                                <DataGridTemplateColumn Header="Actions" Width="140">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal"
+                                                        HorizontalAlignment="Center"
+                                                        Visibility="{Binding BudgetLine.Nommenclature.Enfants, Converter={StaticResource CollectionHasItemsToVisibilityConverter}}">
+                                                <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                        ToolTip="Ajouter un remaniement"
+                                                        Command="{Binding DataContext.OpenAddDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                        CommandParameter="{Binding BudgetLine}"
+                                                        Margin="4,0">
+                                                    <materialDesign:PackIcon Kind="PlusCircle" Foreground="#4CAF50"/>
+                                                </Button>
+                                                <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                        ToolTip="Voir détail"
+                                                        Command="{Binding DataContext.OpenDetailsCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                        CommandParameter="{Binding BudgetLine}"
+                                                        Margin="4,0">
+                                                    <materialDesign:PackIcon Kind="Eye" Foreground="#1976D2"/>
+                                                </Button>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
                             </DataGrid.Columns>
                         </DataGrid>
                     </materialDesign:Card>
                 </TabItem>
 
-                <!-- ========================================
-                     ONGLET 4 : DÉPENSE - INVESTISSEMENT
-                     ======================================== -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- ONGLET 4 : DÉPENSE - INVESTISSEMENT -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
                 <TabItem>
                     <TabItem.Header>
                         <StackPanel Orientation="Horizontal">
@@ -408,26 +454,56 @@
                                   CanUserAddRows="False"
                                   IsReadOnly="True"
                                   SelectionMode="Single"
+                                  CanUserSortColumns="False"
+                                  CanUserReorderColumns="False"
+                                  HeadersVisibility="Column"
+                                  GridLinesVisibility="Horizontal"
                                   materialDesign:DataGridAssist.CellPadding="13 8 8 8">
 
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="Chapitre" Binding="{Binding Nommenclature.Chapitre}" Width="100"/>
-                                <DataGridTextColumn Header="Article" Binding="{Binding Nommenclature.Article}" Width="80"/>
-                                <DataGridTextColumn Header="Paragraphe" Binding="{Binding Nommenclature.Paragraphe}" Width="100"/>
-                                <DataGridTextColumn Header="S-Paragraphe" Binding="{Binding Nommenclature.SousParagraphe}" Width="150"/>
-                                <DataGridTextColumn Header="Intitulé" Binding="{Binding Nommenclature.Intitule}" Width="*" MinWidth="200"/>
-                                <DataGridTextColumn Header="Montant prévu" Binding="{Binding MontantPrevu, StringFormat={}{0:N0} GNF}" Width="150"/>
+                            <DataGrid.RowStyle>
+                                <Style TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
+                                    <Setter Property="Background" Value="{Binding BackgroundColor, Converter={StaticResource BackgroundColorConverter}}"/>
+                                    <Setter Property="Visibility" Value="{Binding IsVisible, Converter={StaticResource BoolToVis}}"/>
+                                </Style>
+                            </DataGrid.RowStyle>
 
-                                <DataGridTemplateColumn Header="Remaniements" Width="200">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Header="Chapitre" Width="120">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" Margin="{Binding IndentationMargin}">
+                                                <Button Width="20" Height="20" Padding="0" Margin="0,0,5,0"
+                                                      Background="Transparent" BorderThickness="0"
+                                                      Command="{Binding DataContext.ToggleExpandCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                      CommandParameter="{Binding}"
+                                                      Visibility="{Binding HasChildren, Converter={StaticResource BoolToVis}}"
+                                                      Style="{StaticResource MaterialDesignFlatButton}">
+                                                    <materialDesign:PackIcon Kind="{Binding ExpanderIcon}" Width="16" Height="16"/>
+                                                </Button>
+                                                <TextBlock Text="{Binding BudgetLine.Nommenclature.Chapitre}" 
+                                                         VerticalAlignment="Center"
+                                                         FontWeight="{Binding TextFontWeight}"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTextColumn Header="Article" Binding="{Binding BudgetLine.Nommenclature.Article}" Width="80"/>
+                                <DataGridTextColumn Header="Paragraphe" Binding="{Binding BudgetLine.Nommenclature.Paragraphe}" Width="100"/>
+                                <DataGridTextColumn Header="S-Paragraphe" Binding="{Binding BudgetLine.Nommenclature.SousParagraphe}" Width="120"/>
+                                <DataGridTextColumn Header="Intitulé" Binding="{Binding BudgetLine.Nommenclature.Intitule}" Width="*" MinWidth="200"/>
+                                <DataGridTextColumn Header="Montant prévu" Binding="{Binding BudgetLine.MontantPrevu, StringFormat={}{0:N0} GNF}" Width="140"/>
+
+                                <DataGridTemplateColumn Header="Remaniements" Width="180">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <StackPanel>
-                                                <TextBlock Text="{Binding VariationTotale, StringFormat={}{0:N0} GNF}"
+                                                <TextBlock Text="{Binding BudgetLine.VariationTotale, StringFormat={}{0:N0} GNF}"
                                                            FontWeight="Bold"
-                                                           Foreground="{Binding VariationTotale, Converter={StaticResource VariationToBrushConverter}}"
+                                                           Foreground="{Binding BudgetLine.VariationTotale, Converter={StaticResource VariationToBrushConverter}}"
                                                            HorizontalAlignment="Right"/>
-                                                <TextBlock Text="{Binding VariationTotale, Converter={StaticResource VariationToLabelConverter}}"
-                                                           Foreground="{Binding VariationTotale, Converter={StaticResource VariationToBrushConverter}}"
+                                                <TextBlock Text="{Binding BudgetLine.VariationTotale, Converter={StaticResource VariationToLabelConverter}}"
+                                                           Foreground="{Binding BudgetLine.VariationTotale, Converter={StaticResource VariationToBrushConverter}}"
                                                            FontSize="11"
                                                            HorizontalAlignment="Right"/>
                                             </StackPanel>
@@ -435,44 +511,32 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <DataGridTextColumn Header="Montant définitif"
-                                                    Binding="{Binding MontantActu, StringFormat={}{0:N0} GNF}"
-                                                    Width="160"/>
+                                <DataGridTextColumn Header="Montant définitif" Binding="{Binding BudgetLine.MontantActu, StringFormat={}{0:N0} GNF}" Width="150"/>
 
-                                <DataGridTemplateColumn Header="Actions" Width="160">
-    <DataGridTemplateColumn.CellTemplate>
-        <DataTemplate>
-            <StackPanel Orientation="Horizontal"
-                        HorizontalAlignment="Center"
-                        Visibility="{Binding Nommenclature.Enfants, Converter={StaticResource CollectionHasItemsToVisibilityConverter}}">
-
-                <!-- Bouton Ajouter -->
-                <Button Style="{StaticResource MaterialDesignIconButton}"
-                        ToolTip="Ajouter un remaniement"
-                        Command="{Binding DataContext.OpenAddDialogCommand, 
-                                  RelativeSource={RelativeSource AncestorType=Page}}"
-                        CommandParameter="{Binding}"
-                        Margin="4,0">
-                    <materialDesign:PackIcon Kind="PlusCircle"
-                                             Foreground="#4CAF50"/>
-                </Button>
-
-                <!-- Bouton Voir détail -->
-                <Button Style="{StaticResource MaterialDesignIconButton}"
-                        ToolTip="Voir détail"
-                        Command="{Binding DataContext.OpenDetailsCommand, 
-                                  RelativeSource={RelativeSource AncestorType=Page}}"
-                        CommandParameter="{Binding}"
-                        Margin="4,0">
-                    <materialDesign:PackIcon Kind="Eye"
-                                             Foreground="#1976D2"/>
-                </Button>
-
-            </StackPanel>
-        </DataTemplate>
-    </DataGridTemplateColumn.CellTemplate>
-</DataGridTemplateColumn>
-
+                                <DataGridTemplateColumn Header="Actions" Width="140">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal"
+                                                        HorizontalAlignment="Center"
+                                                        Visibility="{Binding BudgetLine.Nommenclature.Enfants, Converter={StaticResource CollectionHasItemsToVisibilityConverter}}">
+                                                <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                        ToolTip="Ajouter un remaniement"
+                                                        Command="{Binding DataContext.OpenAddDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                        CommandParameter="{Binding BudgetLine}"
+                                                        Margin="4,0">
+                                                    <materialDesign:PackIcon Kind="PlusCircle" Foreground="#4CAF50"/>
+                                                </Button>
+                                                <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                        ToolTip="Voir détail"
+                                                        Command="{Binding DataContext.OpenDetailsCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                        CommandParameter="{Binding BudgetLine}"
+                                                        Margin="4,0">
+                                                    <materialDesign:PackIcon Kind="Eye" Foreground="#1976D2"/>
+                                                </Button>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
                             </DataGrid.Columns>
                         </DataGrid>
                     </materialDesign:Card>
@@ -481,7 +545,7 @@
             </TabControl>
         </Grid>
 
-        <!-- Dialog Modal -->
+        <!-- Dialog Modal - Ajout remaniement -->
         <materialDesign:DialogHost IsOpen="{Binding IsDialogOpen}" 
                                  CloseOnClickAway="False" 
                                  Panel.ZIndex="1000">

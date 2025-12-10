@@ -452,7 +452,88 @@ namespace Collectivite.Utils
             throw new NotImplementedException();
         }
     }
+    /// <summary>
+    /// Convertit un montant décimal en chaîne formatée avec séparateurs de milliers et 2 décimales
+    /// </summary>
+    public class CurrencyConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value == null)
+                return "0,00";
 
+            if (value is decimal decimalValue)
+            {
+                // Format avec séparateurs d'espaces pour les milliers et 2 décimales
+                return decimalValue.ToString("N2", new CultureInfo("fr-FR")).Replace(" ", " ");
+            }
 
+            if (value is double doubleValue)
+            {
+                return doubleValue.ToString("N2", new CultureInfo("fr-FR")).Replace(" ", " ");
+            }
+
+            if (value is int intValue)
+            {
+                return intValue.ToString("N2", new CultureInfo("fr-FR")).Replace(" ", " ");
+            }
+
+            if (value is long longValue)
+            {
+                return longValue.ToString("N2", new CultureInfo("fr-FR")).Replace(" ", " ");
+            }
+
+            return value.ToString();
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    /// <summary>
+    /// Convertit un pourcentage (double) en chaîne formatée avec signe + ou - et 2 décimales
+    /// </summary>
+    public class PercentageConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value == null)
+                return "0,00%";
+
+            if (value is double doubleValue)
+            {
+                // Arrondir à 2 décimales
+                var rounded = Math.Round(doubleValue, 2);
+
+                // Ajouter le signe + pour les valeurs positives
+                if (rounded > 0)
+                    return $"+{rounded:0.00}%";
+                else if (rounded < 0)
+                    return $"{rounded:0.00}%";
+                else
+                    return "0,00%";
+            }
+
+            if (value is decimal decimalValue)
+            {
+                var rounded = Math.Round((double)decimalValue, 2);
+
+                if (rounded > 0)
+                    return $"+{rounded:0.00}%";
+                else if (rounded < 0)
+                    return $"{rounded:0.00}%";
+                else
+                    return "0,00%";
+            }
+
+            return value.ToString();
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }
-

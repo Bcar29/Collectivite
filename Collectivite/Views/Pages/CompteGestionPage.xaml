@@ -11,6 +11,9 @@
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <Utils:CollectionHasItemsToVisibilityConverter x:Key="CollectionHasItemsToVisibilityConverter"/>
         <Utils:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
+
+        <!-- 🆕 Convertisseur pour les couleurs de fond -->
+        <Utils:BackgroundColorConverter x:Key="BackgroundColorConverter"/>
     </Page.Resources>
 
     <Grid>
@@ -22,7 +25,8 @@
         <!-- Overlay de chargement -->
         <Grid Background="#80000000" 
               Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}"
-              Panel.ZIndex="999">
+              Panel.ZIndex="999"
+              Grid.RowSpan="2">
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                 <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}"
                            Value="0"
@@ -42,7 +46,9 @@
                     SelectedIndex="{Binding SelectedTabIndex}"
                     Margin="20,0,20,20">
 
-            <!-- Recette - Fonctionnement -->
+            <!-- ═══════════════════════════════════════════════════════════ -->
+            <!-- ONGLET 1 : Recette - Fonctionnement -->
+            <!-- ═══════════════════════════════════════════════════════════ -->
             <TabItem>
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal">
@@ -61,39 +67,86 @@
                     <DataGrid ItemsSource="{Binding DisplayedLines}"
                               AutoGenerateColumns="False"
                               IsReadOnly="True"
+                              CanUserSortColumns="False"
+                              CanUserReorderColumns="False"
+                              HeadersVisibility="Column"
+                              GridLinesVisibility="Horizontal"
                               Style="{StaticResource MaterialDesignDataGrid}">
+
+                        <!-- 🆕 Style des lignes avec couleur de fond -->
+                        <DataGrid.RowStyle>
+                            <Style TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
+                                <Setter Property="Background" Value="{Binding BackgroundColor, Converter={StaticResource BackgroundColorConverter}}"/>
+                                <Setter Property="Visibility" Value="{Binding IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                            </Style>
+                        </DataGrid.RowStyle>
+
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Chapitre" Binding="{Binding Nommenclature.Chapitre}" Width="100"/>
-                            <DataGridTextColumn Header="Article" Binding="{Binding Nommenclature.Article}" Width="100"/>
-                            <DataGridTextColumn Header="Paragraphe" Binding="{Binding Nommenclature.Paragraphe}" Width="100"/>
-                            <DataGridTextColumn Header="Sous-Paragraphe" Binding="{Binding Nommenclature.SousParagraphe}" Width="150"/>
-                            <DataGridTextColumn Header="Intitulé" Binding="{Binding Nommenclature.Intitule}" Width="*"/>
+                            <!-- 🆕 Colonne avec expander et chapitre -->
+                            <DataGridTemplateColumn Header="Chapitre" Width="150">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" Margin="{Binding IndentationMargin}">
+                                            <!-- Bouton expander -->
+                                            <Button Width="20" 
+                                                  Height="20"
+                                                  Padding="0"
+                                                  Margin="0,0,5,0"
+                                                  Background="Transparent"
+                                                  BorderThickness="0"
+                                                  Command="{Binding DataContext.ToggleExpandCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                  CommandParameter="{Binding}"
+                                                  Visibility="{Binding HasChildren, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                  Style="{StaticResource MaterialDesignFlatButton}">
+                                                <materialDesign:PackIcon Kind="{Binding ExpanderIcon}" 
+                                                                       Width="16" 
+                                                                       Height="16"/>
+                                            </Button>
+
+                                            <!-- Texte du chapitre -->
+                                            <TextBlock Text="{Binding BudgetLine.Nommenclature.Chapitre}" 
+                                                     VerticalAlignment="Center"
+                                                     FontWeight="{Binding TextFontWeight}"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTextColumn Header="Article" 
+                                              Binding="{Binding BudgetLine.Nommenclature.Article}" 
+                                              Width="100"/>
+                            <DataGridTextColumn Header="Paragraphe" 
+                                              Binding="{Binding BudgetLine.Nommenclature.Paragraphe}" 
+                                              Width="100"/>
+                            <DataGridTextColumn Header="Sous-Paragraphe" 
+                                              Binding="{Binding BudgetLine.Nommenclature.SousParagraphe}" 
+                                              Width="150"/>
+                            <DataGridTextColumn Header="Intitulé" 
+                                              Binding="{Binding BudgetLine.Nommenclature.Intitule}" 
+                                              Width="*"/>
                             <DataGridTextColumn Header="Montant prévu" 
-                                Binding="{Binding MontantDefinitif, StringFormat={}{0:N3} GNF}" 
-                                Width="150"/>
-
+                                              Binding="{Binding BudgetLine.MontantDefinitif, StringFormat={}{0:N3} GNF}" 
+                                              Width="150"/>
                             <DataGridTextColumn Header="Montant Emis" 
-                                Binding="{Binding MontantRealise, StringFormat={}{0:N3} GNF}" 
-                                Width="150"/>
-
+                                              Binding="{Binding BudgetLine.MontantRealise, StringFormat={}{0:N3} GNF}" 
+                                              Width="150"/>
                             <DataGridTextColumn Header="Montant Recouvré" 
-                                Binding="{Binding MontantEntreSortie, StringFormat={}{0:N3} GNF}" 
-                                Width="150"/>
-
+                                              Binding="{Binding BudgetLine.MontantEntreSortie, StringFormat={}{0:N3} GNF}" 
+                                              Width="150"/>
                             <DataGridTextColumn Header="Taux Recouvrement" 
-                                Binding="{Binding TauxEntreSortie, StringFormat={}{0:N3} %}" 
-                                Width="150"/>
-                            
+                                              Binding="{Binding BudgetLine.TauxEntreSortie, StringFormat={}{0:N2} %}" 
+                                              Width="150"/>
                             <DataGridTextColumn Header="Reste Recouvré" 
-                                Binding="{Binding ResteEntreSortie, StringFormat={}{0:N3} GNF}" 
-                                Width="150"/>
+                                              Binding="{Binding BudgetLine.ResteEntreSortie, StringFormat={}{0:N3} GNF}" 
+                                              Width="150"/>
                         </DataGrid.Columns>
                     </DataGrid>
                 </materialDesign:Card>
-
             </TabItem>
 
-            <!-- Recette - Investissement -->
+            <!-- ═══════════════════════════════════════════════════════════ -->
+            <!-- ONGLET 2 : Recette - Investissement -->
+            <!-- ═══════════════════════════════════════════════════════════ -->
             <TabItem>
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal">
@@ -107,42 +160,86 @@
                                  FontWeight="Medium"/>
                     </StackPanel>
                 </TabItem.Header>
-                <!-- Même structure de DataGrid -->
+
                 <materialDesign:Card Padding="0" Margin="0,10,0,0">
                     <DataGrid ItemsSource="{Binding DisplayedLines}"
                               AutoGenerateColumns="False"
-                              IsReadOnly="True">
+                              IsReadOnly="True"
+                              CanUserSortColumns="False"
+                              CanUserReorderColumns="False"
+                              HeadersVisibility="Column"
+                              GridLinesVisibility="Horizontal"
+                              Style="{StaticResource MaterialDesignDataGrid}">
+
+                        <DataGrid.RowStyle>
+                            <Style TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
+                                <Setter Property="Background" Value="{Binding BackgroundColor, Converter={StaticResource BackgroundColorConverter}}"/>
+                                <Setter Property="Visibility" Value="{Binding IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                            </Style>
+                        </DataGrid.RowStyle>
+
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Chapitre" Binding="{Binding Nommenclature.Chapitre}" Width="100"/>
-                            <DataGridTextColumn Header="Article" Binding="{Binding Nommenclature.Article}" Width="100"/>
-                            <DataGridTextColumn Header="Paragraphe" Binding="{Binding Nommenclature.Paragraphe}" Width="100"/>
-                            <DataGridTextColumn Header="Sous-Paragraphe" Binding="{Binding Nommenclature.SousParagraphe}" Width="150"/>
-                            <DataGridTextColumn Header="Intitulé" Binding="{Binding Nommenclature.Intitule}" Width="*"/>
+                            <DataGridTemplateColumn Header="Chapitre" Width="150">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" Margin="{Binding IndentationMargin}">
+                                            <Button Width="20" 
+                                                  Height="20"
+                                                  Padding="0"
+                                                  Margin="0,0,5,0"
+                                                  Background="Transparent"
+                                                  BorderThickness="0"
+                                                  Command="{Binding DataContext.ToggleExpandCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                  CommandParameter="{Binding}"
+                                                  Visibility="{Binding HasChildren, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                  Style="{StaticResource MaterialDesignFlatButton}">
+                                                <materialDesign:PackIcon Kind="{Binding ExpanderIcon}" 
+                                                                       Width="16" 
+                                                                       Height="16"/>
+                                            </Button>
+                                            <TextBlock Text="{Binding BudgetLine.Nommenclature.Chapitre}" 
+                                                     VerticalAlignment="Center"
+                                                     FontWeight="{Binding TextFontWeight}"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTextColumn Header="Article" 
+                                              Binding="{Binding BudgetLine.Nommenclature.Article}" 
+                                              Width="100"/>
+                            <DataGridTextColumn Header="Paragraphe" 
+                                              Binding="{Binding BudgetLine.Nommenclature.Paragraphe}" 
+                                              Width="100"/>
+                            <DataGridTextColumn Header="Sous-Paragraphe" 
+                                              Binding="{Binding BudgetLine.Nommenclature.SousParagraphe}" 
+                                              Width="150"/>
+                            <DataGridTextColumn Header="Intitulé" 
+                                              Binding="{Binding BudgetLine.Nommenclature.Intitule}" 
+                                              Width="*"/>
                             <DataGridTextColumn Header="Montant prévu" 
-                                 Binding="{Binding MontantDefinitif, StringFormat={}{0:N3} GNF}" 
-                                 Width="150"/>
-
+                                              Binding="{Binding BudgetLine.MontantDefinitif, StringFormat={}{0:N3} GNF}" 
+                                              Width="150"/>
                             <DataGridTextColumn Header="Montant Emis" 
-                                 Binding="{Binding MontantRealise, StringFormat={}{0:N3} GNF}" 
-                                 Width="150"/>
-
+                                              Binding="{Binding BudgetLine.MontantRealise, StringFormat={}{0:N3} GNF}" 
+                                              Width="150"/>
                             <DataGridTextColumn Header="Montant Recouvré" 
-                                 Binding="{Binding MontantEntreSortie, StringFormat={}{0:N3} GNF}" 
-                                 Width="150"/>
-
+                                              Binding="{Binding BudgetLine.MontantEntreSortie, StringFormat={}{0:N3} GNF}" 
+                                              Width="150"/>
                             <DataGridTextColumn Header="Taux Recouvrement" 
-                                 Binding="{Binding TauxEntreSortie, StringFormat={}{0:N3} %}" 
-                                 Width="150"/>
-
+                                              Binding="{Binding BudgetLine.TauxEntreSortie, StringFormat={}{0:N2} %}" 
+                                              Width="150"/>
                             <DataGridTextColumn Header="Reste Recouvré" 
-                                 Binding="{Binding ResteEntreSortie, StringFormat={}{0:N3} GNF}" 
-                                 Width="150"/>
+                                              Binding="{Binding BudgetLine.ResteEntreSortie, StringFormat={}{0:N3} GNF}" 
+                                              Width="150"/>
                         </DataGrid.Columns>
                     </DataGrid>
                 </materialDesign:Card>
             </TabItem>
 
-            <!-- Dépense - Fonctionnement -->
+            <!-- ═══════════════════════════════════════════════════════════ -->
+            <!-- ONGLET 3 : Dépense - Fonctionnement -->
+            <!-- ═══════════════════════════════════════════════════════════ -->
             <TabItem>
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal">
@@ -156,41 +253,86 @@
                                  FontWeight="Medium"/>
                     </StackPanel>
                 </TabItem.Header>
+
                 <materialDesign:Card Padding="0" Margin="0,10,0,0">
                     <DataGrid ItemsSource="{Binding DisplayedLines}"
-               AutoGenerateColumns="False"
-               IsReadOnly="True">
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserSortColumns="False"
+                              CanUserReorderColumns="False"
+                              HeadersVisibility="Column"
+                              GridLinesVisibility="Horizontal"
+                              Style="{StaticResource MaterialDesignDataGrid}">
+
+                        <DataGrid.RowStyle>
+                            <Style TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
+                                <Setter Property="Background" Value="{Binding BackgroundColor, Converter={StaticResource BackgroundColorConverter}}"/>
+                                <Setter Property="Visibility" Value="{Binding IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                            </Style>
+                        </DataGrid.RowStyle>
+
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Chapitre" Binding="{Binding Nommenclature.Chapitre}" Width="100"/>
-                            <DataGridTextColumn Header="Article" Binding="{Binding Nommenclature.Article}" Width="100"/>
-                            <DataGridTextColumn Header="Paragraphe" Binding="{Binding Nommenclature.Paragraphe}" Width="100"/>
-                            <DataGridTextColumn Header="Sous-Paragraphe" Binding="{Binding Nommenclature.SousParagraphe}" Width="150"/>
-                            <DataGridTextColumn Header="Intitulé" Binding="{Binding Nommenclature.Intitule}" Width="*"/>
+                            <DataGridTemplateColumn Header="Chapitre" Width="150">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" Margin="{Binding IndentationMargin}">
+                                            <Button Width="20" 
+                                                  Height="20"
+                                                  Padding="0"
+                                                  Margin="0,0,5,0"
+                                                  Background="Transparent"
+                                                  BorderThickness="0"
+                                                  Command="{Binding DataContext.ToggleExpandCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                  CommandParameter="{Binding}"
+                                                  Visibility="{Binding HasChildren, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                  Style="{StaticResource MaterialDesignFlatButton}">
+                                                <materialDesign:PackIcon Kind="{Binding ExpanderIcon}" 
+                                                                       Width="16" 
+                                                                       Height="16"/>
+                                            </Button>
+                                            <TextBlock Text="{Binding BudgetLine.Nommenclature.Chapitre}" 
+                                                     VerticalAlignment="Center"
+                                                     FontWeight="{Binding TextFontWeight}"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTextColumn Header="Article" 
+                                              Binding="{Binding BudgetLine.Nommenclature.Article}" 
+                                              Width="100"/>
+                            <DataGridTextColumn Header="Paragraphe" 
+                                              Binding="{Binding BudgetLine.Nommenclature.Paragraphe}" 
+                                              Width="100"/>
+                            <DataGridTextColumn Header="Sous-Paragraphe" 
+                                              Binding="{Binding BudgetLine.Nommenclature.SousParagraphe}" 
+                                              Width="150"/>
+                            <DataGridTextColumn Header="Intitulé" 
+                                              Binding="{Binding BudgetLine.Nommenclature.Intitule}" 
+                                              Width="*"/>
                             <DataGridTextColumn Header="Montant prévu" 
-                                 Binding="{Binding MontantDefinitif, StringFormat={}{0:N3} GNF}" 
-                                 Width="150"/>
-
+                                              Binding="{Binding BudgetLine.MontantDefinitif, StringFormat={}{0:N3} GNF}" 
+                                              Width="150"/>
                             <DataGridTextColumn Header="Montant Emis" 
-                                 Binding="{Binding MontantRealise, StringFormat={}{0:N3} GNF}" 
-                                 Width="150"/>
-
+                                              Binding="{Binding BudgetLine.MontantRealise, StringFormat={}{0:N3} GNF}" 
+                                              Width="150"/>
                             <DataGridTextColumn Header="Montant Payé" 
-                                 Binding="{Binding MontantEntreSortie, StringFormat={}{0:N3} GNF}" 
-                                 Width="150"/>
-
+                                              Binding="{Binding BudgetLine.MontantEntreSortie, StringFormat={}{0:N3} GNF}" 
+                                              Width="150"/>
                             <DataGridTextColumn Header="Taux Paiement" 
-                                 Binding="{Binding TauxEntreSortie, StringFormat={}{0:N3} %}" 
-                                 Width="150"/>
-
+                                              Binding="{Binding BudgetLine.TauxEntreSortie, StringFormat={}{0:N2} %}" 
+                                              Width="150"/>
                             <DataGridTextColumn Header="Reste Payer" 
-                                 Binding="{Binding ResteEntreSortie, StringFormat={}{0:N3} GNF}" 
-                                 Width="150"/>
+                                              Binding="{Binding BudgetLine.ResteEntreSortie, StringFormat={}{0:N3} GNF}" 
+                                              Width="150"/>
                         </DataGrid.Columns>
                     </DataGrid>
                 </materialDesign:Card>
             </TabItem>
 
-            <!-- Dépense - Investissement -->
+            <!-- ═══════════════════════════════════════════════════════════ -->
+            <!-- ONGLET 4 : Dépense - Investissement -->
+            <!-- ═══════════════════════════════════════════════════════════ -->
             <TabItem>
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal">
@@ -204,43 +346,83 @@
                                  FontWeight="Medium"/>
                     </StackPanel>
                 </TabItem.Header>
+
                 <materialDesign:Card Padding="0" Margin="0,10,0,0">
                     <DataGrid ItemsSource="{Binding DisplayedLines}"
-                           AutoGenerateColumns="False"
-                           IsReadOnly="True">
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserSortColumns="False"
+                              CanUserReorderColumns="False"
+                              HeadersVisibility="Column"
+                              GridLinesVisibility="Horizontal"
+                              Style="{StaticResource MaterialDesignDataGrid}">
+
+                        <DataGrid.RowStyle>
+                            <Style TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
+                                <Setter Property="Background" Value="{Binding BackgroundColor, Converter={StaticResource BackgroundColorConverter}}"/>
+                                <Setter Property="Visibility" Value="{Binding IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                            </Style>
+                        </DataGrid.RowStyle>
+
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Chapitre" Binding="{Binding Nommenclature.Chapitre}" Width="100"/>
-                            <DataGridTextColumn Header="Article" Binding="{Binding Nommenclature.Article}" Width="100"/>
-                            <DataGridTextColumn Header="Paragraphe" Binding="{Binding Nommenclature.Paragraphe}" Width="100"/>
-                            <DataGridTextColumn Header="Sous-Paragraphe" Binding="{Binding Nommenclature.SousParagraphe}" Width="150"/>
-                            <DataGridTextColumn Header="Intitulé" Binding="{Binding Nommenclature.Intitule}" Width="*"/>
+                            <DataGridTemplateColumn Header="Chapitre" Width="150">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" Margin="{Binding IndentationMargin}">
+                                            <Button Width="20" 
+                                                  Height="20"
+                                                  Padding="0"
+                                                  Margin="0,0,5,0"
+                                                  Background="Transparent"
+                                                  BorderThickness="0"
+                                                  Command="{Binding DataContext.ToggleExpandCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                  CommandParameter="{Binding}"
+                                                  Visibility="{Binding HasChildren, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                  Style="{StaticResource MaterialDesignFlatButton}">
+                                                <materialDesign:PackIcon Kind="{Binding ExpanderIcon}" 
+                                                                       Width="16" 
+                                                                       Height="16"/>
+                                            </Button>
+                                            <TextBlock Text="{Binding BudgetLine.Nommenclature.Chapitre}" 
+                                                     VerticalAlignment="Center"
+                                                     FontWeight="{Binding TextFontWeight}"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTextColumn Header="Article" 
+                                              Binding="{Binding BudgetLine.Nommenclature.Article}" 
+                                              Width="100"/>
+                            <DataGridTextColumn Header="Paragraphe" 
+                                              Binding="{Binding BudgetLine.Nommenclature.Paragraphe}" 
+                                              Width="100"/>
+                            <DataGridTextColumn Header="Sous-Paragraphe" 
+                                              Binding="{Binding BudgetLine.Nommenclature.SousParagraphe}" 
+                                              Width="150"/>
+                            <DataGridTextColumn Header="Intitulé" 
+                                              Binding="{Binding BudgetLine.Nommenclature.Intitule}" 
+                                              Width="*"/>
                             <DataGridTextColumn Header="Montant prévu" 
-                                 Binding="{Binding MontantDefinitif, StringFormat={}{0:N3} GNF}" 
-                                 Width="150"/>
-
+                                              Binding="{Binding BudgetLine.MontantDefinitif, StringFormat={}{0:N3} GNF}" 
+                                              Width="150"/>
                             <DataGridTextColumn Header="Montant Emis" 
-                                 Binding="{Binding MontantRealise, StringFormat={}{0:N3} GNF}" 
-                                 Width="150"/>
-
+                                              Binding="{Binding BudgetLine.MontantRealise, StringFormat={}{0:N3} GNF}" 
+                                              Width="150"/>
                             <DataGridTextColumn Header="Montant Payé" 
-                                 Binding="{Binding MontantEntreSortie, StringFormat={}{0:N3} GNF}" 
-                                 Width="150"/>
-
+                                              Binding="{Binding BudgetLine.MontantEntreSortie, StringFormat={}{0:N3} GNF}" 
+                                              Width="150"/>
                             <DataGridTextColumn Header="Taux Paiement" 
-                                 Binding="{Binding TauxEntreSortie, StringFormat={}{0:N3} %}" 
-                                 Width="150"/>
-
+                                              Binding="{Binding BudgetLine.TauxEntreSortie, StringFormat={}{0:N2} %}" 
+                                              Width="150"/>
                             <DataGridTextColumn Header="Reste Payer" 
-                                 Binding="{Binding ResteEntreSortie, StringFormat={}{0:N3} GNF}" 
-                                 Width="150"/>
+                                              Binding="{Binding BudgetLine.ResteEntreSortie, StringFormat={}{0:N3} GNF}" 
+                                              Width="150"/>
                         </DataGrid.Columns>
                     </DataGrid>
                 </materialDesign:Card>
             </TabItem>
 
         </TabControl>
-
-
     </Grid>
-
 </Page>

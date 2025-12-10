@@ -52,10 +52,11 @@
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
-                    <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                        <Button Style="{StaticResource MaterialDesignRaisedButton}"
                             Command="{Binding OpenAddPageCommand}"
                             Height="36"
-                            Margin="0,0,10,0">
+                            Margin="0,0,10,0"
+                            Visibility="{Binding CanCreateBonCommande, Converter={StaticResource BoolToVis}}">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="Plus" Margin="0,0,5,0"/>
                             <TextBlock Text="Nouveau Bon"/>
@@ -129,19 +130,22 @@
                                         <Button Style="{StaticResource MaterialDesignIconButton}"
                                                 Command="{Binding DataContext.OpenDetailsPageCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                                 CommandParameter="{Binding}"
-                                                ToolTip="Voir les détails">
+                                                ToolTip="Voir les détails"
+                                                Visibility="{Binding DataContext.CanViewBonCommande, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
                                             <materialDesign:PackIcon Kind="Eye" Foreground="#4CAF50"/>
                                         </Button>
                                         <Button Style="{StaticResource MaterialDesignIconButton}"
                                                 Command="{Binding DataContext.OpenEditPageCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                                 CommandParameter="{Binding}"
-                                                ToolTip="Modifier">
+                                                ToolTip="Modifier"
+                                                Visibility="{Binding DataContext.CanEditBonCommande, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
                                             <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2"/>
                                         </Button>
                                         <Button Style="{StaticResource MaterialDesignIconButton}"
                                                 Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                                 CommandParameter="{Binding}"
-                                                ToolTip="Supprimer">
+                                                ToolTip="Supprimer"
+                                                Visibility="{Binding DataContext.CanDeleteBonCommande, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
                                             <materialDesign:PackIcon Kind="Delete" Foreground="#F44336"/>
                                         </Button>
                                     </StackPanel>

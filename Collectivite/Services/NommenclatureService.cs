@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Collectivite.Models;
+using Collectivite.Utils;
 using Microsoft.EntityFrameworkCore;
 
 namespace Collectivite.Services
@@ -24,6 +25,9 @@ namespace Collectivite.Services
         // recuperer tous les nommenclatures
         public async Task<List<Nommenclature>> GetAllNommenclatureAsync()
         {
+            if (!SessionManager.HasPermission("Nommenclature.View"))
+                throw new UnauthorizedAccessException("Permission Nommenclature.View requise pour consulter les nomenclatures.");
+
             return await _context.Nommenclatures
                 .OrderBy(n => n.Section)
                 .ToListAsync();
@@ -34,6 +38,9 @@ namespace Collectivite.Services
         {
             try
             {
+                if (!SessionManager.HasPermission("Nommenclature.Create"))
+                    return (false, "Permission Nommenclature.Create requise pour créer une nomenclature.", null);
+
                 // Validation : Vérifier qu'il n'existe pas déjà une nommenclature avec le même intitulé
                 var existe = await _context.Nommenclatures
                     .AnyAsync(n => n.Intitule == nommenclature.Intitule);
@@ -56,6 +63,9 @@ namespace Collectivite.Services
         {
             try
             {
+                if (!SessionManager.HasPermission("Nommenclature.Edit"))
+                    return (false, "Permission Nommenclature.Edit requise pour modifier une nomenclature.");
+
                 var existingNommenclature = await _context.Nommenclatures
                     .FirstOrDefaultAsync(n => n.Id == nommenclature.Id);
                 if (existingNommenclature == null)
@@ -91,6 +101,9 @@ namespace Collectivite.Services
         {
             try
             {
+                if (!SessionManager.HasPermission("Nommenclature.Delete"))
+                    return (false, "Permission Nommenclature.Delete requise pour supprimer une nomenclature.");
+
                 var existingNommenclature = await _context.Nommenclatures
                     .FirstOrDefaultAsync(n => n.Id == nommenclatureId);
                 if (existingNommenclature == null)

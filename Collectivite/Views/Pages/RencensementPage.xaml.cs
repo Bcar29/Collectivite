@@ -1,4 +1,5 @@
 ﻿using Collectivite.ViewModels;
+using Collectivite.Services;
 using System.Windows.Controls;
 
 namespace Collectivite.Views.Pages
@@ -11,7 +12,8 @@ namespace Collectivite.Views.Pages
         public RecensementPage()
         {
             InitializeComponent();
-            DataContext = new RecensementViewModel();
+            var service = new RecensementService();
+            DataContext = new RecensementViewModel(service);
         }
     }
 }

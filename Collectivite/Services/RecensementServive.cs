@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Collectivite.Utils;
 
 namespace Collectivite.Services
 {
@@ -21,6 +22,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<List<Recensement>> GetAllRecensementsAsync()
         {
+            if (!SessionManager.HasPermission("Recensement.View"))
+                throw new UnauthorizedAccessException("Permission Recensement.View requise pour consulter les recensements.");
+
             using var context = CreateContext();
 
             return await context.Recensements
@@ -39,6 +43,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<Recensement?> GetRecensementByIdAsync(int id)
         {
+            if (!SessionManager.HasPermission("Recensement.View"))
+                throw new UnauthorizedAccessException("Permission Recensement.View requise pour consulter les recensements.");
+
             using var context = CreateContext();
 
             return await context.Recensements
@@ -56,6 +63,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<List<Recensement>> GetRecensementsByExerciceAsync(int exerciceId)
         {
+            if (!SessionManager.HasPermission("Recensement.View"))
+                throw new UnauthorizedAccessException("Permission Recensement.View requise pour consulter les recensements.");
+
             using var context = CreateContext();
 
             return await context.Recensements
@@ -73,6 +83,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<List<Recensement>> GetRecensementsByCommuneAsync(int communeId)
         {
+            if (!SessionManager.HasPermission("Recensement.View"))
+                throw new UnauthorizedAccessException("Permission Recensement.View requise pour consulter les recensements.");
+
             using var context = CreateContext();
 
             return await context.Recensements
@@ -169,6 +182,9 @@ namespace Collectivite.Services
         public async Task<(bool Success, string Message, Recensement? Recensement)> CreateRecensementAsync(
             Recensement recensement)
         {
+            if (!SessionManager.HasPermission("Recensement.Create"))
+                return (false, "Permission Recensement.Create requise pour créer un recensement.", null);
+
             using var context = CreateContext();
 
             try
@@ -242,6 +258,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<(bool Success, string Message)> UpdateRecensementAsync(Recensement recensement)
         {
+            if (!SessionManager.HasPermission("Recensement.Edit"))
+                return (false, "Permission Recensement.Edit requise pour modifier un recensement.");
+
             using var context = CreateContext();
 
             try
@@ -292,6 +311,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<(bool Success, string Message)> DeleteRecensementAsync(int id)
         {
+            if (!SessionManager.HasPermission("Recensement.Delete"))
+                return (false, "Permission Recensement.Delete requise pour supprimer un recensement.");
+
             using var context = CreateContext();
 
             try

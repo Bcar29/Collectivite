@@ -24,14 +24,13 @@ namespace Collectivite.Views.Pages
     /// </summary>
     public partial class BudgetLinesPage : Page
     {
-        public BudgetLinesPage()
+        public BudgetLinesPage(AuthService authService)
         {
             InitializeComponent();
 
-            //_service = new BudgetLineService();
-
             // On attend que la Page soit entièrement chargée
-            DataContext = new BudgetLinesViewModel(new BudgetLineService());
+            var auditService = new AuditService();
+            DataContext = new BudgetLinesViewModel(new BudgetLineService(), authService, auditService);
         }
 
         private void Page_Unloaded(object sender, RoutedEventArgs e)
@@ -39,7 +38,6 @@ namespace Collectivite.Views.Pages
             if (DataContext is BudgetLinesViewModel viewModel)
             {
                 viewModel.Dispose();
-                //System.Diagnostics.Debug.WriteLine("BudgetLinesViewModel disposed");
             }
         }
     }

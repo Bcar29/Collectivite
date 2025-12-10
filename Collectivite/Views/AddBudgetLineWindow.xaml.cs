@@ -11,19 +11,28 @@ namespace Collectivite.Views
     {
         private readonly BudgetLineService _service;
         private readonly IEnumerable<Nommenclature> _available;
+        private readonly AuditService _auditService;
+        private readonly AuthService _authService;
 
         public AddBudgetLineWindow(
              BudgetLineService service,
              int budgetPrimitifId,
-             IEnumerable<Nommenclature> available)
+             IEnumerable<Nommenclature> available,
+             AuditService auditService,
+             AuthService authService)
+
         {
             InitializeComponent();
 
             _service = service;
             _available = available;
+            _auditService = auditService;
+            _authService = authService;
 
             // On appelle une méthode async quand la fenêtre est chargée
             Loaded += AddBudgetLineWindow_Loaded;
+            _auditService = auditService;
+            _authService = authService;
         }
 
         private async void AddBudgetLineWindow_Loaded(object sender, RoutedEventArgs e)
@@ -45,7 +54,7 @@ namespace Collectivite.Views
             
 
             // Mise à jour du DataContext avec le bon ID
-            DataContext = new AddBudgetLineViewModel(_service, bp.Id, _available);
+            DataContext = new AddBudgetLineViewModel(_service, bp.Id, _available, _authService, _auditService);
         }
     }
 
