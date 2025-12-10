@@ -153,6 +153,11 @@ namespace Collectivite.Utils
             new Permission { Name = "Modifier un remaniement", Code = "Remaniement.Edit", Description = "Permet de modifier un remaniement budgétaire." },
             new Permission { Name = "Voir les remaniements", Code = "Remaniement.View", Description = "Permet de consulter les remaniements budgétaires." },
             new Permission { Name = "Supprimer un remaniement", Code = "Remaniement.Delete", Description = "Permet de supprimer un remaniement budgétaire." },
+            // ExpressionBesoin
+            new Permission { Name = "Créer une Expression de Besoin", Code = "ExpressionBesoin.Create", Description = "Permet de créer une Expression de Besoin." },
+            new Permission { Name = "Modifier une Expression de Besoin", Code = "ExpressionBesoin.Edit", Description = "Permet de modifier une Expression de Besoin." },
+            new Permission { Name = "Voir les Expression de Besoin", Code = "ExpressionBesoin.View", Description = "Permet de consulter les  Expressions de Besoin." },
+            new Permission { Name = "Supprimer une Expression de Besoin", Code = "ExpressionBesoin.Delete", Description = "Permet de supprimer une Expression de Besoin." },
 
             // Role
             new Permission { Name = "Créer un rôle", Code = "Role.Create", Description = "Permet de créer un rôle applicatif." },

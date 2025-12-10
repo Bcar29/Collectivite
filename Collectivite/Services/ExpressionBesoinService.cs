@@ -45,6 +45,35 @@ namespace Collectivite.Services
                 .ToListAsync();
         }
 
+        // Dans ExpressionBesoinService.cs
+        public async Task<string> GenerateNextNumeroAsync()
+        {
+            var currentYear = DateTime.Now.Year;
+            var prefix = $"EB-{currentYear}-";
+
+            // Récupérer toutes les expressions de l'année en cours
+            var expressionsThisYear = await _context.ExpressionBesoins
+                .Where(eb => eb.Numero.StartsWith(prefix))
+                .OrderByDescending(eb => eb.Numero)
+                .ToListAsync();
+
+            if (!expressionsThisYear.Any())
+            {
+                return $"{prefix}0001";
+            }
+
+            // Extraire le dernier numéro et incrémenter
+            var lastNumero = expressionsThisYear.First().Numero;
+            var lastSequence = lastNumero.Substring(lastNumero.LastIndexOf('-') + 1);
+
+            if (int.TryParse(lastSequence, out int sequence))
+            {
+                var nextSequence = sequence + 1;
+                return $"{prefix}{nextSequence:D4}";
+            }
+
+            return $"{prefix}0001";
+        }
         // Créer une nouvelle expression de besoin
         public async Task<(bool success, string message, ExpressionBesoin? expressionBesoin)> CreateExpressionBesoinAsync(
             ExpressionBesoin expressionBesoin,

@@ -24,7 +24,7 @@ namespace Collectivite.ViewModels
             _expressionBesoin = new ExpressionBesoin
             {
                 DateCreation = DateTime.Now,
-                Numero = $"EB-{DateTime.Now:yyyyMMdd}-001"
+                Numero = "" // Sera généré dans LoadDataAsync
             };
 
             // Commandes
@@ -37,7 +37,6 @@ namespace Collectivite.ViewModels
             // Charger les données
             LoadDataCommand.Execute(null);
         }
-
         #region Properties
 
         public ObservableCollection<Exercice> Exercices { get; } = new();
@@ -77,7 +76,6 @@ namespace Collectivite.ViewModels
         #endregion
 
         #region Methods
-
         private async System.Threading.Tasks.Task LoadDataAsync()
         {
             IsLoading = true;
@@ -135,6 +133,14 @@ namespace Collectivite.ViewModels
                             }
                         }
                     }
+                }
+                else
+                {
+                    // Mode création : générer le prochain numéro
+                    var expressionBesoinService = new ExpressionBesoinService();
+                    var nextNumero = await expressionBesoinService.GenerateNextNumeroAsync();
+                    ExpressionBesoin.Numero = nextNumero;
+                    OnPropertyChanged(nameof(ExpressionBesoin));
                 }
             }
             catch (Exception ex)

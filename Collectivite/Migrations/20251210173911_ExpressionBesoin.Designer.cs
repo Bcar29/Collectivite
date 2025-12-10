@@ -4,6 +4,7 @@ using Collectivite.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Collectivite.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251210173911_ExpressionBesoin")]
+    partial class ExpressionBesoin
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -70,8 +73,8 @@ namespace Collectivite.Migrations
 
                     b.Property<string>("Numero")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("varchar(20)");
+                        .HasMaxLength(10)
+                        .HasColumnType("varchar(10)");
 
                     b.HasKey("Id");
 
@@ -749,8 +752,8 @@ namespace Collectivite.Migrations
 
                     b.Property<string>("Numero")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("varchar(20)");
+                        .HasMaxLength(10)
+                        .HasColumnType("varchar(10)");
 
                     b.HasKey("Id");
 

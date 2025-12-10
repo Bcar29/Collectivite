@@ -12,7 +12,7 @@ namespace Collectivite.Models
         [Key]
         public int Id { get; set; }
         [Required]
-        [MaxLength(10)]
+        [MaxLength(20)]
         public string Numero { get; set; } = null!;
         public DateTime DateCreation { get; set; }
         public int ExerciceId { get; set; }
