@@ -104,7 +104,8 @@
                 <Button Style="{StaticResource MaterialDesignRaisedButton}"
                         Command="{Binding OpenAddEcritureCommand}"
                         Background="{DynamicResource PrimaryHueMidBrush}"
-                        Foreground="White">
+                        Foreground="White"
+                        Visibility="{Binding CanCreateEcritureComptable, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="Plus" VerticalAlignment="Center" Margin="0,0,5,0"/>
                         <TextBlock Text="Nouvelle Écriture"/>
@@ -293,7 +294,6 @@
                                         HeaderStyle="{StaticResource DataGridHeaderStyle}"
                                         CellStyle="{StaticResource DataGridCellCenterStyle}"/>
 
-                    <!-- Actions 
                     <DataGridTemplateColumn Header="Actions" Width="120" HeaderStyle="{StaticResource DataGridHeaderStyle}">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
@@ -302,7 +302,8 @@
                                             Command="{Binding DataContext.OpenEditEcritureCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                             CommandParameter="{Binding}"
                                             ToolTip="Modifier"
-                                            Margin="2">
+                                            Margin="2"
+                                            Visibility="{Binding DataContext.CanEditEcritureComptable, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource BooleanToVisibilityConverter}}">
                                         <materialDesign:PackIcon Kind="Pencil" Foreground="{DynamicResource PrimaryHueMidBrush}"/>
                                     </Button>
 
@@ -310,13 +311,14 @@
                                             Command="{Binding DataContext.DeleteEcritureCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                             CommandParameter="{Binding}"
                                             ToolTip="Supprimer"
-                                            Margin="2">
+                                            Margin="2"
+                                            Visibility="{Binding DataContext.CanDeleteEcritureComptable, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource BooleanToVisibilityConverter}}">
                                         <materialDesign:PackIcon Kind="Delete" Foreground="#D32F2F"/>
                                     </Button>
                                 </StackPanel>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>-->
+                    </DataGridTemplateColumn>
                 </DataGrid.Columns>
             </DataGrid>
         </materialDesign:Card>

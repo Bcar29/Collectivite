@@ -159,6 +159,12 @@ namespace Collectivite.ViewModels
 
         public bool IsEquilibre => TotalCredit == TotalDebit;
 
+        // Permissions
+        public bool CanViewEcritureComptable => SessionManager.HasPermission("EcritureComptable.View");
+        public bool CanCreateEcritureComptable => SessionManager.HasPermission("EcritureComptable.Create");
+        public bool CanEditEcritureComptable => SessionManager.HasPermission("EcritureComptable.Edit");
+        public bool CanDeleteEcritureComptable => SessionManager.HasPermission("EcritureComptable.Delete");
+
         #endregion
 
         #region Commands
@@ -204,6 +210,12 @@ namespace Collectivite.ViewModels
 
             try
             {
+                if (!CanViewEcritureComptable)
+                {
+                    IsLoading = false;
+                    MessageBox.Show("Accès refusé", "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
                 List<EcritureComptable> ecritures;
 
                 // Convertir DateTime en DateOnly pour le service
@@ -333,6 +345,11 @@ namespace Collectivite.ViewModels
         private void OpenAddEcriture()
         {
             System.Diagnostics.Debug.WriteLine("➕ Ouverture dialogue nouvelle écriture");
+            if (!CanCreateEcritureComptable)
+            {
+                MessageBox.Show("Accès refusé", "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
             IsEditMode = false;
             DialogEcriture = new EcritureComptable
             {
@@ -352,6 +369,11 @@ namespace Collectivite.ViewModels
             if (ecriture == null)
             {
                 System.Diagnostics.Debug.WriteLine("⚠️ OpenEditEcriture appelé avec null");
+                return;
+            }
+            if (!CanEditEcritureComptable)
+            {
+                MessageBox.Show("Accès refusé", "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -385,6 +407,18 @@ namespace Collectivite.ViewModels
         private async Task SaveEcritureAsync()
         {
             System.Diagnostics.Debug.WriteLine($"💾 Sauvegarde écriture (Mode: {(IsEditMode ? "Édition" : "Création")})");
+            // Permission checks
+            if (IsEditMode && !CanEditEcritureComptable)
+            {
+                MessageBox.Show("Accès refusé", "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            if (!IsEditMode && !CanCreateEcritureComptable)
+            {
+                MessageBox.Show("Accès refusé", "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             IsLoading = true;
 
             try
@@ -451,6 +485,12 @@ namespace Collectivite.ViewModels
             if (ecriture == null)
                 return;
 
+            if (!CanDeleteEcritureComptable)
+            {
+                MessageBox.Show("Accès refusé", "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             System.Diagnostics.Debug.WriteLine($"🗑️ Demande suppression écriture ID: {ecriture.Id}");
 
             var result = MessageBox.Show(
@@ -510,6 +550,11 @@ namespace Collectivite.ViewModels
             System.Diagnostics.Debug.WriteLine("⚖️ Vérification de l'équilibre");
             try
             {
+                if (!CanViewEcritureComptable)
+                {
+                    MessageBox.Show("Accès refusé", "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
                 DateOnly? dateDebut = DateDebutDateTime.HasValue
                     ? DateOnly.FromDateTime(DateDebutDateTime.Value)
                     : null;

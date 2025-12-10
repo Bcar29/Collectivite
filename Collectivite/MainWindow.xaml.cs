@@ -85,8 +85,16 @@ namespace Collectivite
 
         private void CommuneButton_Click(object sender, RoutedEventArgs e)
         {
+            if (!SessionManager.HasPermission("Commune.View"))
+            {
+                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section.",
+                               "Accès refusé",
+                               MessageBoxButton.OK,
+                               MessageBoxImage.Warning);
+                return;
+            }
+
             _viewModel.UpdatePageTitle("CONFIGURATION - COMMUNE");
-            // Utilisez le type CommunePage directement grâce à l'import
             NavigationService.Instance.NavigateTo(new Views.Pages.CommunePage());
             _viewModel.IsMenuOpen = false;
         }
@@ -100,6 +108,15 @@ namespace Collectivite
 
         private void NommenclatureButton_Click(object sender, RoutedEventArgs e)
         {
+            if (!SessionManager.HasPermission("Nommenclature.View"))
+            {
+                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section.",
+                               "Accès refusé",
+                               MessageBoxButton.OK,
+                               MessageBoxImage.Warning);
+                return;
+            }
+
             _viewModel.UpdatePageTitle("CONFIGURATION - NOMMENCLATURE");
             NavigationService.Instance.NavigateTo(new Views.Pages.NommenclaturePage());
             _viewModel.IsMenuOpen = false;
@@ -107,13 +124,34 @@ namespace Collectivite
         // COMPTE COMPTABLE CLICK
         private void CompteComptable_Click(object sender, RoutedEventArgs e)
         {
+
             _viewModel.UpdatePageTitle("CONFIGURATION - PLAN COMPTABLES");
+
+            if (!SessionManager.HasPermission("CompteComptable.View"))
+            {
+                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section.",
+                               "Accès refusé",
+                               MessageBoxButton.OK,
+                               MessageBoxImage.Warning);
+                return;
+            }
+
+
             NavigationService.Instance.NavigateTo(new Views.Pages.CompteComptablePage());
             _viewModel.IsMenuOpen = false;
         }
         // COMPTE CONTRAT CLICK
         private void Contrat_Click(object sender, RoutedEventArgs e)
         {
+            if (!SessionManager.HasPermission("Contrats.View"))
+            {
+                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section.",
+                               "Accès refusé",
+                               MessageBoxButton.OK,
+                               MessageBoxImage.Warning);
+                return;
+            }
+
             _viewModel.UpdatePageTitle("SAISIE - DES CONTRATS");
             NavigationService.Instance.NavigateTo(new Views.Pages.ContratPage());
             _viewModel.IsMenuOpen = false;
@@ -143,9 +181,18 @@ namespace Collectivite
         }
         private void CompteGestion_Click(object sender, RoutedEventArgs e)
         {
+            if (!SessionManager.HasPermission("GestionComptable.Access"))
+            {
+                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à la gestion comptable.",
+                               "Accès refusé",
+                               MessageBoxButton.OK,
+                               MessageBoxImage.Warning);
+                return;
+            }
+
             _viewModel.UpdatePageTitle("GESTION COMPTABLE - COMPTE DE GESTION");
 
-             NavigationService.Instance.NavigateTo(new Views.Pages.CompteGestionPage(_authService));
+            NavigationService.Instance.NavigateTo(new Views.Pages.CompteGestionPage(_authService));
             _viewModel.IsMenuOpen = false;
         }
 
@@ -154,6 +201,16 @@ namespace Collectivite
         private void BonCommande_Click(object sender, RoutedEventArgs e)
         {
             _viewModel.UpdatePageTitle("SAISIE DES PIECES - BON-COMMANDE");
+
+            if (!SessionManager.HasPermission("BonCommande.View"))
+            {
+                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section.",
+                               "Accès refusé",
+                               MessageBoxButton.OK,
+                               MessageBoxImage.Warning);
+                return;
+            }
+
             NavigationService.Instance.NavigateTo(new Views.Pages.BonCommandeListPage());
             _viewModel.IsMenuOpen = false;
         }
@@ -167,27 +224,70 @@ namespace Collectivite
 
         private void OrdreRecette_Click(object sender, RoutedEventArgs e)
         {
+
             _viewModel.UpdatePageTitle("SAISIE DES PIECES - ORDRE RECETTE");
+            if (!SessionManager.HasPermission("OrdreRecette.View"))
+            {
+                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section.",
+                               "Accès refusé",
+                               MessageBoxButton.OK,
+                               MessageBoxImage.Warning);
+                return;
+            }
+
             NavigationService.Instance.NavigateTo(new Views.Pages.OrdreRecettePage());
             _viewModel.IsMenuOpen = false;
         }
         private void FicheEngagement_Click(object sender, RoutedEventArgs e)
         {
             _viewModel.UpdatePageTitle("SAISIE DES PIECES - FICHE D'ENGAGEMENT");
+
+            if (!SessionManager.HasPermission("Engagement.View"))
+            {
+                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section.",
+                               "Accès refusé",
+                               MessageBoxButton.OK,
+                               MessageBoxImage.Warning);
+                return;
+            }
+
+
             NavigationService.Instance.NavigateTo(new Views.Pages.EngagementPage());
             _viewModel.IsMenuOpen = false;
         }
 
         private void Mandat_Click(object sender, RoutedEventArgs e)
         {
+
             _viewModel.UpdatePageTitle("SAISIE DES PIECES - FICHE DE MANDAT");
+
+            if (!SessionManager.HasPermission("Mandat.View"))
+            {
+                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section.",
+                               "Accès refusé",
+                               MessageBoxButton.OK,
+                               MessageBoxImage.Warning);
+                return;
+            }
+
             NavigationService.Instance.NavigateTo(new Views.Pages.MandatListPage());
             _viewModel.IsMenuOpen = false;
         }
 
         private void RemaniementButton_Click(object sender, RoutedEventArgs e)
         {
+
             _viewModel.UpdatePageTitle("GESTION BUDGETAIRE - BUDGET REMANIE");
+            if (!SessionManager.HasPermission("Remaniement.View"))
+            {
+                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section.",
+                               "Accès refusé",
+                               MessageBoxButton.OK,
+                               MessageBoxImage.Warning);
+                return;
+            }
+
+
             NavigationService.Instance.NavigateTo(new Views.Pages.RemaniementPage());
             _viewModel.IsMenuOpen = false;
         }
@@ -203,6 +303,15 @@ namespace Collectivite
 
         private void TiersButton_Click(object sender, RoutedEventArgs e)
         {
+            if (!SessionManager.HasPermission("Tiers.View"))
+            {
+                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section.",
+                               "Accès refusé",
+                               MessageBoxButton.OK,
+                               MessageBoxImage.Warning);
+                return;
+            }
+
             _viewModel.UpdatePageTitle("CONFIGURATION - TIERS");
             NavigationService.Instance.NavigateTo(new Views.Pages.TiersPage());
             _viewModel.IsMenuOpen = false;
@@ -210,13 +319,32 @@ namespace Collectivite
 
         private void FactureButton_Click(object sender, RoutedEventArgs e)
         {
+
             _viewModel.UpdatePageTitle("SAISIE DES PIECES - FACTURES ET DETAILS");
+            if (!SessionManager.HasPermission("Facture.View"))
+            {
+                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section.",
+                               "Accès refusé",
+                               MessageBoxButton.OK,
+                               MessageBoxImage.Warning);
+                return;
+            }
+
             NavigationService.Instance.NavigateTo(new Views.Pages.FacturePage());
             _viewModel.IsMenuOpen = false;
         }
 
         private void RecensementButton_Click(object sender, RoutedEventArgs e)
         {
+            if (!SessionManager.HasPermission("Recensement.View"))
+            {
+                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section.",
+                               "Accès refusé",
+                               MessageBoxButton.OK,
+                               MessageBoxImage.Warning);
+                return;
+            }
+
             _viewModel.UpdatePageTitle("CONFIGURATION - RECENSEMENTS");
             NavigationService.Instance.NavigateTo(new Views.Pages.RecensementPage());
             _viewModel.IsMenuOpen = false;
@@ -351,6 +479,15 @@ namespace Collectivite
         // Navigation vers la page Livre Journal
         private void LivreJournalButton_Click(object sender, RoutedEventArgs e)
         {
+            if (!SessionManager.HasPermission("GestionComptable.Access"))
+            {
+                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à la gestion comptable.",
+                               "Accès refusé",
+                               MessageBoxButton.OK,
+                               MessageBoxImage.Warning);
+                return;
+            }
+
             _viewModel.UpdatePageTitle("COMPTABILITÉ - LIVRE JOURNAL");
             NavigationService.Instance.NavigateTo(new Views.Pages.LivreJournalPage());
             _viewModel.IsMenuOpen = false;
@@ -359,6 +496,15 @@ namespace Collectivite
         // Navigation vers la page Grand Livre 
         private void GrandLivreButton_Click(object sender, RoutedEventArgs e)
         {
+            if (!SessionManager.HasPermission("GestionComptable.Access"))
+            {
+                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à la gestion comptable.",
+                               "Accès refusé",
+                               MessageBoxButton.OK,
+                               MessageBoxImage.Warning);
+                return;
+            }
+
             _viewModel.UpdatePageTitle("COMPTABILITÉ - GRAND LIVRE");
             MainContentFrame.Navigate(new Views.GrandLivrePage());
             _viewModel.IsMenuOpen = false;
