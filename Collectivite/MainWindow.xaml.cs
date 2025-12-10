@@ -91,6 +91,7 @@ namespace Collectivite
                                "Accès refusé",
                                MessageBoxButton.OK,
                                MessageBoxImage.Warning);
+                _viewModel.IsMenuOpen = false;
                 return;
             }
 
