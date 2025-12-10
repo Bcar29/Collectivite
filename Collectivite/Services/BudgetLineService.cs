@@ -321,6 +321,7 @@ namespace Collectivite.Services
                 if (newLine.Nommenclature.Nature == NatureType.Recette)
                 {
                     newLine.BudgetPrimitif.MontantRecette += newLine.MontantPrevu;
+                    newLine.BudgetPrimitif.MontantTotal = newLine.BudgetPrimitif.MontantRecette;
                 }
                 else if (newLine.Nommenclature.Nature == NatureType.Depense)
                 {

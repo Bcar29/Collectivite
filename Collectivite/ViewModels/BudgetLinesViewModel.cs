@@ -349,7 +349,7 @@ namespace Collectivite.ViewModels
 
             // Commandes principales
             AddCommand = new RelayCommand(async _ => await OpenAddDialogAsync(), _ => CanModifyBudget);
-            OpenEditDialogCommand = new RelayCommand<BudgetLine>(async line => await OpenEditDialogAsync(line));
+            OpenEditDialogCommand = new RelayCommand<BudgetLine>( line =>  OpenEditDialogAsync(line));
             DeleteCommand = new RelayCommand<BudgetLine>(async line => await DeleteLineAsync(line));
             RefreshCommand = new RelayCommand(async _ => await LoadForSelectedTabAsync());
 
@@ -691,7 +691,7 @@ namespace Collectivite.ViewModels
         // DIALOG - MODIFICATION
         // ═══════════════════════════════════════════════════════════
 
-        private async Task OpenEditDialogAsync(BudgetLine? line)
+        private void  OpenEditDialogAsync(BudgetLine? line)
         {
             if (line == null) return;
 

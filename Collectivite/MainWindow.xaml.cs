@@ -107,7 +107,7 @@ namespace Collectivite
         // COMPTE COMPTABLE CLICK
         private void CompteComptable_Click(object sender, RoutedEventArgs e)
         {
-            _viewModel.UpdatePageTitle("CONFIGURATION - COMPTES COMPTABLES");
+            _viewModel.UpdatePageTitle("CONFIGURATION - PLAN COMPTABLES");
             NavigationService.Instance.NavigateTo(new Views.Pages.CompteComptablePage());
             _viewModel.IsMenuOpen = false;
         }
@@ -122,7 +122,7 @@ namespace Collectivite
         
         private void Sythese_Click(object sender, RoutedEventArgs e)
         {
-            _viewModel.UpdatePageTitle("CONFIGURATION - SYNTHESE");
+            _viewModel.UpdatePageTitle("GESTION BUDGETAIRE - SYNTHESE");
              NavigationService.Instance.NavigateTo(new Views.Pages.BudgetPrimitifPage());
             _viewModel.IsMenuOpen = false;
         }
@@ -153,7 +153,7 @@ namespace Collectivite
 
         private void BonCommande_Click(object sender, RoutedEventArgs e)
         {
-            _viewModel.UpdatePageTitle("GESTION BUDGÉTAIRE - BON-COMMANDE");
+            _viewModel.UpdatePageTitle("SAISIE DES PIECES - BON-COMMANDE");
             NavigationService.Instance.NavigateTo(new Views.Pages.BonCommandeListPage());
             _viewModel.IsMenuOpen = false;
         }
@@ -161,27 +161,27 @@ namespace Collectivite
 
         private void OrdreRecette_Click(object sender, RoutedEventArgs e)
         {
-            _viewModel.UpdatePageTitle("GESTION BUDGÉTAIRE - ORDRE RECETTE");
+            _viewModel.UpdatePageTitle("SAISIE DES PIECES - ORDRE RECETTE");
             NavigationService.Instance.NavigateTo(new Views.Pages.OrdreRecettePage());
             _viewModel.IsMenuOpen = false;
         }
         private void FicheEngagement_Click(object sender, RoutedEventArgs e)
         {
-            _viewModel.UpdatePageTitle("GESTION BUDGÉTAIRE - FICHE D'ENGAGEMENT");
+            _viewModel.UpdatePageTitle("SAISIE DES PIECES - FICHE D'ENGAGEMENT");
             NavigationService.Instance.NavigateTo(new Views.Pages.EngagementPage());
             _viewModel.IsMenuOpen = false;
         }
 
         private void Mandat_Click(object sender, RoutedEventArgs e)
         {
-            _viewModel.UpdatePageTitle("GESTION BUDGÉTAIRE - FICHE DE MANDAT");
+            _viewModel.UpdatePageTitle("SAISIE DES PIECES - FICHE DE MANDAT");
             NavigationService.Instance.NavigateTo(new Views.Pages.MandatListPage());
             _viewModel.IsMenuOpen = false;
         }
 
         private void RemaniementButton_Click(object sender, RoutedEventArgs e)
         {
-            _viewModel.UpdatePageTitle("CONFIGURATION - BUDGET REMANIE");
+            _viewModel.UpdatePageTitle("GESTION BUDGETAIRE - BUDGET REMANIE");
             NavigationService.Instance.NavigateTo(new Views.Pages.RemaniementPage());
             _viewModel.IsMenuOpen = false;
         }
@@ -204,7 +204,7 @@ namespace Collectivite
 
         private void FactureButton_Click(object sender, RoutedEventArgs e)
         {
-            _viewModel.UpdatePageTitle("CONFIGURATION - FACTURES ET DETAILS");
+            _viewModel.UpdatePageTitle("SAISIE DES PIECES - FACTURES ET DETAILS");
             NavigationService.Instance.NavigateTo(new Views.Pages.FacturePage());
             _viewModel.IsMenuOpen = false;
         }
@@ -307,7 +307,7 @@ namespace Collectivite
             }
 
             // Continuer avec la page des lignes de budget
-            _viewModel.UpdatePageTitle("GESTION BUDGÉTAIRE - BUDGET LINE");
+            _viewModel.UpdatePageTitle("GESTION BUDGÉTAIRE - SAISIE PREVISIONS");
 
             NavigationService.Instance.NavigateTo(new Views.Pages.BudgetLinesPage(_authService));
             _viewModel.IsMenuOpen = false;
