@@ -78,6 +78,8 @@ namespace Collectivite.Models
             DateEngagement = DateTime.Now;
         }
 
-        public ICollection<BonCommande>? BonCommandes { get; set; } = new List<BonCommande>();
+        // Nouvelle relation : N engagements → 1 bon de commande
+        public int? BonCommandeId { get; set; }
+        public BonCommande? BonCommande { get; set; }
     }
 }

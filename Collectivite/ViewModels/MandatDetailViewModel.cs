@@ -246,15 +246,7 @@ namespace Collectivite.ViewModels
 
         private void RetourListe()
         {
-            var mainWindow = Application.Current.MainWindow;
-            if (mainWindow != null)
-            {
-                var frame = mainWindow.FindName("MainContentFrame") as System.Windows.Controls.Frame;
-                if (frame != null)
-                {
-                    frame.GoBack();
-                }
-            }
+            NavigationService.Instance.GoBack();  
         }
 
         #endregion

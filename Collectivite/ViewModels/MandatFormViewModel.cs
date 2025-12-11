@@ -1,10 +1,10 @@
 ﻿using Collectivite.Models;
 using Collectivite.Services;
 using Collectivite.Utils;
-using DocumentFormat.OpenXml.Bibliography;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 
@@ -16,44 +16,8 @@ namespace Collectivite.ViewModels
         private bool _isEditMode;
         private int? _mandatId;
         private Mandat _mandat;
-
-
         private BudgetLine? _selectedBudgetLine;
-        public BudgetLine? SelectedBudgetLine
-        {
-            get => _selectedBudgetLine;
-            set
-            {
-                _selectedBudgetLine = value;
-                OnPropertyChanged(nameof(SelectedBudgetLine));
-                // Vous pouvez aussi exposer des propriétés spécifiques
-                OnPropertyChanged(nameof(MontantDisponible));
-                OnPropertyChanged(nameof(NomenclatureCode));
-            }
-        }
 
-        // Propriétés calculées pour affichage
-        public decimal MontantDisponible => SelectedBudgetLine?.MontantDefinitif ?? 0;
-        public string NomenclatureCode => SelectedBudgetLine?.Nommenclature ?.code() ?? "";
-
-        
-
-        // Méthode pour charger le BudgetLine quand l'engagement change
-        private async Task OnEngagementChanged()
-        {
-             MandatService mandatService = new MandatService();
-            
-            if (Mandat.EngagementId > 0)
-            {
-                var budgetLine = await mandatService.GetBudgetLineByEngagementIdAsync(Mandat.EngagementId);
-                SelectedBudgetLine = budgetLine;
-                Console.WriteLine(budgetLine);
-            }
-            else
-            {
-                SelectedBudgetLine = null;
-            }
-        }
         public MandatFormViewModel(int? mandatId = null)
         {
             _mandatId = mandatId;
@@ -66,7 +30,8 @@ namespace Collectivite.ViewModels
                 MontantBrut = 0,
                 Rts = 0,
                 AutresPrecomptes = 0,
-                MontantNet = 0
+                MontantNet = 0,
+                NumeroMandat = "" // Sera généré automatiquement
             };
 
             // Commandes
@@ -99,13 +64,40 @@ namespace Collectivite.ViewModels
         public Mandat Mandat
         {
             get => _mandat;
-            set => SetProperty(ref _mandat, value);
+            set
+            {
+                if (SetProperty(ref _mandat, value))
+                {
+                    // Déclencher le chargement du BudgetLine quand l'EngagementId change
+                    if (_mandat != null && _mandat.EngagementId > 0)
+                    {
+                        _ = OnEngagementChanged();
+                    }
+                }
+            }
+        }
+
+        public BudgetLine? SelectedBudgetLine
+        {
+            get => _selectedBudgetLine;
+            set
+            {
+                if (SetProperty(ref _selectedBudgetLine, value))
+                {
+                    OnPropertyChanged(nameof(MontantDisponible));
+                    OnPropertyChanged(nameof(NomenclatureCode));
+                }
+            }
         }
 
         public string PageTitle => IsEditMode ? "Modifier le mandat" : "Nouveau mandat";
 
         // Liste des mois
         public Array MoisList => Enum.GetValues(typeof(TypeMois));
+
+        // Propriétés calculées pour affichage
+        public decimal MontantDisponible => SelectedBudgetLine?.MontantDefinitif ?? 0;
+        public string NomenclatureCode => SelectedBudgetLine?.Nommenclature?.CodeNomenclature ?? "";
 
         #endregion
 
@@ -121,7 +113,7 @@ namespace Collectivite.ViewModels
 
         #region Methods
 
-        private async System.Threading.Tasks.Task LoadDataAsync()
+        private async Task LoadDataAsync()
         {
             IsLoading = true;
 
@@ -129,7 +121,7 @@ namespace Collectivite.ViewModels
             {
                 // Charger les engagements
                 var engagementService = new EngagementService();
-                var engagements = await engagementService.GetAllEngagementsAsync();
+                var engagements = await engagementService.GetEngagementsForMandatAsync();
 
                 Engagements.Clear();
                 foreach (var e in engagements)
@@ -159,9 +151,11 @@ namespace Collectivite.ViewModels
                             MontantLettre = existingMandat.MontantLettre,
                             DateEmission = existingMandat.DateEmission,
                             Objet = existingMandat.Objet,
-                            Motif = existingMandat.Motif,
                             DatePaiement = existingMandat.DatePaiement
                         };
+
+                        // Charger le BudgetLine pour l'engagement
+                        await OnEngagementChanged();
                     }
                     else
                     {
@@ -169,6 +163,14 @@ namespace Collectivite.ViewModels
                             MessageBoxButton.OK, MessageBoxImage.Error);
                         Cancel();
                     }
+                }
+                else
+                {
+                    // Mode création : générer le numéro automatiquement
+                    var mandatService = new MandatService();
+                    var nextNumero = await mandatService.GenerateNextNumeroAsync();
+                    Mandat.NumeroMandat = nextNumero;
+                    OnPropertyChanged(nameof(Mandat));
                 }
             }
             catch (Exception ex)
@@ -179,6 +181,24 @@ namespace Collectivite.ViewModels
             finally
             {
                 IsLoading = false;
+            }
+        }
+
+        /// <summary>
+        /// Méthode pour charger le BudgetLine quand l'engagement change
+        /// </summary>
+        private async Task OnEngagementChanged()
+        {
+            var mandatService = new MandatService();
+
+            if (Mandat.EngagementId > 0)
+            {
+                var budgetLine = await mandatService.GetBudgetLineByEngagementIdAsync(Mandat.EngagementId);
+                SelectedBudgetLine = budgetLine;
+            }
+            else
+            {
+                SelectedBudgetLine = null;
             }
         }
 
@@ -198,7 +218,7 @@ namespace Collectivite.ViewModels
                    !string.IsNullOrWhiteSpace(Mandat.Objet);
         }
 
-        private async System.Threading.Tasks.Task SaveAsync()
+        private async Task SaveAsync()
         {
             IsLoading = true;
 
@@ -217,28 +237,27 @@ namespace Collectivite.ViewModels
 
                     if (success)
                     {
-                        ReturnToList();
+                        Cancel();
                     }
                 }
                 else
                 {
                     var (success, message, mandat) = await mandatService.CreateMandatAsync(Mandat);
 
-                    //  Si Mandat est créé avec succès, générer l'écriture comptable
+                    // Si Mandat est créé avec succès, générer l'écriture comptable
                     if (success && mandat != null)
                     {
                         // Récupérer la ligne budgétaire de l'engagement correspondant avec sa nomenclature
-                        var currenEngagement = Engagements
+                        var currentEngagement = Engagements
                             .FirstOrDefault(e => e.Id == Mandat.EngagementId);
 
-                        if (currenEngagement != null)
+                        if (currentEngagement != null)
                         {
-                            var budgetLine = currenEngagement.BudgetLine;
+                            var budgetLine = currentEngagement.BudgetLine;
 
                             if (budgetLine?.Nommenclature != null)
                             {
-                                MessageBox.Show($"{budgetLine.MontantPrevu} {mandat.MontantNet}");
-                                //  APPELER LA FONCTION UTILITAIRE
+                                // APPELER LA FONCTION UTILITAIRE
                                 var (ecritureSuccess, ecritureMessage, ecriture) =
                                     await EcritureComptableHelper.GenererEcritureComptableAsync(
                                         budgetLine,  // La ligne budgétaire complète
@@ -267,7 +286,7 @@ namespace Collectivite.ViewModels
 
                     if (success)
                     {
-                        ReturnToList();
+                        Cancel();
                     }
                 }
             }
@@ -284,42 +303,18 @@ namespace Collectivite.ViewModels
 
         private void Cancel()
         {
-            var result = MessageBox.Show(
-                "Voulez-vous vraiment annuler ? Les modifications non enregistrées seront perdues.",
-                "Confirmation",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
-
-            if (result == MessageBoxResult.Yes)
-            {
-                ReturnToList();
-            }
+            NavigationService.Instance.GoBack();
         }
 
-        private void ReturnToList()
+        private void ConvertMontantToLettres()
         {
-            var mainWindow = Application.Current.MainWindow;
-            if (mainWindow != null)
-            {
-                var frame = mainWindow.FindName("MainContentFrame") as System.Windows.Controls.Frame;
-                if (frame != null)
-                {
-                    frame.GoBack();
-                }
-            }
-        }
-
-         private void ConvertMontantToLettres()
-         {
             if (Mandat.MontantNet > 0)
             {
                 Mandat.MontantLettre = Convertir.ConvertirNombreEnLettres((long)Mandat.MontantNet);
                 OnPropertyChanged(nameof(Mandat));
             }
-         }
+        }
 
         #endregion
-
-
     }
 }

@@ -49,28 +49,26 @@
                                FontWeight="SemiBold"
                                Margin="10,0,0,0"
                                VerticalAlignment="Center"/>
-                    
+
                     <Button Style="{StaticResource MaterialDesignFlatButton}"
-                         Command="{Binding GoFowardCommande}"
+                         Command="{Binding GoForwardCommand}"
                          Height="36">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="ArrowForward" Margin="0,0,5,0" Height="20" Width="30"/>
-                            
                         </StackPanel>
                     </Button>
-
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
-                        <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                    <Button Style="{StaticResource MaterialDesignRaisedButton}"
                             Command="{Binding OpenAddPageCommand}"
                             Height="36"
                             Margin="0,0,10,0"
                             Visibility="{Binding CanCreateBonCommande, Converter={StaticResource BoolToVis}}">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Plus" Margin="0,0,5,0"/>
-                                <TextBlock Text="Nouveau Bon"/>
-                            </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Plus" Margin="0,0,5,0"/>
+                            <TextBlock Text="Nouveau Bon"/>
+                        </StackPanel>
                     </Button>
                     <Button Style="{StaticResource MaterialDesignOutlinedButton}"
                             Command="{Binding LoadDataCommand}"
@@ -105,16 +103,16 @@
                                           Binding="{Binding DateCreation, StringFormat='dd/MM/yyyy'}" 
                                           Width="120"/>
 
-                        <!-- Engagement -->
-                        <DataGridTextColumn Header="Engagement" 
-                                          Binding="{Binding Engagement.Objet}" 
-                                          Width="*" 
-                                          MinWidth="200"/>
+                        <!-- Expression de Besoin -->
+                        <DataGridTextColumn Header="Expression de Besoin" 
+                                          Binding="{Binding ExpressionBesoin.Numero}" 
+                                          Width="180"
+                                          FontWeight="SemiBold"/>
 
-                        <!-- Tiers -->
-                        <DataGridTextColumn Header="Tiers" 
-                                          Binding="{Binding Engagement.Tiers.Nom}" 
-                                          Width="200"/>
+                        <!-- Exercice -->
+                        <DataGridTextColumn Header="Exercice" 
+                                          Binding="{Binding ExpressionBesoin.Exercice.Annee}" 
+                                          Width="100"/>
 
                         <!-- Nombre de détails -->
                         <DataGridTemplateColumn Header="Nb Lignes" Width="100">

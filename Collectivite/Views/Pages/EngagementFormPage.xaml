@@ -75,7 +75,7 @@
                 </Grid>
 
                 <!-- Formulaire -->
-                <materialDesign:Card Padding="30" Height="760">
+                <materialDesign:Card Padding="30" Height="778">
                     <Grid Margin="0,0,0,-34">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
@@ -99,6 +99,8 @@
                             <RowDefinition Height="15"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="15"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="20"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="20"/>
                             <RowDefinition Height="Auto"/>
@@ -147,30 +149,47 @@
                                 SelectedValue="{Binding Engagement.TiersId}"
                                 SelectedValuePath="Id"
                                 DisplayMemberPath="Nom"/>
+                        <!-- Facture -->
+                        <ComboBox Grid.Row="6" Grid.Column="0"
+                            materialDesign:HintAssist.Hint="Facture (optionnel)"
+                            Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                            ItemsSource="{Binding Factures}"
+                            SelectedValue="{Binding Engagement.FactureId}"
+                            SelectedValuePath="Id"
+                            DisplayMemberPath="NumeroFacture"/>
 
-                        <!-- Ligne budgétaire -->
-                        <ComboBox Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="3"
-                                materialDesign:HintAssist.Hint="Ligne budgétaire *"
-                                Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                                ItemsSource="{Binding BudgetLines}"
-                                SelectedItem="{Binding SelectedBudgetLine}"
-                                SelectedValue="{Binding Engagement.BudgetLineId}"
-                                SelectedValuePath="Id"
-                                DisplayMemberPath="Nommenclature.Intitule"/>
+                        <!-- Bon de Commande -->
+                        <ComboBox Grid.Row="6" Grid.Column="2"
+                            materialDesign:HintAssist.Hint="Bon de Commande (optionnel)"
+                            Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                            ItemsSource="{Binding BonCommandes}"
+                            SelectedValue="{Binding Engagement.BonCommandeId}"
+                            SelectedValuePath="Id"
+                            DisplayMemberPath="Numero"/>
 
-                        <!-- Objet -->
-                        <TextBox Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="3"
-                               materialDesign:HintAssist.Hint="Objet de l'engagement *"
-                               Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                               Text="{Binding Engagement.Objet, UpdateSourceTrigger=PropertyChanged}"
-                               AcceptsReturn="True"
-                               TextWrapping="Wrap"
-                               MinLines="3"
-                               MaxLines="5"
-                               VerticalScrollBarVisibility="Auto"/>
+                        <!-- Ligne budgétaire (déplacer à la ligne 8) -->
+                        <ComboBox Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="3"
+                            materialDesign:HintAssist.Hint="Ligne budgétaire *"
+                            Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                            ItemsSource="{Binding BudgetLines}"
+                            SelectedItem="{Binding SelectedBudgetLine}"
+                            SelectedValue="{Binding Engagement.BudgetLineId}"
+                            SelectedValuePath="Id"
+                            DisplayMemberPath="Nommenclature.Intitule"/>
+
+                        <!-- Objet (déplacer à la ligne 10) -->
+                        <TextBox Grid.Row="10" Grid.Column="0" Grid.ColumnSpan="3"
+                           materialDesign:HintAssist.Hint="Objet de l'engagement *"
+                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                           Text="{Binding Engagement.Objet, UpdateSourceTrigger=PropertyChanged}"
+                           AcceptsReturn="True"
+                           TextWrapping="Wrap"
+                           MinLines="3"
+                           MaxLines="5"
+                           VerticalScrollBarVisibility="Auto"/>
 
                         <!-- Section : Montants -->
-                        <TextBlock Grid.Row="10" Grid.Column="0" Grid.ColumnSpan="3"
+                        <TextBlock Grid.Row="12" Grid.Column="0" Grid.ColumnSpan="3"
                                  Text="💰 Montants"
                                  FontSize="16"
                                  FontWeight="SemiBold"
@@ -178,26 +197,26 @@
                                  Margin="0,0,0,10"/>
 
                         <!-- Crédits budgétaires -->
-                        <TextBox Grid.Row="12" Grid.Column="0"
+                        <TextBox Grid.Row="14" Grid.Column="0"
                                materialDesign:HintAssist.Hint="Crédits budgétaires (GNF) *"
                                Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                
                                Text="{Binding Engagement.CreditsBudgetaires, UpdateSourceTrigger=PropertyChanged, StringFormat=N0}"/>
 
                         <!-- Engagements antérieurs -->
-                        <TextBox Grid.Row="12" Grid.Column="2"
+                        <TextBox Grid.Row="14" Grid.Column="2"
                                materialDesign:HintAssist.Hint="Engagements antérieurs (GNF)"
                                Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                Text="{Binding Engagement.EngagementsAnterieurs, UpdateSourceTrigger=PropertyChanged, StringFormat=N0}"/>
 
                         <!-- Montant de l'engagement -->
-                        <TextBox Grid.Row="14" Grid.Column="0"
+                        <TextBox Grid.Row="16" Grid.Column="0"
                                materialDesign:HintAssist.Hint="Montant de l'engagement (GNF) *"
                                Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                Text="{Binding Engagement.MontantEngagement, UpdateSourceTrigger=PropertyChanged, StringFormat=N0}"/>
 
                         <!-- Disponible budgétaire (calculé) -->
-                        <Border Grid.Row="14" Grid.Column="2"
+                        <Border Grid.Row="16" Grid.Column="2"
                               Background="#E3F2FD"
                               CornerRadius="4"
                               Padding="15">
@@ -214,7 +233,7 @@
                             </StackPanel>
                         </Border>
 
-                        <Grid Grid.Row="16" Grid.Column="0" Grid.ColumnSpan="3">
+                        <Grid Grid.Row="18" Grid.Column="0" Grid.ColumnSpan="3">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
@@ -235,7 +254,7 @@
                                  HorizontalAlignment="Stretch"
                                  RenderTransformOrigin="0.5,0.5" />
 
-                                                    <Button 
+                            <Button 
                                 Grid.Column="1"
                                 Style="{StaticResource MaterialDesignRaisedButton}"
                                 Command="{Binding ConvertMontantToLettresCommand}"
@@ -251,11 +270,8 @@
                             </Button>
                         </Grid>
 
-
-
-
                         <!-- Section : Fichier joint -->
-                        <TextBlock Grid.Row="18" Grid.Column="0" Grid.ColumnSpan="3"
+                        <TextBlock Grid.Row="20" Grid.Column="1" Grid.ColumnSpan="3"
                                  Text="📎 Fichier joint (optionnel)"
                                  FontSize="16"
                                  FontWeight="SemiBold"
@@ -283,7 +299,7 @@
                                      Foreground="#666">
                                 <TextBlock.Style>
                                     <Style TargetType="TextBlock">
-                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Setter Property="Visibility" Value="Visible"/>
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding FichierName}" Value="">
                                                 <Setter Property="Visibility" Value="Collapsed"/>
@@ -294,6 +310,7 @@
                                         </Style.Triggers>
                                     </Style>
                                 </TextBlock.Style>
+
                             </TextBlock>
                         </StackPanel>
 

@@ -557,7 +557,7 @@ namespace Collectivite.Services
         public decimal TotalGeneralDepenseReel(List<BudgetLine> lines)
         {
             return TotalDepenseReelFonctionnement(lines)
-                 - TotalDepenseInvestissement(lines);
+                 + TotalDepenseInvestissement(lines);
         }
 
 

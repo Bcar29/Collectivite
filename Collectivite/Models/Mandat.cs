@@ -74,10 +74,6 @@ namespace Collectivite.Models
         [MaxLength(255, ErrorMessage = "L'objet ne doit pas dépasser 255 caractères")]
         public string Objet { get; set; } = null!;
 
-        [Required(ErrorMessage = "donner l'objet de la depense")]
-        [Column(TypeName = "text")]
-        public string? Motif { get; set; }
-
         // 🔹 Fichier joint (facultatif)
         public byte[]? FichierJoin { get; set; }
         public sbyte? FichierName { get; set; }

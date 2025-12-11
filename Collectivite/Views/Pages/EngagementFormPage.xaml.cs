@@ -19,7 +19,7 @@ namespace Collectivite.Views.Pages
             InitializeComponent();
 
             _service = new BudgetLineService();
-            _viewModel = new EngagementFormViewModel();
+            _viewModel = new EngagementFormViewModel(engagementId);
             // On attend que la Page soit entièrement chargée
            DataContext = _viewModel;
         }

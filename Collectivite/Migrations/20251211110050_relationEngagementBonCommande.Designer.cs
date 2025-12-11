@@ -4,6 +4,7 @@ using Collectivite.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Collectivite.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251211110050_relationEngagementBonCommande")]
+    partial class relationEngagementBonCommande
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -185,6 +188,7 @@ namespace Collectivite.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("Prefecture")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Region")
@@ -876,6 +880,10 @@ namespace Collectivite.Migrations
                     b.Property<decimal>("MontantNet")
                         .HasColumnType("decimal(65,30)");
 
+                    b.Property<string>("Motif")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("NumeroMandat")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -888,9 +896,6 @@ namespace Collectivite.Migrations
 
                     b.Property<decimal>("Rts")
                         .HasColumnType("decimal(65,30)");
-
-                    b.Property<int>("status")
-                        .HasColumnType("int");
 
                     b.HasKey("Id");
 

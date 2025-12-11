@@ -15,16 +15,19 @@ namespace Collectivite.ViewModels
         private ExpressionBesoin _expressionBesoin;
         private bool _isEditMode;
         private int? _expressionBesoinId;
+        private readonly ExerciceService _exerciceService;
 
         public ExpressionBesoinFormViewModel(int? expressionBesoinId = null)
         {
             _expressionBesoinId = expressionBesoinId;
             _isEditMode = expressionBesoinId.HasValue;
+            _exerciceService = ExerciceService.Instance;
 
             _expressionBesoin = new ExpressionBesoin
             {
                 DateCreation = DateTime.Now,
-                Numero = "" // Sera généré dans LoadDataAsync
+                Numero = "" ,// Sera généré dans LoadDataAsync
+                ExerciceId = _exerciceService.CurrentExercice?.Id ?? 0,
             };
 
             // Commandes
