@@ -237,6 +237,7 @@ namespace Collectivite.ViewModels
 
                             if (budgetLine?.Nommenclature != null)
                             {
+                                MessageBox.Show($"{budgetLine.MontantPrevu} {mandat.MontantNet}");
                                 //  APPELER LA FONCTION UTILITAIRE
                                 var (ecritureSuccess, ecritureMessage, ecriture) =
                                     await EcritureComptableHelper.GenererEcritureComptableAsync(

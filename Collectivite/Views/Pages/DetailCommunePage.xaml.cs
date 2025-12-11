@@ -9,6 +9,7 @@ namespace Collectivite.Views.Pages
     /// </summary>
     public partial class DetailCommunePage : Page
     {
+
         /// <summary>
         /// Constructeur par défaut (affiche tous les détails)
         /// </summary>

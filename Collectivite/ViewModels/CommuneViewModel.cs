@@ -6,6 +6,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
+using System.Collections.Generic;
 
 namespace Collectivite.ViewModels
 {
@@ -19,6 +20,9 @@ namespace Collectivite.ViewModels
         private bool _isEditMode;
         private string _accessDeniedMessage = "Vous n'avez pas la permission pour cette action.";
 
+        // ✅ NOUVEAU : Pour gérer le TypeCommune
+        private TypeCommuneItem? _selectedTypeCommuneItem;
+
         public CommuneViewModel(CommuneService commune)
         {
             _communeService = commune;
@@ -28,6 +32,16 @@ namespace Collectivite.ViewModels
                 DateCreation = DateOnly.FromDateTime(DateTime.Now)
             };
 
+            // ✅ NOUVEAU : Initialiser la liste des types de commune
+            TypesCommuneDisponibles = new List<TypeCommuneItem>
+            {
+                new TypeCommuneItem(Commune.TypeCommune.URBAINE, "Commune Urbaine"),
+                new TypeCommuneItem(Commune.TypeCommune.RURALE, "Commune Rurale")
+            };
+
+            // ✅ NOUVEAU : Sélectionner URBAINE par défaut
+            _selectedTypeCommuneItem = TypesCommuneDisponibles.First();
+
             //commandes
             LoadCommuneCommand = new RelayCommand(async _ => await LoadCommuneAsync());
             OppenAddCommuneCommand = new RelayCommand(_ => OpenAddCommune());
@@ -35,7 +49,6 @@ namespace Collectivite.ViewModels
             SaveCommuneCommand = new RelayCommand(async _ => await SaveCommuneAsync(), _ => CanSaveCommune());
             CancelCommuneCommand = new RelayCommand(_ => CancelCommune());
             DeleteCommuneCommand = new RelayCommand<Commune>(async commune => await DeleteCommuneAsync(commune));
-            
 
             // ✅ NOUVELLE COMMANDE : Ouvrir les détails
             OpenDetailCommuneCommand = new RelayCommand<Commune>(commune => OpenDetailCommune(commune));
@@ -92,6 +105,35 @@ namespace Collectivite.ViewModels
             {
                 DialogCommune.DateCreation = DateOnly.FromDateTime(value);
                 OnPropertyChanged();
+            }
+        }
+
+        // ══════════════════════════════════════════════════════════
+        // ✅ NOUVELLES PROPRIÉTÉS : GESTION DU TYPE DE COMMUNE
+        // ══════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Liste de tous les types de commune disponibles avec libellés
+        /// </summary>
+        public List<TypeCommuneItem> TypesCommuneDisponibles { get; }
+
+        /// <summary>
+        /// Type de commune sélectionné dans le ComboBox
+        /// </summary>
+        public TypeCommuneItem? SelectedTypeCommuneItem
+        {
+            get => _selectedTypeCommuneItem;
+            set
+            {
+                if (SetProperty(ref _selectedTypeCommuneItem, value))
+                {
+                    // Mettre à jour automatiquement le DialogCommune
+                    if (DialogCommune != null && value != null)
+                    {
+                        DialogCommune.CommuneType = value.Valeur;
+                        OnPropertyChanged(nameof(DialogCommune));
+                    }
+                }
             }
         }
 
@@ -168,8 +210,13 @@ namespace Collectivite.ViewModels
                 DateCreation = DateOnly.FromDateTime(DateTime.Now),
                 DistanceCapitale = 0,
                 DistanceChefLieuProvince = 0,
-                DistanceChefLieuRegion = 0
+                DistanceChefLieuRegion = 0,
+                CommuneType = Commune.TypeCommune.URBAINE // ✅ Valeur par défaut
             };
+
+            // ✅ NOUVEAU : Sélectionner URBAINE par défaut dans le ComboBox
+            SelectedTypeCommuneItem = TypesCommuneDisponibles
+                .FirstOrDefault(t => t.Valeur == Commune.TypeCommune.URBAINE);
 
             OnPropertyChanged(nameof(DialogCommuneDateCreation));
 
@@ -196,18 +243,23 @@ namespace Collectivite.ViewModels
             {
                 Id = commune.Id,
                 Nom = commune.Nom,
+                Region = commune.Region,
+                Prefecture = commune.Prefecture,
                 DateCreation = commune.DateCreation,
                 DistanceCapitale = commune.DistanceCapitale,
                 DistanceChefLieuProvince = commune.DistanceChefLieuProvince,
-                DistanceChefLieuRegion = commune.DistanceChefLieuRegion
+                DistanceChefLieuRegion = commune.DistanceChefLieuRegion,
+                CommuneType = commune.CommuneType // ✅ Récupérer le type existant
             };
+
+            // ✅ NOUVEAU : Sélectionner le type correspondant dans le ComboBox
+            SelectedTypeCommuneItem = TypesCommuneDisponibles
+                .FirstOrDefault(t => t.Valeur == commune.CommuneType);
 
             OnPropertyChanged(nameof(DialogCommuneDateCreation));
 
             IsDialogOpen = true;
         }
-
-        
 
         // ══════════════════════════════════════════════════════════
         // ✅ NOUVELLE MÉTHODE : OUVRIR LES DÉTAILS D'UNE COMMUNE
@@ -363,5 +415,23 @@ namespace Collectivite.ViewModels
             }
         }
         #endregion
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // ✅ NOUVELLE CLASSE : ITEM POUR LE COMBOBOX
+    // ══════════════════════════════════════════════════════════
+    /// <summary>
+    /// Classe pour afficher les types de commune avec un libellé personnalisé
+    /// </summary>
+    public class TypeCommuneItem
+    {
+        public Commune.TypeCommune Valeur { get; set; }
+        public string Libelle { get; set; } = string.Empty;
+
+        public TypeCommuneItem(Commune.TypeCommune valeur, string libelle)
+        {
+            Valeur = valeur;
+            Libelle = libelle;
+        }
     }
 }

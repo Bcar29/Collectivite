@@ -30,6 +30,24 @@ namespace Collectivite.ViewModels
         private bool? _filtreEstPaye;
         private bool _isDisposed;
 
+        // ══════════════════════════════════════════════════════
+        // AJOUT : Dictionnaire pour stocker les montants payés
+        // ══════════════════════════════════════════════════════
+        private Dictionary<int, decimal> _montantsPayes = new();
+
+        /// <summary>
+        /// Obtient le montant payé pour un mandat spécifique
+        /// </summary>
+        public decimal GetMontantPaye(int mandatId)
+        {
+            return _montantsPayes.TryGetValue(mandatId, out var montant) ? montant : 0m;
+        }
+
+        /// <summary>
+        /// Dictionnaire accessible pour le binding (utilisé par le converter)
+        /// </summary>
+        public Dictionary<int, decimal> MontantsPayes => _montantsPayes;
+
         public MandatListViewModel()
         {
             _exerciceService = ExerciceService.Instance;
@@ -73,11 +91,23 @@ namespace Collectivite.ViewModels
         }
 
         public decimal TotalMandats => Mandats.Sum(m => m.MontantNet);
-        public decimal TotalPayes => Mandats.Where(m => m.DatePaiement != null).Sum(m => m.MontantNet);
-        public decimal TotalNonPayes => Mandats.Where(m => m.DatePaiement == null).Sum(m => m.MontantNet);
+
+        // ══════════════════════════════════════════════════════
+        // MODIFIÉ : Statistiques basées sur le statut calculé
+        // ══════════════════════════════════════════════════════
+        public decimal TotalPayes => Mandats.Where(m => m.status == Mandat.StatutMandat.Payé).Sum(m => m.MontantNet);
+        public decimal TotalPartiels => Mandats.Where(m => m.status == Mandat.StatutMandat.Partiel).Sum(m => m.MontantNet);
+        public decimal TotalNonPayes => Mandats.Where(m => m.status == Mandat.StatutMandat.Non_Payé).Sum(m => m.MontantNet);
+
         public int NombreMandats => Mandats.Count;
-        public int NombrePayes => Mandats.Count(m => m.DatePaiement != null);
-        public int NombreNonPayes => Mandats.Count(m => m.DatePaiement == null);
+        public int NombrePayes => Mandats.Count(m => m.status == Mandat.StatutMandat.Payé);
+        public int NombrePartiels => Mandats.Count(m => m.status == Mandat.StatutMandat.Partiel);
+        public int NombreNonPayes => Mandats.Count(m => m.status == Mandat.StatutMandat.Non_Payé);
+
+        // ══════════════════════════════════════════════════════
+        // AJOUT : Total des montants payés
+        // ══════════════════════════════════════════════════════
+        public decimal TotalMontantsPayes => _montantsPayes.Values.Sum();
 
         #endregion
 
@@ -161,10 +191,10 @@ namespace Collectivite.ViewModels
         {
             await Application.Current.Dispatcher.InvokeAsync(async () =>
             {
-                //System.Diagnostics.Debug.WriteLine($"Rechargement des budgets pour l'exercice : {exercice.Libelle}");
                 await LoadDataAsync();
             });
         }
+
         private async System.Threading.Tasks.Task LoadDataAsync()
         {
             if (!CanViewMandat)
@@ -179,6 +209,19 @@ namespace Collectivite.ViewModels
             {
                 var mandatService = new MandatService();
                 var mandats = await mandatService.GetAllMandatsAsync();
+
+                // ══════════════════════════════════════════════════════
+                // MODIFIÉ : Calculer le statut et le montant payé
+                // ══════════════════════════════════════════════════════
+                var paiementService = new MandatPaiementService();
+                _montantsPayes.Clear(); // Réinitialiser le dictionnaire
+
+                foreach (var m in mandats)
+                {
+                    var (montantPaye, statut) = await paiementService.GetInfoPaiementAsync(m.Id, m.MontantNet);
+                    m.status = statut;
+                    _montantsPayes[m.Id] = montantPaye; // Stocker le montant payé
+                }
 
                 Mandats.Clear();
                 foreach (var m in mandats)
@@ -233,6 +276,19 @@ namespace Collectivite.ViewModels
                     dateEmissionFin: FiltreDateEmissionFin,
                     estPaye: FiltreEstPaye
                 );
+
+                // ══════════════════════════════════════════════════════
+                // MODIFIÉ : Calculer le statut et le montant payé
+                // ══════════════════════════════════════════════════════
+                var paiementService = new MandatPaiementService();
+                _montantsPayes.Clear(); // Réinitialiser le dictionnaire
+
+                foreach (var m in mandats)
+                {
+                    var (montantPaye, statut) = await paiementService.GetInfoPaiementAsync(m.Id, m.MontantNet);
+                    m.status = statut;
+                    _montantsPayes[m.Id] = montantPaye; // Stocker le montant payé
+                }
 
                 Mandats.Clear();
                 foreach (var m in mandats)
@@ -468,10 +524,14 @@ namespace Collectivite.ViewModels
         {
             OnPropertyChanged(nameof(TotalMandats));
             OnPropertyChanged(nameof(TotalPayes));
+            OnPropertyChanged(nameof(TotalPartiels));
             OnPropertyChanged(nameof(TotalNonPayes));
             OnPropertyChanged(nameof(NombreMandats));
             OnPropertyChanged(nameof(NombrePayes));
+            OnPropertyChanged(nameof(NombrePartiels));
             OnPropertyChanged(nameof(NombreNonPayes));
+            OnPropertyChanged(nameof(TotalMontantsPayes));
+            OnPropertyChanged(nameof(MontantsPayes));
         }
 
         /// <summary>

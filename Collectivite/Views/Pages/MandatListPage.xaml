@@ -15,6 +15,15 @@
         <utils:NullToBooleanConverter x:Key="NullToBooleanConverter"/>
         <utils:PaymentTooltipConverter x:Key="PaymentTooltipConverter"/>
         <utils:PaymentCommandConverter x:Key="PaymentCommandConverter"/>
+
+        <utils:StatutMandatToTextConverter x:Key="StatutToText"/>
+        <utils:StatutMandatToColorConverter x:Key="StatutToColor"/>
+        <utils:StatutMandatToBackgroundConverter x:Key="StatutToBackground"/>
+
+        <!-- AJOUT : Converters pour montant payé et visibilité du bouton modifier -->
+        <utils:MontantPayeConverter x:Key="MontantPayeConverter"/>
+        <utils:StatutMandatToEditVisibilityConverter x:Key="StatutToEditVisibility"/>
+        <utils:EditButtonVisibilityConverter x:Key="EditButtonVisibilityConverter"/>
     </Page.Resources>
 
     <Grid>
@@ -60,7 +69,7 @@
                                VerticalAlignment="Center"/>
                 </StackPanel>
 
-                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
                     <Button Style="{StaticResource MaterialDesignRaisedButton}"
                         Command="{Binding OpenAddPageCommand}"
                         Visibility="{Binding CanCreateMandat, Converter={StaticResource BoolToVis}}"
@@ -362,46 +371,49 @@
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
+                        <!-- ══════════════════════════════════════════════════════ -->
+                        <!-- AJOUT : Colonne Montant Payé -->
+                        <!-- ══════════════════════════════════════════════════════ -->
+                        <DataGridTemplateColumn Header="Montant Payé" Width="140">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="#E3F2FD" 
+                                            CornerRadius="4" 
+                                            Padding="8,4">
+                                        <TextBlock HorizontalAlignment="Right"
+                                                   FontWeight="Bold"
+                                                   Foreground="#1565C0">
+                                            <TextBlock.Text>
+                                                <MultiBinding Converter="{StaticResource MontantPayeConverter}">
+                                                    <Binding Path="Id"/>
+                                                    <Binding Path="DataContext.MontantsPayes" ElementName="MandatListPageRoot"/>
+                                                </MultiBinding>
+                                            </TextBlock.Text>
+                                        </TextBlock>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
                         <!-- Date d'émission -->
                         <DataGridTextColumn Header="Date Émission" 
                                           Binding="{Binding DateEmission, StringFormat=dd/MM/yyyy}" 
                                           Width="120"/>
 
+                        
                         <!-- Statut paiement -->
                         <DataGridTemplateColumn Header="Statut" Width="100">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <Border CornerRadius="12" 
-                                            Padding="8,4"
-                                            HorizontalAlignment="Center">
-                                        <Border.Style>
-                                            <Style TargetType="Border">
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding DatePaiement, Converter={StaticResource NullToBooleanConverter}}" Value="True">
-                                                        <Setter Property="Background" Value="#E8F5E9"/>
-                                                    </DataTrigger>
-                                                    <DataTrigger Binding="{Binding DatePaiement, Converter={StaticResource NullToBooleanConverter}}" Value="False">
-                                                        <Setter Property="Background" Value="#FFF3E0"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Border.Style>
-                                        <TextBlock FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center">
-                                            <TextBlock.Style>
-                                                <Style TargetType="TextBlock">
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding DatePaiement, Converter={StaticResource NullToBooleanConverter}}" Value="True">
-                                                            <Setter Property="Text" Value="Payé"/>
-                                                            <Setter Property="Foreground" Value="#388E3C"/>
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding DatePaiement, Converter={StaticResource NullToBooleanConverter}}" Value="False">
-                                                            <Setter Property="Text" Value="Non payé"/>
-                                                            <Setter Property="Foreground" Value="#F57C00"/>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </TextBlock.Style>
-                                        </TextBlock>
+                                        Padding="8,4"
+                                         HorizontalAlignment="Center"
+                                         Background="{Binding status, Converter={StaticResource StatutToBackground}}">
+                                        <TextBlock Text="{Binding status, Converter={StaticResource StatutToText}}"
+                                            Foreground="{Binding status, Converter={StaticResource StatutToColor}}"
+                                            FontSize="11" 
+                                            FontWeight="SemiBold" 
+                                            HorizontalAlignment="Center"/>
                                     </Border>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
@@ -421,16 +433,23 @@
                                             <materialDesign:PackIcon Kind="Eye" Foreground="#1976D2"/>
                                         </Button>
 
-                                        <!-- Modifier -->
+                                        <!-- ══════════════════════════════════════════════════════ -->
+                                        <!-- MODIFIÉ : Bouton Modifier visible seulement si non payé -->
+                                        <!-- ══════════════════════════════════════════════════════ -->
                                         <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                Visibility="{Binding DataContext.CanEditMandat, ElementName=MandatListPageRoot, Converter={StaticResource BoolToVis}}"
                                                 Command="{Binding DataContext.OpenEditPageCommand, ElementName=MandatListPageRoot}"
                                                 CommandParameter="{Binding}"
                                                 ToolTip="Modifier">
+                                            <Button.Visibility>
+                                                <MultiBinding Converter="{StaticResource EditButtonVisibilityConverter}">
+                                                    <Binding Path="DataContext.CanEditMandat" ElementName="MandatListPageRoot"/>
+                                                    <Binding Path="status"/>
+                                                </MultiBinding>
+                                            </Button.Visibility>
                                             <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2"/>
                                         </Button>
 
-                                        <!-- Marquer payé / Annuler paiement -->
+                                        <!-- Marquer payé / Annuler paiement 
                                         <Button Style="{StaticResource MaterialDesignIconButton}"
                                             Visibility="{Binding DataContext.CanEditMandat, ElementName=MandatListPageRoot, Converter={StaticResource BoolToVis}}"
                                             ToolTip="{Binding DatePaiement, Converter={StaticResource PaymentTooltipConverter}}">
@@ -461,7 +480,7 @@
                                                 </materialDesign:PackIcon.Style>
                                             </materialDesign:PackIcon>
                                         </Button>
-
+                                            -->
                                         <!-- Supprimer -->
                                         <Button Style="{StaticResource MaterialDesignIconButton}"
                                                 Visibility="{Binding DataContext.CanDeleteMandat, ElementName=MandatListPageRoot, Converter={StaticResource BoolToVis}}"

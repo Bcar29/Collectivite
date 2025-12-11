@@ -17,6 +17,7 @@ namespace Collectivite.ViewModels
         private bool _hasValidationErrors;
         private readonly ExerciceService _exerciceService;
         private bool _isDisposed;
+        
 
         public OrdreRecetteFormViewModel(int? ordreRecetteId = null)
         {

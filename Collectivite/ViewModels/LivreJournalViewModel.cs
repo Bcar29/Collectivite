@@ -387,20 +387,33 @@ namespace Collectivite.ViewModels
 
                 if (saveDialog.ShowDialog() == true)
                 {
-                    await Task.Run(() =>
+                    var idCommune = Properties.Settings.Default.CommuneId;
+
+                    // Appel DIRECT avec await (pas de Task.Run)
+                    string tempPath = await _exportService.ExportToExcel(
+                        idCommune,
+                        Ecritures.ToList(),
+                        DateDebutDateTime,
+                        DateFinDateTime);
+
+                    // Vérifier que le fichier existe
+                    if (string.IsNullOrEmpty(tempPath) || !File.Exists(tempPath))
                     {
-                        // Exporter vers un fichier temporaire
-                        string tempPath = _exportService.ExportToExcel(
-                            Ecritures.ToList(),
-                            DateDebutDateTime,
-                            DateFinDateTime);
+                        throw new FileNotFoundException("Le fichier temporaire n'a pas été créé.");
+                    }
 
-                        // Copier vers la destination choisie
-                        File.Copy(tempPath, saveDialog.FileName, true);
+                    // Copier vers la destination (opération rapide, pas besoin de Task.Run)
+                    File.Copy(tempPath, saveDialog.FileName, true);
 
-                        // Supprimer le fichier temporaire
+                    // Supprimer le fichier temporaire
+                    try
+                    {
                         File.Delete(tempPath);
-                    });
+                    }
+                    catch
+                    {
+                        // Ignorer les erreurs de suppression
+                    }
 
                     var result = MessageBox.Show(
                         $"Export Excel réussi!\n\nFichier: {saveDialog.FileName}\n\nVoulez-vous ouvrir le fichier?",
@@ -433,6 +446,7 @@ namespace Collectivite.ViewModels
                     MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
+
             if (!CanEditEcritureComptable)
             {
                 MessageBox.Show("Accès refusé", "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -453,20 +467,33 @@ namespace Collectivite.ViewModels
 
                 if (saveDialog.ShowDialog() == true)
                 {
-                    await Task.Run(() =>
+                    var idCommune = Properties.Settings.Default.CommuneId;
+
+                    // Appel DIRECT avec await (pas de Task.Run)
+                    string tempPath = await _exportService.ExportToPdf(
+                        idCommune,
+                        Ecritures.ToList(),
+                        DateDebutDateTime,
+                        DateFinDateTime);
+
+                    // Vérifier que le fichier existe
+                    if (string.IsNullOrEmpty(tempPath) || !File.Exists(tempPath))
                     {
-                        // Exporter vers un fichier temporaire
-                        string tempPath = _exportService.ExportToPdf(
-                            Ecritures.ToList(),
-                            DateDebutDateTime,
-                            DateFinDateTime);
+                        throw new FileNotFoundException("Le fichier temporaire n'a pas été créé.");
+                    }
 
-                        // Copier vers la destination choisie
-                        File.Copy(tempPath, saveDialog.FileName, true);
+                    // Copier vers la destination (opération rapide, pas besoin de Task.Run)
+                    File.Copy(tempPath, saveDialog.FileName, true);
 
-                        // Supprimer le fichier temporaire
+                    // Supprimer le fichier temporaire
+                    try
+                    {
                         File.Delete(tempPath);
-                    });
+                    }
+                    catch
+                    {
+                        // Ignorer les erreurs de suppression
+                    }
 
                     var result = MessageBox.Show(
                         $"Export PDF réussi!\n\nFichier: {saveDialog.FileName}\n\nVoulez-vous ouvrir le fichier?",

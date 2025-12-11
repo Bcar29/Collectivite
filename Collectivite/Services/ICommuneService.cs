@@ -9,7 +9,11 @@ namespace Collectivite.Services
 {
     public interface ICommuneService
     {
-        Commune? GetCommuneById(int id);
-       
+        
+        /// <summary>
+        /// Récupère une commune par son ID avec toutes ses relations
+        /// </summary>
+        Task<Commune?> GetCommuneByIdWithRelationsAsync(int id);
+
     }
 }
