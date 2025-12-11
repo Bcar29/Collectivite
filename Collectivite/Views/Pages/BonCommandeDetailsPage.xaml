@@ -75,7 +75,6 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
                         <!-- Titre section -->
@@ -107,39 +106,27 @@
                                        FontWeight="SemiBold"/>
                         </StackPanel>
 
-                        <!-- Engagement -->
-                        <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,15">
-                            <TextBlock Text="Engagement"
+                        <!-- Expression de Besoin -->
+                        <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,0,15">
+                            <TextBlock Text="Expression de Besoin"
                                        FontSize="12"
                                        Foreground="#666"
                                        Margin="0,0,0,5"/>
-                            <TextBlock Text="{Binding BonCommande.Engagement.Objet}"
-                                       FontSize="16"
-                                       FontWeight="SemiBold"
-                                       TextWrapping="Wrap"/>
-                        </StackPanel>
-
-                        <!-- Tiers -->
-                        <StackPanel Grid.Row="3" Grid.Column="0" Margin="0,0,0,15">
-                            <TextBlock Text="Tiers"
-                                       FontSize="12"
-                                       Foreground="#666"
-                                       Margin="0,0,0,5"/>
-                            <TextBlock Text="{Binding BonCommande.Engagement.Tiers.Nom}"
-                                       FontSize="16"
-                                       FontWeight="SemiBold"/>
-                        </StackPanel>
-
-                        <!-- Montant engagement -->
-                        <StackPanel Grid.Row="3" Grid.Column="2">
-                            <TextBlock Text="Montant Engagement"
-                                       FontSize="12"
-                                       Foreground="#666"
-                                       Margin="0,0,0,5"/>
-                            <TextBlock Text="{Binding BonCommande.Engagement.MontantEngagement, StringFormat={}{0:N0} GNF}"
+                            <TextBlock Text="{Binding BonCommande.ExpressionBesoin.Numero}"
                                        FontSize="16"
                                        FontWeight="SemiBold"
                                        Foreground="#1976D2"/>
+                        </StackPanel>
+
+                        <!-- Exercice -->
+                        <StackPanel Grid.Row="2" Grid.Column="2">
+                            <TextBlock Text="Exercice"
+                                       FontSize="12"
+                                       Foreground="#666"
+                                       Margin="0,0,0,5"/>
+                            <TextBlock Text="{Binding BonCommande.ExpressionBesoin.Exercice.Libelle}"
+                                       FontSize="16"
+                                       FontWeight="SemiBold"/>
                         </StackPanel>
                     </Grid>
                 </materialDesign:Card>
@@ -153,85 +140,73 @@
                                    Margin="0,0,0,20"/>
 
                         <!-- DataGrid des détails -->
-                        <!-- Détails du bon de commande -->
-                        <materialDesign:Card Grid.Row="2" Padding="20" Margin="0,0,0,20">
-                            <StackPanel>
-                                <TextBlock Text="Détails du Bon de Commande"
-                   FontSize="18"
-                   FontWeight="SemiBold"
-                   Margin="0,0,0,20"/>
+                        <DataGrid ItemsSource="{Binding Details}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  IsReadOnly="True"
+                                  SelectionMode="Single"
+                                  LoadingRow="DataGrid_LoadingRow"
+                                  materialDesign:DataGridAssist.CellPadding="13 8 8 8">
 
-                                <!-- DataGrid des détails -->
-                                <DataGrid ItemsSource="{Binding Details}"
-                  AutoGenerateColumns="False"
-                  CanUserAddRows="False"
-                  IsReadOnly="True"
-                  SelectionMode="Single"
-                  LoadingRow="DataGrid_LoadingRow"
-                  materialDesign:DataGridAssist.CellPadding="13 8 8 8">
+                            <DataGrid.Columns>
+                                <!-- # -->
+                                <DataGridTextColumn Header="#" 
+                                                  Width="50"
+                                                  Binding="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Path=Header}"/>
 
-                                    <DataGrid.Columns>
-                                        <!-- # -->
-                                        <DataGridTextColumn Header="#" 
-                                  Width="50"
-                                  Binding="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Path=Header}"/>
+                                <!-- Désignation -->
+                                <DataGridTextColumn Header="Désignation" 
+                                                  Binding="{Binding Designation}" 
+                                                  Width="*" 
+                                                  MinWidth="250"/>
 
-                                        <!-- Désignation -->
-                                        <DataGridTextColumn Header="Désignation" 
-                                  Binding="{Binding Designation}" 
-                                  Width="*" 
-                                  MinWidth="250"/>
+                                <!-- Quantité -->
+                                <DataGridTextColumn Header="Quantité" 
+                                                  Binding="{Binding Quantite}" 
+                                                  Width="100">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
 
-                                        <!-- Quantité -->
-                                        <DataGridTextColumn Header="Quantité" 
-                                  Binding="{Binding Quantite}" 
-                                  Width="100">
-                                            <DataGridTextColumn.ElementStyle>
-                                                <Style TargetType="TextBlock">
-                                                    <Setter Property="HorizontalAlignment" Value="Center"/>
-                                                    <Setter Property="FontWeight" Value="SemiBold"/>
-                                                </Style>
-                                            </DataGridTextColumn.ElementStyle>
-                                        </DataGridTextColumn>
+                                <!-- Prix unitaire -->
+                                <DataGridTemplateColumn Header="Prix Unitaire" Width="150">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding PrixUnitaire, StringFormat={}{0:N0} GNF}"
+                                                       HorizontalAlignment="Right"
+                                                       Foreground="#666"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
 
-                                        <!-- Prix unitaire -->
-                                        <DataGridTemplateColumn Header="Prix Unitaire" Width="150">
-                                            <DataGridTemplateColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <TextBlock Text="{Binding PrixUnitaire, StringFormat={}{0:N0} GNF}"
-                                       HorizontalAlignment="Right"
-                                       Foreground="#666"/>
-                                                </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
-
-                                        <!-- Total -->
-                                        <DataGridTemplateColumn Header="Total" Width="180">
-                                            <DataGridTemplateColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <Border Background="#E3F2FD" 
-                                    CornerRadius="4" 
-                                    Padding="8,4">
-                                                        <TextBlock Text="{Binding Total, StringFormat={}{0:N0} GNF}"
-                                           FontWeight="Bold"
-                                           Foreground="#1976D2"
-                                           HorizontalAlignment="Right"/>
-                                                    </Border>
-                                                </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
-                                    </DataGrid.Columns>
-                                </DataGrid>
-                            </StackPanel>
-                        </materialDesign:Card>
-
+                                <!-- Total -->
+                                <DataGridTemplateColumn Header="Total" Width="180">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border Background="#E3F2FD" 
+                                                    CornerRadius="4" 
+                                                    Padding="8,4">
+                                                <TextBlock Text="{Binding Total, StringFormat={}{0:N0} GNF}"
+                                                           FontWeight="Bold"
+                                                           Foreground="#1976D2"
+                                                           HorizontalAlignment="Right"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
                     </StackPanel>
                 </materialDesign:Card>
 
                 <!-- Montant total -->
                 <materialDesign:Card Grid.Row="3" Padding="25">
                     <DockPanel>
-                        <materialDesign:PackIcon Kind="CurrencyUsd" 
+                        <materialDesign:PackIcon Kind="CashCheck" 
                                                Width="32" 
                                                Height="32"
                                                Foreground="#4CAF50"

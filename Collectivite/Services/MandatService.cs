@@ -17,6 +17,43 @@ namespace Collectivite.Services
         }
 
         #region Récupération
+        #region Génération de numéro
+
+        /// <summary>
+        /// Génère le prochain numéro de mandat (format: M-YYYY-0001)
+        /// </summary>
+        public async Task<string> GenerateNextNumeroAsync()
+        {
+            using var context = CreateContext();
+
+            var currentYear = DateTime.Now.Year;
+            var prefix = $"M-{currentYear}-";
+
+            // Récupérer tous les mandats de l'année en cours
+            var mandatsThisYear = await context.Mandats
+                .Where(m => m.NumeroMandat.StartsWith(prefix))
+                .OrderByDescending(m => m.NumeroMandat)
+                .ToListAsync();
+
+            if (!mandatsThisYear.Any())
+            {
+                return $"{prefix}0001";
+            }
+
+            // Extraire le dernier numéro et incrémenter
+            var lastNumero = mandatsThisYear.First().NumeroMandat;
+            var lastSequence = lastNumero.Substring(lastNumero.LastIndexOf('-') + 1);
+
+            if (int.TryParse(lastSequence, out int sequence))
+            {
+                var nextSequence = sequence + 1;
+                return $"{prefix}{nextSequence:D4}";
+            }
+
+            return $"{prefix}0001";
+        }
+
+        #endregion
 
         /// <summary>
         /// Récupère la ligne budgétaire d'un engagement
@@ -265,7 +302,6 @@ namespace Collectivite.Services
                     MontantLettre = mandat.MontantLettre,
                     DateEmission = mandat.DateEmission,
                     Objet = mandat.Objet,
-                    Motif = mandat.Motif,
                     FichierJoin = mandat.FichierJoin,
                     FichierName = mandat.FichierName,
                     DatePaiement = mandat.DatePaiement
@@ -371,7 +407,6 @@ namespace Collectivite.Services
                 existingMandat.MontantLettre = mandat.MontantLettre;
                 existingMandat.DateEmission = mandat.DateEmission;
                 existingMandat.Objet = mandat.Objet;
-                existingMandat.Motif = mandat.Motif;
                 existingMandat.FichierJoin = mandat.FichierJoin;
                 existingMandat.FichierName = mandat.FichierName;
                 existingMandat.DatePaiement = mandat.DatePaiement;

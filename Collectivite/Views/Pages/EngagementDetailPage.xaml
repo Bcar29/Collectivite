@@ -127,7 +127,7 @@
                             <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding Engagement.Commune.Nom}"/>
 
                             <TextBlock Grid.Row="6" Grid.Column="0" Text="Tiers :" FontWeight="SemiBold"/>
-                            <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding Engagement.Tiers.Nom}"/>
+                            <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding Engagement.Tiers.NomComplet}"/>
 
                             <TextBlock Grid.Row="8" Grid.Column="0" Text="Ligne budgétaire :" FontWeight="SemiBold"/>
                             <TextBlock Grid.Row="8" Grid.Column="1" Text="{Binding Engagement.BudgetLine.Nommenclature.Intitule}" TextWrapping="Wrap"/>

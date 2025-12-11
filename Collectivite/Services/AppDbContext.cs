@@ -437,6 +437,36 @@ namespace Collectivite.Services
                 .HasForeignKey(deb => deb.NommenclatureId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+
+            // ════════════════════════════════════════════════════════
+            // BonCommande ↔ ExpressionBesoin (N → 1)
+            // ════════════════════════════════════════════════════════
+            modelBuilder.Entity<BonCommande>()
+                .HasOne(bc => bc.ExpressionBesoin)
+                .WithMany()
+                .HasForeignKey(bc => bc.ExpressionBesoinId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ════════════════════════════════════════════════════════
+            // BonCommande ↔ Engagements (1 → N)
+            // ════════════════════════════════════════════════════════
+            modelBuilder.Entity<Engagement>()
+                .HasOne(e => e.BonCommande)
+                .WithMany(bc => bc.Engagements)
+                .HasForeignKey(e => e.BonCommandeId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+
+            // ════════════════════════════════════════════════════════
+            // Index unique sur le numéro
+            // ════════════════════════════════════════════════════════
+            modelBuilder.Entity<BonCommande>()
+                .HasIndex(bc => bc.Numero)
+                .IsUnique();
+
+            // Ignorer les propriétés calculées
+            modelBuilder.Entity<DetailBonCommande>()
+                .Ignore(d => d.Total);
         }
 
     }

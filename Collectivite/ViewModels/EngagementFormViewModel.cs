@@ -1,13 +1,13 @@
 ﻿using Collectivite.Models;
 using Collectivite.Services;
 using Collectivite.Utils;
-using DocumentFormat.OpenXml.InkML;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Win32;
 using System;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 
@@ -18,26 +18,26 @@ namespace Collectivite.ViewModels
     /// </summary>
     public class EngagementFormViewModel : ViewModelBase
     {
-        // private readonly string _accessDeniedMessage = "Vous n'avez pas la permission pour cette action.";
         private bool _isLoading;
         private Engagement _engagement;
         private bool _isEditMode;
         private string _fichierName;
-        //private readonly AppDbContext _context;
         private readonly ExerciceService _exerciceService;
-        private readonly int _budgetPrimitifId;
         private bool _isDisposed;
-
+        private BudgetLine? _selectedBudgetLine;
+        private int commune = Properties.Settings.Default.CommuneId;
         public EngagementFormViewModel(int? engagementId = null)
         {
             _exerciceService = ExerciceService.Instance;
             _exerciceService.ExerciceChanged += OnExerciceChanged;
-            //_budgetPrimitifId = bpId;
+
             _engagement = new Engagement
             {
                 DateEngagement = DateTime.Now,
-                //CreditsBudgetaires = SelectedBudgetLine?.MontantActu ?? 0
+                ExerciceId = _exerciceService.CurrentExercice?.Id ?? 0,
+                CommuneId = commune
             };
+
             _fichierName = string.Empty;
 
             // Commandes
@@ -48,14 +48,12 @@ namespace Collectivite.ViewModels
             CalculerDisponibleCommand = new RelayCommand(_ => CalculerDisponible());
             ConvertMontantToLettresCommand = new RelayCommand(_ => ConvertMontantToLettres());
 
-
             // Charger les données
             LoadDataCommand.Execute(null);
 
             // Si ID fourni, charger l'engagement
             if (engagementId.HasValue)
             {
-
                 _isEditMode = true;
                 LoadEngagementAsync(engagementId.Value);
             }
@@ -67,14 +65,15 @@ namespace Collectivite.ViewModels
         public ObservableCollection<Commune> Communes { get; } = new();
         public ObservableCollection<BudgetLine> BudgetLines { get; } = new();
         public ObservableCollection<Tiers> TiersList { get; } = new();
-        public ObservableCollection<Contrats> Contrats { get; } = new();
-        public BudgetLine? _selectedBudgetLine;
+        public ObservableCollection<Facture> Factures { get; } = new();
+        public ObservableCollection<BonCommande> BonCommandes { get; } = new();
 
         public bool IsLoading
         {
             get => _isLoading;
             set => SetProperty(ref _isLoading, value);
         }
+
         public BudgetLine? SelectedBudgetLine
         {
             get => _selectedBudgetLine;
@@ -84,15 +83,12 @@ namespace Collectivite.ViewModels
                 {
                     if (_selectedBudgetLine != null)
                     {
-                        Engagement.CreditsBudgetaires = _selectedBudgetLine.MontantActu;
-
-                        // 🔥 Lancer la méthode async
+                        Engagement.CreditsBudgetaires = _selectedBudgetLine.MontantPrevu;
                         _ = LoadEngagementsForSelectedBudgetLineAsync();
                     }
                 }
             }
         }
-
 
         public Engagement Engagement
         {
@@ -130,15 +126,16 @@ namespace Collectivite.ViewModels
         #endregion
 
         #region Methods
+
         private async void OnExerciceChanged(object? sender, Exercice exercice)
         {
             await Application.Current.Dispatcher.InvokeAsync(async () =>
             {
-                //System.Diagnostics.Debug.WriteLine($"Rechargement des budgets pour l'exercice : {exercice.Libelle}");
                 await LoadDataAsync();
             });
         }
-        public async System.Threading.Tasks.Task LoadDataAsync()
+
+        public async Task LoadDataAsync()
         {
             IsLoading = true;
 
@@ -172,29 +169,31 @@ namespace Collectivite.ViewModels
                 }
 
                 // Charger les lignes budgétaires
-               
                 var budgetLineService = new BudgetLineService();
-                var exercice = ExerciceService.Instance;
-
                 BudgetLines.Clear();
-                
-                    
                 var budgetLines = await budgetLineService.GetDepenseForEngagement();
                 foreach (var bl in budgetLines)
                 {
                     BudgetLines.Add(bl);
                 }
-                
 
+                // Charger les factures
+                var factureService = new FactureService();
+                var factures = await factureService.GetAllFacturesAsync();
+                Factures.Clear();
+                foreach (var f in factures)
+                {
+                    Factures.Add(f);
+                }
 
-                // Charger les contrats
-                //var contratService = new ContratService(_context);
-                //var contrats = await contratService.GetAllContratsAsync();
-                //Contrats.Clear();
-                //foreach (var c in contrats)
-                //{
-                //    Contrats.Add(c);
-                //}
+                // Charger les bons de commande
+                var bonCommandeService = new BonCommandeService();
+                var bonCommandes = await bonCommandeService.GetAllBonCommandesAsync();
+                BonCommandes.Clear();
+                foreach (var bc in bonCommandes)
+                {
+                    BonCommandes.Add(bc);
+                }
             }
             catch (Exception ex)
             {
@@ -231,13 +230,16 @@ namespace Collectivite.ViewModels
                         EngagementsAnterieurs = engagement.EngagementsAnterieurs,
                         MontantEngagement = engagement.MontantEngagement,
                         FichierJoin = engagement.FichierJoin,
+                        FichierName = engagement.FichierName,
                         ContratId = engagement.ContratId,
-                        FactureId = engagement.FactureId
+                        FactureId = engagement.FactureId,
+                        MontantLettre = engagement.MontantLettre,
+                        BonCommandeId = engagement.BonCommandeId
                     };
 
                     if (engagement.FichierJoin != null)
                     {
-                        FichierName = "Fichier existant";
+                        FichierName = engagement.FichierName ?? "Fichier existant";
                     }
                 }
                 else
@@ -263,15 +265,11 @@ namespace Collectivite.ViewModels
             return Engagement != null &&
                    Engagement.ExerciceId > 0 &&
                    Engagement.CommuneId > 0 &&
-
                    Engagement.BudgetLineId > 0 &&
-                   //Engagement.TiersId > 0 &&
-
                    !string.IsNullOrWhiteSpace(Engagement.Objet);
-                   //Engagement.MontantEngagement > 0;
         }
 
-        private async System.Threading.Tasks.Task SaveAsync()
+        private async Task SaveAsync()
         {
             // Validation supplémentaire
             if (Engagement.MontantEngagement > DisponibleBudgetaire)
@@ -312,38 +310,31 @@ namespace Collectivite.ViewModels
 
                 if (IsEditMode)
                 {
+                    //Engagement.EngagementsAnterieurs -= Engagement.MontantEngagement;
                     var (success, message) = await service.UpdateEngagementAsync(Engagement);
+
+                    MessageBox.Show(message,
+                        success ? "Succès" : "Erreur",
+                        MessageBoxButton.OK,
+                        success ? MessageBoxImage.Information : MessageBoxImage.Warning);
 
                     if (success)
                     {
-                        MessageBox.Show(message, "Succès",
-                            MessageBoxButton.OK, MessageBoxImage.Information);
-
-                        // Retour à la page principale
                         NavigateBack();
-                    }
-                    else
-                    {
-                        MessageBox.Show(message, "Erreur",
-                            MessageBoxButton.OK, MessageBoxImage.Warning);
                     }
                 }
                 else
                 {
                     var (success, message, engagement) = await service.CreateEngagementAsync(Engagement);
 
+                    MessageBox.Show(message,
+                        success ? "Succès" : "Erreur",
+                        MessageBoxButton.OK,
+                        success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+
                     if (success)
                     {
-                        MessageBox.Show(message, "Succès",
-                            MessageBoxButton.OK, MessageBoxImage.Information);
-
-                        // Retour à la page principale
                         NavigateBack();
-                    }
-                    else
-                    {
-                        MessageBox.Show(message, "Erreur",
-                            MessageBoxButton.OK, MessageBoxImage.Warning);
                     }
                 }
             }
@@ -360,8 +351,7 @@ namespace Collectivite.ViewModels
 
         private void Cancel()
         {
-          
-                NavigateBack();
+            NavigateBack();
         }
 
         private void NavigateBack()
@@ -382,22 +372,21 @@ namespace Collectivite.ViewModels
 
                 if (openFileDialog.ShowDialog() == true)
                 {
-                    // Lire le fichier
                     byte[] fileBytes = File.ReadAllBytes(openFileDialog.FileName);
 
-                    // Vérifier la taille (max 5 MB)
                     if (fileBytes.Length > 5 * 1024 * 1024)
                     {
                         MessageBox.Show("Le fichier est trop volumineux (max 5 MB).",
                             "Avertissement", MessageBoxButton.OK, MessageBoxImage.Warning);
                         return;
                     }
-
+                    MessageBox.Show("Le fichier est selectionner.",
+                            "Avertissement", MessageBoxButton.OK, MessageBoxImage.Warning);
                     Engagement.FichierJoin = fileBytes;
                     Engagement.FichierName = Path.GetFileName(openFileDialog.FileName);
+                    FichierName = Engagement.FichierName;
 
-                    MessageBox.Show($"Fichier '{Engagement.FichierName}' sélectionné avec succès.",
-                        "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                    OnPropertyChanged(nameof(FichierName));
                 }
             }
             catch (Exception ex)
@@ -409,7 +398,6 @@ namespace Collectivite.ViewModels
 
         private void CalculerDisponible()
         {
-
             OnPropertyChanged(nameof(DisponibleBudgetaire));
         }
 
@@ -423,7 +411,6 @@ namespace Collectivite.ViewModels
 
             Engagement.EngagementsAnterieurs = totalEngage;
 
-            // 🔔 Notifier l’UI
             OnPropertyChanged(nameof(Engagement));
             OnPropertyChanged(nameof(DisponibleBudgetaire));
         }
@@ -437,7 +424,6 @@ namespace Collectivite.ViewModels
             }
         }
 
-
         /// <summary>
         /// Nettoyer les ressources et se désabonner des événements
         /// </summary>
@@ -449,6 +435,7 @@ namespace Collectivite.ViewModels
                 _isDisposed = true;
             }
         }
+
         #endregion
     }
 }

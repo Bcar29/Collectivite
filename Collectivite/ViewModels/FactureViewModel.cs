@@ -634,7 +634,7 @@ private void Imprimer(Facture? facture)
                 MontantHT = 0,
                 TauxTVA = 18, // TVA par défaut
                 MontantTTC = 0,
-                NumeroFacture = $"FACT-{DateTime.Now:yyyyMMdd}-{Factures.Count + 1:D4}",
+                NumeroFacture = "",
                 Description = ""
             };
 

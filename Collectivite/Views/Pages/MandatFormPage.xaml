@@ -91,12 +91,14 @@
                                  Foreground="#1976D2"
                                  Margin="0,0,0,15"/>
 
-                        <!-- Numéro de mandat -->
+                        <!-- Numéro de Mandat (readonly/automatique) -->
                         <TextBox Grid.Row="1" Grid.Column="0"
-                                 materialDesign:HintAssist.Hint="Numéro de mandat *"
-                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                 Text="{Binding Mandat.NumeroMandat, UpdateSourceTrigger=PropertyChanged}"
-                                 Margin="0,0,0,15"/>
+                             materialDesign:HintAssist.Hint="N° Mandat (automatique)"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                             Text="{Binding Mandat.NumeroMandat}"
+                             IsReadOnly="True"
+                             Background="#F0F0F0"
+                             Margin="0,0,0,15"/>
 
                         <!-- Bordereau -->
                         <TextBox Grid.Row="1" Grid.Column="2"
@@ -138,8 +140,8 @@
                                 <DataTemplate>
                                     <StackPanel>
                                         <TextBlock FontWeight="SemiBold">
-                                            <Run Text="N° "/>
-                                            <Run Text="{Binding NumeroEngagement, Mode=OneWay}"/>
+                                            <Run Text="Imputation "/>
+                                            <Run Text="{Binding BudgetLine.Nommenclature.CodeNomenclature, Mode=OneWay}"/>
                                             <Run Text=" - "/>
                                             <Run Text="{Binding Tiers.Nom, Mode=OneWay}"/>
                                         </TextBlock>
@@ -263,17 +265,6 @@
                                  MinHeight="80"
                                  VerticalScrollBarVisibility="Auto"
                                  Margin="0,0,0,15"/>
-
-                        <!-- Motif -->
-                        <TextBox Grid.Row="10" Grid.Column="0" Grid.ColumnSpan="3"
-                                 materialDesign:HintAssist.Hint="Motif / Description détaillée"
-                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                 Text="{Binding Mandat.Motif, UpdateSourceTrigger=PropertyChanged}"
-                                 AcceptsReturn="True"
-                                 TextWrapping="Wrap"
-                                 MinHeight="100"
-                                 VerticalScrollBarVisibility="Auto"
-                                 Margin="0,0,0,15"/> 
 
                         <!-- Date de paiement (si mode édition) -->
                         <DatePicker Grid.Row="11" Grid.Column="0"
