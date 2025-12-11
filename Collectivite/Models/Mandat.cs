@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Data;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static Collectivite.Models.Commune;
 
 namespace Collectivite.Models
 {
@@ -27,6 +29,7 @@ namespace Collectivite.Models
     }
     public class Mandat
     {
+        public enum StatutMandat { Non_Payé,Partiel,Payé}
         [Key]
         public int Id { get; set; }
 
@@ -71,16 +74,30 @@ namespace Collectivite.Models
         [MaxLength(255, ErrorMessage = "L'objet ne doit pas dépasser 255 caractères")]
         public string Objet { get; set; } = null!;
 
-        [Required(ErrorMessage = "donner l'objet de la depense")]
-        [Column(TypeName = "text")]
-        public string? Motif { get; set; }
-
         // 🔹 Fichier joint (facultatif)
         public byte[]? FichierJoin { get; set; }
         public sbyte? FichierName { get; set; }
 
         // 🔹 Date de paiement (facultatif)
         public DateTime? DatePaiement { get; set; }
+
+        public StatutMandat status { get; set; } = StatutMandat.Non_Payé;
         public ICollection<EcritureComptable>? EcritureComptables { get; set; } = new List<EcritureComptable>();
+
+        // Methode qui recupere le status du mandat
+
+        public string MandatStatut  
+        {
+            get
+            {
+                return status switch
+                {
+                    StatutMandat.Non_Payé => "Non Payé",
+                    StatutMandat.Partiel => "Partiel",
+                    StatutMandat.Payé => "Payé",
+                    _ => ""
+                };
+            }
+        }
     }
 }

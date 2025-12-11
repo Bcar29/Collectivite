@@ -7,23 +7,36 @@ using System.Linq;
 
 namespace Collectivite.Services
 {
-    public class CommuneService : ICommuneService
+    public class CommuneService 
     {
-        private static CommuneService? _instance { get; set; }
-        private Commune? _communeCurrent;
-
-        // Singleton
-        public static CommuneService Instance => _instance ??= new CommuneService();
-
-        // Commune courant
-        public Commune? CurrentCommune
-        {
-            get => _communeCurrent;
-            set => _communeCurrent = value;
-        }
+        
+        
         private AppDbContext CreateContext()
         {
             return new AppDbContext();
+        }
+        /// <summary>
+        /// Récupère une commune par son ID avec toutes ses relations (DetailCommunes, Users, Engagements, Recensements)
+        /// </summary>
+        public async Task<Commune?> GetCommuneByIdWithRelationsAsync(int id)
+        {
+            try
+            {
+                using var context = CreateContext();
+                return await context.Communes
+                    .AsNoTracking()
+                    .Include(c => c.DetailCommunes)
+                    .Include(c => c.Users)
+                    .Include(c => c.Engagements)
+                    .Include(c => c.Recensements)
+                    .FirstOrDefaultAsync(c => c.Id == id);
+            }
+            catch (Exception ex)
+            {
+                // Log l'erreur si vous avez un système de logging
+                Console.WriteLine($"Erreur lors de la récupération de la commune avec relations {id}: {ex.Message}");
+                return null;
+            }
         }
 
         // Recuperer toutes les communes 
@@ -38,20 +51,8 @@ namespace Collectivite.Services
                 .OrderBy(c => c.Nom)
                 .ToListAsync();
         }
-        /// <summary>
-        /// Récupère une commune selon son Id (VERSION SYNCHRONE)
-        /// </summary>
-        public Commune? GetCommuneById(int id)
-        {
-            using var context = CreateContext();
-            return context.Communes
-                .Include(c => c.DetailCommunes)
-                .Include(c => c.Users)
-                .Include(c => c.Engagements)
-                .Include(c => c.Recensements)
-                .FirstOrDefault(c => c.Id == id);  // ✅ Sans "Async"
-        }
 
+        
         // ajouter une communes
         public async Task<(bool Succes, string Message, Commune? Commune)> CreateCommuneAsync(Commune commune)
         {
@@ -125,6 +126,9 @@ namespace Collectivite.Services
                 // ✅ ÉTAPE 4 : METTRE À JOUR LES PROPRIÉTÉS
                 // ══════════════════════════════════════════════════════════
                 existingCommune.Nom = commune.Nom;
+                existingCommune.CommuneType = commune.CommuneType;
+                existingCommune.Region = commune.Region;
+                existingCommune.Prefecture = commune.Prefecture;
                 existingCommune.DateCreation = commune.DateCreation;
                 existingCommune.DistanceChefLieuRegion = commune.DistanceChefLieuRegion;
                 existingCommune.DistanceChefLieuProvince = commune.DistanceChefLieuProvince;

@@ -1,10 +1,8 @@
 ﻿using Collectivite.Models;
 using Collectivite.Services;
 using Collectivite.Utils;
-using Microsoft.Win32;
 using System;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
@@ -16,7 +14,6 @@ namespace Collectivite.ViewModels
         private bool _isLoading;
         private BonCommande _bonCommande;
         private bool _isEditMode;
-        private string _fichierName;
         private int? _bonCommandeId;
 
         public BonCommandeFormViewModel(int? bonCommandeId = null)
@@ -27,15 +24,13 @@ namespace Collectivite.ViewModels
             _bonCommande = new BonCommande
             {
                 DateCreation = DateTime.Now,
-                Numero = $"BC-{DateTime.Now:yyyyMMdd}-001"
+                Numero = "", // Sera généré automatiquement
             };
-            _fichierName = string.Empty;
 
             // Commandes
             LoadDataCommand = new RelayCommand(async _ => await LoadDataAsync());
             SaveCommand = new RelayCommand(async _ => await SaveAsync(), _ => CanSave());
             CancelCommand = new RelayCommand(_ => Cancel());
-            ChooseFileCommand = new RelayCommand(_ => ChooseFile());
             AddDetailCommand = new RelayCommand(_ => AddDetail());
             RemoveDetailCommand = new RelayCommand<DetailBonCommande>(d => RemoveDetail(d));
             RecalculerDetailCommand = new RelayCommand<DetailBonCommande>(d => RecalculerDetail(d));
@@ -46,7 +41,9 @@ namespace Collectivite.ViewModels
 
         #region Properties
 
-        public ObservableCollection<Engagement> Engagements { get; } = new();
+        public ObservableCollection<ExpressionBesoin> ExpressionBesoins { get; } = new();
+        public ObservableCollection<Engagement> EngagementsDisponibles { get; } = new();
+        public ObservableCollection<Engagement> EngagementsSelectionnes { get; } = new();
         public ObservableCollection<DetailBonCommande> Details { get; } = new();
 
         public bool IsLoading
@@ -67,12 +64,6 @@ namespace Collectivite.ViewModels
             set => SetProperty(ref _isEditMode, value);
         }
 
-        public string FichierName
-        {
-            get => _fichierName;
-            set => SetProperty(ref _fichierName, value);
-        }
-
         public string PageTitle => IsEditMode ? "Modifier le bon de commande" : "Nouveau bon de commande";
 
         public double MontantTotal => Details.Sum(d => d.Total);
@@ -84,7 +75,6 @@ namespace Collectivite.ViewModels
         public ICommand LoadDataCommand { get; }
         public ICommand SaveCommand { get; }
         public ICommand CancelCommand { get; }
-        public ICommand ChooseFileCommand { get; }
         public ICommand AddDetailCommand { get; }
         public ICommand RemoveDetailCommand { get; }
         public ICommand RecalculerDetailCommand { get; }
@@ -99,14 +89,24 @@ namespace Collectivite.ViewModels
 
             try
             {
-                // Charger les engagements
-                var engagementService = new EngagementService();
-                var engagements = await engagementService.GetAllEngagementsAsync();
+                // Charger les expressions de besoin
+                var expressionBesoinService = new ExpressionBesoinService();
+                var expressionBesoins = await expressionBesoinService.GetAllExpressionBesoinsAsync();
 
-                Engagements.Clear();
+                ExpressionBesoins.Clear();
+                foreach (var eb in expressionBesoins)
+                {
+                    ExpressionBesoins.Add(eb);
+                }
+
+                // Charger les engagements disponibles (sans bon de commande)
+                var engagementService = new EngagementService();
+                var engagements = await engagementService.GetEngagementsWithoutBonCommandeAsync();
+
+                EngagementsDisponibles.Clear();
                 foreach (var e in engagements)
                 {
-                    Engagements.Add(e);
+                    EngagementsDisponibles.Add(e);
                 }
 
                 // Si mode édition, charger le bon de commande
@@ -122,10 +122,25 @@ namespace Collectivite.ViewModels
                             Id = bonCommande.Id,
                             Numero = bonCommande.Numero,
                             DateCreation = bonCommande.DateCreation,
-                            EngagementId = bonCommande.EngagementId,
-                            FichierJoin = bonCommande.FichierJoin
+                            ExpressionBesoinId = bonCommande.ExpressionBesoinId
                         };
 
+                        // Charger les engagements sélectionnés
+                        EngagementsSelectionnes.Clear();
+                        if (bonCommande.Engagements != null)
+                        {
+                            foreach (var engagement in bonCommande.Engagements)
+                            {
+                                EngagementsSelectionnes.Add(engagement);
+                                // Ajouter aussi aux disponibles pour pouvoir les désélectionner
+                                if (!EngagementsDisponibles.Any(e => e.Id == engagement.Id))
+                                {
+                                    EngagementsDisponibles.Add(engagement);
+                                }
+                            }
+                        }
+
+                        // Charger les détails
                         Details.Clear();
                         if (bonCommande.Details != null)
                         {
@@ -140,9 +155,15 @@ namespace Collectivite.ViewModels
                                 });
                             }
                         }
-
-                        FichierName = bonCommande.FichierJoin != null ? "Fichier existant" : string.Empty;
                     }
+                }
+                else
+                {
+                    // Mode création : générer le numéro automatiquement
+                    var bonCommandeService = new BonCommandeService();
+                    var nextNumero = await bonCommandeService.GenerateNextNumeroAsync();
+                    BonCommande.Numero = nextNumero;
+                    OnPropertyChanged(nameof(BonCommande));
                 }
             }
             catch (Exception ex)
@@ -160,7 +181,7 @@ namespace Collectivite.ViewModels
         {
             return BonCommande != null &&
                    !string.IsNullOrWhiteSpace(BonCommande.Numero) &&
-                   BonCommande.EngagementId > 0 &&
+                   BonCommande.ExpressionBesoinId > 0 &&
                    Details.Count > 0;
         }
 
@@ -172,11 +193,12 @@ namespace Collectivite.ViewModels
             {
                 var bonCommandeService = new BonCommandeService();
                 var detailsList = Details.ToList();
+                var engagementIds = EngagementsSelectionnes.Select(e => e.Id).ToList();
 
                 if (IsEditMode)
                 {
                     var (success, message) = await bonCommandeService.UpdateBonCommandeAsync(
-                        BonCommande, detailsList);
+                        BonCommande, detailsList, engagementIds);
 
                     MessageBox.Show(message,
                         success ? "Succès" : "Erreur",
@@ -191,7 +213,7 @@ namespace Collectivite.ViewModels
                 else
                 {
                     var (success, message, bonCommande) = await bonCommandeService.CreateBonCommandeAsync(
-                        BonCommande, detailsList);
+                        BonCommande, detailsList, engagementIds);
 
                     MessageBox.Show(message,
                         success ? "Succès" : "Erreur",
@@ -217,8 +239,7 @@ namespace Collectivite.ViewModels
 
         private void Cancel()
         {
-            
-             NavigateBack();
+            NavigateBack();
         }
 
         private void NavigateBack()
@@ -226,40 +247,6 @@ namespace Collectivite.ViewModels
             NavigationService.Instance.GoBack();
         }
 
-        private void ChooseFile()
-        {
-            try
-            {
-                var openFileDialog = new OpenFileDialog
-                {
-                    Title = "Sélectionner un fichier",
-                    Filter = "Tous les fichiers (*.*)|*.*|Documents PDF (*.pdf)|*.pdf",
-                    FilterIndex = 2
-                };
-
-                if (openFileDialog.ShowDialog() == true)
-                {
-                    byte[] fileBytes = File.ReadAllBytes(openFileDialog.FileName);
-
-                    if (fileBytes.Length > 5 * 1024 * 1024)
-                    {
-                        MessageBox.Show("Le fichier est trop volumineux (max 5 MB).",
-                            "Avertissement", MessageBoxButton.OK, MessageBoxImage.Warning);
-                        return;
-                    }
-
-                    BonCommande.FichierJoin = fileBytes;
-                    FichierName = Path.GetFileName(openFileDialog.FileName);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        // ✅ Ajouter une ligne de détail
         private void AddDetail()
         {
             var newDetail = new DetailBonCommande
@@ -273,7 +260,6 @@ namespace Collectivite.ViewModels
             OnPropertyChanged(nameof(MontantTotal));
         }
 
-        // ✅ Supprimer une ligne de détail
         private void RemoveDetail(DetailBonCommande? detail)
         {
             if (detail != null)
@@ -283,7 +269,6 @@ namespace Collectivite.ViewModels
             }
         }
 
-        // ✅ Recalculer le total d'une ligne
         private void RecalculerDetail(DetailBonCommande? detail)
         {
             if (detail != null)

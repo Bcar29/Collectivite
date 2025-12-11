@@ -94,6 +94,24 @@
                                               Binding="{Binding Nom}"
                                               Width="250"
                                               FontWeight="Medium"/>
+                            
+                            <!-- Type de la commune -->
+                            <DataGridTextColumn Header="Type Commune" 
+                                              Binding="{Binding TypCommune}"
+                                              Width="250"
+                                              FontWeight="Medium"/>
+
+                            <!-- Région de la commune -->
+                            <DataGridTextColumn Header="Région Administrative" 
+                                              Binding="{Binding Region}"
+                                              Width="250"
+                                              FontWeight="Medium"/>
+                            
+                            <!-- Préfecture de la commune -->
+                            <DataGridTextColumn Header="Préfecture" 
+                                              Binding="{Binding Prefecture}"
+                                              Width="250"
+                                              FontWeight="Medium"/>
 
                             <!-- Distance Chef-Lieu Province -->
                             <DataGridTemplateColumn Header="Dist. Chef-Lieu Province" Width="180">
@@ -264,6 +282,30 @@
                     <TextBox materialDesign:HintAssist.Hint="Nom de la commune *"
                            Style="{StaticResource MaterialDesignOutlinedTextBox}"
                            Text="{Binding DialogCommune.Nom, UpdateSourceTrigger=PropertyChanged}"
+                           Margin="0,0,0,15"
+                           MaxLength="200"/>
+
+                    <!-- Type  de la commune -->
+                    <ComboBox 
+                            materialDesign:HintAssist.Hint="Type de commune *"
+                            Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                            ItemsSource="{Binding TypesCommuneDisponibles}"
+                            SelectedItem="{Binding SelectedTypeCommuneItem}"
+                            DisplayMemberPath="Libelle"
+                            Margin="0,0,0,15"
+                            FontSize="13"/>
+
+                    <!-- Region de la commune -->
+                    <TextBox materialDesign:HintAssist.Hint="Région Administrative *"
+                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                           Text="{Binding DialogCommune.Region, UpdateSourceTrigger=PropertyChanged}"
+                           Margin="0,0,0,15"
+                           MaxLength="200"/>
+
+                    <!-- Prefecture de la commune -->
+                    <TextBox materialDesign:HintAssist.Hint="Préfecture "
+                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                           Text="{Binding DialogCommune.Prefecture, UpdateSourceTrigger=PropertyChanged}"
                            Margin="0,0,0,15"
                            MaxLength="200"/>
 

@@ -46,9 +46,26 @@ namespace Collectivite.Services
                 .Include(e => e.Tiers)
                 .Include(e => e.Contrat)
                 .Include(e => e.Facture)
-                .Include(e => e.BonCommandes)
+                .Include(e => e.BonCommande)
                 .AsNoTracking()
                 .OrderByDescending(e => e.DateEngagement)
+                .ToListAsync();
+        }
+        public async Task<List<Engagement>> GetEngagementsForMandatAsync()
+        {
+
+            using var context = CreateContext();
+            var exerciceService = ExerciceService.Instance;
+
+            if (exerciceService.CurrentExercice == null)
+            {
+                return new List<Engagement>();
+            }
+
+            return await context.Engagements
+                .Where(e => e.ExerciceId == exerciceService.CurrentExercice.Id && e.Mandat == null)
+                .Include(e => e.BudgetLine)
+                    .ThenInclude(bl => bl.Nommenclature)
                 .ToListAsync();
         }
 
@@ -70,10 +87,26 @@ namespace Collectivite.Services
                 .Include(e => e.Tiers)
                 .Include(e => e.Contrat)
                 .Include(e => e.Facture)
+                .Include(e => e.BonCommande)
+                    .ThenInclude(bc => bc.ExpressionBesoin)
                 .Include(e => e.Mandat)
-                .Include(e => e.BonCommandes)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(e => e.Id == id);
+        }
+
+        /// <summary>
+        /// Récupère les engagements qui ne sont pas encore liés à un bon de commande
+        /// </summary>
+        public async Task<List<Engagement>> GetEngagementsWithoutBonCommandeAsync()
+        {
+            using var context = CreateContext();
+
+            return await context.Engagements
+                .Include(e => e.Tiers)
+                .Include(e => e.Exercice)
+                .Where(e => e.BonCommandeId == null)
+                .OrderByDescending(e => e.DateEngagement)
+                .ToListAsync();
         }
 
         /// <summary>
@@ -164,7 +197,6 @@ namespace Collectivite.Services
                     .ThenInclude(bl => bl.Nommenclature)
                 .Include(e => e.Tiers)
                 .Where(e => e.Objet.ToLower().Contains(searchTerm) ||
-                           //e.Tiers.Nom.ToLower().Contains(searchTerm) ||
                            e.BudgetLine.Nommenclature.Intitule.ToLower().Contains(searchTerm))
                 .AsNoTracking()
                 .OrderByDescending(e => e.DateEngagement)
@@ -197,9 +229,6 @@ namespace Collectivite.Services
                 if (engagement.BudgetLineId <= 0)
                     return (false, "La ligne budgétaire est obligatoire.", null);
 
-                //if (engagement.TiersId <= 0)
-                //    return (false, "Le tiers est obligatoire.", null);
-
                 if (string.IsNullOrWhiteSpace(engagement.Objet))
                     return (false, "L'objet de l'engagement est obligatoire.", null);
 
@@ -214,11 +243,6 @@ namespace Collectivite.Services
                 if (exercice.EstCloture)
                     return (false, "Impossible de créer un engagement sur un exercice clôturé.", null);
 
-                // Vérifier que le tiers existe
-                //var tiersExists = await context.Tiers.AnyAsync(t => t.Id == engagement.TiersId);
-                //if (!tiersExists)
-                //    return (false, "Le tiers spécifié n'existe pas.", null);
-
                 // Vérifier que la ligne budgétaire existe
                 var budgetLineExists = await context.BudgetLines.AnyAsync(bl => bl.Id == engagement.BudgetLineId);
                 if (!budgetLineExists)
@@ -227,7 +251,7 @@ namespace Collectivite.Services
                 // Vérifier les crédits disponibles
                 if (engagement.MontantEngagement > engagement.CreditsBudgetaires - engagement.EngagementsAnterieurs)
                 {
-                    return (false, $"Le montant de l'engagement {engagement.MontantEngagement} dépasse les crédits disponibles  {engagement.CreditsBudgetaires - engagement.EngagementsAnterieurs}.", null);
+                    return (false, $"Le montant de l'engagement {engagement.MontantEngagement:N0} GNF dépasse les crédits disponibles {(engagement.CreditsBudgetaires - engagement.EngagementsAnterieurs):N0} GNF.", null);
                 }
 
                 // ✅ Créer un nouvel objet sans navigation
@@ -246,8 +270,8 @@ namespace Collectivite.Services
                     FichierName = engagement.FichierName,
                     ContratId = engagement.ContratId,
                     FactureId = engagement.FactureId,
-                    MontantLettre = engagement.MontantLettre
-
+                    MontantLettre = engagement.MontantLettre,
+                    BonCommandeId = engagement.BonCommandeId
                 };
 
                 context.Engagements.Add(newEngagement);
@@ -256,7 +280,7 @@ namespace Collectivite.Services
                 // Recharger avec les relations
                 var savedEngagement = await GetEngagementByIdAsync(newEngagement.Id);
 
-                return (true, "Engagement créé avec succès.", savedEngagement);
+                return (true, "✅ Engagement créé avec succès.", savedEngagement);
             }
             catch (DbUpdateException dbEx)
             {
@@ -313,12 +337,15 @@ namespace Collectivite.Services
                 existingEngagement.EngagementsAnterieurs = engagement.EngagementsAnterieurs;
                 existingEngagement.MontantEngagement = engagement.MontantEngagement;
                 existingEngagement.FichierJoin = engagement.FichierJoin;
+                existingEngagement.FichierName = engagement.FichierName;
                 existingEngagement.ContratId = engagement.ContratId;
                 existingEngagement.FactureId = engagement.FactureId;
+                existingEngagement.MontantLettre = engagement.MontantLettre;
+                existingEngagement.BonCommandeId = engagement.BonCommandeId;
 
                 await context.SaveChangesAsync();
 
-                return (true, "Engagement modifié avec succès.");
+                return (true, "✅ Engagement modifié avec succès.");
             }
             catch (Exception ex)
             {
@@ -344,7 +371,6 @@ namespace Collectivite.Services
             {
                 var engagement = await context.Engagements
                     .Include(e => e.Mandat)
-                    .Include(e => e.BonCommandes)
                     .FirstOrDefaultAsync(e => e.Id == id);
 
                 if (engagement == null)
@@ -361,16 +387,10 @@ namespace Collectivite.Services
                     return (false, "Impossible de supprimer cet engagement car un mandat y est lié.");
                 }
 
-                // Vérifier s'il y a des bons de commande liés
-                if (engagement.BonCommandes?.Any() == true)
-                {
-                    return (false, $"Impossible de supprimer cet engagement car {engagement.BonCommandes.Count} bon(s) de commande y sont liés.");
-                }
-
                 context.Engagements.Remove(engagement);
                 await context.SaveChangesAsync();
 
-                return (true, "Engagement supprimé avec succès.");
+                return (true, "✅ Engagement supprimé avec succès.");
             }
             catch (Exception ex)
             {
@@ -401,7 +421,8 @@ namespace Collectivite.Services
             var montantMoyen = totalEngagements > 0 ? montantTotal / totalEngagements : 0;
 
             var parTiers = await query
-                .GroupBy(e => e.Tiers.Nom)
+                .Where(e => e.Tiers != null)
+                .GroupBy(e => e.Tiers!.Nom)
                 .Select(g => new { Tiers = g.Key, Montant = g.Sum(e => e.MontantEngagement) })
                 .OrderByDescending(x => x.Montant)
                 .Take(10)

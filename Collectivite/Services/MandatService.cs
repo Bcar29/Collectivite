@@ -17,6 +17,43 @@ namespace Collectivite.Services
         }
 
         #region Récupération
+        #region Génération de numéro
+
+        /// <summary>
+        /// Génère le prochain numéro de mandat (format: M-YYYY-0001)
+        /// </summary>
+        public async Task<string> GenerateNextNumeroAsync()
+        {
+            using var context = CreateContext();
+
+            var currentYear = DateTime.Now.Year;
+            var prefix = $"M-{currentYear}-";
+
+            // Récupérer tous les mandats de l'année en cours
+            var mandatsThisYear = await context.Mandats
+                .Where(m => m.NumeroMandat.StartsWith(prefix))
+                .OrderByDescending(m => m.NumeroMandat)
+                .ToListAsync();
+
+            if (!mandatsThisYear.Any())
+            {
+                return $"{prefix}0001";
+            }
+
+            // Extraire le dernier numéro et incrémenter
+            var lastNumero = mandatsThisYear.First().NumeroMandat;
+            var lastSequence = lastNumero.Substring(lastNumero.LastIndexOf('-') + 1);
+
+            if (int.TryParse(lastSequence, out int sequence))
+            {
+                var nextSequence = sequence + 1;
+                return $"{prefix}{nextSequence:D4}";
+            }
+
+            return $"{prefix}0001";
+        }
+
+        #endregion
 
         /// <summary>
         /// Récupère la ligne budgétaire d'un engagement
@@ -209,7 +246,6 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<(bool Success, string Message, Mandat? Mandat)> CreateMandatAsync(Mandat mandat)
         {
-            //using AppDbContext context = CreateContext();
             using var context = CreateContext();
 
             if (!SessionManager.HasPermission("Mandat.Create"))
@@ -217,8 +253,9 @@ namespace Collectivite.Services
 
             try
             {
-
-                // Validations
+                // -----------------------
+                // 1️⃣ VALIDATIONS SIMPLES
+                // -----------------------
                 if (string.IsNullOrWhiteSpace(mandat.NumeroMandat))
                     return (false, "Le numéro du mandat est obligatoire.", null);
 
@@ -237,21 +274,52 @@ namespace Collectivite.Services
                 if (string.IsNullOrWhiteSpace(mandat.Objet))
                     return (false, "L'objet du mandat est obligatoire.", null);
 
-                // Vérifier que l'engagement existe
+
+                // -------------------------------
+                // 2️⃣ VALIDATION : ENGAGEMENT EXISTE
+                // -------------------------------
                 var engagement = await context.Engagements.FindAsync(mandat.EngagementId);
                 if (engagement == null)
                     return (false, "Engagement introuvable.", null);
 
-                
 
-                // Vérifier l'unicité du numéro de mandat
+                // ----------------------------------------------
+                // 3️⃣ UNICITÉ DU NUMÉRO MANDAT (AVANT ENREGISTREMENT)
+                // ----------------------------------------------
                 var existingMandat = await context.Mandats
                     .FirstOrDefaultAsync(m => m.NumeroMandat == mandat.NumeroMandat);
 
                 if (existingMandat != null)
                     return (false, $"Un mandat avec le numéro '{mandat.NumeroMandat}' existe déjà.", null);
 
-                // Créer le mandat
+
+                // ----------------------------------------------------------------
+                // 4️⃣ VALIDATION : LIGNE BUDGETAIRE + NOMENCLATURE + COMPTE COMPTABLE
+                // ----------------------------------------------------------------
+                var budgetLine = await context.BudgetLines
+                    .Where(bl => bl.Id == engagement.BudgetLineId)
+                    .Select(bl => new { bl.Id, bl.Nommenclature.CodeNomenclature })
+                    .FirstOrDefaultAsync();
+
+                if (budgetLine == null)
+                    return (false, "La ligne budgétaire spécifiée dans l'engagement n'existe pas.", null);
+
+                if (string.IsNullOrWhiteSpace(budgetLine.CodeNomenclature))
+                    return (false, "La ligne budgétaire spécifiée ne possède pas de nomenclature.", null);
+
+                // 👉 Vérification du compte comptable AVANT de créer le mandat
+                var compteComptableExists = await context.CompteComptables
+                    .AnyAsync(cc => cc.NumeroCompte == budgetLine.CodeNomenclature);
+
+                if (!compteComptableExists)
+                    return (false,
+                        $"La nomenclature '{budgetLine.CodeNomenclature}' de la ligne budgétaire n'a pas de correspondance dans les Comptes Comptables.",
+                        null);
+
+
+                // ----------------------------
+                // 5️⃣ CREATION DU MANDAT (VALIDÉ)
+                // ----------------------------
                 var newMandat = new Mandat
                 {
                     NumeroMandat = mandat.NumeroMandat,
@@ -265,7 +333,6 @@ namespace Collectivite.Services
                     MontantLettre = mandat.MontantLettre,
                     DateEmission = mandat.DateEmission,
                     Objet = mandat.Objet,
-                    Motif = mandat.Motif,
                     FichierJoin = mandat.FichierJoin,
                     FichierName = mandat.FichierName,
                     DatePaiement = mandat.DatePaiement
@@ -274,49 +341,31 @@ namespace Collectivite.Services
                 context.Mandats.Add(newMandat);
                 await context.SaveChangesAsync();
 
+
+                // --------------------------------------
+                // 6️⃣ MISE À JOUR DU MONTANT ACTU
+                // --------------------------------------
                 var bl = await context.Engagements
-                    .Where(e => e.Id == newMandat!.EngagementId)
+                    .Where(e => e.Id == newMandat.EngagementId)
                     .Select(e => e.BudgetLine)
                     .FirstOrDefaultAsync();
 
                 if (bl != null)
                 {
-                    bl.MontantActu -= newMandat!.MontantNet;
+                    bl.MontantActu -= newMandat.MontantNet;
                     await context.SaveChangesAsync();
 
-                    // 🔥 recalcul hiérarchique
+                    // 🔥 Recalcul hiérarchique
                     using var ctx = CreateContext();
-                    await OrdreRecetteService.RecalculateRealisation(
-                        ctx,
-                        bl.NommenclatureId,
-                        bl.BudgetPrimitifId
-                    );
+                    await OrdreRecetteService.RecalculateRealisation(ctx, bl.NommenclatureId, bl.BudgetPrimitifId);
                 }
-                // Recharger avec les relations
+
+
+                // -------------------------------
+                // 7️⃣ RECHARGER LE MANDAT COMPLET
+                // -------------------------------
                 var savedMandat = await GetMandatByIdAsync(newMandat.Id);
 
-                if (savedMandat != null)
-                {
-                    // Vérifier que la ligne budgétaire associée existe et recupérer sa nomenclature
-                    var budgetLine = await context.BudgetLines
-                        .Where(bl => bl.Id == savedMandat.Engagement.BudgetLineId)
-                        .Select(bl => new { bl.Id, bl.Nommenclature.CodeNomenclature })
-                        .FirstOrDefaultAsync();
-                    if (budgetLine == null)
-                        return (false, "La ligne budgétaire spécifiée dans l'engagement n'existe pas.", null);
-
-                    if (string.IsNullOrWhiteSpace(budgetLine.CodeNomenclature))
-                        return (false, "La ligne budgétaire spécifiée dans l'engagement ne possède pas de nomenclature.", null);
-
-                    // Vérifier si la nomenclature existe dans la table CompteComptable
-                    var compteComptableExists = await context.CompteComptables
-                        .AnyAsync(cc => cc.NumeroCompte == budgetLine.CodeNomenclature);
-
-                    if (!compteComptableExists)
-                        return (false, $"La nomenclature '{budgetLine.CodeNomenclature}' de la ligne budgétaire n'a pas de ContrePartie dans les Comptes Comptables.", null);
-
-
-                }
 
                 return (true, "✅ Mandat créé avec succès.", savedMandat);
             }
@@ -371,7 +420,6 @@ namespace Collectivite.Services
                 existingMandat.MontantLettre = mandat.MontantLettre;
                 existingMandat.DateEmission = mandat.DateEmission;
                 existingMandat.Objet = mandat.Objet;
-                existingMandat.Motif = mandat.Motif;
                 existingMandat.FichierJoin = mandat.FichierJoin;
                 existingMandat.FichierName = mandat.FichierName;
                 existingMandat.DatePaiement = mandat.DatePaiement;

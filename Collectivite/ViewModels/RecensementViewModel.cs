@@ -12,6 +12,7 @@ namespace Collectivite.ViewModels
     public class RecensementViewModel : ViewModelBase
     {
         private readonly RecensementService _recensementService;
+
         private bool _isLoading;
         private Recensement? _selectedRecensement;
         private bool _isDialogOpen;

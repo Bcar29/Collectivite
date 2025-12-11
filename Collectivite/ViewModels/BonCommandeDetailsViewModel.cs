@@ -30,6 +30,7 @@ namespace Collectivite.ViewModels
         #region Properties
 
         public ObservableCollection<DetailBonCommande> Details { get; } = new();
+        public ObservableCollection<Engagement> Engagements { get; } = new();
 
         public bool IsLoading
         {
@@ -69,12 +70,23 @@ namespace Collectivite.ViewModels
                 {
                     BonCommande = bonCommande;
 
+                    // Charger les détails
                     Details.Clear();
                     if (bonCommande.Details != null)
                     {
                         foreach (var detail in bonCommande.Details)
                         {
                             Details.Add(detail);
+                        }
+                    }
+
+                    // Charger les engagements
+                    Engagements.Clear();
+                    if (bonCommande.Engagements != null)
+                    {
+                        foreach (var engagement in bonCommande.Engagements)
+                        {
+                            Engagements.Add(engagement);
                         }
                     }
 

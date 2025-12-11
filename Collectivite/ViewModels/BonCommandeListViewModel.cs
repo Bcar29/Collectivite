@@ -11,7 +11,6 @@ namespace Collectivite.ViewModels
 {
     public class BonCommandeListViewModel : ViewModelBase
     {
-        // private readonly string _accessDeniedMessage = "Vous n'avez pas la permission pour cette action.";
         private bool _isLoading;
         private BonCommande? _selectedBonCommande;
 
@@ -20,7 +19,7 @@ namespace Collectivite.ViewModels
             // Commandes
             LoadDataCommand = new RelayCommand(async _ => await LoadDataAsync());
             OpenAddPageCommand = new RelayCommand(_ => OpenAddPage());
-            GoFowardCommande = new RelayCommand(_ => NavigateFront());
+            GoForwardCommand = new RelayCommand(_ => NavigateFront());
             OpenEditPageCommand = new RelayCommand<BonCommande>(bc => OpenEditPage(bc));
             OpenDetailsPageCommand = new RelayCommand<BonCommande>(bc => OpenDetailsPage(bc));
             DeleteCommand = new RelayCommand<BonCommande>(async bc => await DeleteAsync(bc));
@@ -63,7 +62,7 @@ namespace Collectivite.ViewModels
         public ICommand OpenEditPageCommand { get; }
         public ICommand OpenDetailsPageCommand { get; }
         public ICommand DeleteCommand { get; }
-        public ICommand GoFowardCommande { get; }
+        public ICommand GoForwardCommand { get; }
 
         #endregion
 
@@ -112,7 +111,6 @@ namespace Collectivite.ViewModels
                 return;
             }
             NavigationService.Instance.NavigateTo(new Views.Pages.BonCommandeFormPage());
-           
         }
 
         private void OpenEditPage(BonCommande? bonCommande)
@@ -125,7 +123,6 @@ namespace Collectivite.ViewModels
                 return;
             }
             NavigationService.Instance.NavigateTo(new Views.Pages.BonCommandeFormPage(bonCommande.Id));
-            
         }
 
         private void OpenDetailsPage(BonCommande? bonCommande)
@@ -153,6 +150,7 @@ namespace Collectivite.ViewModels
             var result = MessageBox.Show(
                 $"⚠️ Supprimer le bon de commande '{bonCommande.Numero}' ?\n\n" +
                 $"Cette action supprimera également tous les détails associés.\n" +
+                $"Les engagements liés seront dissociés.\n" +
                 $"Cette action est irréversible.",
                 "Confirmation",
                 MessageBoxButton.YesNo,
@@ -192,6 +190,7 @@ namespace Collectivite.ViewModels
         {
             NavigationService.Instance.GoForward();
         }
+
         #endregion
     }
 }

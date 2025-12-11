@@ -4,6 +4,7 @@ using Collectivite.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Collectivite.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251211123753_PrefectureToCommuneNullable")]
+    partial class PrefectureToCommuneNullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -61,8 +64,12 @@ namespace Collectivite.Migrations
                     b.Property<DateTime>("DateCreation")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<int>("ExpressionBesoinId")
+                    b.Property<int>("EngagementId")
                         .HasColumnType("int");
+
+                    b.Property<byte[]>("FichierJoin")
+                        .IsRequired()
+                        .HasColumnType("longblob");
 
                     b.Property<string>("Numero")
                         .IsRequired()
@@ -71,10 +78,7 @@ namespace Collectivite.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ExpressionBesoinId");
-
-                    b.HasIndex("Numero")
-                        .IsUnique();
+                    b.HasIndex("EngagementId");
 
                     b.ToTable("BonCommandes");
                 });
@@ -648,9 +652,6 @@ namespace Collectivite.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("BonCommandeId")
-                        .HasColumnType("int");
-
                     b.Property<int>("BudgetLineId")
                         .HasColumnType("int");
 
@@ -696,8 +697,6 @@ namespace Collectivite.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("BonCommandeId");
 
                     b.HasIndex("BudgetLineId");
 
@@ -876,6 +875,10 @@ namespace Collectivite.Migrations
                     b.Property<decimal>("MontantNet")
                         .HasColumnType("decimal(65,30)");
 
+                    b.Property<string>("Motif")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("NumeroMandat")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -888,9 +891,6 @@ namespace Collectivite.Migrations
 
                     b.Property<decimal>("Rts")
                         .HasColumnType("decimal(65,30)");
-
-                    b.Property<int>("status")
-                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -1291,9 +1291,10 @@ namespace Collectivite.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Email")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<string>("PasswordHash")
+                    b.Property<string>("Password")
                         .IsRequired()
                         .HasColumnType("longtext");
 
@@ -1301,6 +1302,7 @@ namespace Collectivite.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Tel")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Username")
@@ -1318,13 +1320,13 @@ namespace Collectivite.Migrations
 
             modelBuilder.Entity("Collectivite.Models.BonCommande", b =>
                 {
-                    b.HasOne("Collectivite.Models.ExpressionBesoin", "ExpressionBesoin")
-                        .WithMany()
-                        .HasForeignKey("ExpressionBesoinId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                    b.HasOne("Collectivite.Models.Engagement", "Engagement")
+                        .WithMany("BonCommandes")
+                        .HasForeignKey("EngagementId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("ExpressionBesoin");
+                    b.Navigation("Engagement");
                 });
 
             modelBuilder.Entity("Collectivite.Models.BudgetLine", b =>
@@ -1502,11 +1504,6 @@ namespace Collectivite.Migrations
 
             modelBuilder.Entity("Collectivite.Models.Engagement", b =>
                 {
-                    b.HasOne("Collectivite.Models.BonCommande", "BonCommande")
-                        .WithMany("Engagements")
-                        .HasForeignKey("BonCommandeId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("Collectivite.Models.BudgetLine", "BudgetLine")
                         .WithMany("Engagements")
                         .HasForeignKey("BudgetLineId")
@@ -1537,8 +1534,6 @@ namespace Collectivite.Migrations
                         .WithMany("Engagements")
                         .HasForeignKey("TiersId")
                         .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("BonCommande");
 
                     b.Navigation("BudgetLine");
 
@@ -1767,8 +1762,6 @@ namespace Collectivite.Migrations
             modelBuilder.Entity("Collectivite.Models.BonCommande", b =>
                 {
                     b.Navigation("Details");
-
-                    b.Navigation("Engagements");
                 });
 
             modelBuilder.Entity("Collectivite.Models.BudgetLine", b =>
@@ -1815,6 +1808,8 @@ namespace Collectivite.Migrations
 
             modelBuilder.Entity("Collectivite.Models.Engagement", b =>
                 {
+                    b.Navigation("BonCommandes");
+
                     b.Navigation("Mandat");
                 });
 

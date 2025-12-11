@@ -52,7 +52,7 @@ namespace Collectivite.Services
                     Bordereau = mandat.Bordereau,
                     DateEmission = mandat.DateEmission,
                     Objet = mandat.Objet,
-                    Motif = mandat.Motif,
+                    Motif = mandat.Objet,
                     Beneficiaire = mandat.Engagement?.Tiers?.Nom
                         ?? mandat.Engagement?.Tiers?.RaisonSociale
                         ?? "Tiers non défini",
@@ -94,7 +94,7 @@ namespace Collectivite.Services
                 Bordereau = mandat.Bordereau,
                 DateEmission = mandat.DateEmission,
                 Objet = mandat.Objet,
-                Motif = mandat.Motif,
+                Motif = mandat.Objet,
                 Beneficiaire = mandat.Engagement?.Tiers?.Nom
                     ?? mandat.Engagement?.Tiers?.RaisonSociale
                     ?? "Tiers non défini",

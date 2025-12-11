@@ -4,6 +4,7 @@ using Collectivite.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Collectivite.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251211131250_DeleteMotifToMandat")]
+    partial class DeleteMotifToMandat
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -185,6 +188,7 @@ namespace Collectivite.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("Prefecture")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Region")
@@ -889,9 +893,6 @@ namespace Collectivite.Migrations
                     b.Property<decimal>("Rts")
                         .HasColumnType("decimal(65,30)");
 
-                    b.Property<int>("status")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("EngagementId")
@@ -1291,9 +1292,10 @@ namespace Collectivite.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Email")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<string>("PasswordHash")
+                    b.Property<string>("Password")
                         .IsRequired()
                         .HasColumnType("longtext");
 
@@ -1301,6 +1303,7 @@ namespace Collectivite.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Tel")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Username")

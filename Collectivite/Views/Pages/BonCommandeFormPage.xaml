@@ -72,11 +72,13 @@
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
-                            <!-- Numéro -->
+                            <!-- Numéro (readonly) -->
                             <TextBox Grid.Row="0" Grid.Column="0"
-                                     materialDesign:HintAssist.Hint="N° Bon de Commande *"
+                                     materialDesign:HintAssist.Hint="N° Bon de Commande (automatique)"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                     Text="{Binding BonCommande.Numero, UpdateSourceTrigger=PropertyChanged}"
+                                     Text="{Binding BonCommande.Numero}"
+                                     IsReadOnly="True"
+                                     Background="#F0F0F0"
                                      Margin="0,0,0,15"/>
 
                             <!-- Date -->
@@ -86,33 +88,16 @@
                                         SelectedDate="{Binding BonCommande.DateCreation}"
                                         Margin="0,0,0,15"/>
 
-                            <!-- Engagement -->
+                            <!-- Expression de Besoin -->
                             <ComboBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
-                                      materialDesign:HintAssist.Hint="Engagement *"
+                                      materialDesign:HintAssist.Hint="Expression de Besoin *"
                                       Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                                      ItemsSource="{Binding Engagements}"
-                                      SelectedValue="{Binding BonCommande.EngagementId}"
+                                      ItemsSource="{Binding ExpressionBesoins}"
+                                      SelectedValue="{Binding BonCommande.ExpressionBesoinId}"
                                       SelectedValuePath="Id"
-                                      DisplayMemberPath="Objet"
+                                      DisplayMemberPath="Numero"
                                       Margin="0,0,0,15"/>
                         </Grid>
-
-                        <!-- Fichier joint -->
-                        <StackPanel Orientation="Horizontal">
-                            <Button Style="{StaticResource MaterialDesignOutlinedButton}"
-                                    Command="{Binding ChooseFileCommand}"
-                                    Height="36">
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="Attachment" Margin="0,0,5,0"/>
-                                    <TextBlock Text="Joindre un fichier"/>
-                                </StackPanel>
-                            </Button>
-                            <TextBlock Text="{Binding FichierName}"
-                                       VerticalAlignment="Center"
-                                       Margin="10,0,0,0"
-                                       FontStyle="Italic"
-                                       Foreground="#666"/>
-                        </StackPanel>
                     </StackPanel>
                 </materialDesign:Card>
 

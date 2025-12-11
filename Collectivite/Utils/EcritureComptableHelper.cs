@@ -72,13 +72,15 @@ namespace Collectivite.Utils
                 else if (lb.Nommenclature.Nature == NatureType.Depense && md != null)
                 {
                     // Traitement pour les dépenses
+                    System.Diagnostics.Debug.WriteLine($"contre partie {compteComptable.ContrePartie.Id}");
+
                     ecriture = new EcritureComptable
                     {
                         DateEcriture = DateOnly.FromDateTime(DateTime.Now),
                         CompteDebitId = compteComptable.Id,
                         CompteCreditId = compteComptable.ContrePartie.Id,
                         Montant = md.MontantNet,
-                        OrdreRecetteId = md.Id
+                        MandatId = md.Id
                     };
                 }
                 else
@@ -95,7 +97,7 @@ namespace Collectivite.Utils
             catch (Exception ex)
             {
                 
-                return (false, $"Erreur lors de la génération de l'écriture : {ex.Message}", null);
+                return (false, $"Erreur lors de la génération de l'écriture dans Ecriture helper  : {ex.Message}", null);
             }
         }
     }

@@ -107,11 +107,11 @@
 
                         <!-- Exercice -->
                         <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,0,15">
-                            <TextBlock Text="Exercice"
+                            <TextBlock Text="Exercice "
                                        FontSize="12"
                                        Foreground="#666"
                                        Margin="0,0,0,5"/>
-                            <TextBlock Text="{Binding ExpressionBesoin.Exercice.Annee}"
+                            <TextBlock Text="{Binding ExpressionBesoin.Exercice.Libelle}"
                                        FontSize="16"
                                        FontWeight="SemiBold"
                                        Foreground="#1976D2"/>
@@ -161,7 +161,7 @@
 
                                 <!-- Nomenclature -->
                                 <DataGridTextColumn Header="Code Nomenclature" 
-                                                  Binding="{Binding Nommenclature.Code}" 
+                                                  Binding="{Binding Nommenclature.CodeNomenclature}" 
                                                   Width="150"
                                                   FontWeight="SemiBold"/>
 

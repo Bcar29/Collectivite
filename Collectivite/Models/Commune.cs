@@ -15,8 +15,8 @@ namespace Collectivite.Models
         public int Id { get; set; }
         [Required]
         public string Nom { get; set; } = null!;
-        public string Region { get; set; }
-        public string Prefecture { get; set; }
+        public string Region { get; set; }= null!;
+        public string? Prefecture { get; set; }
         public TypeCommune CommuneType { get; set; }= TypeCommune.URBAINE;
 
         // Distances (en km) - Non modifiables après création
