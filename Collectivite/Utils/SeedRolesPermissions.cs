@@ -153,6 +153,7 @@ namespace Collectivite.Utils
             new Permission { Name = "Modifier un remaniement", Code = "Remaniement.Edit", Description = "Permet de modifier un remaniement budgétaire." },
             new Permission { Name = "Voir les remaniements", Code = "Remaniement.View", Description = "Permet de consulter les remaniements budgétaires." },
             new Permission { Name = "Supprimer un remaniement", Code = "Remaniement.Delete", Description = "Permet de supprimer un remaniement budgétaire." },
+            
             // ExpressionBesoin
             new Permission { Name = "Créer une Expression de Besoin", Code = "ExpressionBesoin.Create", Description = "Permet de créer une Expression de Besoin." },
             new Permission { Name = "Modifier une Expression de Besoin", Code = "ExpressionBesoin.Edit", Description = "Permet de modifier une Expression de Besoin." },
@@ -185,7 +186,6 @@ namespace Collectivite.Utils
 
             // Gestion comptable
             new Permission { Name = "Accès à la gestion comptable", Code = "GestionComptable.Access", Description = "Permet d'accéder à la section de gestion comptable (Comptes de gestion, Livre journal, Grand livre, Balance)." }
-
         };
 
         private static readonly Dictionary<string, string[]> RolePermissions = new()
@@ -199,7 +199,9 @@ namespace Collectivite.Utils
         {
             //db.Database.Migrate();
 
-            // Permissions
+            // ═══════════════════════════════════════════════════════════
+            // 1. PERMISSIONS
+            // ═══════════════════════════════════════════════════════════
             foreach (var permission in DefaultPermissions)
             {
                 if (!db.Permissions.Any(p => p.Code == permission.Code))
@@ -215,7 +217,9 @@ namespace Collectivite.Utils
 
             db.SaveChanges();
 
-            // Roles + assignments
+            // ═══════════════════════════════════════════════════════════
+            // 2. RÔLES + ASSIGNMENTS
+            // ═══════════════════════════════════════════════════════════
             // ⚠️ IMPORTANT : on ne supprime plus les RolePermissions existantes.
             // L'objectif est de fournir un "rôle par défaut" la première fois :
             // - si le rôle n'existe pas, on le crée
@@ -270,7 +274,7 @@ namespace Collectivite.Utils
             }
 
             // ════════════════════════════════════════════════════════════
-            // Maire = super-admin : lui attribuer TOUTES les permissions existantes
+            // 3. MAIRE = SUPER-ADMIN : lui attribuer TOUTES les permissions existantes
             // sans retirer celles déjà présentes (ajout uniquement des manquantes).
             // ════════════════════════════════════════════════════════════
             var maire = db.Roles
@@ -298,7 +302,69 @@ namespace Collectivite.Utils
 
                 db.SaveChanges();
             }
+
+            // ═══════════════════════════════════════════════════════════
+            // 4. CRÉATION DE L'UTILISATEUR SUPER-ADMIN
+            // ═══════════════════════════════════════════════════════════
+            SeedSuperAdmin(db);
+        }
+
+        /// <summary>
+        /// Crée un utilisateur super-admin par défaut avec le rôle "Maire".
+        /// Cet utilisateur n'est créé qu'une seule fois (vérification par username).
+        /// </summary>
+        private static void SeedSuperAdmin(AppDbContext db)
+        {
+            const string SUPER_ADMIN_USERNAME = "admin";
+            const string SUPER_ADMIN_PASSWORD = "Admin@2025";
+            const string SUPER_ADMIN_EMAIL = "admin@collectivite.local";
+
+            // Vérifier si l'utilisateur admin existe déjà
+            if (db.Users.Any(u => u.Username == SUPER_ADMIN_USERNAME))
+            {
+                return; // L'admin existe déjà, on ne fait rien
+            }
+
+            // Récupérer le rôle Maire
+            var maireRole = db.Roles.FirstOrDefault(r => r.Name == "Maire");
+            if (maireRole == null)
+            {
+                System.Console.WriteLine("⚠️  ATTENTION : Le rôle 'Maire' n'existe pas. Impossible de créer le super-admin.");
+                return; // Pas de rôle Maire, impossible de créer l'admin
+            }
+
+            // Récupérer la première commune (ou null si aucune)
+            var premiereCommune = db.Communes.FirstOrDefault();
+
+            // Hacher le mot de passe avec BCrypt
+            var passwordHasher = new PasswordHasher();
+            var passwordHash = passwordHasher.HashPassword(SUPER_ADMIN_PASSWORD);
+
+            // Créer l'utilisateur super-admin
+            var superAdmin = new User
+            {
+                Username = SUPER_ADMIN_USERNAME,
+                Email = SUPER_ADMIN_EMAIL,
+                Tel = "+224 000 00 00 00",
+                PasswordHash = passwordHash,
+                RoleId = maireRole.Id,
+                CommuneId = premiereCommune?.Id ?? 0
+            };
+
+            db.Users.Add(superAdmin);
+            db.SaveChanges();
+
+            // Affichage dans la console pour information
+            System.Console.WriteLine("═══════════════════════════════════════════════════════");
+            System.Console.WriteLine("✅ UTILISATEUR SUPER-ADMIN CRÉÉ AVEC SUCCÈS !");
+            System.Console.WriteLine("═══════════════════════════════════════════════════════");
+            System.Console.WriteLine($"   Username: {SUPER_ADMIN_USERNAME}");
+            System.Console.WriteLine($"   Password: {SUPER_ADMIN_PASSWORD}");
+            System.Console.WriteLine($"   Email:    {SUPER_ADMIN_EMAIL}");
+            System.Console.WriteLine($"   Rôle:     Maire (tous les droits)");
+            System.Console.WriteLine("═══════════════════════════════════════════════════════");
+            System.Console.WriteLine("⚠️  IMPORTANT: Changez ce mot de passe dès la première connexion !");
+            System.Console.WriteLine("═══════════════════════════════════════════════════════");
         }
     }
 }
-

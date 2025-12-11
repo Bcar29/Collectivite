@@ -115,6 +115,7 @@ namespace Collectivite
                                "Accès refusé",
                                MessageBoxButton.OK,
                                MessageBoxImage.Warning);
+                _viewModel.IsMenuOpen = false;
                 return;
             }
 
@@ -134,6 +135,7 @@ namespace Collectivite
                                "Accès refusé",
                                MessageBoxButton.OK,
                                MessageBoxImage.Warning);
+                _viewModel.IsMenuOpen = false;
                 return;
             }
 
@@ -150,6 +152,7 @@ namespace Collectivite
                                "Accès refusé",
                                MessageBoxButton.OK,
                                MessageBoxImage.Warning);
+                _viewModel.IsMenuOpen = false;
                 return;
             }
 
@@ -188,6 +191,7 @@ namespace Collectivite
                                "Accès refusé",
                                MessageBoxButton.OK,
                                MessageBoxImage.Warning);
+                _viewModel.IsMenuOpen = false;
                 return;
             }
 
@@ -209,6 +213,7 @@ namespace Collectivite
                                "Accès refusé",
                                MessageBoxButton.OK,
                                MessageBoxImage.Warning);
+                _viewModel.IsMenuOpen = false;
                 return;
             }
 
@@ -217,7 +222,7 @@ namespace Collectivite
         }
         private void ExpressionBesoin_Click(object sender, RoutedEventArgs e)
         {
-            _viewModel.UpdatePageTitle("SAISIE DES PIECES - BON-COMMANDE");
+            _viewModel.UpdatePageTitle("SAISIE DES PIECES - EXPRESSION BESOIN");
             NavigationService.Instance.NavigateTo(new Views.Pages.ExpressionBesoinListPage());
             _viewModel.IsMenuOpen = false;
         }
@@ -233,6 +238,7 @@ namespace Collectivite
                                "Accès refusé",
                                MessageBoxButton.OK,
                                MessageBoxImage.Warning);
+                _viewModel.IsMenuOpen = false;
                 return;
             }
 
@@ -249,6 +255,7 @@ namespace Collectivite
                                "Accès refusé",
                                MessageBoxButton.OK,
                                MessageBoxImage.Warning);
+                _viewModel.IsMenuOpen = false;
                 return;
             }
 
@@ -268,6 +275,7 @@ namespace Collectivite
                                "Accès refusé",
                                MessageBoxButton.OK,
                                MessageBoxImage.Warning);
+                _viewModel.IsMenuOpen = false;
                 return;
             }
 
@@ -285,6 +293,7 @@ namespace Collectivite
                                "Accès refusé",
                                MessageBoxButton.OK,
                                MessageBoxImage.Warning);
+                _viewModel.IsMenuOpen = false;
                 return;
             }
 
@@ -310,6 +319,7 @@ namespace Collectivite
                                "Accès refusé",
                                MessageBoxButton.OK,
                                MessageBoxImage.Warning);
+                _viewModel.IsMenuOpen = false;
                 return;
             }
 
@@ -328,6 +338,7 @@ namespace Collectivite
                                "Accès refusé",
                                MessageBoxButton.OK,
                                MessageBoxImage.Warning);
+                _viewModel.IsMenuOpen = false;
                 return;
             }
 
@@ -343,6 +354,7 @@ namespace Collectivite
                                "Accès refusé",
                                MessageBoxButton.OK,
                                MessageBoxImage.Warning);
+                _viewModel.IsMenuOpen = false;
                 return;
             }
 
@@ -359,6 +371,7 @@ namespace Collectivite
                                "Accès refusé",
                                MessageBoxButton.OK,
                                MessageBoxImage.Warning);
+                _viewModel.IsMenuOpen = false;
                 return;
             }
 
@@ -375,6 +388,7 @@ namespace Collectivite
                                "Accès refusé",
                                MessageBoxButton.OK,
                                MessageBoxImage.Warning);
+                _viewModel.IsMenuOpen = false;
                 return;
             }
 
@@ -391,6 +405,7 @@ namespace Collectivite
                                "Accès refusé",
                                MessageBoxButton.OK,
                                MessageBoxImage.Warning);
+                _viewModel.IsMenuOpen = false;
                 return;
             }
 

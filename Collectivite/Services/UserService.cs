@@ -8,6 +8,13 @@ namespace Collectivite.Services
 {
     public class UserService
     {
+        private readonly IPasswordHasher _passwordHasher;
+
+        public UserService()
+        {
+            _passwordHasher = new PasswordHasher();
+        }
+
         private AppDbContext CreateContext() => new AppDbContext();
 
         public async Task<List<User>> GetAllAsync()
@@ -30,6 +37,13 @@ namespace Collectivite.Services
                 return (false, "Ce nom d'utilisateur est déjà utilisé.", null);
             }
 
+            // ✅ HACHAGE AUTOMATIQUE du mot de passe
+            if (!string.IsNullOrEmpty(user.Password))
+            {
+                user.PasswordHash = _passwordHasher.HashPassword(user.Password);
+                user.Password = string.Empty; // Nettoyer la propriété temporaire
+            }
+
             context.Users.Add(user);
             await context.SaveChangesAsync();
 
@@ -44,8 +58,8 @@ namespace Collectivite.Services
         public async Task<(bool Success, string Message)> UpdateAsync(User user)
         {
             using var context = CreateContext();
-            var existing = await context.Users.FindAsync(user.Id);
 
+            var existing = await context.Users.FindAsync(user.Id);
             if (existing == null)
             {
                 return (false, "Utilisateur introuvable.");
@@ -54,9 +68,14 @@ namespace Collectivite.Services
             existing.Username = user.Username;
             existing.Email = user.Email;
             existing.Tel = user.Tel;
-            existing.Password = user.Password;
             existing.CommuneId = user.CommuneId;
             existing.RoleId = user.RoleId;
+
+            // ✅ HACHAGE du nouveau mot de passe SI fourni
+            if (!string.IsNullOrEmpty(user.Password))
+            {
+                existing.PasswordHash = _passwordHasher.HashPassword(user.Password);
+            }
 
             await context.SaveChangesAsync();
             return (true, "Utilisateur mis à jour avec succès.");
@@ -65,8 +84,8 @@ namespace Collectivite.Services
         public async Task<(bool Success, string Message)> DeleteAsync(int userId)
         {
             using var context = CreateContext();
-            var user = await context.Users.FindAsync(userId);
 
+            var user = await context.Users.FindAsync(userId);
             if (user == null)
             {
                 return (false, "Utilisateur introuvable.");
@@ -74,15 +93,14 @@ namespace Collectivite.Services
 
             context.Users.Remove(user);
             await context.SaveChangesAsync();
-
             return (true, "Utilisateur supprimé avec succès.");
         }
 
         public async Task<(bool Success, string Message)> UpdateRoleAsync(int userId, int roleId)
         {
             using var context = CreateContext();
-            var user = await context.Users.FindAsync(userId);
 
+            var user = await context.Users.FindAsync(userId);
             if (user == null)
             {
                 return (false, "Utilisateur introuvable.");
@@ -96,9 +114,7 @@ namespace Collectivite.Services
 
             user.RoleId = roleId;
             await context.SaveChangesAsync();
-
             return (true, "Rôle mis à jour avec succès.");
         }
     }
 }
-

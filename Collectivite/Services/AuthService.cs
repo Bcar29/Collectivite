@@ -9,8 +9,14 @@ namespace Collectivite.Services
 {
     public class AuthService
     {
+        private readonly IPasswordHasher _passwordHasher;
         private User? _currentUser;
         private readonly HashSet<string> _currentPermissions = new(StringComparer.OrdinalIgnoreCase);
+
+        public AuthService()
+        {
+            _passwordHasher = new PasswordHasher();
+        }
 
         private AppDbContext CreateContext()
         {
@@ -38,8 +44,8 @@ namespace Collectivite.Services
                     return (false, "Nom d'utilisateur ou mot de passe incorrect.", null);
                 }
 
-                // Note: En production, utilisez un hash (BCrypt, PBKDF2, etc.)
-                if (user.Password != password)
+                // ✅ VÉRIFICATION du mot de passe avec BCrypt
+                if (!_passwordHasher.VerifyPassword(password, user.PasswordHash))
                 {
                     return (false, "Nom d'utilisateur ou mot de passe incorrect.", null);
                 }

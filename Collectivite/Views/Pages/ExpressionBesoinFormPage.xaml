@@ -93,7 +93,7 @@
                                       ItemsSource="{Binding Exercices}"
                                       SelectedValue="{Binding ExpressionBesoin.ExerciceId}"
                                       SelectedValuePath="Id"
-                                      DisplayMemberPath="Annee"
+                                      DisplayMemberPath="Libelle"
                                       Margin="0,0,0,15"/>
                         </Grid>
                     </StackPanel>

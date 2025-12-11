@@ -632,7 +632,7 @@ private void Imprimer(Facture? facture)
                 DateEcheance = DateTime.Now.AddDays(30),
                 Status = StatusFact.impayee,
                 MontantHT = 0,
-                TauxTVA = 18, // TVA par défaut
+                TauxTVA = 18,
                 MontantTTC = 0,
                 NumeroFacture = $"FACT-{DateTime.Now:yyyyMMdd}-{Factures.Count + 1:D4}",
                 Description = ""
