@@ -185,14 +185,27 @@ namespace Collectivite.Utils
             new Permission { Name = "Accès à l'administration", Code = "Administration.Access", Description = "Permet d'accéder à la section d'administration (Rôles, Permissions, Utilisateurs)." },
 
             // Gestion comptable
-            new Permission { Name = "Accès à la gestion comptable", Code = "GestionComptable.Access", Description = "Permet d'accéder à la section de gestion comptable (Comptes de gestion, Livre journal, Grand livre, Balance)." }
+            new Permission { Name = "Accès à la gestion comptable", Code = "GestionComptable.Access", Description = "Permet d'accéder à la section de gestion comptable (Comptes de gestion, Livre journal, Grand livre, Balance)." },
+
+            // gestion des sous-onglets de gestion comptables
+            new Permission { Name = "Voir le livre journal", Code = "LivreJournal.View", Description = "Permet de consulter le Livre Journal." },
+            new Permission { Name = "Voir le grand livre", Code = "GrandLivre.View", Description = "Permet de consulter le Grand Livre." },
+            new Permission { Name = "Voir les droits constatés", Code = "DroitConstate.View", Description = "Permet de consulter les droits constatés." },
+            new Permission { Name = "Voir les droits au comptant", Code = "DroitAuComptant.View", Description = "Permet de consulter les droits au comptant." },
+            new Permission { Name = "Voir les balances mensuelles", Code = "BalanceMensuelle.View", Description = "Permet de consulter les balances mensuelles." },
+            new Permission { Name = "Voir les balances annuelles", Code = "BalanceAnnuelle.View", Description = "Permet de consulter les balances annuelles." },
+            new Permission { Name = "Voir les exercices", Code = "Exercice.View", Description = "Permet de consulter les exercices." },
+            new Permission { Name = "Voir les expressions de besoins", Code = "ExpressionBesoin.View", Description = "Permet de consulter les expressions de besoin." },
+
+
+
         };
 
         private static readonly Dictionary<string, string[]> RolePermissions = new()
         {
             { "Maire", new[] { "Budget.Approve", "Budget.Validate", "Remaniement.Manage" } },
-            { "Secrétaire Général", new[] { "Courrier.Register", "Remaniement.Manage" } },
-            { "Receveur", new[] { "Finance.Manage", "Remaniement.Manage" } }
+            //{ "Secrétaire Général", new[] { "Courrier.Register", "Remaniement.Manage" } },
+            //{ "Receveur", new[] { "Finance.Manage", "Remaniement.Manage" } }
         };
 
         public static void Seed(AppDbContext db)
