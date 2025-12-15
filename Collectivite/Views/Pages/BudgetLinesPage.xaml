@@ -73,23 +73,47 @@
 
             <!-- Boutons (visibles seulement si budget non validé) -->
             <StackPanel Grid.Row="1"
-                        Orientation="Horizontal" 
-                        HorizontalAlignment="Right"
-                        Visibility="{Binding CanModifyBudget, Converter={StaticResource BooleanToVisibilityConverter}}">
+                Orientation="Horizontal" 
+                HorizontalAlignment="Right">
 
+                <!-- 🆕 Bouton Export PDF -->
+                <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                    Command="{Binding ExportPdfCommand}"
+                    Height="36"
+                    Margin="0,0,10,0">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="FilePdfBox" Margin="0,0,5,0"/>
+                        <TextBlock Text="Exporter PDF"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- 🆕 Bouton Imprimer -->
+                <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                    Command="{Binding PrintCommand}"
+                    Height="36"
+                    Margin="0,0,10,0">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Printer" Margin="0,0,5,0"/>
+                        <TextBlock Text="Imprimer"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Bouton Ajouter (visible seulement si budget non validé) -->
                 <Button Style="{StaticResource MaterialDesignRaisedButton}"
-                        Command="{Binding AddCommand}"
-                        Height="36"
-                        Margin="0,0,10,0">
+                    Command="{Binding AddCommand}"
+                    Height="36"
+                    Margin="0,0,10,0"
+                    Visibility="{Binding CanModifyBudget, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="Plus" Margin="0,0,5,0"/>
                         <TextBlock Text="Ajouter"/>
                     </StackPanel>
                 </Button>
 
+                <!-- Bouton Rafraîchir -->
                 <Button Style="{StaticResource MaterialDesignOutlinedButton}"
-                        Command="{Binding RefreshCommand}"
-                        Height="36">
+            Command="{Binding RefreshCommand}"
+            Height="36">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="Refresh" Margin="0,0,5,0"/>
                         <TextBlock Text="Rafraîchir"/>

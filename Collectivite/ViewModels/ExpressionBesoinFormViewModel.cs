@@ -223,7 +223,8 @@ namespace Collectivite.ViewModels
 
         private void NavigateBack()
         {
-            NavigationService.Instance.GoBack();
+            NavigationService.Instance.NavigateTo(new Views.Pages.ExpressionBesoinListPage());
+
         }
 
         private void AddDetail()

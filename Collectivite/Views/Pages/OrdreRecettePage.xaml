@@ -94,7 +94,7 @@
                         CornerRadius="8"
                         Padding="15">
                     <DockPanel>
-                        <materialDesign:PackIcon Kind="CurrencyUsd" 
+                        <materialDesign:PackIcon Kind="CashCycle" 
                                                Width="24" 
                                                Height="24"
                                                Foreground="#1976D2"

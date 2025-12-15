@@ -44,9 +44,8 @@ namespace Collectivite.ViewModels
         public string Exercice => OrdreRecette?.Exercice?.Libelle ?? "N/A";
         public string Commune => OrdreRecette?.Commune?.Nom ?? "N/A";
         public string LigneBudgetaire => OrdreRecette?.BudgetLine?.Nommenclature?.Intitule ?? "N/A";
-        public string Chapitre => OrdreRecette?.BudgetLine?.Nommenclature?.Chapitre ?? "N/A";
-        public string Article => OrdreRecette?.BudgetLine?.Nommenclature?.Article ?? "N/A";
-        public string Comptable => OrdreRecette?.Comptable ?? "N/A";
+        public string Imputation => OrdreRecette?.BudgetLine?.Nommenclature?.CodeNomenclature ?? "N/A";
+        public string Comptable => OrdreRecette?.Comptable ?? "Non defini";
         public new string Tiers => OrdreRecette?.Tiers?.Nom ?? "Non spécifié";
         public string Motifs => OrdreRecette?.Motifs ?? "Aucun motif";
         public string MontantChiffres => OrdreRecette != null ? $"{OrdreRecette.MontantOrdre:N0} GNF" : "0 GNF";
@@ -85,8 +84,7 @@ namespace Collectivite.ViewModels
                     OnPropertyChanged(nameof(Exercice));
                     OnPropertyChanged(nameof(Commune));
                     OnPropertyChanged(nameof(LigneBudgetaire));
-                    OnPropertyChanged(nameof(Chapitre));
-                    OnPropertyChanged(nameof(Article));
+                    OnPropertyChanged(nameof(Imputation));
                     OnPropertyChanged(nameof(Comptable));
                     OnPropertyChanged(nameof(Tiers));
                     OnPropertyChanged(nameof(Motifs));
@@ -118,7 +116,7 @@ namespace Collectivite.ViewModels
 
         private void NavigateToEdit()
         {
-            
+           
         }
 
         private async System.Threading.Tasks.Task DeleteAsync()

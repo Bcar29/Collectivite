@@ -165,28 +165,22 @@
                                         <TextBlock Text="Nommenclature" FontSize="12" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
+                                <Button Style="{StaticResource MenuButtonStyle}"
+                                    Click="CompteComptable_Click">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="BookmarkMultiple" 
+                                            VerticalAlignment="Center"
+                                            Width="22"
+                                            Height="22"
+                                            Margin="0,0,15,0"/>
+                                        <TextBlock Text="Plan comptables" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
 
 
                             </StackPanel>
                         </Expander>
-
-
                         <!-- Section Configuration FIN -->
-
-
-                        <Button Style="{StaticResource MenuButtonStyle}"
-                            Click="CompteComptable_Click">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="BookmarkMultiple" 
-                                    VerticalAlignment="Center"
-                                    Width="22"
-                                    Height="22"
-                                    Margin="0,0,15,0"/>
-                                <TextBlock Text="Compte comptables" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
-
-                       
 
                         <!-- Section Gestion Budgétaire -->
 

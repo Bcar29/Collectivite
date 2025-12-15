@@ -81,22 +81,15 @@
                         <Button Style="{StaticResource MaterialDesignRaisedButton}"
                                 Command="{Binding NavigateToEditCommand}"
                                 Height="36"
+                                Background="DarkRed"
+                                BorderBrush="DarkRed"
                                 Margin="0,0,10,0">
                             <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Pencil" Margin="0,0,5,0"/>
-                                <TextBlock Text="Modifier"/>
+                                <materialDesign:PackIcon Kind="FilePdfBox" Margin="0,0,5,0"/>
+                                <TextBlock Text="Export PDF"/>
                             </StackPanel>
                         </Button>
-                        <Button Style="{StaticResource MaterialDesignRaisedButton}"
-                                Command="{Binding DeleteCommand}"
-                                Background="#F44336"
-                                BorderBrush="#F44336"
-                                Height="36">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Delete" Margin="0,0,5,0"/>
-                                <TextBlock Text="Supprimer"/>
-                            </StackPanel>
-                        </Button>
+                        
                     </StackPanel>
                 </DockPanel>
 
@@ -233,27 +226,14 @@
                                          Foreground="#1976D2"
                                          Margin="0,0,0,15"/>
 
-                                <!-- Chapitre -->
+                                <!-- Imputation -->
                                 <DockPanel Margin="0,0,0,10">
-                                    <TextBlock Text="Chapitre :"
+                                    <TextBlock Text="Imputation :"
                                              FontSize="12"
                                              Foreground="#666"
                                              Width="80"
                                              DockPanel.Dock="Left"/>
-                                    <TextBlock Text="{Binding Chapitre}"
-                                             FontSize="13"
-                                             FontWeight="SemiBold"
-                                             Foreground="#424242"/>
-                                </DockPanel>
-
-                                <!-- Article -->
-                                <DockPanel Margin="0,0,0,10">
-                                    <TextBlock Text="Article :"
-                                             FontSize="12"
-                                             Foreground="#666"
-                                             Width="80"
-                                             DockPanel.Dock="Left"/>
-                                    <TextBlock Text="{Binding Article}"
+                                    <TextBlock Text="{Binding Imputation}"
                                              FontSize="13"
                                              FontWeight="SemiBold"
                                              Foreground="#424242"/>

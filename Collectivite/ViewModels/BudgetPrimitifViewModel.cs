@@ -11,12 +11,15 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using iTextSharp.text;
+using iTextSharp.text.pdf;
 
 namespace Collectivite.ViewModels
 {
     class BudgetPrimitifViewModel : ViewModelBase, IDisposable
     {
         private readonly BudgetPrimitifService _budgetPrimitifService;
+        private readonly BudgetLineService _budgetLineService;
         private readonly ExerciceService _exerciceService;
         private bool _isLoading;
         private BudgetPrimitif? _selectedBudgetPrimitif;
@@ -33,9 +36,14 @@ namespace Collectivite.ViewModels
         private string? _fileNameValidation;
         private bool _isDisposed;
 
+        // 🆕 Pour la vue d'ensemble
+        private int _selectedVueEnsembleTabIndex;
+        private readonly List<BudgetLine> _allVueEnsembleLines = new();
+
         public BudgetPrimitifViewModel(BudgetPrimitifService budgetPrimitifService)
         {
             _budgetPrimitifService = budgetPrimitifService;
+            _budgetLineService = new BudgetLineService();
             _exerciceService = ExerciceService.Instance;
 
             _dialogBudgetPrimitif = new BudgetPrimitif
@@ -48,40 +56,36 @@ namespace Collectivite.ViewModels
 
             //Commandes
             LoadBudgetPrimitifCommand = new RelayCommand(async _ => await LoadBudgetPrimitifAsync());
-            OppenAddBudgetPrimitifCommand = new RelayCommand( _ =>  OpenAddBudgetPrimitif());
+            OppenAddBudgetPrimitifCommand = new RelayCommand(_ => OpenAddBudgetPrimitif());
             OppenEditBudgetPrimitifCommand = new RelayCommand<BudgetPrimitif>(budgetPrimitif => OppenEditBudgetPrimitif(budgetPrimitif));
             SaveBudgetPrimitifCommand = new RelayCommand(async _ => await SaveBudgetPrimitifAsync(), _ => CanSaveBudgetPrimitif());
             CancelBudgetPrimitifCommand = new RelayCommand(_ => CancelBudgetPrimitif());
             DeleteBudgetPrimitifCommand = new RelayCommand<BudgetPrimitif>(async budgetPrimitif => await DeleteBudgetPrimitifAsync(budgetPrimitif));
-            OpenValidationDialogCommand = new RelayCommand<BudgetPrimitif>(
-                budget => OpenValidationDialog(budget));
-
-            OpenApprovalDialogCommand = new RelayCommand<BudgetPrimitif>(
-                budget => OpenApprovalDialog(budget));
-
-            ConfirmValidationCommand = new RelayCommand(
-                async _ => await ConfirmValidationAsync(),
-                _ => CanConfirmValidation());
-
-            CancelValidationCommand = new RelayCommand(
-                _ => CancelValidation());
-
-            ConfirmApprovalCommand = new RelayCommand(
-                async _ => await ConfirmApprovalAsync(),
-                _ => CanConfirmApproval());
-
-            CancelApprovalCommand = new RelayCommand(
-                _ => CancelApproval());
-
+            OpenValidationDialogCommand = new RelayCommand<BudgetPrimitif>(budget => OpenValidationDialog(budget));
+            OpenApprovalDialogCommand = new RelayCommand<BudgetPrimitif>(budget => OpenApprovalDialog(budget));
+            ConfirmValidationCommand = new RelayCommand(async _ => await ConfirmValidationAsync(), _ => CanConfirmValidation());
+            CancelValidationCommand = new RelayCommand(_ => CancelValidation());
+            ConfirmApprovalCommand = new RelayCommand(async _ => await ConfirmApprovalAsync(), _ => CanConfirmApproval());
+            CancelApprovalCommand = new RelayCommand(_ => CancelApproval());
             SelectFileCommand = new RelayCommand(_ => SelectFile());
 
-            // Charger les données au démarrage3
+            // 🆕 Commandes Vue d'Ensemble
+            LoadVueEnsembleCommand = new RelayCommand(async _ => await LoadVueEnsembleAsync());
+            ExportPdfCommand = new RelayCommand(async _ => await ExportToPdfAsync());
+            PrintCommand = new RelayCommand(_ => Print());
+
+            // Charger les données au démarrage
             LoadBudgetPrimitifCommand.Execute(null);
+            LoadVueEnsembleCommand.Execute(null);
         }
 
         #region Properties
+
         public ObservableCollection<BudgetPrimitif> BudgetPrimitifs { get; } = new();
         public ObservableCollection<Exercice> Exercices { get; } = new();
+
+        // 🆕 Pour la vue d'ensemble
+        public ObservableCollection<BudgetLine> VueEnsembleDisplayedLines { get; } = new();
 
         /// <summary>
         /// Permission fonctionnelle pour valider un budget primitif.
@@ -131,8 +135,8 @@ namespace Collectivite.ViewModels
 
         public DateTime DilogBudgetPrimitifDateApprobation
         {
-            get => DialogBudgetPrimitif.DateApprobation.HasValue 
-                ? DialogBudgetPrimitif.DateApprobation.Value.ToDateTime(TimeOnly.MinValue) 
+            get => DialogBudgetPrimitif.DateApprobation.HasValue
+                ? DialogBudgetPrimitif.DateApprobation.Value.ToDateTime(TimeOnly.MinValue)
                 : DateTime.Now;
             set
             {
@@ -201,9 +205,58 @@ namespace Collectivite.ViewModels
 
         public string DialogTitle => IsEditMode ? "Modifier budget primitif" : "Ajouter budget primitif";
 
+        // 🆕 Propriétés Vue d'Ensemble
+        public int SelectedVueEnsembleTabIndex
+        {
+            get => _selectedVueEnsembleTabIndex;
+            set
+            {
+                if (SetProperty(ref _selectedVueEnsembleTabIndex, value))
+                {
+                    ApplyVueEnsembleFilter();
+                }
+            }
+        }
+
+        public decimal TotalRecetteFonctionnement
+        {
+            get
+            {
+                return _budgetLineService.RecetteFonctionnementPrevu(_allVueEnsembleLines);
+            }
+        }
+
+
+        public decimal TotalRecetteInvestissement
+        {
+            get
+            {
+                return _budgetLineService.RecetteInvestissementPrevu(_allVueEnsembleLines);
+            }
+        }
+        public decimal TotalDepenseFonctionnement
+        {
+            get
+            {
+                return _budgetLineService.DepenseFonctionnementPrevu(_allVueEnsembleLines);
+            }
+        }
+
+        public decimal TotalDepenseInvestissement
+        {
+            get
+            {
+                return _budgetLineService.DepenseInvestissementPrevu(_allVueEnsembleLines);
+            }
+        }
+        public decimal TotalRecettes => TotalRecetteFonctionnement + TotalRecetteInvestissement;
+        public decimal TotalDepenses => TotalDepenseFonctionnement + TotalDepenseInvestissement;
+        public decimal Solde => TotalRecettes - TotalDepenses;
+
         #endregion
 
         #region Commands
+
         public ICommand LoadBudgetPrimitifCommand { get; }
         public ICommand OppenAddBudgetPrimitifCommand { get; }
         public ICommand OppenEditBudgetPrimitifCommand { get; }
@@ -217,6 +270,12 @@ namespace Collectivite.ViewModels
         public ICommand ConfirmApprovalCommand { get; }
         public ICommand CancelApprovalCommand { get; }
         public ICommand SelectFileCommand { get; }
+
+        // 🆕 Commandes Vue d'Ensemble
+        public ICommand LoadVueEnsembleCommand { get; }
+        public ICommand ExportPdfCommand { get; }
+        public ICommand PrintCommand { get; }
+
         #endregion
 
         #region Methods
@@ -228,8 +287,8 @@ namespace Collectivite.ViewModels
         {
             await Application.Current.Dispatcher.InvokeAsync(async () =>
             {
-                //System.Diagnostics.Debug.WriteLine($"Rechargement des budgets pour l'exercice : {exercice.Libelle}");
                 await LoadBudgetPrimitifAsync();
+                await LoadVueEnsembleAsync();
             });
         }
 
@@ -286,11 +345,320 @@ namespace Collectivite.ViewModels
             }
         }
 
-        public void  OpenAddBudgetPrimitif()
+        // 🆕 Méthodes Vue d'Ensemble
+        private async Task LoadVueEnsembleAsync()
         {
-            // ═══════════════════════════════════════════════════════════
-            // Les budgets primitifs sont créés automatiquement lors de la création d'un exercice
-            // ═══════════════════════════════════════════════════════════
+            IsLoading = true;
+            try
+            {
+                if (_exerciceService.CurrentExercice == null)
+                {
+                    _allVueEnsembleLines.Clear();
+                    VueEnsembleDisplayedLines.Clear();
+                    RefreshVueEnsembleStatistics();
+                    return;
+                }
+
+                var budgetLines = await _budgetPrimitifService.GetVueEnsemble();
+
+                _allVueEnsembleLines.Clear();
+                _allVueEnsembleLines.AddRange(budgetLines);
+
+                ApplyVueEnsembleFilter();
+                RefreshVueEnsembleStatistics();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors du chargement de la vue d'ensemble : {ex.Message}",
+                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        private void ApplyVueEnsembleFilter()
+        {
+            VueEnsembleDisplayedLines.Clear();
+
+            if (!_allVueEnsembleLines.Any())
+                return;
+
+            var filtered = _allVueEnsembleLines.AsEnumerable();
+
+            switch (SelectedVueEnsembleTabIndex)
+            {
+                case 0: // Recette - Fonctionnement
+                    filtered = filtered.Where(bl =>
+                        bl.Nommenclature.Nature == NatureType.Recette &&
+                        bl.Nommenclature.Section == SectionType.Fonctionnement);
+                    break;
+                case 1: // Recette - Investissement
+                    filtered = filtered.Where(bl =>
+                        bl.Nommenclature.Nature == NatureType.Recette &&
+                        bl.Nommenclature.Section == SectionType.Investissement);
+                    break;
+                case 2: // Dépense - Fonctionnement
+                    filtered = filtered.Where(bl =>
+                        bl.Nommenclature.Nature == NatureType.Depense &&
+                        bl.Nommenclature.Section == SectionType.Fonctionnement);
+                    break;
+                case 3: // Dépense - Investissement
+                    filtered = filtered.Where(bl =>
+                        bl.Nommenclature.Nature == NatureType.Depense &&
+                        bl.Nommenclature.Section == SectionType.Investissement);
+                    break;
+            }
+
+            foreach (var line in filtered.OrderBy(bl => bl.Nommenclature.Chapitre))
+            {
+                VueEnsembleDisplayedLines.Add(line);
+            }
+        }
+
+        private void RefreshVueEnsembleStatistics()
+        {
+            OnPropertyChanged(nameof(TotalRecetteFonctionnement));
+            OnPropertyChanged(nameof(TotalRecetteInvestissement));
+            OnPropertyChanged(nameof(TotalDepenseFonctionnement));
+            OnPropertyChanged(nameof(TotalDepenseInvestissement));
+            OnPropertyChanged(nameof(TotalRecettes));
+            OnPropertyChanged(nameof(TotalDepenses));
+            OnPropertyChanged(nameof(Solde));
+        }
+
+        private async Task ExportToPdfAsync()
+        {
+            try
+            {
+                var saveFileDialog = new SaveFileDialog
+                {
+                    Filter = "Fichiers PDF|*.pdf",
+                    FileName = $"VueEnsemble_{_exerciceService.CurrentExercice?.Libelle}_{DateTime.Now:yyyyMMdd}.pdf"
+                };
+
+                if (saveFileDialog.ShowDialog() == true)
+                {
+                    await Task.Run(() => GeneratePdf(saveFileDialog.FileName));
+
+                    MessageBox.Show(
+                        "Export PDF réalisé avec succès !",
+                        "Succès",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+
+                    // Ouvrir le fichier
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = saveFileDialog.FileName,
+                        UseShellExecute = true
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'export PDF : {ex.Message}",
+                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void GeneratePdf(string filePath)
+        {
+            Document document = new Document(PageSize.A4.Rotate(), 25, 25, 30, 30);
+            PdfWriter writer = PdfWriter.GetInstance(document, new FileStream(filePath, FileMode.Create));
+
+            document.Open();
+
+            // Police
+            var titleFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 18);
+            var headerFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12);
+            var normalFont = FontFactory.GetFont(FontFactory.HELVETICA, 10);
+            var boldFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 10);
+
+            // Titre
+            Paragraph title = new Paragraph($"Vue d'Ensemble - Budget {_exerciceService.CurrentExercice?.Libelle}", titleFont);
+            title.Alignment = Element.ALIGN_CENTER;
+            title.SpacingAfter = 20;
+            document.Add(title);
+
+            // Date d'export
+            Paragraph dateExport = new Paragraph($"Généré le {DateTime.Now:dd/MM/yyyy à HH:mm}", normalFont);
+            dateExport.Alignment = Element.ALIGN_RIGHT;
+            dateExport.SpacingAfter = 20;
+            document.Add(dateExport);
+
+            // Tableau pour chaque section
+            string[] sections = {
+                "Recette - Fonctionnement",
+                "Recette - Investissement",
+                "Dépense - Fonctionnement",
+                "Dépense - Investissement"
+            };
+
+            for (int i = 0; i < 4; i++)
+            {
+                var sectionLines = _allVueEnsembleLines.Where(bl =>
+                {
+                    return i switch
+                    {
+                        0 => bl.Nommenclature.Nature == NatureType.Recette && bl.Nommenclature.Section == SectionType.Fonctionnement,
+                        1 => bl.Nommenclature.Nature == NatureType.Recette && bl.Nommenclature.Section == SectionType.Investissement,
+                        2 => bl.Nommenclature.Nature == NatureType.Depense && bl.Nommenclature.Section == SectionType.Fonctionnement,
+                        _ => bl.Nommenclature.Nature == NatureType.Depense && bl.Nommenclature.Section == SectionType.Investissement
+                    };
+                }).OrderBy(bl => bl.Nommenclature.Chapitre).ToList();
+
+                if (sectionLines.Any())
+                {
+                    // Titre de section
+                    Paragraph sectionTitle = new Paragraph(sections[i], headerFont);
+                    sectionTitle.SpacingBefore = 15;
+                    sectionTitle.SpacingAfter = 10;
+                    document.Add(sectionTitle);
+
+                    // Table
+                    PdfPTable table = new PdfPTable(3) { WidthPercentage = 100 };
+                    table.SetWidths(new float[] { 15f, 55f, 30f });
+
+                    // En-têtes
+                    AddCell(table, "Chapitre", headerFont, BaseColor.LIGHT_GRAY);
+                    AddCell(table, "Intitulé", headerFont, BaseColor.LIGHT_GRAY);
+                    AddCell(table, "Montant Définitif", headerFont, BaseColor.LIGHT_GRAY);
+
+                    // Données
+                    decimal total = 0;
+                    foreach (var line in sectionLines)
+                    {
+                        AddCell(table, line.Nommenclature.Chapitre ?? "", normalFont);
+                        AddCell(table, line.Nommenclature.Intitule ?? "", normalFont);
+                        AddCell(table, $"{line.MontantDefinitif:N0} GNF", normalFont);
+                        total += line.MontantDefinitif;
+                    }
+
+                    // Total
+                    AddCell(table, "", boldFont, BaseColor.LIGHT_GRAY);
+                    AddCell(table, "TOTAL", boldFont, BaseColor.LIGHT_GRAY);
+                    AddCell(table, $"{total:N0} GNF", boldFont, BaseColor.LIGHT_GRAY);
+
+                    document.Add(table);
+                }
+            }
+
+            // 🆕 Calcul des totaux avec les bonnes formules
+            decimal totalRecetteFonctionnement = _budgetLineService.RecetteFonctionnementPrevu(_allVueEnsembleLines);
+            decimal totalRecetteInvestissement = _budgetLineService.RecetteInvestissementPrevu(_allVueEnsembleLines);
+            decimal totalRecetteReelInvestissement = _budgetLineService.TotalRecetteReelInvestissementPrevu(_allVueEnsembleLines);
+            decimal totalGeneralRecetteReel = _budgetLineService.TotalGeneralRecetteReelPrevu(_allVueEnsembleLines);
+
+            decimal totalDepenseFonctionnement = _budgetLineService.DepenseFonctionnementPrevu(_allVueEnsembleLines);
+            decimal totalDepenseReelFonctionnement = _budgetLineService.TotalDepenseReelFonctionnementPrevu(_allVueEnsembleLines);
+            decimal totalDepenseInvestissement = _budgetLineService.DepenseInvestissementPrevu(_allVueEnsembleLines);
+            decimal totalGeneralDepenseReel = _budgetLineService.TotalGeneralDepenseReelPrevu(_allVueEnsembleLines);
+
+            decimal prelevement = totalRecetteFonctionnement * 0.6m;
+            decimal solde = totalGeneralRecetteReel - totalGeneralDepenseReel;
+
+            // Synthèse générale
+            document.NewPage();
+            Paragraph syntheseTitle = new Paragraph("Synthèse Générale", titleFont);
+            syntheseTitle.Alignment = Element.ALIGN_CENTER;
+            syntheseTitle.SpacingAfter = 20;
+            document.Add(syntheseTitle);
+
+            PdfPTable summaryTable = new PdfPTable(2) { WidthPercentage = 70, HorizontalAlignment = Element.ALIGN_CENTER };
+            summaryTable.SetWidths(new float[] { 65f, 35f });
+
+            // 🆕 Section RECETTES
+            AddCell(summaryTable, "═══ RECETTES ═══", headerFont, new BaseColor(200, 230, 201));
+            AddCell(summaryTable, "", headerFont, new BaseColor(200, 230, 201));
+
+            AddCell(summaryTable, "Total Recettes de Fonctionnement", boldFont);
+            AddCell(summaryTable, $"{totalRecetteFonctionnement:N0} GNF", normalFont);
+
+            AddCell(summaryTable, "Total Recettes d'Investissement", boldFont);
+            AddCell(summaryTable, $"{totalRecetteInvestissement:N0} GNF", normalFont);
+
+            AddCell(summaryTable, "Prélèvement (60% des Recettes Fonctionnement)", boldFont);
+            AddCell(summaryTable, $"{prelevement:N0} GNF", normalFont);
+
+            AddCell(summaryTable, "Total Recettes Réelles d'Investissement", boldFont);
+            AddCell(summaryTable, $"{totalRecetteReelInvestissement:N0} GNF", normalFont);
+
+            // Ligne vide
+            PdfPCell emptyCell = new PdfPCell(new Phrase(" ")) { Colspan = 2, Border = 0 };
+            summaryTable.AddCell(emptyCell);
+
+            AddCell(summaryTable, "TOTAL GÉNÉRAL DES RECETTES RÉELLES", headerFont, new BaseColor(144, 238, 144));
+            AddCell(summaryTable, $"{totalGeneralRecetteReel:N0} GNF", headerFont, new BaseColor(144, 238, 144));
+
+            // Ligne vide séparation
+            summaryTable.AddCell(emptyCell);
+
+            // 🆕 Section DÉPENSES
+            AddCell(summaryTable, "═══ DÉPENSES ═══", headerFont, new BaseColor(255, 205, 210));
+            AddCell(summaryTable, "", headerFont, new BaseColor(255, 205, 210));
+
+            AddCell(summaryTable, "Total Dépenses de Fonctionnement", boldFont);
+            AddCell(summaryTable, $"{totalDepenseFonctionnement:N0} GNF", normalFont);
+
+            AddCell(summaryTable, "Total Dépenses Réelles de Fonctionnement", boldFont);
+            AddCell(summaryTable, $"{totalDepenseReelFonctionnement:N0} GNF", normalFont);
+
+            AddCell(summaryTable, "Total Dépenses d'Investissement", boldFont);
+            AddCell(summaryTable, $"{totalDepenseInvestissement:N0} GNF", normalFont);
+
+            // Ligne vide
+            summaryTable.AddCell(emptyCell);
+
+            AddCell(summaryTable, "TOTAL GÉNÉRAL DES DÉPENSES RÉELLES", headerFont, new BaseColor(255, 182, 193));
+            AddCell(summaryTable, $"{totalGeneralDepenseReel:N0} GNF", headerFont, new BaseColor(255, 182, 193));
+
+            // Ligne vide séparation
+            summaryTable.AddCell(emptyCell);
+
+            // 🆕 Section SOLDE
+            var soldeColor = solde >= 0 ? new BaseColor(144, 238, 144) : new BaseColor(255, 99, 71);
+            AddCell(summaryTable, "═══ SOLDE BUDGÉTAIRE ═══", headerFont, soldeColor);
+            AddCell(summaryTable, $"{solde:N0} GNF", headerFont, soldeColor);
+
+            document.Add(summaryTable);
+
+            // 🆕 Note explicative
+            document.Add(new Paragraph(" "));
+            Paragraph note = new Paragraph("Note : Le prélèvement de 60% des recettes de fonctionnement est transféré à l'investissement.", normalFont);
+            note.Alignment = Element.ALIGN_LEFT;
+            note.SpacingBefore = 10;
+            document.Add(note);
+
+            document.Close();
+            writer.Close();
+        }
+        private void AddCell(PdfPTable table, string text, iTextSharp.text.Font font, BaseColor? backgroundColor = null)
+        {
+            PdfPCell cell = new PdfPCell(new Phrase(text, font));
+            cell.Padding = 5;
+            cell.HorizontalAlignment = Element.ALIGN_LEFT;
+            if (backgroundColor != null)
+            {
+                cell.BackgroundColor = backgroundColor;
+            }
+            table.AddCell(cell);
+        }
+
+        private void Print()
+        {
+            MessageBox.Show(
+                "Fonctionnalité d'impression en cours de développement.\n" +
+                "Veuillez utiliser l'export PDF puis imprimer le fichier généré.",
+                "Information",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+        }
+
+        // Reste des méthodes inchangées...
+        public void OpenAddBudgetPrimitif()
+        {
             MessageBox.Show(
                 "Les budgets primitifs sont créés automatiquement lors de la création d'un exercice.\n\n" +
                 "Pour créer un nouveau budget primitif, veuillez créer un nouvel exercice.",
@@ -299,18 +667,11 @@ namespace Collectivite.ViewModels
                 MessageBoxImage.Information);
         }
 
-        // ═══════════════════════════════════════════════════════════
-        // MÉTHODE SUPPRIMÉE : Le bouton Modifier est remplacé par Approuver
-        // ═══════════════════════════════════════════════════════════
-        // Cette méthode n'est plus utilisée car on ne modifie plus les budgets
-        // après leur création. On les approuve puis on les valide.
         private void OppenEditBudgetPrimitif(BudgetPrimitif? budgetPrimitif)
         {
-            // Cette méthode est conservée pour compatibilité mais ne devrait plus être appelée
-            // Le bouton Modifier a été remplacé par le bouton Approuver
             if (budgetPrimitif == null)
                 return;
-            
+
             MessageBox.Show(
                 "La modification du budget primitif n'est plus disponible.\n" +
                 "Veuillez utiliser le bouton d'approbation pour approuver le budget.",
@@ -358,7 +719,6 @@ namespace Collectivite.ViewModels
                 }
                 else
                 {
-                    //creation
                     if (!CanCreateBudgetPrimitif)
                     {
                         MessageBox.Show(
@@ -446,8 +806,6 @@ namespace Collectivite.ViewModels
         {
             if (budget == null) return;
 
-            // Sécurité fonctionnelle : seule une personne avec la permission
-            // \"Budget.Approve\" (ex. le Maire) peut ouvrir la fenêtre d'approbation.
             if (!CanApproveBudget)
             {
                 MessageBox.Show(
@@ -459,7 +817,6 @@ namespace Collectivite.ViewModels
                 return;
             }
 
-            // Vérifier si le budget est déjà approuvé
             if (budget.Status == BudgetPrimitif.Statusbudget.APPROVED || budget.Status == BudgetPrimitif.Statusbudget.VALIDATED)
             {
                 MessageBox.Show(
@@ -471,7 +828,6 @@ namespace Collectivite.ViewModels
                 return;
             }
 
-            // Vérifier que le budget est en DRAFT
             if (budget.Status != BudgetPrimitif.Statusbudget.DRAFT)
             {
                 MessageBox.Show(
@@ -483,10 +839,7 @@ namespace Collectivite.ViewModels
             }
 
             _budgetToApprove = budget;
-
-            // Initialiser la date d'approbation avec la date du jour
             DateApprobation = DateOnly.FromDateTime(DateTime.Now);
-
             IsApprovalDialogOpen = true;
         }
 
@@ -494,8 +847,6 @@ namespace Collectivite.ViewModels
         {
             if (budget == null) return;
 
-            // Sécurité fonctionnelle : seule une personne avec la permission
-            // \"Budget.Validate\" (ex. le Maire) peut ouvrir la fenêtre de validation.
             if (!CanValidateBudget)
             {
                 MessageBox.Show(
@@ -507,7 +858,6 @@ namespace Collectivite.ViewModels
                 return;
             }
 
-            // Vérifier si le budget est déjà validé
             if (budget.Status == BudgetPrimitif.Statusbudget.VALIDATED)
             {
                 MessageBox.Show(
@@ -519,7 +869,6 @@ namespace Collectivite.ViewModels
                 return;
             }
 
-            // Vérifier que le budget est approuvé
             if (budget.Status != BudgetPrimitif.Statusbudget.APPROVED)
             {
                 MessageBox.Show(
@@ -532,14 +881,11 @@ namespace Collectivite.ViewModels
 
             _budgetToValidate = budget;
 
-            // Initialiser la date de validation avec la date du jour
-            // mais vérifier qu'elle est >= date d'approbation
             var today = DateOnly.FromDateTime(DateTime.Now);
             DateValidation = budget.DateApprobation.HasValue && today >= budget.DateApprobation.Value
                 ? today
                 : (budget.DateApprobation ?? today);
 
-            // Réinitialiser le fichier
             FichierValidation = null;
             FileNameValidation = null;
 
@@ -548,16 +894,11 @@ namespace Collectivite.ViewModels
 
         private bool CanConfirmValidation()
         {
-            // On ne peut confirmer la validation que si :
-            // 1) un budget est sélectionné pour validation
-            // 2) l'utilisateur courant possède la permission fonctionnelle
             return _budgetToValidate != null && CanValidateBudget;
         }
 
         private bool CanConfirmApproval()
         {
-            // 1) un budget est sélectionné pour approbation
-            // 2) l'utilisateur courant possède la permission fonctionnelle
             return _budgetToApprove != null && CanApproveBudget;
         }
 
@@ -626,7 +967,6 @@ namespace Collectivite.ViewModels
                 if (success)
                 {
                     await LoadBudgetPrimitifAsync();
-                    // Réinitialiser le fichier
                     FichierValidation = null;
                     FileNameValidation = null;
                 }
@@ -676,9 +1016,6 @@ namespace Collectivite.ViewModels
             _budgetToValidate = null;
         }
 
-        /// <summary>
-        /// Nettoyer les ressources et se désabonner des événements
-        /// </summary>
         public void Dispose()
         {
             if (!_isDisposed)
