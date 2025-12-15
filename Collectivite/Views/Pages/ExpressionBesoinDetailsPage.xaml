@@ -160,7 +160,7 @@
                                                   Binding="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Path=Header}"/>
 
                                 <!-- Nomenclature -->
-                                <DataGridTextColumn Header="Code Nomenclature" 
+                                <DataGridTextColumn Header="Imputation" 
                                                   Binding="{Binding Nommenclature.CodeNomenclature}" 
                                                   Width="150"
                                                   FontWeight="SemiBold"/>

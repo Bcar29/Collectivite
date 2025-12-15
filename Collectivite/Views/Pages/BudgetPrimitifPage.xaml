@@ -38,16 +38,20 @@
         </Grid>
 
         <!-- ═══════════════════════════════════════════════════════════
-             CONTENU PRINCIPAL
+             CONTENU PRINCIPAL AVEC DEUX SECTIONS
              ═══════════════════════════════════════════════════════════ -->
         <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20">
             <StackPanel>
 
-                <!-- ───────────────────────────────────────────────────
-                     DATAGRID DES BUDGETS PRIMITIFS
-                     ─────────────────────────────────────────────────── -->
-                <materialDesign:Card Padding="0" 
-                                   UniformCornerRadius="8">
+                <!-- ═══════════════════════════════════════════════════════════
+                     SECTION 1 : GESTION DES BUDGETS PRIMITIFS
+                     ═══════════════════════════════════════════════════════════ -->
+                <Expander Header="Debaler pour valider le budget " 
+                     materialDesign:ExpanderAssist.HorizontalHeaderPadding="0"
+                     IsExpanded="False">
+                     <materialDesign:Card Padding="0" 
+                                   UniformCornerRadius="8"
+                                   Margin="0,0,0,30">
                     <DataGrid ItemsSource="{Binding BudgetPrimitifs}"
                               SelectedItem="{Binding SelectedBudgetPrimitif}"
                               AutoGenerateColumns="False"
@@ -85,6 +89,7 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
+
                             <!-- Montant Recette -->
                             <DataGridTemplateColumn Header="Montant des recettes" Width="200">
                                 <DataGridTemplateColumn.CellTemplate>
@@ -103,6 +108,7 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
+
                             <!-- Montant Depense -->
                             <DataGridTemplateColumn Header="Montant des depense" Width="200">
                                 <DataGridTemplateColumn.CellTemplate>
@@ -139,6 +145,7 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
+
                             <!-- Date de validation -->
                             <DataGridTemplateColumn Header="Date de validation" Width="180">
                                 <DataGridTemplateColumn.CellTemplate>
@@ -164,9 +171,7 @@
                                         <StackPanel Orientation="Horizontal" 
                                             HorizontalAlignment="Center">
 
-                                            <!-- Bouton Approuver (visible seulement si statut = DRAFT)
-                                                 et activable uniquement si l'utilisateur possède la
-                                                 permission fonctionnelle Budget.Approve -->
+                                            <!-- Bouton Approuver -->
                                             <Button Style="{StaticResource MaterialDesignIconButton}"
                                                     ToolTip="Approuver le budget"
                                                     Command="{Binding DataContext.OpenApprovalDialogCommand, 
@@ -186,9 +191,7 @@
                                                        Height="20"/>
                                             </Button>
 
-                                            <!-- Bouton Valider (visible seulement si statut = APPROVED)
-                                                 et activable uniquement si l'utilisateur possède la
-                                                 permission fonctionnelle Budget.Validate -->
+                                            <!-- Bouton Valider -->
                                             <Button Style="{StaticResource MaterialDesignIconButton}"
                                                   ToolTip="Valider le budget"
                                                   Command="{Binding DataContext.OpenValidationDialogCommand, 
@@ -208,7 +211,7 @@
                                                        Height="20"/>
                                             </Button>
 
-                                            <!-- Badge Validé (visible seulement si statut = VALIDATED) -->
+                                            <!-- Badge Validé -->
                                             <Border Background="#E8F5E9"
                                                   CornerRadius="12"
                                                   Padding="8,4"
@@ -233,23 +236,23 @@
                                                 </StackPanel>
                                             </Border>
 
-                                            <!-- Bouton Supprimer (visible seulement si statut = APPROVED) -->
-                                        <Button Style="{StaticResource MaterialDesignIconButton}"
-                                          ToolTip="Supprimer"
-                                          Command="{Binding DataContext.DeleteBudgetPrimitifCommand, 
-                                              RelativeSource={RelativeSource AncestorType=Page}}"
-                                          CommandParameter="{Binding}"
-                                          Margin="4,0"
-                                          IsEnabled="{Binding DataContext.CanDeleteBudgetPrimitif, RelativeSource={RelativeSource AncestorType=Page}}">
-                                    <Button.Visibility>
-                                        <Binding Path="Status" 
-                                               Converter="{StaticResource EnumToVisibilityConverter}" 
-                                               ConverterParameter="APPROVED"/>
-                                        </Button.Visibility>
-                                        <materialDesign:PackIcon Kind="Delete" 
-                                           Foreground="#F44336"
-                                           Width="20"
-                                           Height="20"/>
+                                            <!-- Bouton Supprimer -->
+                                            <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                  ToolTip="Supprimer"
+                                                  Command="{Binding DataContext.DeleteBudgetPrimitifCommand, 
+                                                      RelativeSource={RelativeSource AncestorType=Page}}"
+                                                  CommandParameter="{Binding}"
+                                                  Margin="4,0"
+                                                  IsEnabled="{Binding DataContext.CanDeleteBudgetPrimitif, RelativeSource={RelativeSource AncestorType=Page}}">
+                                                <Button.Visibility>
+                                                    <Binding Path="Status" 
+                                                       Converter="{StaticResource EnumToVisibilityConverter}" 
+                                                       ConverterParameter="APPROVED"/>
+                                                </Button.Visibility>
+                                                <materialDesign:PackIcon Kind="Delete" 
+                                                   Foreground="#F44336"
+                                                   Width="20"
+                                                   Height="20"/>
                                             </Button>
                                         </StackPanel>
                                     </DataTemplate>
@@ -259,7 +262,179 @@
                         </DataGrid.Columns>
                     </DataGrid>
                 </materialDesign:Card>
+                </Expander>
+                <!-- ═══════════════════════════════════════════════════════════
+                     SECTION 2 : VUE D'ENSEMBLE (SYNTHÈSE)
+                     ═══════════════════════════════════════════════════════════ -->
+                <Grid Margin="0,30,0,15">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
+                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                        <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Command="{Binding ExportPdfCommand}"
+                                Height="36"
+                                Margin="0,0,10,0">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="FilePdfBox" Margin="0,0,5,0"/>
+                                <TextBlock Text="Exporter PDF"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Command="{Binding PrintCommand}"
+                                Height="36"
+                                Margin="0,0,10,0">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Printer" Margin="0,0,5,0"/>
+                                <TextBlock Text="Imprimer"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Command="{Binding LoadVueEnsembleCommand}"
+                                Height="36">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Refresh" Margin="0,0,5,0"/>
+                                <TextBlock Text="Rafraîchir"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Onglets Vue d'Ensemble -->
+                <TabControl SelectedIndex="{Binding SelectedVueEnsembleTabIndex}"
+                            Margin="0,0,0,20">
+
+                    <!-- Recette - Fonctionnement -->
+                    <TabItem>
+                        <TabItem.Header>
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="CashPlus" 
+                                                       Width="20" 
+                                                       Height="20"
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,8,0"/>
+                                <TextBlock Text="Recette - Fonctionnement" 
+                                         VerticalAlignment="Center" 
+                                         FontWeight="Medium"/>
+                            </StackPanel>
+                        </TabItem.Header>
+
+                        <materialDesign:Card Padding="0" Margin="0,10,0,0">
+                            <DataGrid ItemsSource="{Binding VueEnsembleDisplayedLines}"
+                                      AutoGenerateColumns="False"
+                                      IsReadOnly="True"
+                                      Style="{StaticResource MaterialDesignDataGrid}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Chapitre" Binding="{Binding Nommenclature.Chapitre}" Width="150"/>
+                                    <DataGridTextColumn Header="Intitulé" Binding="{Binding Nommenclature.Intitule}" Width="*"/>
+                                    <DataGridTextColumn Header="Montant Définitif" 
+                                                        Binding="{Binding MontantDefinitif, StringFormat={}{0:N0} GNF}" 
+                                                        Width="200"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </materialDesign:Card>
+                    </TabItem>
+
+                    <!-- Recette - Investissement -->
+                    <TabItem>
+                        <TabItem.Header>
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="TrendingUp" 
+                                                       Width="20" 
+                                                       Height="20"
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,8,0"/>
+                                <TextBlock Text="Recette - Investissement" 
+                                         VerticalAlignment="Center" 
+                                         FontWeight="Medium"/>
+                            </StackPanel>
+                        </TabItem.Header>
+
+                        <materialDesign:Card Padding="0" Margin="0,10,0,0">
+                            <DataGrid ItemsSource="{Binding VueEnsembleDisplayedLines}"
+                                      AutoGenerateColumns="False"
+                                      IsReadOnly="True"
+                                      Style="{StaticResource MaterialDesignDataGrid}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Chapitre" Binding="{Binding Nommenclature.Chapitre}" Width="150"/>
+                                    <DataGridTextColumn Header="Intitulé" Binding="{Binding Nommenclature.Intitule}" Width="*"/>
+                                    <DataGridTextColumn Header="Montant Définitif" 
+                                                        Binding="{Binding MontantDefinitif, StringFormat={}{0:N0} GNF}" 
+                                                        Width="200"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </materialDesign:Card>
+                    </TabItem>
+
+                    <!-- Dépense - Fonctionnement -->
+                    <TabItem>
+                        <TabItem.Header>
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="CashMinus" 
+                                                       Width="20" 
+                                                       Height="20"
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,8,0"/>
+                                <TextBlock Text="Dépense - Fonctionnement" 
+                                         VerticalAlignment="Center" 
+                                         FontWeight="Medium"/>
+                            </StackPanel>
+                        </TabItem.Header>
+
+                        <materialDesign:Card Padding="0" Margin="0,10,0,0">
+                            <DataGrid ItemsSource="{Binding VueEnsembleDisplayedLines}"
+                                      AutoGenerateColumns="False"
+                                      IsReadOnly="True"
+                                      Style="{StaticResource MaterialDesignDataGrid}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Chapitre" Binding="{Binding Nommenclature.Chapitre}" Width="150"/>
+                                    <DataGridTextColumn Header="Intitulé" Binding="{Binding Nommenclature.Intitule}" Width="*"/>
+                                    <DataGridTextColumn Header="Montant Définitif" 
+                                                        Binding="{Binding MontantDefinitif, StringFormat={}{0:N0} GNF}" 
+                                                        Width="200"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </materialDesign:Card>
+                    </TabItem>
+
+                    <!-- Dépense - Investissement -->
+                    <TabItem>
+                        <TabItem.Header>
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="TrendingDown" 
+                                                       Width="20" 
+                                                       Height="20"
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,8,0"/>
+                                <TextBlock Text="Dépense - Investissement" 
+                                         VerticalAlignment="Center" 
+                                         FontWeight="Medium"/>
+                            </StackPanel>
+                        </TabItem.Header>
+
+                        <materialDesign:Card Padding="0" Margin="0,10,0,0">
+                            <DataGrid ItemsSource="{Binding VueEnsembleDisplayedLines}"
+                                      AutoGenerateColumns="False"
+                                      IsReadOnly="True"
+                                      Style="{StaticResource MaterialDesignDataGrid}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Chapitre" Binding="{Binding Nommenclature.Chapitre}" Width="150"/>
+                                    <DataGridTextColumn Header="Intitulé" Binding="{Binding Nommenclature.Intitule}" Width="*"/>
+                                    <DataGridTextColumn Header="Montant Définitif" 
+                                                        Binding="{Binding MontantDefinitif, StringFormat={}{0:N0} GNF}" 
+                                                        Width="200"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </materialDesign:Card>
+                    </TabItem>
+
+                </TabControl>
+
+               
             </StackPanel>
         </ScrollViewer>
 
@@ -378,7 +553,7 @@
             </materialDesign:DialogHost.DialogContent>
         </materialDesign:DialogHost>
 
-        
+
         <!-- ═══════════════════════════════════════════════════════════
              DIALOGHOST - VALIDATION DU BUDGET
          ═══════════════════════════════════════════════════════════ -->
@@ -438,14 +613,14 @@
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    
+
                                     <TextBox Grid.Column="0"
                                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                          Text="{Binding FileNameValidation, Mode=OneWay}"
                                          IsReadOnly="True"
                                          materialDesign:HintAssist.Hint="Aucun fichier sélectionné"
                                          Margin="0,0,10,0"/>
-                                    
+
                                     <Button Grid.Column="1"
                                         Style="{StaticResource MaterialDesignRaisedButton}"
                                         Command="{Binding SelectFileCommand}"

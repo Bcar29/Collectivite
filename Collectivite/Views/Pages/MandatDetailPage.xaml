@@ -65,24 +65,31 @@
                                  VerticalAlignment="Center"/>
                     </StackPanel>
 
-                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                    <!-- Boutons d'action -->
+                    <StackPanel Orientation="Horizontal" 
+                        DockPanel.Dock="Right" 
+                        HorizontalAlignment="Right">
                         <Button Style="{StaticResource MaterialDesignOutlinedButton}"
-                                Command="{Binding OpenEditPageCommand}"
-                                Height="36"
-                                Margin="0,0,10,0">
+                            Command="{Binding PrintCommand}"
+                            Height="36"
+                            Margin="0,0,10,0">
                             <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Pencil" Margin="0,0,5,0"/>
-                                <TextBlock Text="Modifier"/>
+                                <materialDesign:PackIcon Kind="Printer" Margin="0,0,5,0"/>
+                                <TextBlock Text="Imprimer"/>
                             </StackPanel>
                         </Button>
-                        <Button Style="{StaticResource MaterialDesignOutlinedButton}"
-                                Command="{Binding DeleteCommand}"
-                                Height="36">
+                        <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                            Command="{Binding NavigateToEditCommand}"
+                            Height="36"
+                            Background="DarkRed"
+                            BorderBrush="DarkRed"
+                            Margin="0,0,10,0">
                             <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Delete" Margin="0,0,5,0"/>
-                                <TextBlock Text="Supprimer"/>
+                                <materialDesign:PackIcon Kind="FilePdfBox" Margin="0,0,5,0"/>
+                                <TextBlock Text="Export PDF"/>
                             </StackPanel>
                         </Button>
+
                     </StackPanel>
                 </DockPanel>
 

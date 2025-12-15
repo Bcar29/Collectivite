@@ -330,7 +330,7 @@
                     <materialDesign:Card Grid.Column="2" Padding="20">
                         <StackPanel Orientation="Horizontal">
                             <Border Background="#E8F5E9" CornerRadius="8" Padding="12" Margin="0,0,15,0">
-                                <materialDesign:PackIcon Kind="CurrencyUsd" 
+                                <materialDesign:PackIcon Kind="CashCheck" 
                                                          Width="28" Height="28" 
                                                          Foreground="#4CAF50"/>
                             </Border>

@@ -303,7 +303,8 @@ namespace Collectivite.ViewModels
 
         private void Cancel()
         {
-            NavigationService.Instance.GoBack();
+            NavigationService.Instance.NavigateTo(new Views.Pages.MandatListPage());
+
         }
 
         private void ConvertMontantToLettres()

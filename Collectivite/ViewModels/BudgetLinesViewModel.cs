@@ -10,6 +10,11 @@ using System.Windows;
 using System.Windows.Input;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+// Ajoutez ces using en haut du fichier
+using iTextSharp.text;
+using iTextSharp.text.pdf;
+using System.IO;
+using Microsoft.Win32;
 
 namespace Collectivite.ViewModels
 {
@@ -129,7 +134,7 @@ namespace Collectivite.ViewModels
             BudgetLine = budgetLine;
             Level = level;
             Children = new ObservableCollection<BudgetLineHierarchyViewModel>();
-            _isExpanded = false; // Par défaut tout est plié
+            _isExpanded = true; // Par défaut tout est plié
         }
 
         /// <summary>
@@ -331,7 +336,10 @@ namespace Collectivite.ViewModels
         public ICommand SaveDialogCommand { get; }
         public ICommand CancelDialogCommand { get; }
         public ICommand ToggleExpandCommand { get; } // 🆕
-
+        public ICommand ExportPdfCommand { get; }
+        public ICommand ExportPdfCompteAdminCommand { get; }
+        public ICommand ExportPdfCompteGestionCommand { get; }
+        public ICommand PrintCommand { get; }
         // ═══════════════════════════════════════════════════════════
         // CONSTRUCTEUR
         // ═══════════════════════════════════════════════════════════
@@ -359,6 +367,11 @@ namespace Collectivite.ViewModels
             // Commandes du dialog
             SaveDialogCommand = new RelayCommand(async _ => await SaveDialogAsync(), _ => CanSaveDialog());
             CancelDialogCommand = new RelayCommand(_ => CloseDialog());
+
+            ExportPdfCommand = new RelayCommand(async _ => await ExportToPdfAsync());
+            ExportPdfCompteAdminCommand = new RelayCommand(async _ => await ExportToPdfCompteAdminAsync());
+            ExportPdfCompteGestionCommand = new RelayCommand(async _ => await ExportToPdfCompteGestionAsync());
+            PrintCommand = new RelayCommand(_ => Print());
 
             // Charger les données initiales
             _ = InitializeAsync();
@@ -596,14 +609,14 @@ namespace Collectivite.ViewModels
                 var filter = TabToFilter(SelectedTabIndex);
                 var all = await _service.GetBudgetLinesForBudgetPrimitifAsync(_budgetPrimitifId);
 
-                TotalRecetteFonctionnement = _service.TotalRecetteFonctionnement(all);
-                TotalRecetteInvestissement = _service.TotalRecetteInvestissement(all);
-                TotalRecetteReelsInvestissement = _service.TotalRecetteReelInvestissement(all);
-                TotalGeneralRecettesReels = _service.TotalGeneralRecetteReel(all);
-                TotalDepenseFonctionnement = _service.TotalDepenseFonctionnement(all);
-                TotalDepenseReelsFonctionnement = _service.TotalDepenseReelFonctionnement(all);
-                TotalDepenseInvestissement = _service.TotalDepenseInvestissement(all);
-                TotalGeneralDepensesReels = _service.TotalGeneralDepenseReel(all);
+                TotalRecetteFonctionnement = _service.RecetteFonctionnementPrevu(all);
+                TotalRecetteInvestissement = _service.RecetteInvestissementPrevu(all);
+                TotalRecetteReelsInvestissement = _service.TotalRecetteReelInvestissementPrevu(all);
+                TotalGeneralRecettesReels = _service.TotalGeneralRecetteReelPrevu(all);
+                TotalDepenseFonctionnement = _service.DepenseFonctionnementPrevu(all);
+                TotalDepenseReelsFonctionnement = _service.TotalDepenseReelFonctionnementPrevu(all);
+                TotalDepenseInvestissement = _service.DepenseInvestissementPrevu(all);
+                TotalGeneralDepensesReels = _service.TotalGeneralDepenseReelPrevu(all);
                 // 🆕 Construire la hiérarchie au lieu de simplement filtrer
                 _fullHierarchy = BuildHierarchy(all, filter.nature, filter.section);
 
@@ -919,6 +932,491 @@ namespace Collectivite.ViewModels
                 _isDisposed = true;
             }
         }
-    
+
+        private async Task ExportToPdfAsync()
+        {
+            try
+            {
+                var saveFileDialog = new SaveFileDialog
+                {
+                    Filter = "Fichiers PDF|*.pdf",
+                    FileName = $"LignesBudgetaires_{GetTabName(SelectedTabIndex)}_{_exerciceService.CurrentExercice?.Libelle}_{DateTime.Now:yyyyMMdd}.pdf"
+                };
+
+                if (saveFileDialog.ShowDialog() == true)
+                {
+                    await Task.Run(() => GeneratePdfBudgetPrimitif(saveFileDialog.FileName));
+
+                    MessageBox.Show(
+                        "Export PDF réalisé avec succès !",
+                        "Succès",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+
+                    // Ouvrir le fichier
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = saveFileDialog.FileName,
+                        UseShellExecute = true
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'export PDF : {ex.Message}",
+                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private async Task ExportToPdfCompteAdminAsync()
+        {
+            try
+            {
+                var saveFileDialog = new SaveFileDialog
+                {
+                    Filter = "Fichiers PDF|*.pdf",
+                    FileName = $"Compte Administratif_{GetTabName(SelectedTabIndex)}_{_exerciceService.CurrentExercice?.Libelle}_{DateTime.Now:yyyyMMdd}.pdf"
+                };
+
+                if (saveFileDialog.ShowDialog() == true)
+                {
+                    await Task.Run(() => GeneratePdfCompteAdmin(saveFileDialog.FileName));
+
+                    MessageBox.Show(
+                        "Export PDF réalisé avec succès !",
+                        "Succès",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+
+                    // Ouvrir le fichier
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = saveFileDialog.FileName,
+                        UseShellExecute = true
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'export PDF : {ex.Message}",
+                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private async Task ExportToPdfCompteGestionAsync()
+        {
+            try
+            {
+                var saveFileDialog = new SaveFileDialog
+                {
+                    Filter = "Fichiers PDF|*.pdf",
+                    FileName = $"Compte Gestion{GetTabName(SelectedTabIndex)}_{_exerciceService.CurrentExercice?.Libelle}_{DateTime.Now:yyyyMMdd}.pdf"
+                };
+
+                if (saveFileDialog.ShowDialog() == true)
+                {
+                    await Task.Run(() => GeneratePdfCompteGestion(saveFileDialog.FileName));
+
+                    MessageBox.Show(
+                        "Export PDF réalisé avec succès !",
+                        "Succès",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+
+                    // Ouvrir le fichier
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = saveFileDialog.FileName,
+                        UseShellExecute = true
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'export PDF : {ex.Message}",
+                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private string GetTabName(int tabIndex)
+        {
+            return tabIndex switch
+            {
+                0 => "Recette_Fonctionnement",
+                1 => "Recette_Investissement",
+                2 => "Depense_Fonctionnement",
+                3 => "Depense_Investissement",
+                _ => "Budget"
+            };
+        }
+
+        private string GetTabFullName(int tabIndex)
+        {
+            return tabIndex switch
+            {
+                0 => "Recette - Fonctionnement",
+                1 => "Recette - Investissement",
+                2 => "Dépense - Fonctionnement",
+                3 => "Dépense - Investissement",
+                _ => "Budget"
+            };
+        }
+
+        private void GeneratePdfBudgetPrimitif(string filePath)
+        {
+            // ✅ Format paysage déjà présent : PageSize.A4.Rotate()
+            Document document = new Document(PageSize.A4.Rotate(), 25, 25, 30, 30);
+            PdfWriter writer = PdfWriter.GetInstance(document, new FileStream(filePath, FileMode.Create));
+
+            document.Open();
+
+            // Polices
+            var titleFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 18);
+            var headerFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12);
+            var normalFont = FontFactory.GetFont(FontFactory.HELVETICA, 10);
+            var boldFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 10);
+
+            // Titre
+            Paragraph title = new Paragraph($"Lignes Budgétaires - {GetTabFullName(SelectedTabIndex)}", titleFont);
+            title.Alignment = Element.ALIGN_CENTER;
+            title.SpacingAfter = 10;
+            document.Add(title);
+
+            // Sous-titre avec exercice
+            Paragraph subtitle = new Paragraph($"Exercice : {_exerciceService.CurrentExercice?.Libelle ?? "N/A"}", headerFont);
+            subtitle.Alignment = Element.ALIGN_CENTER;
+            subtitle.SpacingAfter = 20;
+            document.Add(subtitle);
+
+            // Date d'export
+            Paragraph dateExport = new Paragraph($"Généré le {DateTime.Now:dd/MM/yyyy à HH:mm}", normalFont);
+            dateExport.Alignment = Element.ALIGN_RIGHT;
+            dateExport.SpacingAfter = 20;
+            document.Add(dateExport);
+
+            // Tableau principal
+            PdfPTable table = new PdfPTable(6) { WidthPercentage = 100 };
+            table.SetWidths(new float[] { 12f, 10f, 10f, 12f, 40f, 16f });
+
+            // En-têtes
+            AddCellWithColor(table, "Chapitre", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
+            AddCellWithColor(table, "Article", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
+            AddCellWithColor(table, "Paragraphe", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
+            AddCellWithColor(table, "Sous-Paragraphe", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
+            AddCellWithColor(table, "Intitulé", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
+            AddCellWithColor(table, "Montant Prévu", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
+
+            // Données hiérarchiques
+            var flatList = FlattenHierarchy(_fullHierarchy);
+            foreach (var item in flatList)
+            {
+                // Déterminer la couleur de fond selon le niveau
+                BaseColor bgColor = item.Level switch
+                {
+                    0 => new BaseColor(255, 205, 210), // Rouge clair #FFCDD2
+                    1 => new BaseColor(255, 249, 196), // Jaune clair #FFF9C4
+                    2 => new BaseColor(200, 230, 201), // Vert clair #C8E6C9
+                    _ => BaseColor.WHITE
+                };
+
+                // Police selon le niveau
+                var cellFont = item.Level switch
+                {
+                    0 => boldFont,
+                    1 => boldFont,
+                    2 => normalFont,
+                    _ => normalFont
+                };
+
+                // Indentation pour le chapitre
+                string indentation = new string(' ', item.Level * 2);
+
+                AddCellWithColor(table, indentation + (item.BudgetLine.Nommenclature.Chapitre ?? ""), cellFont, bgColor, Element.ALIGN_LEFT);
+                AddCellWithColor(table, item.BudgetLine.Nommenclature.Article ?? "", cellFont, bgColor, Element.ALIGN_LEFT);
+                AddCellWithColor(table, item.BudgetLine.Nommenclature.Paragraphe ?? "", cellFont, bgColor, Element.ALIGN_LEFT);
+                AddCellWithColor(table, item.BudgetLine.Nommenclature.SousParagraphe ?? "", cellFont, bgColor, Element.ALIGN_LEFT);
+                AddCellWithColor(table, item.BudgetLine.Nommenclature.Intitule ?? "", cellFont, bgColor, Element.ALIGN_LEFT);
+                AddCellWithColor(table, $"{item.BudgetLine.MontantPrevu:N0} GNF", cellFont, bgColor, Element.ALIGN_RIGHT);
+            }
+
+            document.Add(table);
+
+            // Espace avant les totaux
+            document.Add(new Paragraph(" "));
+
+            // Totaux selon l'onglet
+            AddTotalsSection(document, headerFont, boldFont, normalFont);
+
+            document.Close();
+            writer.Close();
+        }
+        private void GeneratePdfCompteAdmin(string filePath)
+        {
+            // ✅ Format paysage déjà présent : PageSize.A4.Rotate()
+            Document document = new Document(PageSize.A4.Rotate(), 25, 25, 30, 30);
+            PdfWriter writer = PdfWriter.GetInstance(document, new FileStream(filePath, FileMode.Create));
+
+            document.Open();
+
+            // Polices
+            var titleFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 18);
+            var headerFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12);
+            var normalFont = FontFactory.GetFont(FontFactory.HELVETICA, 10);
+            var boldFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 10);
+
+            // Titre
+            Paragraph title = new Paragraph($"Compte Administratif - {GetTabFullName(SelectedTabIndex)}", titleFont);
+            title.Alignment = Element.ALIGN_CENTER;
+            title.SpacingAfter = 10;
+            document.Add(title);
+
+            // Sous-titre avec exercice
+            Paragraph subtitle = new Paragraph($"Exercice : {_exerciceService.CurrentExercice?.Libelle ?? "N/A"}", headerFont);
+            subtitle.Alignment = Element.ALIGN_CENTER;
+            subtitle.SpacingAfter = 20;
+            document.Add(subtitle);
+
+            // Date d'export
+            Paragraph dateExport = new Paragraph($"Généré le {DateTime.Now:dd/MM/yyyy à HH:mm}", normalFont);
+            dateExport.Alignment = Element.ALIGN_RIGHT;
+            dateExport.SpacingAfter = 20;
+            document.Add(dateExport);
+
+            // Tableau principal
+            PdfPTable table = new PdfPTable(9) { WidthPercentage = 100 };
+            table.SetWidths(new float[] { 10f, 8f, 8f, 10f, 30f, 12f, 12f, 10f, 12f });
+
+            // En-têtes
+            AddCellWithColor(table, "Chapitre", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
+            AddCellWithColor(table, "Article", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
+            AddCellWithColor(table, "Paragraphe", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
+            AddCellWithColor(table, "Sous-Paragraphe", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
+            AddCellWithColor(table, "Intitulé", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
+            AddCellWithColor(table, "Montant Prévu", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
+            AddCellWithColor(table, "Montant Réalisé", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
+            AddCellWithColor(table, "Taux Réalisation", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
+            AddCellWithColor(table, "Reste Réalisé", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
+
+            // Données hiérarchiques
+            var flatList = FlattenHierarchy(_fullHierarchy);
+            foreach (var item in flatList)
+            {
+                // Déterminer la couleur de fond selon le niveau
+                BaseColor bgColor = item.Level switch
+                {
+                    0 => new BaseColor(255, 205, 210), // Rouge clair #FFCDD2
+                    1 => new BaseColor(255, 249, 196), // Jaune clair #FFF9C4
+                    2 => new BaseColor(200, 230, 201), // Vert clair #C8E6C9
+                    _ => BaseColor.WHITE
+                };
+
+                // Police selon le niveau
+                var cellFont = item.Level switch
+                {
+                    0 => boldFont,
+                    1 => boldFont,
+                    2 => normalFont,
+                    _ => normalFont
+                };
+
+                // Indentation pour le chapitre
+                string indentation = new string(' ', item.Level * 2);
+
+                AddCellWithColor(table, indentation + (item.BudgetLine.Nommenclature.Chapitre ?? ""), cellFont, bgColor, Element.ALIGN_LEFT);
+                AddCellWithColor(table, item.BudgetLine.Nommenclature.Article ?? "", cellFont, bgColor, Element.ALIGN_LEFT);
+                AddCellWithColor(table, item.BudgetLine.Nommenclature.Paragraphe ?? "", cellFont, bgColor, Element.ALIGN_LEFT);
+                AddCellWithColor(table, item.BudgetLine.Nommenclature.SousParagraphe ?? "", cellFont, bgColor, Element.ALIGN_LEFT);
+                AddCellWithColor(table, item.BudgetLine.Nommenclature.Intitule ?? "", cellFont, bgColor, Element.ALIGN_LEFT);
+                AddCellWithColor(table, $"{item.BudgetLine.MontantDefinitif:N2} GNF", cellFont, bgColor, Element.ALIGN_RIGHT);
+                AddCellWithColor(table, $"{item.BudgetLine.MontantRealise:N2} GNF", cellFont, bgColor, Element.ALIGN_RIGHT);
+                AddCellWithColor(table, $"{item.BudgetLine.TauxRealisation:N2} %", cellFont, bgColor, Element.ALIGN_RIGHT);
+                AddCellWithColor(table, $"{item.BudgetLine.ResteRealise:N2} GNF", cellFont, bgColor, Element.ALIGN_RIGHT);
+            }
+
+            document.Add(table);
+
+            // Espace avant les totaux
+            document.Add(new Paragraph(" "));
+
+            // Totaux selon l'onglet
+            AddTotalsSection(document, headerFont, boldFont, normalFont);
+
+            document.Close();
+            writer.Close();
+        }
+        private void GeneratePdfCompteGestion(string filePath)
+        {
+            // ✅ Format paysage déjà présent : PageSize.A4.Rotate()
+            Document document = new Document(PageSize.A4.Rotate(), 25, 25, 30, 30);
+            PdfWriter writer = PdfWriter.GetInstance(document, new FileStream(filePath, FileMode.Create));
+
+            document.Open();
+
+            // Polices
+            var titleFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 18);
+            var headerFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12);
+            var normalFont = FontFactory.GetFont(FontFactory.HELVETICA, 10);
+            var boldFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 10);
+
+            // Titre
+            Paragraph title = new Paragraph($"Compte de Gestion - {GetTabFullName(SelectedTabIndex)}", titleFont);
+            title.Alignment = Element.ALIGN_CENTER;
+            title.SpacingAfter = 10;
+            document.Add(title);
+
+            // Sous-titre avec exercice
+            Paragraph subtitle = new Paragraph($"Exercice : {_exerciceService.CurrentExercice?.Libelle ?? "N/A"}", headerFont);
+            subtitle.Alignment = Element.ALIGN_CENTER;
+            subtitle.SpacingAfter = 20;
+            document.Add(subtitle);
+
+            // Date d'export
+            Paragraph dateExport = new Paragraph($"Généré le {DateTime.Now:dd/MM/yyyy à HH:mm}", normalFont);
+            dateExport.Alignment = Element.ALIGN_RIGHT;
+            dateExport.SpacingAfter = 20;
+            document.Add(dateExport);
+
+            // 🆕 Déterminer si on est en Recette ou Dépense selon l'onglet
+            bool isRecette = SelectedTabIndex == 0 || SelectedTabIndex == 1; // 0=Recette Fonct, 1=Recette Invest
+
+            // Tableau principal
+            PdfPTable table = new PdfPTable(10) { WidthPercentage = 100 };
+            table.SetWidths(new float[] { 10f, 8f, 8f, 10f, 28f, 11f, 11f, 11f, 10f, 11f });
+
+            // 🆕 En-têtes adaptés selon Recette/Dépense
+            AddCellWithColor(table, "Chapitre", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
+            AddCellWithColor(table, "Article", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
+            AddCellWithColor(table, "Paragraphe", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
+            AddCellWithColor(table, "Sous-Paragraphe", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
+            AddCellWithColor(table, "Intitulé", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
+            AddCellWithColor(table, "Montant Prévu", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
+            AddCellWithColor(table, "Montant Émis", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
+
+            // 🆕 Colonne adaptée : "Montant Recouvré" pour Recette, "Montant Payé" pour Dépense
+            AddCellWithColor(table, isRecette ? "Montant Recouvré" : "Montant Payé",
+                headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
+
+            // 🆕 Colonne adaptée : "Taux Recouvrement" pour Recette, "Taux Paiement" pour Dépense
+            AddCellWithColor(table, isRecette ? "Taux Recouvrement" : "Taux Paiement",
+                headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
+
+            // 🆕 Colonne adaptée : "Reste à Recouvrer" pour Recette, "Reste à Payer" pour Dépense
+            AddCellWithColor(table, isRecette ? "Reste à Recouvrer" : "Reste à Payer",
+                headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
+
+            // Données hiérarchiques
+            var flatList = FlattenHierarchy(_fullHierarchy);
+            foreach (var item in flatList)
+            {
+                // Déterminer la couleur de fond selon le niveau
+                BaseColor bgColor = item.Level switch
+                {
+                    0 => new BaseColor(255, 205, 210), // Rouge clair #FFCDD2
+                    1 => new BaseColor(255, 249, 196), // Jaune clair #FFF9C4
+                    2 => new BaseColor(200, 230, 201), // Vert clair #C8E6C9
+                    _ => BaseColor.WHITE
+                };
+
+                // Police selon le niveau
+                var cellFont = item.Level switch
+                {
+                    0 => boldFont,
+                    1 => boldFont,
+                    2 => normalFont,
+                    _ => normalFont
+                };
+
+                // Indentation pour le chapitre
+                string indentation = new string(' ', item.Level * 2);
+
+                AddCellWithColor(table, indentation + (item.BudgetLine.Nommenclature.Chapitre ?? ""), cellFont, bgColor, Element.ALIGN_LEFT);
+                AddCellWithColor(table, item.BudgetLine.Nommenclature.Article ?? "", cellFont, bgColor, Element.ALIGN_LEFT);
+                AddCellWithColor(table, item.BudgetLine.Nommenclature.Paragraphe ?? "", cellFont, bgColor, Element.ALIGN_LEFT);
+                AddCellWithColor(table, item.BudgetLine.Nommenclature.SousParagraphe ?? "", cellFont, bgColor, Element.ALIGN_LEFT);
+                AddCellWithColor(table, item.BudgetLine.Nommenclature.Intitule ?? "", cellFont, bgColor, Element.ALIGN_LEFT);
+                AddCellWithColor(table, $"{item.BudgetLine.MontantDefinitif:N2} GNF", cellFont, bgColor, Element.ALIGN_RIGHT);
+                AddCellWithColor(table, $"{item.BudgetLine.MontantRealise:N2} GNF", cellFont, bgColor, Element.ALIGN_RIGHT);
+                AddCellWithColor(table, $"{item.BudgetLine.MontantEntreSortie:N2} GNF", cellFont, bgColor, Element.ALIGN_RIGHT);
+                AddCellWithColor(table, $"{item.BudgetLine.TauxEntreSortie:N2} %", cellFont, bgColor, Element.ALIGN_RIGHT);
+                AddCellWithColor(table, $"{item.BudgetLine.ResteEntreSortie:N2} GNF", cellFont, bgColor, Element.ALIGN_RIGHT);
+            }
+
+            document.Add(table);
+
+            // Espace avant les totaux
+            document.Add(new Paragraph(" "));
+
+            // Totaux selon l'onglet
+            AddTotalsSection(document, headerFont, boldFont, normalFont);
+
+            document.Close();
+            writer.Close();
+        }
+        private void AddCellWithColor(PdfPTable table, string text, iTextSharp.text.Font font, BaseColor backgroundColor, int alignment)
+        {
+            PdfPCell cell = new PdfPCell(new Phrase(text, font));
+            cell.Padding = 5;
+            cell.HorizontalAlignment = alignment;
+            cell.BackgroundColor = backgroundColor;
+            cell.BorderWidth = 0.5f;
+            cell.BorderColor = BaseColor.GRAY;
+            table.AddCell(cell);
+        }
+
+        private void AddTotalsSection(Document document, iTextSharp.text.Font headerFont, iTextSharp.text.Font boldFont, iTextSharp.text.Font normalFont)
+        {
+            Paragraph totalsTitle = new Paragraph("Totaux", headerFont);
+            totalsTitle.SpacingBefore = 15;
+            totalsTitle.SpacingAfter = 10;
+            document.Add(totalsTitle);
+
+            PdfPTable totalsTable = new PdfPTable(2) { WidthPercentage = 60 };
+            totalsTable.SetWidths(new float[] { 70f, 30f });
+
+            switch (SelectedTabIndex)
+            {
+                case 0: // Recette - Fonctionnement
+                    AddCellWithColor(totalsTable, "Total Recettes de Fonctionnement", boldFont, BaseColor.LIGHT_GRAY, Element.ALIGN_LEFT);
+                    AddCellWithColor(totalsTable, $"{TotalRecetteFonctionnement:N2} GNF", boldFont, new BaseColor(200, 230, 201), Element.ALIGN_RIGHT);
+                    break;
+
+                case 1: // Recette - Investissement
+                    AddCellWithColor(totalsTable, "Total Recettes d'Investissement", boldFont, BaseColor.LIGHT_GRAY, Element.ALIGN_LEFT);
+                    AddCellWithColor(totalsTable, $"{TotalRecetteInvestissement:N2} GNF", boldFont, new BaseColor(200, 230, 201), Element.ALIGN_RIGHT);
+
+                    AddCellWithColor(totalsTable, "Total Recettes Réels d'Investissement", boldFont, BaseColor.LIGHT_GRAY, Element.ALIGN_LEFT);
+                    AddCellWithColor(totalsTable, $"{TotalRecetteReelsInvestissement:N2} GNF", boldFont, new BaseColor(165, 214, 167), Element.ALIGN_RIGHT);
+
+                    AddCellWithColor(totalsTable, "Total Général des Recettes Réels", headerFont, new BaseColor(66, 165, 245), Element.ALIGN_LEFT);
+                    AddCellWithColor(totalsTable, $"{TotalGeneralRecettesReels:N2} GNF", headerFont, new BaseColor(144, 202, 249), Element.ALIGN_RIGHT);
+                    break;
+
+                case 2: // Dépense - Fonctionnement
+                    AddCellWithColor(totalsTable, "Total Dépenses de Fonctionnement", boldFont, BaseColor.LIGHT_GRAY, Element.ALIGN_LEFT);
+                    AddCellWithColor(totalsTable, $"{TotalDepenseFonctionnement:N2} GNF", boldFont, new BaseColor(239, 154, 154), Element.ALIGN_RIGHT);
+
+                    AddCellWithColor(totalsTable, "Total Dépenses Réels de Fonctionnement", boldFont, BaseColor.LIGHT_GRAY, Element.ALIGN_LEFT);
+                    AddCellWithColor(totalsTable, $"{TotalDepenseReelsFonctionnement:N2} GNF", boldFont, new BaseColor(229, 115, 115), Element.ALIGN_RIGHT);
+                    break;
+
+                case 3: // Dépense - Investissement
+                    AddCellWithColor(totalsTable, "Total Dépenses d'Investissement", boldFont, BaseColor.LIGHT_GRAY, Element.ALIGN_LEFT);
+                    AddCellWithColor(totalsTable, $"{TotalDepenseInvestissement:N2} GNF", boldFont, new BaseColor(239, 154, 154), Element.ALIGN_RIGHT);
+
+                    AddCellWithColor(totalsTable, "Total Général des Dépenses Réels", headerFont, new BaseColor(198, 40, 40), Element.ALIGN_LEFT);
+                    AddCellWithColor(totalsTable, $"{TotalGeneralDepensesReels:N2} GNF", headerFont, new BaseColor(244, 143, 177), Element.ALIGN_RIGHT);
+                    break;
+            }
+
+            document.Add(totalsTable);
+        }
+
+        private void Print()
+        {
+            MessageBox.Show(
+                "Fonctionnalité d'impression en cours de développement.\n" +
+                "Veuillez utiliser l'export PDF puis imprimer le fichier généré.",
+                "Information",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+        }
     }
 }

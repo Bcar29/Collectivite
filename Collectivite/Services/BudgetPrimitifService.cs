@@ -58,7 +58,21 @@ namespace Collectivite.Services
                 throw new Exception($"Erreur lors de la récupération des budgets primitifs : {ex.Message}", ex);
             }
         }
+         
+        public async Task<List<BudgetLine>> GetVueEnsemble()
+        {
+            using var context = CreateContext();
+            var exerciceService = ExerciceService.Instance;
 
+            if (exerciceService.CurrentExercice == null)
+            {
+                throw new InvalidOperationException("Aucun exercice n'est sélectionné.");
+            }
+            return await context.BudgetLines
+                .Where(bl => bl.Nommenclature.ParentId == null && bl.BudgetPrimitif.ExerciceId == exerciceService.CurrentExercice.Id)
+                .Include(b => b.Nommenclature)
+                .ToListAsync();
+        }
         // ajouter un budgetprimitif
         public async Task<(bool Success, string Message, BudgetPrimitif? BudgetPrimitif)> CreateBudgetPrimitifAsync(BudgetPrimitif budgePrimitif)
         {
