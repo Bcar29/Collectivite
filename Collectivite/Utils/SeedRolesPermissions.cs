@@ -181,6 +181,14 @@ namespace Collectivite.Utils
             new Permission { Name = "Voir les utilisateurs", Code = "User.View", Description = "Permet de consulter les utilisateurs." },
             new Permission { Name = "Supprimer un utilisateur", Code = "User.Delete", Description = "Permet de supprimer un utilisateur." },
 
+            // Gestion budgétaire et budget préparatoire
+            new Permission { Name = "Voir la synthèse", Code = "Synthese.View", Description = "Permet de consulter la synthèse." },
+            new Permission { Name = "Voir les lignes budgétaires", Code = "BudgetLine.View", Description = "Permet de consulter les lignes budgétaires." },
+            new Permission { Name = "Voir les lignes comptes administratifs", Code = "CompteAdministratif.View", Description = "Permet de consulter les comptes administratifs." },
+
+
+
+
             // Administration
             new Permission { Name = "Accès à l'administration", Code = "Administration.Access", Description = "Permet d'accéder à la section d'administration (Rôles, Permissions, Utilisateurs)." },
 
