@@ -631,11 +631,15 @@ namespace Collectivite
             _viewModel.IsMenuOpen = false;
         }
 
-        // BOUTON DIAGNOSTIC
-        private async void BoutonDiagnostic_Click(object sender, RoutedEventArgs e)
+        // Navigation vers la page de Validation Engagement Mandat OrdreRecette
+        private void Validation_Click(object sender, RoutedEventArgs e)
         {
-            await TestRapideMouvement.AfficherDiagnosticAsync();
+            _viewModel.UpdatePageTitle("VALIDATION - GESTION DES VALIDATIONS");
+            MainContentFrame.Navigate(new Views.Pages.ValidationPage());
+            _viewModel.IsMenuOpen = false;
         }
+
+        
 
         // Méthode temporaire pour afficher un placeholder
         private static FrameworkElement CreatePlaceholderContent(string pageName)

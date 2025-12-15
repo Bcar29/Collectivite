@@ -433,7 +433,19 @@
                                         <TextBlock Text="Ordre de Recette" FontSize="12" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
-
+                                
+                                <Button Content="Validation"
+                                        Command="{Binding NavigateToValidationCommand}" Click="Validation_Click">
+                                    <Button.ContentTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="ShieldCheck" Margin="0,0,8,0"/>
+                                                <TextBlock Text="Validation"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </Button.ContentTemplate>
+                                </Button>
+                                
                             </StackPanel>
                         </Expander>
                         <!-- Section Saisie des Pièces Fin -->

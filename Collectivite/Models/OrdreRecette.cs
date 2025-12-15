@@ -5,11 +5,14 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static Collectivite.Models.Mandat;
 
 namespace Collectivite.Models
 {
     public class OrdreRecette
     {
+        public enum EtatOdre { Non_Validé, Validé }
+        public enum StatutOrdre { Non_Encaissé, Partiel, Enciassé }
         [Key]
         public int Id { get; set; }
 
@@ -62,12 +65,45 @@ namespace Collectivite.Models
         // 🔹 Date d’émission
         [Required(ErrorMessage = "La date de l'ordre est obligatoire")]
         public DateTime DateOrdre { get; set; } = DateTime.Now;
+        public StatutOrdre Status { get; set; } = StatutOrdre.Non_Encaissé;
+        public EtatOdre Etat { get; set; } = EtatOdre.Non_Validé;
 
         public ICollection<EcritureComptable>? EcritureComptables { get; set; } = new List<EcritureComptable>();
 
         public override string ToString()
         {
             return $"OrdreRecette(Id={Id}, NumeroOrdre={NumeroOrdre}, MontantOrdre={MontantOrdre}, DateOrdre={DateOrdre.ToShortDateString()})";
+        }
+
+        // Methode qui recupere le status du mandat
+
+        public string OrdreStatut
+        {
+            get
+            {
+                return Status switch
+                {
+                    StatutOrdre.Non_Encaissé => "Non Encaissé",
+                    StatutOrdre.Partiel => "Partiel",
+                    StatutOrdre.Enciassé => "Encaissé",
+                    _ => ""
+                };
+            }
+        }
+        // Methode qui recupere l Etat de l'ordre
+
+        public string OrdreEtat
+        {
+            get
+            {
+                return Etat switch
+                {
+                    EtatOdre.Non_Validé => "Non Validé",
+                    EtatOdre.Validé => "Validé",
+
+                    _ => ""
+                };
+            }
         }
     }
 

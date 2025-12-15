@@ -24,6 +24,10 @@
         <utils:VirementToBoolConverter x:Key="VirementToBoolConverter"/>
         <utils:ChequeToBoolConverter x:Key="ChequeToBoolConverter"/>
 
+        <utils:EtatOrdreToTextConverter x:Key="StatutToText"/>
+        <utils:EtatOrdreToColorConverter x:Key="StatutToColor"/>
+        <utils:EtatOrdreToBackgroundConverter x:Key="StatutToBackground"/>
+        
         <!-- Converter inverse pour la visibilité -->
         <Style x:Key="VisibleWhenTrue" TargetType="FrameworkElement">
             <Setter Property="Visibility" Value="Collapsed"/>
@@ -416,6 +420,24 @@
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
 
+                                <!-- Etat Mandat  -->
+                                <DataGridTemplateColumn Header="Etat" Width="150">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border CornerRadius="12" 
+                                             Padding="8,4"
+                                              HorizontalAlignment="Center"
+                                              Background="{Binding Etat, Converter={StaticResource StatutToBackground}}">
+                                                 <TextBlock Text="{Binding Etat, Converter={StaticResource StatutToText}}"
+                                                 Foreground="{Binding Etat, Converter={StaticResource StatutToColor}}"
+                                                 FontSize="11" 
+                                                 FontWeight="SemiBold" 
+                                                 HorizontalAlignment="Left"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
                                 <!-- Bouton Payer -->
                                 <DataGridTemplateColumn Header="" Width="120">
                                     <DataGridTemplateColumn.CellTemplate>
@@ -567,6 +589,23 @@
                                         </Style>
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
+                                <!-- Etat Ordre Recett  -->
+                                <DataGridTemplateColumn Header="Etat" Width="150">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border CornerRadius="12" 
+                                             Padding="8,4"
+                                              HorizontalAlignment="Center"
+                                              Background="{Binding Etat, Converter={StaticResource StatutToBackground}}">
+                                                <TextBlock Text="{Binding Etat, Converter={StaticResource StatutToText}}"
+                                                 Foreground="{Binding ordre.Etat, Converter={StaticResource StatutToColor}}"
+                                                 FontSize="11" 
+                                                 FontWeight="SemiBold" 
+                                                 HorizontalAlignment="Left"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
 
                                 <!-- Bouton Encaisser -->
                                 <DataGridTemplateColumn Header="" Width="130">

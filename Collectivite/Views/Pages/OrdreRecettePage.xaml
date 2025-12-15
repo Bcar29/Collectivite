@@ -2,12 +2,17 @@
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+      xmlns:utils="clr-namespace:Collectivite.Utils"
       Language="fr-FR"
       Background="#F5F5F5"
       Title="Gestion des Ordres de Recette">
 
     <Page.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <utils:StatutOrdreToTextConverter x:Key="StatutOrdreToText"/>
+        <utils:StatutOrdreToColorConverter x:Key="StatutOrdreToColor"/>
+        <utils:StatutOrdreToBackgroundConverter x:Key="StatutOrdreToBackground"/>
+        <utils:StatutOrdreCanEditConverter x:Key="StatutOrdreCanEdit"/>
     </Page.Resources>
 
     <Grid>
@@ -338,6 +343,40 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
+                            <!-- Montant Encaissé -->
+                            <DataGridTemplateColumn Header="Montant Encaissé" Width="130">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{Binding Statut, Converter={StaticResource StatutOrdreToBackground}}" 
+                                                CornerRadius="4" 
+                                                Padding="8,4">
+                                            <TextBlock Text="{Binding MontantEncaisse, StringFormat={}{0:N0} GNF}"
+                                                   FontWeight="Bold"
+                                                   Foreground="{Binding Statut, Converter={StaticResource StatutOrdreToColor}}"
+                                                   HorizontalAlignment="Right"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Statut -->
+                            <DataGridTemplateColumn Header="Statut" Width="100">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border CornerRadius="12" 
+                                                Padding="8,4"
+                                                 HorizontalAlignment="Center"
+                                                Background="{Binding Statut, Converter={StaticResource StatutOrdreToBackground}}">
+                                            <TextBlock Text="{Binding Statut, Converter={StaticResource StatutOrdreToText}}"
+                                                   Foreground="{Binding Statut, Converter={StaticResource StatutOrdreToColor}}"
+                                                    FontSize="11" 
+                                                    FontWeight="SemiBold" 
+                                                     HorizontalAlignment="Center"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
                             <!-- Actions -->
                             <DataGridTemplateColumn Header="Actions" Width="140">
                                 <DataGridTemplateColumn.CellTemplate>
@@ -350,11 +389,12 @@
                                         ToolTip="Voir détails">
                                                 <materialDesign:PackIcon Kind="Eye" Foreground="#4CAF50"/>
                                             </Button>
+                                            <!-- Modifier -->
                                             <Button Style="{StaticResource MaterialDesignIconButton}"
-                                        Visibility="{Binding DataContext.CanEditOrdreRecette, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}"
-                                        Command="{Binding DataContext.NavigateToEditCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                        CommandParameter="{Binding}"
-                                        ToolTip="Modifier">
+                                                Visibility="{Binding Statut, Converter={StaticResource StatutOrdreCanEdit}}"
+                                                Command="{Binding DataContext.NavigateToEditCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                CommandParameter="{Binding}"
+                                                ToolTip="Modifier">
                                                 <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2"/>
                                             </Button>
                                             <Button Style="{StaticResource MaterialDesignIconButton}"
