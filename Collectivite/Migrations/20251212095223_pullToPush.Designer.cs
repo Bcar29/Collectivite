@@ -12,8 +12,13 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Collectivite.Migrations
 {
     [DbContext(typeof(AppDbContext))]
+<<<<<<<< HEAD:Collectivite/Migrations/20251212095223_pullToPush.Designer.cs
     [Migration("20251212095223_pullToPush")]
     partial class pullToPush
+========
+    [Migration("20251212100102_pullTo")]
+    partial class pullTo
+>>>>>>>> 2fa820bf611b1f2f7c4587962deff0d1741edd7c:Collectivite/Migrations/20251212100102_pullTo.Designer.cs
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

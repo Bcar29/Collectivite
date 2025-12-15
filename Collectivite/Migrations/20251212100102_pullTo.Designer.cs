@@ -12,8 +12,13 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Collectivite.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251211110050_relationEngagementBonCommande")]
-    partial class relationEngagementBonCommande
+<<<<<<<< HEAD:Collectivite/Migrations/20251212095223_pullToPush.Designer.cs
+    [Migration("20251212095223_pullToPush")]
+    partial class pullToPush
+========
+    [Migration("20251212100102_pullTo")]
+    partial class pullTo
+>>>>>>>> 2fa820bf611b1f2f7c4587962deff0d1741edd7c:Collectivite/Migrations/20251212100102_pullTo.Designer.cs
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -188,7 +193,6 @@ namespace Collectivite.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("Prefecture")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Region")
@@ -880,10 +884,6 @@ namespace Collectivite.Migrations
                     b.Property<decimal>("MontantNet")
                         .HasColumnType("decimal(65,30)");
 
-                    b.Property<string>("Motif")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<string>("NumeroMandat")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -896,6 +896,9 @@ namespace Collectivite.Migrations
 
                     b.Property<decimal>("Rts")
                         .HasColumnType("decimal(65,30)");
+
+                    b.Property<int>("status")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -1296,10 +1299,9 @@ namespace Collectivite.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Email")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<string>("Password")
+                    b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("longtext");
 
@@ -1307,7 +1309,6 @@ namespace Collectivite.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Tel")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Username")
