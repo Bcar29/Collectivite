@@ -270,6 +270,9 @@ namespace Collectivite.ViewModels
 
                 if (success)
                 {
+                    // Fonction qui incremente l'attribut MontantEntreSortie du BugetLine Cas Mandat
+                    await new BudgetLineEntreSortieService().IncrémenterPourMandatAsync(MandatSelectionne.Id, DialogMontant);
+
                     MessageSucces = message;
                     IsDialogOpen = false;
                     await ChargerDonneesAsync();
@@ -384,6 +387,9 @@ namespace Collectivite.ViewModels
 
                 if (success)
                 {
+                    // Fonction qui incremente l'attribut MontantEntreSortie du BugetLine Cas OrdreRecette
+                    await new BudgetLineEntreSortieService().IncrémenterPourOrdreRecetteAsync(OrdreRecetteSelectionne.Id, DialogMontant);
+
                     MessageSucces = message;
                     IsDialogOpen = false;
                     await ChargerDonneesAsync();

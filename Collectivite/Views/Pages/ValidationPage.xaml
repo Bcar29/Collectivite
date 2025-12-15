@@ -1,0 +1,580 @@
+﻿<UserControl x:Class="Collectivite.Views.Pages.ValidationPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:utils="clr-namespace:Collectivite.Utils"
+             mc:Ignorable="d" 
+             d:DesignHeight="800" d:DesignWidth="1400"
+             Loaded="UserControl_Loaded"
+             Background="#F8FAFC">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
+        <utils:CountZeroToVisibilityConverter x:Key="CountZeroToVisConverter"/>
+
+        <!-- Style pour les boutons d'action -->
+        <Style x:Key="ValidateButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Padding" Value="12,0"/>
+            <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="6"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Background" Value="#10B981"/>
+            <Setter Property="BorderBrush" Value="#10B981"/>
+        </Style>
+
+        <Style x:Key="RejectButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Padding" Value="12,0"/>
+            <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="6"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Foreground" Value="#EF4444"/>
+            <Setter Property="BorderBrush" Value="#FCA5A5"/>
+        </Style>
+    </UserControl.Resources>
+
+    <materialDesign:DialogHost Identifier="ValidationDialog" 
+                               IsOpen="{Binding IsRejetDialogOpen}"
+                               CloseOnClickAway="False">
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- DIALOGUE DE REJET -->
+        <!-- ═══════════════════════════════════════ -->
+        <materialDesign:DialogHost.DialogContent>
+            <Border MinWidth="450" Background="White" CornerRadius="12">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- En-tête -->
+                    <Border Grid.Row="0" Background="#FEF2F2" Padding="24,20" 
+                            CornerRadius="12,12,0,0"
+                            BorderBrush="#FECACA" BorderThickness="0,0,0,1">
+                        <Grid>
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="AlertCircle" Width="24" Height="24" 
+                                                             Foreground="#EF4444" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                    <TextBlock Text="{Binding RejetDialogTitre}" 
+                                               FontSize="18" FontWeight="Bold" Foreground="#991B1B"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <Button Style="{StaticResource MaterialDesignIconButton}"
+                                    HorizontalAlignment="Right" VerticalAlignment="Top"
+                                    Command="{Binding FermerRejetDialogCommand}"
+                                    Foreground="#94A3B8" Margin="-8,-8,0,0">
+                                <materialDesign:PackIcon Kind="Close" Width="20" Height="20"/>
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <!-- Corps -->
+                    <StackPanel Grid.Row="1" Margin="24,20">
+                        <TextBlock Text="Motif du rejet *" FontSize="12" Foreground="#64748B" 
+                                   FontWeight="Medium" Margin="0,0,0,8"/>
+                        <TextBox Text="{Binding MotifRejet, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 materialDesign:HintAssist.Hint="Saisissez le motif du rejet..."
+                                 TextWrapping="Wrap"
+                                 AcceptsReturn="True"
+                                 Height="100"
+                                 VerticalContentAlignment="Top"/>
+                    </StackPanel>
+
+                    <!-- Boutons -->
+                    <Border Grid.Row="2" Background="#F8FAFC" Padding="24,16" 
+                            CornerRadius="0,0,12,12"
+                            BorderBrush="#E2E8F0" BorderThickness="0,1,0,0">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="Annuler"
+                                    Command="{Binding FermerRejetDialogCommand}"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Foreground="#64748B"
+                                    BorderBrush="#CBD5E1"
+                                    Margin="0,0,12,0"
+                                    Height="40" Padding="20,0"/>
+
+                            <Button Command="{Binding ConfirmerRejetCommand}"
+                                    Style="{StaticResource MaterialDesignRaisedButton}"
+                                    Background="#EF4444"
+                                    BorderBrush="#EF4444"
+                                    Height="40" Padding="20,0"
+                                    materialDesign:ButtonAssist.CornerRadius="8">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Close" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Confirmer le rejet"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+        </materialDesign:DialogHost.DialogContent>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- CONTENU PRINCIPAL -->
+        <!-- ═══════════════════════════════════════ -->
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- EN-TÊTE -->
+            <Border Grid.Row="0" Background="White" Padding="28,24"
+                    BorderBrush="#E2E8F0" BorderThickness="0,0,0,1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ShieldCheck" Width="32" Height="32" 
+                                                     Foreground="#6366F1" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                            <TextBlock Text="Validation" 
+                                       FontSize="28" FontWeight="Bold" 
+                                       Foreground="#1E293B" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="Validez les engagements, mandats et ordres de recette en attente" 
+                                   FontSize="14" Foreground="#94A3B8" Margin="44,6,0,0"/>
+                    </StackPanel>
+
+                    <!-- Bouton Rafraîchir -->
+                    <Button Grid.Column="1"
+                            Command="{Binding ChargerDonneesCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            Foreground="#64748B"
+                            BorderBrush="#CBD5E1"
+                            Height="40" Padding="16,0"
+                            VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Refresh" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="Rafraîchir"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!-- STATISTIQUES -->
+            <Border Grid.Row="1" Background="White" Padding="28,16"
+                    BorderBrush="#E2E8F0" BorderThickness="0,0,0,1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Total en attente -->
+                    <Border Grid.Column="0" Background="#F8FAFC" CornerRadius="8" Padding="16" Margin="0,0,8,0">
+                        <StackPanel>
+                            <TextBlock Text="Total en attente" FontSize="12" Foreground="#64748B"/>
+                            <TextBlock FontSize="28" FontWeight="Bold" Foreground="#6366F1" Margin="0,4,0,0">
+                                <Run Text="{Binding CountTotal, Mode=OneWay}"/>
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Engagements -->
+                    <Border Grid.Column="1" Background="#FEF3C7" CornerRadius="8" Padding="16" Margin="8,0">
+                        <StackPanel>
+                            <TextBlock Text="Engagements" FontSize="12" Foreground="#92400E"/>
+                            <TextBlock FontSize="28" FontWeight="Bold" Foreground="#D97706" Margin="0,4,0,0">
+                                <Run Text="{Binding CountEngagements, Mode=OneWay}"/>
+                            </TextBlock>
+                            <TextBlock Text="{Binding TotalEngagements, StringFormat={}{0:N0} GNF}" 
+                                       FontSize="11" Foreground="#92400E"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Mandats -->
+                    <Border Grid.Column="2" Background="#DBEAFE" CornerRadius="8" Padding="16" Margin="8,0">
+                        <StackPanel>
+                            <TextBlock Text="Mandats" FontSize="12" Foreground="#1E40AF"/>
+                            <TextBlock FontSize="28" FontWeight="Bold" Foreground="#2563EB" Margin="0,4,0,0">
+                                <Run Text="{Binding CountMandats, Mode=OneWay}"/>
+                            </TextBlock>
+                            <TextBlock Text="{Binding TotalMandats, StringFormat={}{0:N0} GNF}" 
+                                       FontSize="11" Foreground="#1E40AF"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Ordres de recette -->
+                    <Border Grid.Column="3" Background="#D1FAE5" CornerRadius="8" Padding="16" Margin="8,0,0,0">
+                        <StackPanel>
+                            <TextBlock Text="Ordres de recette" FontSize="12" Foreground="#065F46"/>
+                            <TextBlock FontSize="28" FontWeight="Bold" Foreground="#059669" Margin="0,4,0,0">
+                                <Run Text="{Binding CountOrdresRecette, Mode=OneWay}"/>
+                            </TextBlock>
+                            <TextBlock Text="{Binding TotalOrdresRecette, StringFormat={}{0:N0} GNF}" 
+                                       FontSize="11" Foreground="#065F46"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- ONGLETS -->
+            <TabControl Grid.Row="2" 
+                        Style="{StaticResource MaterialDesignNavigationRailTabControl}"
+                        SelectedIndex="{Binding OngletActif}"
+                        Background="White">
+
+                <!-- ═══════════════════════════════════════ -->
+                <!-- ONGLET 1 : ENGAGEMENTS -->
+                <!-- ═══════════════════════════════════════ -->
+                <TabItem Width="220">
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal" Margin="12,8">
+                            <materialDesign:PackIcon Kind="FileDocumentEdit" Width="20" Height="20" 
+                                                     VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <TextBlock Text="Engagements" VerticalAlignment="Center" FontWeight="Medium"/>
+                            <Border Background="#FEF3C7" CornerRadius="10" Padding="8,2" Margin="10,0,0,0"
+                                    VerticalAlignment="Center">
+                                <TextBlock Text="{Binding CountEngagements}" FontSize="11" 
+                                           FontWeight="Bold" Foreground="#D97706"/>
+                            </Border>
+                        </StackPanel>
+                    </TabItem.Header>
+
+                    <Grid Margin="24">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Bouton Valider tout -->
+                        <Button Grid.Row="0" 
+                                Command="{Binding ValiderTousEngagementsCommand}"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                Background="#10B981" BorderBrush="#10B981"
+                                HorizontalAlignment="Right" Margin="0,0,0,16"
+                                Height="36" Padding="16,0">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="CheckAll" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBlock Text="Valider tous les engagements"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- DataGrid -->
+                        <DataGrid Grid.Row="1"
+                                  ItemsSource="{Binding EngagementsNonValides}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  IsReadOnly="True"
+                                  SelectionMode="Single"
+                                  Background="White"
+                                  BorderThickness="1"
+                                  BorderBrush="#E2E8F0"
+                                  GridLinesVisibility="Horizontal"
+                                  HorizontalGridLinesBrush="#F1F5F9"
+                                  RowHeight="60">
+
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Date" Binding="{Binding DateEngagement, StringFormat=dd/MM/yyyy}" Width="100"/>
+                                <DataGridTextColumn Header="Objet" Binding="{Binding Objet}" Width="*"/>
+                                <DataGridTextColumn Header="Tiers" Binding="{Binding Tiers.Nom}" Width="150"/>
+                                <DataGridTextColumn Header="Ligne budgétaire" Binding="{Binding BudgetLine.Nommenclature.Intitule}" Width="200"/>
+
+                                <DataGridTemplateColumn Header="Montant" Width="140">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border Background="#FEF3C7" CornerRadius="4" Padding="8,4">
+                                                <TextBlock Text="{Binding MontantEngagement, StringFormat={}{0:N0} GNF}"
+                                                           FontWeight="Bold" Foreground="#D97706" HorizontalAlignment="Right"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTemplateColumn Header="Actions" Width="200">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                <Button Content="Valider"
+                                                        Command="{Binding DataContext.ValiderEngagementCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                        CommandParameter="{Binding}"
+                                                        Style="{StaticResource ValidateButtonStyle}"
+                                                        Margin="0,0,8,0"/>
+                                                <Button Content="Rejeter"
+                                                        Command="{Binding DataContext.OuvrirRejetEngagementCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                        CommandParameter="{Binding}"
+                                                        Style="{StaticResource RejectButtonStyle}"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <!-- Message si vide -->
+                        <Border Grid.Row="1" Background="#F0FDF4" CornerRadius="12" Padding="40"
+                                HorizontalAlignment="Center" VerticalAlignment="Center"
+                                Visibility="{Binding CountEngagements, Converter={StaticResource CountZeroToVisConverter}}">
+                            <StackPanel HorizontalAlignment="Center">
+                                <materialDesign:PackIcon Kind="CheckCircle" Width="64" Height="64" 
+                                                         Foreground="#10B981" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Aucun engagement en attente" FontSize="18" FontWeight="SemiBold"
+                                           Foreground="#1E293B" HorizontalAlignment="Center" Margin="0,16,0,0"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </TabItem>
+
+                <!-- ═══════════════════════════════════════ -->
+                <!-- ONGLET 2 : MANDATS -->
+                <!-- ═══════════════════════════════════════ -->
+                <TabItem Width="180">
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal" Margin="12,8">
+                            <materialDesign:PackIcon Kind="FileDocument" Width="20" Height="20" 
+                                                     VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <TextBlock Text="Mandats" VerticalAlignment="Center" FontWeight="Medium"/>
+                            <Border Background="#DBEAFE" CornerRadius="10" Padding="8,2" Margin="10,0,0,0"
+                                    VerticalAlignment="Center">
+                                <TextBlock Text="{Binding CountMandats}" FontSize="11" 
+                                           FontWeight="Bold" Foreground="#2563EB"/>
+                            </Border>
+                        </StackPanel>
+                    </TabItem.Header>
+
+                    <Grid Margin="24">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Bouton Valider tout -->
+                        <Button Grid.Row="0" 
+                                Command="{Binding ValiderTousMandatsCommand}"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                Background="#10B981" BorderBrush="#10B981"
+                                HorizontalAlignment="Right" Margin="0,0,0,16"
+                                Height="36" Padding="16,0">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="CheckAll" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBlock Text="Valider tous les mandats"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- DataGrid -->
+                        <DataGrid Grid.Row="1"
+                                  ItemsSource="{Binding MandatsNonValides}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  IsReadOnly="True"
+                                  SelectionMode="Single"
+                                  Background="White"
+                                  BorderThickness="1"
+                                  BorderBrush="#E2E8F0"
+                                  GridLinesVisibility="Horizontal"
+                                  HorizontalGridLinesBrush="#F1F5F9"
+                                  RowHeight="60">
+
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="N° Mandat" Binding="{Binding NumeroMandat}" Width="120"/>
+                                <DataGridTextColumn Header="Date" Binding="{Binding DateEmission, StringFormat=dd/MM/yyyy}" Width="100"/>
+                                <DataGridTextColumn Header="Objet" Binding="{Binding Objet}" Width="*"/>
+                                <DataGridTextColumn Header="Bénéficiaire" Binding="{Binding Engagement.Tiers.Nom}" Width="150"/>
+
+                                <DataGridTemplateColumn Header="Montant Net" Width="140">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border Background="#DBEAFE" CornerRadius="4" Padding="8,4">
+                                                <TextBlock Text="{Binding MontantNet, StringFormat={}{0:N0} GNF}"
+                                                           FontWeight="Bold" Foreground="#2563EB" HorizontalAlignment="Right"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <!-- État de l'engagement -->
+                                <DataGridTemplateColumn Header="Engagement" Width="110">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border CornerRadius="12" Padding="8,4" HorizontalAlignment="Center">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="#FEF3C7"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Engagement.etat}" Value="Validé">
+                                                                <Setter Property="Background" Value="#D1FAE5"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <TextBlock Text="{Binding Engagement.EngagementEtat}" FontSize="11" FontWeight="SemiBold">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Foreground" Value="#D97706"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Engagement.etat}" Value="Validé">
+                                                                    <Setter Property="Foreground" Value="#059669"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTemplateColumn Header="Actions" Width="200">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                <Button Content="Valider"
+                                                        Command="{Binding DataContext.ValiderMandatCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                        CommandParameter="{Binding}"
+                                                        Style="{StaticResource ValidateButtonStyle}"
+                                                        Margin="0,0,8,0"/>
+                                                <Button Content="Rejeter"
+                                                        Command="{Binding DataContext.OuvrirRejetMandatCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                        CommandParameter="{Binding}"
+                                                        Style="{StaticResource RejectButtonStyle}"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <!-- Message si vide -->
+                        <Border Grid.Row="1" Background="#F0FDF4" CornerRadius="12" Padding="40"
+                                HorizontalAlignment="Center" VerticalAlignment="Center"
+                                Visibility="{Binding CountMandats, Converter={StaticResource CountZeroToVisConverter}}">
+                            <StackPanel HorizontalAlignment="Center">
+                                <materialDesign:PackIcon Kind="CheckCircle" Width="64" Height="64" 
+                                                         Foreground="#10B981" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Aucun mandat en attente" FontSize="18" FontWeight="SemiBold"
+                                           Foreground="#1E293B" HorizontalAlignment="Center" Margin="0,16,0,0"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </TabItem>
+
+                <!-- ═══════════════════════════════════════ -->
+                <!-- ONGLET 3 : ORDRES DE RECETTE -->
+                <!-- ═══════════════════════════════════════ -->
+                <TabItem Width="220">
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal" Margin="12,8">
+                            <materialDesign:PackIcon Kind="CashMultiple" Width="20" Height="20" 
+                                                     VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <TextBlock Text="Ordres de recette" VerticalAlignment="Center" FontWeight="Medium"/>
+                            <Border Background="#D1FAE5" CornerRadius="10" Padding="8,2" Margin="10,0,0,0"
+                                    VerticalAlignment="Center">
+                                <TextBlock Text="{Binding CountOrdresRecette}" FontSize="11" 
+                                           FontWeight="Bold" Foreground="#059669"/>
+                            </Border>
+                        </StackPanel>
+                    </TabItem.Header>
+
+                    <Grid Margin="24">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Bouton Valider tout -->
+                        <Button Grid.Row="0" 
+                                Command="{Binding ValiderTousOrdresRecetteCommand}"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                Background="#10B981" BorderBrush="#10B981"
+                                HorizontalAlignment="Right" Margin="0,0,0,16"
+                                Height="36" Padding="16,0">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="CheckAll" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBlock Text="Valider tous les ordres"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- DataGrid -->
+                        <DataGrid Grid.Row="1"
+                                  ItemsSource="{Binding OrdresRecetteNonValides}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  IsReadOnly="True"
+                                  SelectionMode="Single"
+                                  Background="White"
+                                  BorderThickness="1"
+                                  BorderBrush="#E2E8F0"
+                                  GridLinesVisibility="Horizontal"
+                                  HorizontalGridLinesBrush="#F1F5F9"
+                                  RowHeight="60">
+
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="N° Ordre" Binding="{Binding NumeroOrdre}" Width="130"/>
+                                <DataGridTextColumn Header="Date" Binding="{Binding DateOrdre, StringFormat=dd/MM/yyyy}" Width="100"/>
+                                <DataGridTextColumn Header="Débiteur" Binding="{Binding Tiers.Nom}" Width="150"/>
+                                <DataGridTextColumn Header="Ligne budgétaire" Binding="{Binding BudgetLine.Nommenclature.Intitule}" Width="*"/>
+                                <DataGridTextColumn Header="Comptable" Binding="{Binding Comptable}" Width="120"/>
+
+                                <DataGridTemplateColumn Header="Montant" Width="140">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border Background="#D1FAE5" CornerRadius="4" Padding="8,4">
+                                                <TextBlock Text="{Binding MontantOrdre, StringFormat={}{0:N0} GNF}"
+                                                           FontWeight="Bold" Foreground="#059669" HorizontalAlignment="Right"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTemplateColumn Header="Actions" Width="200">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                <Button Content="Valider"
+                                                        Command="{Binding DataContext.ValiderOrdreRecetteCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                        CommandParameter="{Binding}"
+                                                        Style="{StaticResource ValidateButtonStyle}"
+                                                        Margin="0,0,8,0"/>
+                                                <Button Content="Rejeter"
+                                                        Command="{Binding DataContext.OuvrirRejetOrdreRecetteCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                        CommandParameter="{Binding}"
+                                                        Style="{StaticResource RejectButtonStyle}"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <!-- Message si vide -->
+                        <Border Grid.Row="1" Background="#F0FDF4" CornerRadius="12" Padding="40"
+                                HorizontalAlignment="Center" VerticalAlignment="Center"
+                                Visibility="{Binding CountOrdresRecette, Converter={StaticResource CountZeroToVisConverter}}">
+                            <StackPanel HorizontalAlignment="Center">
+                                <materialDesign:PackIcon Kind="CheckCircle" Width="64" Height="64" 
+                                                         Foreground="#10B981" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Aucun ordre de recette en attente" FontSize="18" FontWeight="SemiBold"
+                                           Foreground="#1E293B" HorizontalAlignment="Center" Margin="0,16,0,0"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </TabItem>
+            </TabControl>
+
+            <!-- Barre de chargement -->
+            <ProgressBar Grid.Row="2" 
+                         IsIndeterminate="True" 
+                         Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisConverter}}"
+                         VerticalAlignment="Top"
+                         Foreground="#6366F1"
+                         Background="Transparent"
+                         Height="3"/>
+        </Grid>
+    </materialDesign:DialogHost>
+</UserControl>

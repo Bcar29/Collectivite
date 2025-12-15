@@ -271,7 +271,9 @@ namespace Collectivite.Services
                     ContratId = engagement.ContratId,
                     FactureId = engagement.FactureId,
                     MontantLettre = engagement.MontantLettre,
-                    BonCommandeId = engagement.BonCommandeId
+                    BonCommandeId = engagement.BonCommandeId,
+                    Etat = engagement.Etat,
+
                 };
 
                 context.Engagements.Add(newEngagement);

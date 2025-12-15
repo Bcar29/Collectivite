@@ -5,11 +5,13 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static Collectivite.Models.Mandat;
 
 namespace Collectivite.Models
 {
     public class Engagement
     {
+        public enum EtatEngagement { Non_Validé, Validé }
         [Key]
         public int Id { get; set; }
 
@@ -68,6 +70,7 @@ namespace Collectivite.Models
         public Facture? Facture { get; set; }
 
         public Mandat? Mandat { get; set; }
+        public EtatEngagement Etat { get; set; } = EtatEngagement.Non_Validé;
 
         [NotMapped]
         public decimal CumulEngagement => EngagementsAnterieurs + MontantEngagement;
@@ -81,5 +84,21 @@ namespace Collectivite.Models
         // Nouvelle relation : N engagements → 1 bon de commande
         public int? BonCommandeId { get; set; }
         public BonCommande? BonCommande { get; set; }
+
+        // Methode qui recupere l Etat Engagement
+
+        public string EngagementEtat
+        {
+            get
+            {
+                return Etat switch
+                {
+                    EtatEngagement.Non_Validé => "Non Validé",
+                    EtatEngagement.Validé => "Validé",
+
+                    _ => ""
+                };
+            }
+        }
     }
 }

@@ -4,6 +4,7 @@ using Collectivite.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Collectivite.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251212104810_AjoutEtatEngagementMandat")]
+    partial class AjoutEtatEngagementMandat
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -669,9 +672,6 @@ namespace Collectivite.Migrations
                     b.Property<decimal>("EngagementsAnterieurs")
                         .HasColumnType("decimal(65,30)");
 
-                    b.Property<int>("Etat")
-                        .HasColumnType("int");
-
                     b.Property<int>("ExerciceId")
                         .HasColumnType("int");
 
@@ -696,6 +696,9 @@ namespace Collectivite.Migrations
                         .HasColumnType("text");
 
                     b.Property<int?>("TiersId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("etat")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -859,9 +862,6 @@ namespace Collectivite.Migrations
                     b.Property<int>("EngagementId")
                         .HasColumnType("int");
 
-                    b.Property<int>("Etat")
-                        .HasColumnType("int");
-
                     b.Property<byte[]>("FichierJoin")
                         .HasColumnType("longblob");
 
@@ -895,7 +895,10 @@ namespace Collectivite.Migrations
                     b.Property<decimal>("Rts")
                         .HasColumnType("decimal(65,30)");
 
-                    b.Property<int>("Status")
+                    b.Property<int>("etat")
+                        .HasColumnType("int");
+
+                    b.Property<int>("status")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -1021,9 +1024,6 @@ namespace Collectivite.Migrations
                     b.Property<DateTime>("DateOrdre")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<int>("Etat")
-                        .HasColumnType("int");
-
                     b.Property<int>("ExerciceId")
                         .HasColumnType("int");
 
@@ -1042,9 +1042,6 @@ namespace Collectivite.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("varchar(50)");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
 
                     b.Property<int?>("TiersId")
                         .HasColumnType("int");

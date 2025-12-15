@@ -95,14 +95,14 @@ namespace Collectivite.ViewModels
         // ══════════════════════════════════════════════════════
         // MODIFIÉ : Statistiques basées sur le statut calculé
         // ══════════════════════════════════════════════════════
-        public decimal TotalPayes => Mandats.Where(m => m.status == Mandat.StatutMandat.Payé).Sum(m => m.MontantNet);
-        public decimal TotalPartiels => Mandats.Where(m => m.status == Mandat.StatutMandat.Partiel).Sum(m => m.MontantNet);
-        public decimal TotalNonPayes => Mandats.Where(m => m.status == Mandat.StatutMandat.Non_Payé).Sum(m => m.MontantNet);
+        public decimal TotalPayes => Mandats.Where(m => m.Status == Mandat.StatutMandat.Payé).Sum(m => m.MontantNet);
+        public decimal TotalPartiels => Mandats.Where(m => m.Status == Mandat.StatutMandat.Partiel).Sum(m => m.MontantNet);
+        public decimal TotalNonPayes => Mandats.Where(m => m.Status == Mandat.StatutMandat.Non_Payé).Sum(m => m.MontantNet);
 
         public int NombreMandats => Mandats.Count;
-        public int NombrePayes => Mandats.Count(m => m.status == Mandat.StatutMandat.Payé);
-        public int NombrePartiels => Mandats.Count(m => m.status == Mandat.StatutMandat.Partiel);
-        public int NombreNonPayes => Mandats.Count(m => m.status == Mandat.StatutMandat.Non_Payé);
+        public int NombrePayes => Mandats.Count(m => m.Status == Mandat.StatutMandat.Payé);
+        public int NombrePartiels => Mandats.Count(m => m.Status == Mandat.StatutMandat.Partiel);
+        public int NombreNonPayes => Mandats.Count(m => m.Status == Mandat.StatutMandat.Non_Payé);
 
         // ══════════════════════════════════════════════════════
         // AJOUT : Total des montants payés
@@ -219,7 +219,7 @@ namespace Collectivite.ViewModels
                 foreach (var m in mandats)
                 {
                     var (montantPaye, statut) = await paiementService.GetInfoPaiementAsync(m.Id, m.MontantNet);
-                    m.status = statut;
+                    m.Status = statut;
                     _montantsPayes[m.Id] = montantPaye; // Stocker le montant payé
                 }
 
@@ -286,7 +286,7 @@ namespace Collectivite.ViewModels
                 foreach (var m in mandats)
                 {
                     var (montantPaye, statut) = await paiementService.GetInfoPaiementAsync(m.Id, m.MontantNet);
-                    m.status = statut;
+                    m.Status = statut;
                     _montantsPayes[m.Id] = montantPaye; // Stocker le montant payé
                 }
 

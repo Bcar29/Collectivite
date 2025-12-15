@@ -1,4 +1,6 @@
 ﻿using System;
+using static Collectivite.Models.Mandat;
+using static Collectivite.Models.OrdreRecette;
 
 namespace Collectivite.Services
 {
@@ -32,7 +34,7 @@ namespace Collectivite.Services
         public decimal MontantNet { get; set; }
         public decimal MontantPaye { get; set; }
         public decimal MontantRestant => MontantNet - MontantPaye;
-
+        public EtatMandat Etat { get; set; } = EtatMandat.Non_Validé;
         // État
         public bool EstTotalementPaye => MontantRestant <= 0;
         public decimal PourcentagePaye => MontantNet > 0 ? (MontantPaye / MontantNet) * 100 : 0;
@@ -54,7 +56,7 @@ namespace Collectivite.Services
         public string NumeroOrdre { get; set; } = string.Empty;
         public DateTime DateOrdre { get; set; }
         public string? Motifs { get; set; }
-
+        public EtatOdre Etat { get; set; } = EtatOdre.Non_Validé;
         // Débiteur (Tiers)
         public string Debiteur { get; set; } = string.Empty;
 

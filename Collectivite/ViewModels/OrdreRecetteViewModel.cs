@@ -13,7 +13,7 @@ namespace Collectivite.ViewModels
     public class OrdreRecetteViewModel : ViewModelBase
     {
         private bool _isLoading;
-        private OrdreRecette? _selectedOrdreRecette;
+        private OrdreRecetteDisplay? _selectedOrdreRecette;
         private bool _isDialogOpen;
         private OrdreRecette _dialogOrdreRecette;
         private readonly CommuneService _communeService;
@@ -45,14 +45,12 @@ namespace Collectivite.ViewModels
 
             // Commandes
             LoadDataCommand = new RelayCommand(async _ => await LoadDataAsync());
-            //OpenAddDialogCommand = new RelayCommand(async _ => await OpenAddDialogAsync());
-            //OpenEditDialogCommand = new RelayCommand<OrdreRecette>(o => OpenEditDialog(o));
             SaveCommand = new RelayCommand(async _ => await SaveAsync(), _ => CanSave());
             CancelCommand = new RelayCommand(_ => CancelDialog());
-            DeleteCommand = new RelayCommand<OrdreRecette>(async o => await DeleteAsync(o));
-            NavigateToDetailCommand = new RelayCommand<OrdreRecette>(o => NavigateToDetail(o));
+            DeleteCommand = new RelayCommand<OrdreRecetteDisplay>(async o => await DeleteAsync(o));
+            NavigateToDetailCommand = new RelayCommand<OrdreRecetteDisplay>(o => NavigateToDetail(o));
             NavigateToAddCommand = new RelayCommand(_ => NavigateToAdd());
-            NavigateToEditCommand = new RelayCommand<OrdreRecette>(o => NavigateToEdit(o));
+            NavigateToEditCommand = new RelayCommand<OrdreRecetteDisplay>(o => NavigateToEdit(o));
 
             // Commandes de recherche et filtrage
             SearchCommand = new RelayCommand(async _ => await SearchAsync());
@@ -68,7 +66,10 @@ namespace Collectivite.ViewModels
 
         #region Properties
 
-        public ObservableCollection<OrdreRecette> OrdresRecette { get; } = new();
+        // ══════════════════════════════════════════════════════
+        // MODIFIÉ : Utiliser OrdreRecetteDisplay au lieu de OrdreRecette
+        // ══════════════════════════════════════════════════════
+        public ObservableCollection<OrdreRecetteDisplay> OrdresRecette { get; } = new();
         public ObservableCollection<BudgetLine> BudgetLines { get; } = new();
         public ObservableCollection<Exercice> Exercices { get; } = new();
         public ObservableCollection<Commune> Communes { get; } = new();
@@ -86,7 +87,7 @@ namespace Collectivite.ViewModels
             set => SetProperty(ref _isLoading, value);
         }
 
-        public OrdreRecette? SelectedOrdreRecette
+        public OrdreRecetteDisplay? SelectedOrdreRecette
         {
             get => _selectedOrdreRecette;
             set => SetProperty(ref _selectedOrdreRecette, value);
@@ -120,6 +121,17 @@ namespace Collectivite.ViewModels
 
         public decimal TotalOrdres => OrdresRecette.Sum(o => o.MontantOrdre);
         public int CountOrdres => OrdresRecette.Count;
+
+        // ══════════════════════════════════════════════════════
+        // AJOUT : Statistiques par statut
+        // ══════════════════════════════════════════════════════
+        public decimal TotalEncaisse => OrdresRecette.Sum(o => o.MontantEncaisse);
+        public decimal TotalPayes => OrdresRecette.Where(o => o.Statut == OrdreRecette.StatutOrdre.Enciassé).Sum(o => o.MontantOrdre);
+        public decimal TotalPartiels => OrdresRecette.Where(o => o.Statut == OrdreRecette.StatutOrdre.Partiel).Sum(o => o.MontantOrdre);
+        public decimal TotalNonPayes => OrdresRecette.Where(o => o.Statut == OrdreRecette.StatutOrdre.Non_Encaissé).Sum(o => o.MontantOrdre);
+        public int NombrePayes => OrdresRecette.Count(o => o.Statut == OrdreRecette.StatutOrdre.Enciassé);
+        public int NombrePartiels => OrdresRecette.Count(o => o.Statut == OrdreRecette.StatutOrdre.Partiel);
+        public int NombreNonPayes => OrdresRecette.Count(o => o.Statut == OrdreRecette.StatutOrdre.Non_Encaissé);
 
         #endregion
 
@@ -178,8 +190,6 @@ namespace Collectivite.ViewModels
         #region Commands
 
         public ICommand LoadDataCommand { get; }
-        //public ICommand OpenAddDialogCommand { get; }
-        //public ICommand OpenEditDialogCommand { get; }
         public ICommand SaveCommand { get; }
         public ICommand CancelCommand { get; }
         public ICommand DeleteCommand { get; }
@@ -210,10 +220,16 @@ namespace Collectivite.ViewModels
                 var ordreRecetteService = new OrdreRecetteService();
                 var ordres = await ordreRecetteService.GetAllOrdresRecetteAsync();
 
+                // ══════════════════════════════════════════════════════
+                // AJOUT : Calculer le montant encaissé et le statut
+                // ══════════════════════════════════════════════════════
+                var paiementService = new OrdreRecettePaiementService();
+
                 OrdresRecette.Clear();
                 foreach (var o in ordres)
                 {
-                    OrdresRecette.Add(o);
+                    var (montantEncaisse, statut) = await paiementService.GetInfoEncaissementAsync(o.Id, o.MontantOrdre);
+                    OrdresRecette.Add(new OrdreRecetteDisplay(o, montantEncaisse, statut));
                 }
 
                 // Charger les lignes budgétaires
@@ -261,8 +277,7 @@ namespace Collectivite.ViewModels
                     TiersList.Add(t);
                 }
 
-                OnPropertyChanged(nameof(TotalOrdres));
-                OnPropertyChanged(nameof(CountOrdres));
+                UpdateStatistics();
             }
             catch (Exception ex)
             {
@@ -275,11 +290,26 @@ namespace Collectivite.ViewModels
             }
         }
 
+        // ══════════════════════════════════════════════════════
+        // AJOUT : Méthode pour mettre à jour les statistiques
+        // ══════════════════════════════════════════════════════
+        private void UpdateStatistics()
+        {
+            OnPropertyChanged(nameof(TotalOrdres));
+            OnPropertyChanged(nameof(CountOrdres));
+            OnPropertyChanged(nameof(TotalEncaisse));
+            OnPropertyChanged(nameof(TotalPayes));
+            OnPropertyChanged(nameof(TotalPartiels));
+            OnPropertyChanged(nameof(TotalNonPayes));
+            OnPropertyChanged(nameof(NombrePayes));
+            OnPropertyChanged(nameof(NombrePartiels));
+            OnPropertyChanged(nameof(NombreNonPayes));
+        }
+
         private void OpenAddDialogAsync()
         {
             IsEditMode = false;
 
-            // Générer le prochain numéro d'ordre si une commune et un exercice sont sélectionnés
             string numeroOrdre = $"OR-{DateTime.Now:yyyyMMdd}-{OrdresRecette.Count + 1:D4}";
 
             DialogOrdreRecette = new OrdreRecette
@@ -402,9 +432,12 @@ namespace Collectivite.ViewModels
             IsDialogOpen = false;
         }
 
-        private async System.Threading.Tasks.Task DeleteAsync(OrdreRecette? ordreRecette)
+        // ══════════════════════════════════════════════════════
+        // MODIFIÉ : Utiliser OrdreRecetteDisplay
+        // ══════════════════════════════════════════════════════
+        private async System.Threading.Tasks.Task DeleteAsync(OrdreRecetteDisplay? ordreDisplay)
         {
-            if (ordreRecette == null) return;
+            if (ordreDisplay == null) return;
 
             if (!CanDeleteOrdreRecette)
             {
@@ -413,9 +446,9 @@ namespace Collectivite.ViewModels
             }
 
             var result = MessageBox.Show(
-                $"⚠️ Supprimer l'ordre de recette '{ordreRecette.NumeroOrdre}' ?\n\n" +
-                $"Montant : {ordreRecette.MontantOrdre:N0} GNF\n" +
-                $"Date : {ordreRecette.DateOrdre:dd/MM/yyyy}\n\n" +
+                $"⚠️ Supprimer l'ordre de recette '{ordreDisplay.NumeroOrdre}' ?\n\n" +
+                $"Montant : {ordreDisplay.MontantOrdre:N0} GNF\n" +
+                $"Date : {ordreDisplay.DateOrdre:dd/MM/yyyy}\n\n" +
                 $"Cette action est irréversible.",
                 "Confirmation",
                 MessageBoxButton.YesNo,
@@ -428,7 +461,7 @@ namespace Collectivite.ViewModels
             try
             {
                 var ordreRecetteService = new OrdreRecetteService();
-                var (success, message) = await ordreRecetteService.DeleteOrdreRecetteAsync(ordreRecette.Id);
+                var (success, message) = await ordreRecetteService.DeleteOrdreRecetteAsync(ordreDisplay.Id);
 
                 MessageBox.Show(message,
                     success ? "Succès" : "Erreur",
@@ -459,30 +492,34 @@ namespace Collectivite.ViewModels
                 return;
             }
             NavigationService.Instance.NavigateTo(new Views.Pages.OrdreRecetteFormPage());
-
         }
 
-        private void NavigateToEdit(OrdreRecette? ordreRecette)
+        // ══════════════════════════════════════════════════════
+        // MODIFIÉ : Utiliser OrdreRecetteDisplay
+        // ══════════════════════════════════════════════════════
+        private void NavigateToEdit(OrdreRecetteDisplay? ordreDisplay)
         {
-            if (ordreRecette == null) return;
+            if (ordreDisplay == null) return;
             if (!CanEditOrdreRecette)
             {
                 MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-            NavigationService.Instance.NavigateTo(new Views.Pages.OrdreRecetteFormPage(ordreRecette.Id));
+            NavigationService.Instance.NavigateTo(new Views.Pages.OrdreRecetteFormPage(ordreDisplay.Id));
         }
 
-        private void NavigateToDetail(OrdreRecette? ordreRecette)
+        // ══════════════════════════════════════════════════════
+        // MODIFIÉ : Utiliser OrdreRecetteDisplay
+        // ══════════════════════════════════════════════════════
+        private void NavigateToDetail(OrdreRecetteDisplay? ordreDisplay)
         {
-            if (ordreRecette == null) return;
+            if (ordreDisplay == null) return;
             if (!CanViewOrdreRecette)
             {
                 MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-            NavigationService.Instance.NavigateTo(new Views.Pages.OrdreRecetteDetailPage(ordreRecette.Id));
-            
+            NavigationService.Instance.NavigateTo(new Views.Pages.OrdreRecetteDetailPage(ordreDisplay.Id));
         }
         #endregion
 
@@ -513,14 +550,19 @@ namespace Collectivite.ViewModels
                     montantMax: FilterMontantMax
                 );
 
+                // ══════════════════════════════════════════════════════
+                // AJOUT : Calculer le montant encaissé et le statut
+                // ══════════════════════════════════════════════════════
+                var paiementService = new OrdreRecettePaiementService();
+
                 OrdresRecette.Clear();
                 foreach (var o in resultats)
                 {
-                    OrdresRecette.Add(o);
+                    var (montantEncaisse, statut) = await paiementService.GetInfoEncaissementAsync(o.Id, o.MontantOrdre);
+                    OrdresRecette.Add(new OrdreRecetteDisplay(o, montantEncaisse, statut));
                 }
 
-                OnPropertyChanged(nameof(TotalOrdres));
-                OnPropertyChanged(nameof(CountOrdres));
+                UpdateStatistics();
             }
             catch (Exception ex)
             {

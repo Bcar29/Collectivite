@@ -2,12 +2,17 @@
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+      xmlns:utils="clr-namespace:Collectivite.Utils"
       Language="fr-FR"
       Background="#F5F5F5"
       Title="Gestion des Engagements">
 
     <Page.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+        <utils:EtatEngagementToTextConverter x:Key="StatutToText"/>
+        <utils:EtatEngagementToColorConverter x:Key="StatutToColor"/>
+        <utils:EtatEngagmentToBackgroundConverter x:Key="StatutToBackground"/>
     </Page.Resources>
 
     <Grid>
@@ -173,11 +178,29 @@
                                         <TextBlock Text="{Binding MontantEngagement, StringFormat={}{0:N0} GNF}"
                                                  FontWeight="SemiBold"
                                                  Foreground="#1976D2"
-                                                 HorizontalAlignment="Right"/>
+                                                 HorizontalAlignment="Left"/>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-
+                            
+                            <!-- Etat -->
+                            <DataGridTemplateColumn Header="Etat" Width="150">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border CornerRadius="12" 
+                                             Padding="8,4"
+                                              HorizontalAlignment="Center"
+                                              Background="{Binding Etat, Converter={StaticResource StatutToBackground}}">
+                                            <TextBlock Text="{Binding Etat, Converter={StaticResource StatutToText}}"
+                                                 Foreground="{Binding Etat, Converter={StaticResource StatutToColor}}"
+                                                 FontSize="11" 
+                                                 FontWeight="SemiBold" 
+                                                 HorizontalAlignment="Left"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                  
                             <!-- Actions -->
                             <DataGridTemplateColumn Header="Actions" Width="180">
                                 <DataGridTemplateColumn.CellTemplate>

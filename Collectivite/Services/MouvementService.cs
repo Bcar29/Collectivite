@@ -58,7 +58,8 @@ namespace Collectivite.Services
                         ?? "Tiers non défini",
                     MontantBrut = mandat.MontantBrut,
                     MontantNet = mandat.MontantNet,
-                    MontantPaye = montantPaye
+                    MontantPaye = montantPaye,
+                    Etat = mandat.Etat
                 };
 
                 // Ne garder que les mandats non totalement payés
@@ -100,7 +101,8 @@ namespace Collectivite.Services
                     ?? "Tiers non défini",
                 MontantBrut = mandat.MontantBrut,
                 MontantNet = mandat.MontantNet,
-                MontantPaye = montantPaye
+                MontantPaye = montantPaye,
+                Etat = mandat.Etat
             };
         }
 

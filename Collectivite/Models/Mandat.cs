@@ -29,6 +29,7 @@ namespace Collectivite.Models
     }
     public class Mandat
     {
+        public enum EtatMandat { Non_Validé, Validé }
         public enum StatutMandat { Non_Payé,Partiel,Payé}
         [Key]
         public int Id { get; set; }
@@ -80,8 +81,9 @@ namespace Collectivite.Models
 
         // 🔹 Date de paiement (facultatif)
         public DateTime? DatePaiement { get; set; }
-
-        public StatutMandat status { get; set; } = StatutMandat.Non_Payé;
+        
+        public StatutMandat Status { get; set; } = StatutMandat.Non_Payé;
+        public EtatMandat Etat { get; set; } = EtatMandat.Non_Validé;
         public ICollection<EcritureComptable>? EcritureComptables { get; set; } = new List<EcritureComptable>();
 
         // Methode qui recupere le status du mandat
@@ -90,11 +92,26 @@ namespace Collectivite.Models
         {
             get
             {
-                return status switch
+                return Status switch
                 {
                     StatutMandat.Non_Payé => "Non Payé",
                     StatutMandat.Partiel => "Partiel",
                     StatutMandat.Payé => "Payé",
+                    _ => ""
+                };
+            }
+        }
+        // Methode qui recupere l Etat du mandat
+
+        public string MandatEtat  
+        {
+            get
+            {
+                return Etat switch
+                {
+                    EtatMandat.Non_Validé => "Non Validé",
+                    EtatMandat.Validé => "Validé",
+                 
                     _ => ""
                 };
             }
