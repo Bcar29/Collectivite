@@ -335,7 +335,8 @@ namespace Collectivite.Services
                     Objet = mandat.Objet,
                     FichierJoin = mandat.FichierJoin,
                     FichierName = mandat.FichierName,
-                    DatePaiement = mandat.DatePaiement
+                    DatePaiement = mandat.DatePaiement,
+                    Etat = mandat.Etat
                 };
 
                 context.Mandats.Add(newMandat);
@@ -423,6 +424,7 @@ namespace Collectivite.Services
                 existingMandat.FichierJoin = mandat.FichierJoin;
                 existingMandat.FichierName = mandat.FichierName;
                 existingMandat.DatePaiement = mandat.DatePaiement;
+                existingMandat.Etat = mandat.Etat;
 
                 await context.SaveChangesAsync();
 

@@ -1,11 +1,30 @@
 ﻿using Collectivite.Models;
 using System;
 using System.Globalization;
+using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
 
 namespace Collectivite.Utils
 {
+    /// <summary>
+    /// Retourne Visible si Non_Encaissé, sinon Collapsed
+    /// </summary>
+    public class StatutOrdreCanEditConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is OrdreRecette.StatutOrdre statut)
+            {
+                // Visible uniquement si Non_Encaissé
+                return statut == OrdreRecette.StatutOrdre.Non_Encaissé ? Visibility.Visible : Visibility.Collapsed;
+            }
+            return Visibility.Visible;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+            => throw new NotImplementedException();
+    }
     /// <summary>
     /// Convertit StatutOrdre en texte
     /// </summary>

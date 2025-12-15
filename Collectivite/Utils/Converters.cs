@@ -16,7 +16,7 @@ namespace Collectivite.Utils
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             string mode = value?.ToString() ?? "";
-
+            
             return mode.ToLower() switch
             {
                 "espèces" or "especes" => new SolidColorBrush(Color.FromRgb(76, 175, 80)),    // Vert #4CAF50

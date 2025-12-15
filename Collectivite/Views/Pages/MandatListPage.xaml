@@ -16,9 +16,9 @@
         <utils:PaymentTooltipConverter x:Key="PaymentTooltipConverter"/>
         <utils:PaymentCommandConverter x:Key="PaymentCommandConverter"/>
 
-        <utils:StatutMandatToTextConverter x:Key="StatutToText"/>
-        <utils:StatutMandatToColorConverter x:Key="StatutToColor"/>
-        <utils:StatutMandatToBackgroundConverter x:Key="StatutToBackground"/>
+        <utils:StatutMandatToTextConverter x:Key="StatutMandatToTextConverter"/>
+        <utils:StatutMandatToColorConverter x:Key="StatutMandatToColorConverter"/>
+        <utils:StatutMandatToBackgroundConverter x:Key="StatutMandatToBackgroundConverter"/>
 
         <!-- AJOUT : Converters pour montant payé et visibilité du bouton modifier -->
         <utils:MontantPayeConverter x:Key="MontantPayeConverter"/>
@@ -408,9 +408,9 @@
                                     <Border CornerRadius="12" 
                                         Padding="8,4"
                                          HorizontalAlignment="Center"
-                                         Background="{Binding status, Converter={StaticResource StatutToBackground}}">
-                                        <TextBlock Text="{Binding status, Converter={StaticResource StatutToText}}"
-                                            Foreground="{Binding status, Converter={StaticResource StatutToColor}}"
+                                         Background="{Binding Status, Converter={StaticResource StatutMandatToBackgroundConverter}}">
+                                        <TextBlock Text="{Binding Status, Converter={StaticResource StatutMandatToTextConverter}}"
+                                            Foreground="{Binding Status, Converter={StaticResource StatutMandatToColorConverter}}"
                                             FontSize="11" 
                                             FontWeight="SemiBold" 
                                             HorizontalAlignment="Center"/>

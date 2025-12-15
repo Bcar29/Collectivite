@@ -482,9 +482,9 @@ namespace Collectivite.Services
         {
             string numeroCompte = modeReglement switch
             {
-                ModeReglement.Espece => "53",    // Caisse
-                ModeReglement.Virement => "55",  // Banque
-                ModeReglement.Cheque => "55",    // Banque
+                ModeReglement.Espece => "55",    // Caisse
+                ModeReglement.Virement => "53",  // Banque
+                ModeReglement.Cheque => "53",    // Banque
                 _ => "53"
             };
 
