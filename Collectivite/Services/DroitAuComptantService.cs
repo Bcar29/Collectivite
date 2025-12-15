@@ -162,118 +162,135 @@ namespace Collectivite.Services
         /// <summary>
         /// Crée une nouvelle opération de droit au comptant
         /// </summary>
-        public async Task<(bool Success, string Message)> CreerOperationAsync(DroitAuComptantCreationDTO dto)
+        public async Task<(bool Success, string Message)>CreerOperationAsync(DroitAuComptantCreationDTO dto)
         {
             using var context = CreateContext();
-            using var transaction = await context.Database.BeginTransactionAsync();
+            var strategy = context.Database.CreateExecutionStrategy();
 
-            try
+            return await strategy.ExecuteAsync(async () =>
             {
-                // Validations
-                if (dto.BudgetLineId <= 0)
-                    return (false, "L'imputation est obligatoire.");
+                (bool Success, string Message) result;
 
-                if (dto.Montant <= 0)
-                    return (false, "Le montant doit être supérieur à zéro.");
+                await using var transaction =
+                    await context.Database.BeginTransactionAsync();
 
-                if (string.IsNullOrWhiteSpace(dto.Comptable))
-                    return (false, "Le nom du comptable est obligatoire.");
-
-                // Récupérer les entités nécessaires
-                var exercice = ExerciceService.Instance.CurrentExercice;
-                var commune = Properties.Settings.Default.CommuneId;
-
-                if (exercice == null)
-                    return (false, "Aucun exercice en cours.");
-
-                var budgetLine = await context.BudgetLines
-                    .Include(b => b.Nommenclature)
-                    .FirstOrDefaultAsync(b => b.Id == dto.BudgetLineId);
-
-                if (budgetLine == null)
-                    return (false, "Ligne budgétaire introuvable.");
-
-                // Récupérer le compte comptable de l'imputation
-                var compteImputation = await context.CompteComptables
-                    .FirstOrDefaultAsync(c => c.NumeroCompte == budgetLine.Nommenclature!.CodeNomenclature);
-
-                if (compteImputation == null)
-                    return (false, $"Compte comptable introuvable pour l'imputation {budgetLine.Nommenclature!.CodeNomenclature}.");
-
-                // Récupérer le compte de trésorerie
-                var compteTresorerie = await GetCompteTresorerieAsync(context, dto.ModeReglement);
-                if (compteTresorerie == null)
-                    return (false, "Compte de trésorerie introuvable.");
-
-                // Générer le numéro d'ordre
-                var numeroOrdre = await GenererNumeroOrdreAsync(context, exercice.Id);
-
-                // 1. Créer l'OrdreRecette
-                var ordreRecette = new OrdreRecette
+                try
                 {
-                    NumeroOrdre = numeroOrdre,
-                    DateOrdre = dto.DateOrdre.ToDateTime(TimeOnly.MaxValue),
-                    MontantOrdre = dto.Montant,
-                    MontantOrdreLettre = ConvertirEnLettres(dto.Montant),
-                    Motifs = dto.Motifs,
-                    Comptable = dto.Comptable,
-                    BudgetLineId = dto.BudgetLineId,
-                    TiersId = dto.TiersId,
-                    ExerciceId = exercice.Id,
-                    CommuneId = commune
-                };
+                    // 🔹 Validations
+                    if (dto.BudgetLineId <= 0)
+                        return (false, "L'imputation est obligatoire.");
 
-                context.OrdreRecettes.Add(ordreRecette);
-                await context.SaveChangesAsync();
+                    if (dto.Montant <= 0)
+                        return (false, "Le montant doit être supérieur à zéro.");
 
-                // 2. Créer le Mouvement
-                var mouvement = new Mouvement
+                    if (string.IsNullOrWhiteSpace(dto.Comptable))
+                        return (false, "Le nom du comptable est obligatoire.");
+
+                    var exercice = ExerciceService.Instance.CurrentExercice;
+                    var commune = Properties.Settings.Default.CommuneId;
+
+                    if (exercice == null)
+                        return (false, "Aucun exercice en cours.");
+
+                    // 🔹 BudgetLine
+                    var budgetLine = await context.BudgetLines
+                        .Include(b => b.Nommenclature)
+                        .FirstOrDefaultAsync(b => b.Id == dto.BudgetLineId);
+
+                    if (budgetLine == null)
+                        return (false, "Ligne budgétaire introuvable.");
+
+                    // 🔹 Compte d’imputation
+                    var compteImputation = await context.CompteComptables
+                        .FirstOrDefaultAsync(c =>
+                            c.NumeroCompte == budgetLine.Nommenclature!.CodeNomenclature);
+
+                    if (compteImputation == null)
+                        return (false,
+                            $"Compte comptable introuvable pour l'imputation {budgetLine.Nommenclature!.CodeNomenclature}.");
+
+                    // 🔹 Compte trésorerie
+                    var compteTresorerie =
+                        await GetCompteTresorerieAsync(context, dto.ModeReglement);
+
+                    if (compteTresorerie == null)
+                        return (false, "Compte de trésorerie introuvable.");
+
+                    // 🔹 Numéro d’ordre
+                    var numeroOrdre =
+                        await GenererNumeroOrdreAsync(context, exercice.Id);
+
+                    // 1️⃣ OrdreRecette
+                    var ordreRecette = new OrdreRecette
+                    {
+                        NumeroOrdre = numeroOrdre,
+                        DateOrdre = dto.DateOrdre.ToDateTime(TimeOnly.MaxValue),
+                        MontantOrdre = dto.Montant,
+                        MontantOrdreLettre = ConvertirEnLettres(dto.Montant),
+                        Motifs = dto.Motifs,
+                        Comptable = dto.Comptable,
+                        BudgetLineId = dto.BudgetLineId,
+                        TiersId = dto.TiersId,
+                        ExerciceId = exercice.Id,
+                        CommuneId = commune
+                    };
+
+                    context.OrdreRecettes.Add(ordreRecette);
+                    await context.SaveChangesAsync();
+
+                    // 2️⃣ Mouvement
+                    var mouvement = new Mouvement
+                    {
+                        Date = dto.DateOrdre,
+                        Montant = dto.Montant,
+                        idCompteComptable = compteTresorerie.Id,
+                        idOrdreRecette = ordreRecette.Id,
+                        RefVirement = dto.ModeReglement == ModeReglement.Virement ? dto.RefVirement : null,
+                        NumBanqueBenef = dto.ModeReglement == ModeReglement.Virement ? dto.NumBanqueBenef : null,
+                        RefChèque = dto.ModeReglement == ModeReglement.Cheque ? dto.RefCheque : null
+                    };
+
+                    context.Mouvements.Add(mouvement);
+                    await context.SaveChangesAsync();
+
+                    // 3️⃣ Écriture comptable
+                    var ecritureComptable = new EcritureComptable
+                    {
+                        DateEcriture = dto.DateOrdre,
+                        CompteDebitId = compteTresorerie.Id,
+                        CompteCreditId = compteImputation.Id,
+                        Montant = dto.Montant,
+                        OrdreRecetteId = ordreRecette.Id,
+                        MouvementId = mouvement.id
+                    };
+
+                    context.EcritureComptables.Add(ecritureComptable);
+
+                    // 4️⃣ Mise à jour BudgetLine
+                    budgetLine.MontantRealise += dto.Montant;
+
+                    await context.SaveChangesAsync();
+
+                    // 5️⃣ Recalcul hiérarchie
+                    await OrdreRecetteService.RecalculateRealisation(
+                        context,
+                        budgetLine.NommenclatureId,
+                        budgetLine.BudgetPrimitifId);
+
+                    await transaction.CommitAsync();
+
+                    result = (true,
+                        $"Opération créée avec succès.\nN° Ordre: {numeroOrdre}");
+
+                    return result;
+                }
+                catch (Exception ex)
                 {
-                    Date = dto.DateOrdre,
-                    Montant = dto.Montant,
-                    idCompteComptable = compteTresorerie.Id,
-                    idOrdreRecette = ordreRecette.Id,
-                    RefVirement = dto.ModeReglement == ModeReglement.Virement ? dto.RefVirement : null,
-                    NumBanqueBenef = dto.ModeReglement == ModeReglement.Virement ? dto.NumBanqueBenef : null,
-                    RefChèque = dto.ModeReglement == ModeReglement.Cheque ? dto.RefCheque : null
-                };
-
-                context.Mouvements.Add(mouvement);
-                await context.SaveChangesAsync();
-
-                // 3. Créer l'EcritureComptable
-                var ecritureComptable = new EcritureComptable
-                {
-                    DateEcriture = dto.DateOrdre,
-                    CompteDebitId = compteTresorerie.Id,      // On débite la trésorerie (on reçoit l'argent)
-                    CompteCreditId = compteImputation.Id,     // On crédite le compte de produit
-                    Montant = dto.Montant,
-                    OrdreRecetteId = ordreRecette.Id,
-                    MouvementId = mouvement.id,
-                };
-
-                context.EcritureComptables.Add(ecritureComptable);
-
-                // 4. Mettre à jour le MontantRealise de la BudgetLine
-                budgetLine.MontantRealise += dto.Montant;
-
-                await context.SaveChangesAsync();
-
-                // 5. Recalculer la hiérarchie
-                await OrdreRecetteService.RecalculateRealisation(
-                    context,
-                    budgetLine.NommenclatureId,
-                    budgetLine.BudgetPrimitifId);
-
-                await transaction.CommitAsync();
-
-                return (true, $"Opération créée avec succès.\nN° Ordre: {numeroOrdre}");
-            }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync();
-                return (false, $"Erreur lors de la création: {ex.Message}");
-            }
+                    await transaction.RollbackAsync();
+                    result = (false, $"Erreur lors de la création : {ex.Message}");
+                    return result;
+                }
+            });
         }
 
         #endregion
