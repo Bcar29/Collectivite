@@ -132,80 +132,87 @@ namespace Collectivite.Services
         /// <summary>
         /// Effectue un paiement sur un mandat
         /// </summary>
-        public async Task<(bool Success, string Message, Mouvement? Mouvement)> PayerMandatAsync(MouvementCreationDTO dto)
+        public async Task<(bool Success, string Message, Mouvement? Mouvement)>PayerMandatAsync(MouvementCreationDTO dto)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            var strategy = _context.Database.CreateExecutionStrategy();
 
-            try
+            return await strategy.ExecuteAsync(async () =>
             {
-                // 1. Vérifier que le mandat existe
-                if (!dto.IdMandat.HasValue)
+                await using var transaction = await _context.Database.BeginTransactionAsync();
+
+                try
                 {
-                    return (false, "L'identifiant du mandat est requis.", null);
+                    // 1. Vérifier que le mandat existe
+                    if (!dto.IdMandat.HasValue)
+                        return ((bool Success, string Message, Mouvement? Mouvement))
+                            (false, "L'identifiant du mandat est requis.", null);
+
+                    var mandat = await _context.Mandats
+                        .Include(m => m.Engagement)
+                        .FirstOrDefaultAsync(m => m.Id == dto.IdMandat.Value);
+
+                    if (mandat == null)
+                        return (false, "Le mandat spécifié n'existe pas.", null);
+
+                    // 2. Vérifier le montant restant
+                    var montantDejaPaye = await _context.Mouvements
+                        .Where(mv => mv.idMandat == dto.IdMandat.Value)
+                        .SumAsync(mv => mv.Montant);
+
+                    var montantRestant = mandat.MontantNet - montantDejaPaye;
+
+                    if (dto.Montant <= 0)
+                        return (false, "Le montant doit être supérieur à zéro.", null);
+
+                    if (dto.Montant > montantRestant)
+                        return (false,
+                            $"Le montant saisi ({dto.Montant:N0} GNF) dépasse le montant restant ({montantRestant:N0} GNF).",
+                            null);
+
+                    // 3. Compte trésorerie
+                    var compteTresorerie =
+                        await _ecritureHelper.GetCompteTresorerieAsync(dto.ModeReglement);
+
+                    // 4. Mouvement
+                    var mouvement = new Mouvement
+                    {
+                        Date = dto.Date,
+                        Montant = dto.Montant,
+                        idCompteComptable = compteTresorerie.Id,
+                        idMandat = dto.IdMandat.Value,
+                        RefVirement = dto.ModeReglement == ModeReglement.Virement ? dto.RefVirement : null,
+                        NumBanqueBenef = dto.ModeReglement == ModeReglement.Virement ? dto.NumBanqueBenef : null,
+                        RefChèque = dto.ModeReglement == ModeReglement.Cheque ? dto.RefCheque : null,
+                        FichierJoint = dto.FichierJoint,
+                        FileName = dto.FileName
+                    };
+
+                    _context.Mouvements.Add(mouvement);
+                    //await _context.SaveChangesAsync();
+
+                    // 5. Écriture comptable
+                    var ecriture =
+                        await _ecritureHelper.GenererEcriturePaiementMandatAsync(
+                            mouvement, mandat, dto.ModeReglement);
+
+                    _context.EcritureComptables.Add(ecriture);
+                    await _context.SaveChangesAsync();
+
+                    // 6. Commit
+                    await transaction.CommitAsync();
+
+                    return (
+                        true,
+                        $"Paiement de {dto.Montant:N0} GNF enregistré avec succès sur le mandat {mandat.NumeroMandat}.",
+                        mouvement
+                    );
                 }
-
-                var mandat = await _context.Mandats
-                    .Include(m => m.Engagement)
-                    .FirstOrDefaultAsync(m => m.Id == dto.IdMandat.Value);
-
-                if (mandat == null)
+                catch (Exception ex)
                 {
-                    return (false, "Le mandat spécifié n'existe pas.", null);
+                    await transaction.RollbackAsync();
+                    return (false, $"Erreur lors du paiement : {ex.Message}", null);
                 }
-
-                // 2. Vérifier le montant restant
-                var montantDejaPaye = await _context.Mouvements
-                    .Where(mv => mv.idMandat == dto.IdMandat.Value)
-                    .SumAsync(mv => mv.Montant);
-
-                var montantRestant = mandat.MontantNet - montantDejaPaye;
-
-                if (dto.Montant <= 0)
-                {
-                    return (false, "Le montant doit être supérieur à zéro.", null);
-                }
-
-                if (dto.Montant > montantRestant)
-                {
-                    return (false, $"Le montant saisi ({dto.Montant:N0} GNF) dépasse le montant restant à payer ({montantRestant:N0} GNF).", null);
-                }
-
-                // 3. Récupérer le compte de trésorerie
-                var compteTresorerie = await _ecritureHelper.GetCompteTresorerieAsync(dto.ModeReglement);
-
-                // 4. Créer le mouvement
-                var mouvement = new Mouvement
-                {
-                    Date = dto.Date,
-                    Montant = dto.Montant,
-                    idCompteComptable = compteTresorerie.Id,
-                    idMandat = dto.IdMandat.Value,
-                    RefVirement = dto.ModeReglement == ModeReglement.Virement ? dto.RefVirement : null,
-                    NumBanqueBenef = dto.ModeReglement == ModeReglement.Virement ? dto.NumBanqueBenef : null,
-                    RefChèque = dto.ModeReglement == ModeReglement.Cheque ? dto.RefCheque : null,
-                    FichierJoint = dto.FichierJoint,
-                    FileName = dto.FileName
-                };
-
-                _context.Mouvements.Add(mouvement);
-                await _context.SaveChangesAsync();
-
-                // 5. Générer l'écriture comptable
-                var ecriture = await _ecritureHelper.GenererEcriturePaiementMandatAsync(
-                    mouvement, mandat, dto.ModeReglement);
-
-                _context.EcritureComptables.Add(ecriture);
-                await _context.SaveChangesAsync();
-
-                await transaction.CommitAsync();
-
-                return (true, $"Paiement de {dto.Montant:N0} GNF enregistré avec succès sur le mandat {mandat.NumeroMandat}.", mouvement);
-            }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync();
-                return (false, $"Erreur lors du paiement : {ex.Message}", null);
-            }
+            });
         }
 
         #endregion
@@ -305,80 +312,105 @@ namespace Collectivite.Services
         /// <summary>
         /// Effectue un encaissement sur un ordre de recette
         /// </summary>
-        public async Task<(bool Success, string Message, Mouvement? Mouvement)> EncaisserOrdreRecetteAsync(MouvementCreationDTO dto)
+        public async Task<(bool Success, string Message, Mouvement? Mouvement)>
+    EncaisserOrdreRecetteAsync(MouvementCreationDTO dto)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            var strategy = _context.Database.CreateExecutionStrategy();
 
-            try
+            return await strategy.ExecuteAsync(async () =>
             {
-                // 1. Vérifier que l'ordre de recette existe
-                if (!dto.IdOrdreRecette.HasValue)
+                (bool Success, string Message, Mouvement? Mouvement) result;
+
+                await using var transaction =
+                    await _context.Database.BeginTransactionAsync();
+
+                try
                 {
-                    return (false, "L'identifiant de l'ordre de recette est requis.", null);
+                    // 1. Vérifier l'ordre de recette
+                    if (!dto.IdOrdreRecette.HasValue)
+                    {
+                        result = (false, "L'identifiant de l'ordre de recette est requis.", null);
+                        return result;
+                    }
+
+                    var ordreRecette = await _context.OrdreRecettes
+                        .Include(o => o.Tiers)
+                        .FirstOrDefaultAsync(o => o.Id == dto.IdOrdreRecette.Value);
+
+                    if (ordreRecette == null)
+                    {
+                        result = (false, "L'ordre de recette spécifié n'existe pas.", null);
+                        return result;
+                    }
+
+                    // 2. Montant restant
+                    var montantDejaEncaisse = await _context.Mouvements
+                        .Where(mv => mv.idOrdreRecette == dto.IdOrdreRecette.Value)
+                        .SumAsync(mv => mv.Montant);
+
+                    var montantRestant = ordreRecette.MontantOrdre - montantDejaEncaisse;
+
+                    if (dto.Montant <= 0)
+                    {
+                        result = (false, "Le montant doit être supérieur à zéro.", null);
+                        return result;
+                    }
+
+                    if (dto.Montant > montantRestant)
+                    {
+                        result = (
+                            false,
+                            $"Le montant saisi ({dto.Montant:N0} GNF) dépasse le montant restant à encaisser ({montantRestant:N0} GNF).",
+                            null
+                        );
+                        return result;
+                    }
+
+                    // 3. Compte trésorerie
+                    var compteTresorerie =
+                        await _ecritureHelper.GetCompteTresorerieAsync(dto.ModeReglement);
+
+                    // 4. Mouvement
+                    var mouvement = new Mouvement
+                    {
+                        Date = dto.Date,
+                        Montant = dto.Montant,
+                        idCompteComptable = compteTresorerie.Id,
+                        idOrdreRecette = dto.IdOrdreRecette.Value,
+                        RefVirement = dto.ModeReglement == ModeReglement.Virement ? dto.RefVirement : null,
+                        NumBanqueBenef = dto.ModeReglement == ModeReglement.Virement ? dto.NumBanqueBenef : null,
+                        RefChèque = dto.ModeReglement == ModeReglement.Cheque ? dto.RefCheque : null,
+                        FichierJoint = dto.FichierJoint,
+                        FileName = dto.FileName
+                    };
+
+                    _context.Mouvements.Add(mouvement);
+
+                    // 5. Écriture comptable
+                    var ecriture =
+                        await _ecritureHelper.GenererEcritureEncaissementOrdreRecetteAsync(
+                            mouvement, ordreRecette, dto.ModeReglement);
+
+                    _context.EcritureComptables.Add(ecriture);
+
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    result = (
+                        true,
+                        $"Encaissement de {dto.Montant:N0} GNF enregistré avec succès sur l'ordre de recette {ordreRecette.NumeroOrdre}.",
+                        mouvement
+                    );
+
+                    return result;
                 }
-
-                var ordreRecette = await _context.OrdreRecettes
-                    .Include(o => o.Tiers)
-                    .FirstOrDefaultAsync(o => o.Id == dto.IdOrdreRecette.Value);
-
-                if (ordreRecette == null)
+                catch (Exception ex)
                 {
-                    return (false, "L'ordre de recette spécifié n'existe pas.", null);
+                    await transaction.RollbackAsync();
+                    result = (false, $"Erreur lors de l'encaissement : {ex.Message}", null);
+                    return result;
                 }
-
-                // 2. Vérifier le montant restant
-                var montantDejaEncaisse = await _context.Mouvements
-                    .Where(mv => mv.idOrdreRecette == dto.IdOrdreRecette.Value)
-                    .SumAsync(mv => mv.Montant);
-
-                var montantRestant = ordreRecette.MontantOrdre - montantDejaEncaisse;
-
-                if (dto.Montant <= 0)
-                {
-                    return (false, "Le montant doit être supérieur à zéro.", null);
-                }
-
-                if (dto.Montant > montantRestant)
-                {
-                    return (false, $"Le montant saisi ({dto.Montant:N0} GNF) dépasse le montant restant à encaisser ({montantRestant:N0} GNF).", null);
-                }
-
-                // 3. Récupérer le compte de trésorerie
-                var compteTresorerie = await _ecritureHelper.GetCompteTresorerieAsync(dto.ModeReglement);
-
-                // 4. Créer le mouvement
-                var mouvement = new Mouvement
-                {
-                    Date = dto.Date,
-                    Montant = dto.Montant,
-                    idCompteComptable = compteTresorerie.Id,
-                    idOrdreRecette = dto.IdOrdreRecette.Value,
-                    RefVirement = dto.ModeReglement == ModeReglement.Virement ? dto.RefVirement : null,
-                    NumBanqueBenef = dto.ModeReglement == ModeReglement.Virement ? dto.NumBanqueBenef : null,
-                    RefChèque = dto.ModeReglement == ModeReglement.Cheque ? dto.RefCheque : null,
-                    FichierJoint = dto.FichierJoint,
-                    FileName = dto.FileName
-                };
-
-                _context.Mouvements.Add(mouvement);
-                await _context.SaveChangesAsync();
-
-                // 5. Générer l'écriture comptable
-                var ecriture = await _ecritureHelper.GenererEcritureEncaissementOrdreRecetteAsync(
-                    mouvement, ordreRecette, dto.ModeReglement);
-
-                _context.EcritureComptables.Add(ecriture);
-                await _context.SaveChangesAsync();
-
-                await transaction.CommitAsync();
-
-                return (true, $"Encaissement de {dto.Montant:N0} GNF enregistré avec succès sur l'ordre de recette {ordreRecette.NumeroOrdre}.", mouvement);
-            }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync();
-                return (false, $"Erreur lors de l'encaissement : {ex.Message}", null);
-            }
+            });
         }
 
         #endregion

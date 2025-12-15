@@ -51,19 +51,30 @@ namespace Collectivite.Services
         {
             if (!optionsBuilder.IsConfigured)
             {
-                // Lire la configuration
                 var configuration = new ConfigurationBuilder()
-                    .SetBasePath(Directory.GetCurrentDirectory())
-                    .AddJsonFile("appsettings.json")
+                    .SetBasePath(AppContext.BaseDirectory) // ✅ CORRECT
+                    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                     .Build();
 
                 var connectionString = configuration.GetConnectionString("DefaultConnection");
 
-                // Utiliser Pomelo pour MySQL
-                optionsBuilder.UseMySql(connectionString,
-                    ServerVersion.AutoDetect(connectionString));
+                if (string.IsNullOrWhiteSpace(connectionString))
+                    throw new InvalidOperationException("Connection string 'DefaultConnection' introuvable.");
+
+                optionsBuilder.UseMySql(
+                    connectionString,
+                    ServerVersion.AutoDetect(connectionString),
+                    mySqlOptions =>
+                    {
+                        mySqlOptions.EnableRetryOnFailure(
+                            maxRetryCount: 5,
+                            maxRetryDelay: TimeSpan.FromSeconds(10),
+                            errorNumbersToAdd: null
+                        );
+                    });
             }
         }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
