@@ -31,6 +31,7 @@ namespace Collectivite.Services
         public async Task<List<MandatPaiementDTO>> GetMandatsNonPayesAsync()
         {
             var mandats = await _context.Mandats
+                .Where(m => m.Etat == Mandat.EtatMandat.Validé)
                 .Include(m => m.Engagement)
                     .ThenInclude(e => e.Tiers)
                 .OrderByDescending(m => m.DateEmission)
@@ -217,6 +218,7 @@ namespace Collectivite.Services
         public async Task<List<OrdreRecetteEncaissementDTO>> GetOrdresRecetteNonEncaissesAsync()
         {
             var ordres = await _context.OrdreRecettes
+                .Where(o => o.Etat == OrdreRecette.EtatOdre.Validé)
                 .Include(o => o.Tiers)
                 .OrderByDescending(o => o.DateOrdre)
                 .ToListAsync();
