@@ -14,14 +14,16 @@ namespace Collectivite.ViewModels
         private DashboardService _dashboardService;
         private readonly ExerciceService _exerciceService;
         private bool _isDisposed;
+        private readonly AuthService _authService;
         //private bool _isLoading = true;
 
-        public DashboardViewModel(AuditService auditService)
+        public DashboardViewModel(AuditService auditService, AuthService authService)
         {
             _auditService = auditService;
             _dashboardService = new DashboardService();
             _statistics = new BudgetStatistics();
             _exerciceService = ExerciceService.Instance;
+            _authService = authService;
 
             // S'abonner aux changements d'exercice
             _exerciceService.ExerciceChanged += OnExerciceChanged;
@@ -29,7 +31,7 @@ namespace Collectivite.ViewModels
 
             // Commandes pour les actions rapides
             NewMandatCommand = new RelayCommand(_ => NavigationService.Instance.NavigateTo(new Views.Pages.MandatListPage()));
-            NewBonCommandeCommand = new RelayCommand(_ => NavigationService.Instance.NavigateTo(new Views.Pages.BonCommandeListPage()));
+            NewBonCommandeCommand = new RelayCommand(_ => NavigationService.Instance.NavigateTo(new Views.Pages.BonCommandeListPage(_authService)));
             NewOrdreRecetteCommand = new RelayCommand(_ => NavigationService.Instance.NavigateTo(new Views.Pages.OrdreRecettePage()));
             NewEngagementCommand = new RelayCommand(_ => NavigationService.Instance.NavigateTo(new Views.Pages.EngagementPage()));
 

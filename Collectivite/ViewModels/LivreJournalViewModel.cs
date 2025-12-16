@@ -257,8 +257,14 @@ namespace Collectivite.ViewModels
                 IsLoading = true;
 
                 using var context = new AppDbContext();
+                var exerciceService = ExerciceService.Instance;
 
+                //if (exerciceService.CurrentExercice == null)
+                //{
+                //    return new List<Facture>();
+                //}
                 var query = context.EcritureComptables
+                    //.Where(e => e.)
                     .Include(e => e.CompteDebit)
                     .Include(e => e.CompteCredit)
                     .AsQueryable();

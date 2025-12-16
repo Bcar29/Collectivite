@@ -8,13 +8,23 @@ using System.Windows.Input;
 
 namespace Collectivite.ViewModels
 {
-    public class ExpressionBesoinListViewModel : ViewModelBase
+    public class ExpressionBesoinListViewModel : ViewModelBase, IDisposable
     {
         private bool _isLoading;
         private ExpressionBesoin? _selectedExpressionBesoin;
+        private readonly ExerciceService _exerciceService;
+        private readonly AuditService _auditService;
+        private readonly AuthService _authService;
+        private bool _isDisposed;
 
-        public ExpressionBesoinListViewModel()
+        public ExpressionBesoinListViewModel(AuthService authService, AuditService auditService)
         {
+            _exerciceService = ExerciceService.Instance;
+            _authService = authService;
+            _auditService = auditService;
+
+            // S'abonner aux changements d'exercice
+            _exerciceService.ExerciceChanged += OnExerciceChanged;
             // Commandes
             LoadDataCommand = new RelayCommand(async _ => await LoadDataAsync());
             OpenAddPageCommand = new RelayCommand(_ => OpenAddPage());
@@ -66,7 +76,15 @@ namespace Collectivite.ViewModels
         #endregion
 
         #region Methods
+        private async void OnExerciceChanged(object? sender, Exercice exercice)
+        {
+            await Application.Current.Dispatcher.InvokeAsync(async () =>
+            {
+                //recharge les expression de besoin 
+                await LoadDataAsync();
 
+            });
+        }
         private async System.Threading.Tasks.Task LoadDataAsync()
         {
             IsLoading = true;
@@ -109,7 +127,7 @@ namespace Collectivite.ViewModels
                     "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-            NavigationService.Instance.NavigateTo(new Views.Pages.ExpressionBesoinFormPage());
+            NavigationService.Instance.NavigateTo(new Views.Pages.ExpressionBesoinFormPage(_authService));
         }
 
         private void OpenEditPage(ExpressionBesoin? expressionBesoin)
@@ -121,7 +139,7 @@ namespace Collectivite.ViewModels
                     "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-            NavigationService.Instance.NavigateTo(new Views.Pages.ExpressionBesoinFormPage(expressionBesoin.Id));
+            NavigationService.Instance.NavigateTo(new Views.Pages.ExpressionBesoinFormPage(_authService, expressionBesoin.Id));
         }
 
         private void OpenDetailsPage(ExpressionBesoin? expressionBesoin)
@@ -187,6 +205,17 @@ namespace Collectivite.ViewModels
         private void NavigateFront()
         {
             NavigationService.Instance.GoForward();
+        }
+        /// <summary>
+        /// Nettoyer les ressources et se désabonner des événements
+        /// </summary>
+        public void Dispose()
+        {
+            if (!_isDisposed)
+            {
+                _exerciceService.ExerciceChanged -= OnExerciceChanged;
+                _isDisposed = true;
+            }
         }
 
         #endregion

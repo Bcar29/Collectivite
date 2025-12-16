@@ -15,11 +15,17 @@ namespace Collectivite.ViewModels
         private BonCommande _bonCommande;
         private bool _isEditMode;
         private int? _bonCommandeId;
+        private readonly ExerciceService _exerciceService;
+        private readonly AuditService _auditService;
+        private readonly AuthService _authService;
 
-        public BonCommandeFormViewModel(int? bonCommandeId = null)
+        public BonCommandeFormViewModel(AuthService authService, AuditService auditService, int? bonCommandeId = null)
         {
             _bonCommandeId = bonCommandeId;
             _isEditMode = bonCommandeId.HasValue;
+            _exerciceService = ExerciceService.Instance;
+            _authService = authService;
+            _auditService = auditService;
 
             _bonCommande = new BonCommande
             {
@@ -244,7 +250,7 @@ namespace Collectivite.ViewModels
 
         private void NavigateBack()
         {
-            NavigationService.Instance.NavigateTo(new Views.Pages.BonCommandeListPage());
+            NavigationService.Instance.NavigateTo(new Views.Pages.BonCommandeListPage(_authService));
         }
 
         private void AddDetail()

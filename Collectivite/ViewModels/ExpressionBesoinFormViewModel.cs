@@ -16,12 +16,16 @@ namespace Collectivite.ViewModels
         private bool _isEditMode;
         private int? _expressionBesoinId;
         private readonly ExerciceService _exerciceService;
+        private readonly AuditService _auditService;
+        private readonly AuthService _authService;
 
-        public ExpressionBesoinFormViewModel(int? expressionBesoinId = null)
+        public ExpressionBesoinFormViewModel(AuthService authService, AuditService auditService,int? expressionBesoinId = null)
         {
             _expressionBesoinId = expressionBesoinId;
             _isEditMode = expressionBesoinId.HasValue;
             _exerciceService = ExerciceService.Instance;
+            _authService = authService;
+            _auditService = auditService;
 
             _expressionBesoin = new ExpressionBesoin
             {
@@ -176,7 +180,7 @@ namespace Collectivite.ViewModels
 
                 if (IsEditMode)
                 {
-                    var (success, message) = await expressionBesoinService.UpdateExpressionBesoinAsync(
+                    var (success, message, eb) = await expressionBesoinService.UpdateExpressionBesoinAsync(
                         ExpressionBesoin, detailsList);
 
                     MessageBox.Show(message,
@@ -186,6 +190,11 @@ namespace Collectivite.ViewModels
 
                     if (success)
                     {
+                        var username = _authService.CurrentUser?.Username ?? "Utilisateur inconnu";
+                        await _auditService.LogAsync(
+                                   "Expression besoin modifié ",
+                                   $"{eb?.Numero}  {username} le {DateTime.Now:dd/MM/yyyy HH:mm}",
+                                   username);
                         NavigateBack();
                     }
                 }
@@ -201,6 +210,11 @@ namespace Collectivite.ViewModels
 
                     if (success)
                     {
+                        var username = _authService.CurrentUser?.Username ?? "Utilisateur inconnu";
+                        await _auditService.LogAsync(
+                                   "Expression Besoin ajouté ",
+                                   $"{expressionBesoin?.Id}  {username} le {DateTime.Now:dd/MM/yyyy HH:mm}",
+                                   username);
                         NavigateBack();
                     }
                 }
@@ -223,7 +237,7 @@ namespace Collectivite.ViewModels
 
         private void NavigateBack()
         {
-            NavigationService.Instance.NavigateTo(new Views.Pages.ExpressionBesoinListPage());
+            NavigationService.Instance.NavigateTo(new Views.Pages.ExpressionBesoinListPage(_authService));
 
         }
 

@@ -16,12 +16,12 @@ namespace Collectivite.Views.Pages
     {
         private readonly DashboardViewModel _viewModel;
 
-        public DashboardPage()
+        public DashboardPage(AuthService authService)
         {
             InitializeComponent();
             AuditService auditService = new AuditService();
 
-            _viewModel = new DashboardViewModel(auditService);
+            _viewModel = new DashboardViewModel(auditService, authService);
             DataContext = _viewModel;
 
             // S'abonner aux changements de collections
