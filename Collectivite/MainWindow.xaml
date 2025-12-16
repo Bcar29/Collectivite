@@ -435,7 +435,8 @@
                                 </Button>
                                 
                                 <Button Content="Validation"
-                                        Command="{Binding NavigateToValidationCommand}" Click="Validation_Click">
+                                    Command="{Binding NavigateToValidationCommand}" Click="Validation_Click"
+                                    Visibility="{Binding Converter={StaticResource PermissionToVisibilityConverter}, ConverterParameter=Validation.Access}">
                                     <Button.ContentTemplate>
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal">
