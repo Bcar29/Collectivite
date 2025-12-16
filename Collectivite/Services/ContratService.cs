@@ -28,7 +28,8 @@ namespace Collectivite.Services
 
             return await _appDbContext.Contrats
                 .AsNoTracking()  // ✅ Ne pas tracker
-                .Include(e => e.Exercice)
+                .Include(c => c.Exercice)
+                .Include(c => c.Tiers) // charger le tiers lié pour pouvoir binder Tiers.Nom dans l'UI
                 .ToListAsync();
         }
 

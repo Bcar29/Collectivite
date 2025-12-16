@@ -139,7 +139,7 @@
 
                             <!-- Le Tiers -->
                             <DataGridTextColumn Header="Tiers" 
-                                  Binding="{Binding TiersId}"
+                                  Binding="{Binding Tiers.Nom}"
                                   Width="230"
                                   FontWeight="Medium"/>
                             
