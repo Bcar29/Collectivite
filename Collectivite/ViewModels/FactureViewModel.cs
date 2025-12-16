@@ -44,7 +44,7 @@ namespace Collectivite.ViewModels
 
             // Commandes
             LoadDataCommand = new RelayCommand(async _ => await LoadDataAsync());
-            OpenAddDialogCommand = new RelayCommand(_ => OpenAddDialog());
+            OpenAddDialogCommand = new RelayCommand(async _ => await OpenAddDialogAsync());
             OpenEditDialogCommand = new RelayCommand<Facture>(f => OpenEditDialog(f));
             SaveCommand = new RelayCommand(async _ => await SaveAsync(), _ => CanSave());
             CancelCommand = new RelayCommand(_ => CancelDialog());
@@ -594,15 +594,19 @@ private void Imprimer(Facture? facture)
                     }
                 }
 
-                //// Charger les contrats
-                //var contratService = new ContratsService();
-                //var contrats = await contratService.GetAllContratsAsync();
+                // Charger les contrats
+                using (var context = new AppDbContext())
+                {
+                    var contratService = new ContratService(context);
+                    var contrats = await contratService.GetAllContratsAsync();
 
-                //ContratsList.Clear();
-                //foreach (var c in contrats)
-                //{
-                //    ContratsList.Add(c);
-                //}
+                    ContratsList.Clear();
+                
+                    foreach (var c in contrats)
+                    {
+                       ContratsList.Add(c);
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -615,7 +619,7 @@ private void Imprimer(Facture? facture)
             }
         }
 
-        private void OpenAddDialog()
+        private async System.Threading.Tasks.Task OpenAddDialogAsync()
         {
             if (!CanCreateFacture)
             {
@@ -640,6 +644,26 @@ private void Imprimer(Facture? facture)
 
             DialogDetails.Clear();
             FichierName = string.Empty;
+
+            // Pré-remplir ExerciceId avec l'exercice courant (fallback à la première entrée)
+            var exerciceService = ExerciceService.Instance;
+            DialogFacture.ExerciceId = exerciceService.CurrentExercice?.Id ?? Exercices.FirstOrDefault()?.Id ?? 0;
+
+            // Pré-remplir TiersId avec le premier tiers actif si disponible
+            DialogFacture.TiersId = TiersList.FirstOrDefault()?.Id ?? 0;
+
+            // Générer automatiquement le numéro de facture
+            try
+            {
+                var factureService = new FactureService();
+                DialogFacture.NumeroFacture = await factureService.GenerateNextNumeroAsync();
+            }
+            catch
+            {
+                DialogFacture.NumeroFacture = string.Empty;
+            }
+
+            OnPropertyChanged(nameof(DialogFacture));
 
             IsDialogOpen = true;
         }

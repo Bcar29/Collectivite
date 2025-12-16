@@ -98,7 +98,13 @@
                             <!-- Numero contrat -->
                             <DataGridTextColumn Header="Numéro Contrat" 
                                 Binding="{Binding NumeroContrat}"
-                                Width="230"
+                                Width="100"
+                                FontWeight="Medium"/>
+
+                            <!-- Exercice -->
+                            <DataGridTextColumn Header="Exercice" 
+                                Binding="{Binding Exercice.Libelle}"
+                                Width="170"
                                 FontWeight="Medium"/>
 
                             <!-- Date signature -->
@@ -140,7 +146,7 @@
                             <!-- Le Tiers -->
                             <DataGridTextColumn Header="Tiers" 
                                   Binding="{Binding Tiers.Nom}"
-                                  Width="230"
+                                  Width="200"
                                   FontWeight="Medium"/>
                             
                             <!-- L'Objet -->
@@ -175,7 +181,7 @@
                             </DataGridTemplateColumn>
 
                             <!-- Actions -->
-                            <DataGridTemplateColumn Header="Actions" Width="190">
+                            <DataGridTemplateColumn Header="Actions" Width="180">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal" 

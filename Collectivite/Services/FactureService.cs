@@ -97,6 +97,39 @@ namespace Collectivite.Services
 
         #endregion
 
+        #region Numérotation
+
+        /// <summary>
+        /// Génère le prochain numéro de facture (format : F-YYYY-0001)
+        /// </summary>
+        public async Task<string> GenerateNextNumeroAsync()
+        {
+            using var context = CreateContext();
+
+            var currentYear = DateTime.Now.Year;
+            var prefix = $"F-{currentYear}-";
+
+            var facturesThisYear = await context.Factures
+                .Where(f => f.NumeroFacture.StartsWith(prefix))
+                .OrderByDescending(f => f.NumeroFacture)
+                .ToListAsync();
+
+            if (!facturesThisYear.Any())
+                return prefix + "0001";
+
+            var lastNumero = facturesThisYear.First().NumeroFacture;
+            var lastSequence = lastNumero.Substring(lastNumero.LastIndexOf('-') + 1);
+
+            if (int.TryParse(lastSequence, out int seq))
+            {
+                return prefix + (seq + 1).ToString("D4");
+            }
+
+            return prefix + "0001";
+        }
+
+        #endregion
+
         #region Création
 
         /// <summary>

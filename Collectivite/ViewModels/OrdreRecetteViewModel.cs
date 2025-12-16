@@ -16,7 +16,6 @@ namespace Collectivite.ViewModels
         private OrdreRecetteDisplay? _selectedOrdreRecette;
         private bool _isDialogOpen;
         private OrdreRecette _dialogOrdreRecette;
-        private readonly CommuneService _communeService;
         private bool _isEditMode;
         private bool _isFilterPanelOpen;
         private readonly string _accessDeniedMessage = "Accès refusé : vous n'avez pas la permission d'effectuer cette opération.";

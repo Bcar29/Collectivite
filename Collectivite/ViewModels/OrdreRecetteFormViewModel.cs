@@ -154,6 +154,34 @@ namespace Collectivite.ViewModels
                 {
                     TiersList.Add(t);
                 }
+
+                // ===== Pré-remplir les valeurs par défaut pour la création =====
+                // Exercice courant : fallback vers le premier exercice non clôturé ou le premier disponible
+                var currentEx = _exerciceService.CurrentExercice ?? Exercices.FirstOrDefault();
+                OrdreRecette.ExerciceId = currentEx?.Id ?? 0;
+
+                // Commune par défaut : settings si disponible sinon première commune
+                var defaultCommuneId = Properties.Settings.Default.CommuneId;
+                if (defaultCommuneId > 0)
+                    OrdreRecette.CommuneId = defaultCommuneId;
+                else
+                    OrdreRecette.CommuneId = Communes.FirstOrDefault()?.Id ?? 0;
+
+                // Numéro d'ordre généré automatiquement si pas en mode édition
+                if (!_isEditMode)
+                {
+                    try
+                    {
+                        OrdreRecette.NumeroOrdre = await ordreRecetteService.GenerateNextNumeroAsync();
+                    }
+                    catch
+                    {
+                        OrdreRecette.NumeroOrdre = string.Empty;
+                    }
+                }
+
+                // Notifier l'UI que les propriétés du modèle ont changé
+                OnPropertyChanged(nameof(OrdreRecette));
             }
             catch (Exception ex)
             {

@@ -1,5 +1,6 @@
 ﻿using Collectivite.Models;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Collectivite.Utils;
@@ -33,6 +34,35 @@ namespace Collectivite.Services
                 .ToListAsync();
         }
 
+        /// <summary>
+        /// Génère le prochain numéro de contrat (format : C-YYYY-0001)
+        /// </summary>
+        public async Task<string> GenerateNextNumeroAsync()
+        {
+            using var context = new AppDbContext();
+
+            var currentYear = DateTime.Now.Year;
+            var prefix = $"C-{currentYear}-";
+
+            var contratsThisYear = await context.Contrats
+                .Where(c => c.NumeroContrat.StartsWith(prefix))
+                .OrderByDescending(c => c.NumeroContrat)
+                .ToListAsync();
+
+            if (!contratsThisYear.Any())
+                return prefix + "0001";
+
+            var lastNumero = contratsThisYear.First().NumeroContrat;
+            var lastSequence = lastNumero.Substring(lastNumero.LastIndexOf('-') + 1);
+
+            if (int.TryParse(lastSequence, out int seq))
+            {
+                return prefix + (seq + 1).ToString("D4");
+            }
+
+            return prefix + "0001";
+        }
+
         // ajouter un contrat
         public async Task<(bool Succes, string Message, Contrats? contrats)> CreateContratAsync(Contrats contrats)
         {
@@ -44,6 +74,7 @@ namespace Collectivite.Services
 
                 var existe = await _appDbContext.Contrats
                     .AnyAsync(c => c.NumeroContrat == contrats.NumeroContrat);
+
                 if (existe)
                 {
                     return (false, $"{contrats.NumeroContrat} existe déjà ", null);

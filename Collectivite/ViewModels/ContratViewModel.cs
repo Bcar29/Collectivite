@@ -209,8 +209,31 @@ namespace Collectivite.ViewModels
             {
                 MessageBox.Show($"Erreur lors du chargement des exercices : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            DialogContrat = new Contrats();
+            // Pré-remplir valeurs par défaut pour la création
+            var defaultExerciceId = Exercices.FirstOrDefault(e => !e.EstCloture)?.Id ?? Exercices.FirstOrDefault()?.Id ?? 0;
+            var defaultTiersId = TiersList.FirstOrDefault()?.Id ?? 0;
+
+            string numero = string.Empty;
+            try
+            {
+                numero = await _contratService.GenerateNextNumeroAsync();
+            }
+            catch
+            {
+                numero = string.Empty;
+            }
+
+            DialogContrat = new Contrats
+            {
+                NumeroContrat = numero,
+                DateSignature = DateOnly.FromDateTime(DateTime.Now),
+                DateEcheance = DateOnly.FromDateTime(DateTime.Now),
+                ExerciceId = defaultExerciceId,
+                TiersId = defaultTiersId
+            };
+
             IsEditMode = false;
+            OnPropertyChanged(nameof(DialogContrat));
             IsDialogOpen = true;
         }
 
