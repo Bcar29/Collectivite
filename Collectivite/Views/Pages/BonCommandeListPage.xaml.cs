@@ -1,4 +1,5 @@
-﻿using Collectivite.ViewModels;
+﻿using Collectivite.Services;
+using Collectivite.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,10 +22,18 @@ namespace Collectivite.Views.Pages
     /// </summary>
     public partial class BonCommandeListPage : Page
     {
-        public BonCommandeListPage()
+        public BonCommandeListPage(AuthService authService)
         {
             InitializeComponent();
-            DataContext = new BonCommandeListViewModel();
+            var auditService = new AuditService();
+            DataContext = new BonCommandeListViewModel(authService, auditService);
+        }
+        private void Page_Unloaded(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is BonCommandeListViewModel viewModel)
+            {
+                viewModel.Dispose();
+            }
         }
     }
 }

@@ -1,7 +1,6 @@
 ﻿using Collectivite.Models;
 using Collectivite.Services;
 using Collectivite.Utils;
-using Collectivite.Services;
 using Microsoft.Win32;
 using System;
 using System.Collections.ObjectModel;
@@ -16,7 +15,7 @@ using System.Diagnostics;
 
 namespace Collectivite.ViewModels
 {
-    public class FactureViewModel : ViewModelBase
+    public class FactureViewModel : ViewModelBase, IDisposable
     {
         // private readonly string _accessDeniedMessage = "Vous n'avez pas la permission pour cette action.";
         private bool _isLoading;
@@ -26,9 +25,16 @@ namespace Collectivite.ViewModels
         private bool _isEditMode;
         private string _fichierName;
         private DetailsFacture? _selectedDetail;
+        private readonly ExerciceService _exerciceService;
+        private readonly AuditService _auditService;
+        private readonly AuthService _authService;
+        private bool _isDisposed;
 
-        public FactureViewModel()
+        public FactureViewModel(AuthService authService, AuditService auditService)
         {
+            _exerciceService = ExerciceService.Instance;
+            _authService = authService;
+            _auditService = auditService;
             _dialogFacture = new Facture
             {
                 DateFacture = DateTime.Now,
@@ -42,6 +48,8 @@ namespace Collectivite.ViewModels
             };
             _fichierName = string.Empty;
 
+            // S'abonner aux changements d'exercice
+            _exerciceService.ExerciceChanged += OnExerciceChanged;
             // Commandes
             LoadDataCommand = new RelayCommand(async _ => await LoadDataAsync());
             OpenAddDialogCommand = new RelayCommand(_ => OpenAddDialog());
@@ -545,8 +553,16 @@ private void Imprimer(Facture? facture)
     }
 }
 
-#endregion
+        #endregion
+        private async void OnExerciceChanged(object? sender, Exercice exercice)
+        {
+            await Application.Current.Dispatcher.InvokeAsync(async () =>
+            {
+                //recharge les expression de besoin 
+                await LoadDataAsync();
 
+            });
+        }
         private async System.Threading.Tasks.Task LoadDataAsync()
         {
             IsLoading = true;
@@ -746,7 +762,7 @@ private void Imprimer(Facture? facture)
 
                 if (IsEditMode)
                 {
-                    var (success, message) = await factureService.UpdateFactureAsync(
+                    var (success, message, fact) = await factureService.UpdateFactureAsync(
                         DialogFacture, detailsList);
 
                     MessageBox.Show(message,
@@ -756,6 +772,11 @@ private void Imprimer(Facture? facture)
 
                     if (success)
                     {
+                        var username = _authService.CurrentUser?.Username ?? "Utilisateur inconnu";
+                        await _auditService.LogAsync(
+                                   "Expression besoin modifié ",
+                                   $"{fact?.NumeroFacture}  {username} le {DateTime.Now:dd/MM/yyyy HH:mm}",
+                                   username);
                         IsDialogOpen = false;
                         await LoadDataAsync();
                     }
@@ -772,6 +793,11 @@ private void Imprimer(Facture? facture)
 
                     if (success)
                     {
+                        var username = _authService.CurrentUser?.Username ?? "Utilisateur inconnu";
+                        await _auditService.LogAsync(
+                                   "Expression besoin modifié ",
+                                   $"{facture?.NumeroFacture}  {username} le {DateTime.Now:dd/MM/yyyy HH:mm}",
+                                   username);
                         IsDialogOpen = false;
                         await LoadDataAsync();
                     }
@@ -972,6 +998,17 @@ private void Imprimer(Facture? facture)
         {
             OnPropertyChanged(nameof(MontantTVA));
             OnPropertyChanged(nameof(MontantTTCCalcule));
+        }
+        /// <summary>
+        /// Nettoyer les ressources et se désabonner des événements
+        /// </summary>
+        public void Dispose()
+        {
+            if (!_isDisposed)
+            {
+                _exerciceService.ExerciceChanged -= OnExerciceChanged;
+                _isDisposed = true;
+            }
         }
 
         #endregion

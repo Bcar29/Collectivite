@@ -19,7 +19,14 @@ namespace Collectivite.Services
         // Récupérer toutes les expressions de besoin
         public async Task<List<ExpressionBesoin>> GetAllExpressionBesoinsAsync()
         {
+            var exerciceService = ExerciceService.Instance;
+
+            if (exerciceService.CurrentExercice == null)
+            {
+                return new List<ExpressionBesoin>();
+            }
             return await _context.ExpressionBesoins
+                .Where(e => e.ExerciceId == exerciceService.CurrentExercice.Id)
                 .Include(e => e.Exercice)
                 .Include(e => e.Details)
                     .ThenInclude(d => d.Nommenclature)
@@ -50,6 +57,11 @@ namespace Collectivite.Services
         {
             var currentYear = DateTime.Now.Year;
             var prefix = $"EB-{currentYear}-";
+            var exerciceService = ExerciceService.Instance;
+            if (exerciceService.CurrentExercice != null)
+            {
+                 prefix = $"EB-{exerciceService.CurrentExercice.GetAnnee()}-";
+            }
 
             // Récupérer toutes les expressions de l'année en cours
             var expressionsThisYear = await _context.ExpressionBesoins
@@ -137,7 +149,7 @@ namespace Collectivite.Services
         }
 
         // Mettre à jour une expression de besoin
-        public async Task<(bool success, string message)> UpdateExpressionBesoinAsync(
+        public async Task<(bool success, string message, ExpressionBesoin? expression)> UpdateExpressionBesoinAsync(
             ExpressionBesoin expressionBesoin,
             List<DetailExpressionBesoin> details)
         {
@@ -149,7 +161,7 @@ namespace Collectivite.Services
 
                 if (existing == null)
                 {
-                    return (false, "Expression de besoin introuvable.");
+                    return (false, "Expression de besoin introuvable.", null);
                 }
 
                 // Vérifier que le numéro n'est pas utilisé par une autre expression
@@ -158,13 +170,13 @@ namespace Collectivite.Services
 
                 if (duplicateNumero)
                 {
-                    return (false, "Ce numéro est déjà utilisé par une autre expression de besoin.");
+                    return (false, "Ce numéro est déjà utilisé par une autre expression de besoin.", null);
                 }
 
                 // Vérifier qu'il y a au moins un détail
                 if (details == null || details.Count == 0)
                 {
-                    return (false, "Veuillez ajouter au moins un détail.");
+                    return (false, "Veuillez ajouter au moins un détail.", null);
                 }
 
                 // Valider les détails
@@ -172,17 +184,17 @@ namespace Collectivite.Services
                 {
                     if (string.IsNullOrWhiteSpace(detail.Designation))
                     {
-                        return (false, "Toutes les lignes doivent avoir une désignation.");
+                        return (false, "Toutes les lignes doivent avoir une désignation.", null);
                     }
 
                     if (detail.Quantite <= 0)
                     {
-                        return (false, "La quantité doit être supérieure à 0.");
+                        return (false, "La quantité doit être supérieure à 0.", null);
                     }
 
                     if (detail.NommenclatureId <= 0)
                     {
-                        return (false, "Veuillez sélectionner une nomenclature pour chaque ligne.");
+                        return (false, "Veuillez sélectionner une nomenclature pour chaque ligne.", null);
                     }
                 }
 
@@ -203,11 +215,11 @@ namespace Collectivite.Services
 
                 await _context.SaveChangesAsync();
 
-                return (true, "Expression de besoin modifiée avec succès.");
+                return (true, "Expression de besoin modifiée avec succès.", existing);
             }
             catch (Exception ex)
             {
-                return (false, $"Erreur lors de la modification : {ex.Message}");
+                return (false, $"Erreur lors de la modification : {ex.Message}", null);
             }
         }
 

@@ -67,7 +67,7 @@ namespace Collectivite.Services
                     mySqlOptions =>
                     {
                         mySqlOptions.EnableRetryOnFailure(
-                            maxRetryCount: 5,
+                            maxRetryCount: 10,
                             maxRetryDelay: TimeSpan.FromSeconds(10),
                             errorNumbersToAdd: null
                         );

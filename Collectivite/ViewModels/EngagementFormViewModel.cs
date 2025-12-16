@@ -83,7 +83,7 @@ namespace Collectivite.ViewModels
                 {
                     if (_selectedBudgetLine != null)
                     {
-                        Engagement.CreditsBudgetaires = _selectedBudgetLine.MontantPrevu;
+                        Engagement.CreditsBudgetaires = _selectedBudgetLine.MontantDefinitif;
                         _ = LoadEngagementsForSelectedBudgetLineAsync();
                     }
                 }

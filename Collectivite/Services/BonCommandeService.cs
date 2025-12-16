@@ -25,7 +25,11 @@ namespace Collectivite.Services
 
             var currentYear = DateTime.Now.Year;
             var prefix = $"BC-{currentYear}-";
-
+            var exerciceService = ExerciceService.Instance;
+            if (exerciceService.CurrentExercice != null)
+            {
+                prefix = $"EB-{exerciceService.CurrentExercice.GetAnnee()}-";
+            }
             // Récupérer tous les bons de commande de l'année en cours
             var bonCommandesThisYear = await context.BonCommandes
                 .Where(bc => bc.Numero.StartsWith(prefix))
@@ -72,6 +76,7 @@ namespace Collectivite.Services
             using var context = CreateContext();
 
             return await context.BonCommandes
+                .Where(bc => bc.ExpressionBesoin.ExerciceId == exerciceService.CurrentExercice.Id)
                 .Include(bc => bc.ExpressionBesoin)
                     .ThenInclude(eb => eb.Exercice)
                 .Include(bc => bc.Engagements)
