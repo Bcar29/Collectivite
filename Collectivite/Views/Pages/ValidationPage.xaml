@@ -13,6 +13,7 @@
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
         <utils:CountZeroToVisibilityConverter x:Key="CountZeroToVisConverter"/>
+        <utils:PermissionToVisibilityConverter x:Key="PermissionToVisibilityConverter"/>
 
         <!-- Style pour les boutons d'action -->
         <Style x:Key="ValidateButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
@@ -255,11 +256,12 @@
 
                         <!-- Bouton Valider tout -->
                         <Button Grid.Row="0" 
-                                Command="{Binding ValiderTousEngagementsCommand}"
-                                Style="{StaticResource MaterialDesignRaisedButton}"
-                                Background="#10B981" BorderBrush="#10B981"
-                                HorizontalAlignment="Right" Margin="0,0,0,16"
-                                Height="36" Padding="16,0">
+                            Command="{Binding ValiderTousEngagementsCommand}"
+                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            Background="#10B981" BorderBrush="#10B981"
+                            HorizontalAlignment="Right" Margin="0,0,0,16"
+                            Height="36" Padding="16,0"
+                            Visibility="{Binding Converter={StaticResource PermissionToVisibilityConverter}, ConverterParameter=Valider.validate}">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="CheckAll" VerticalAlignment="Center" Margin="0,0,8,0"/>
                                 <TextBlock Text="Valider tous les engagements"/>
@@ -302,14 +304,16 @@
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                                 <Button Content="Valider"
-                                                        Command="{Binding DataContext.ValiderEngagementCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                        CommandParameter="{Binding}"
-                                                        Style="{StaticResource ValidateButtonStyle}"
-                                                        Margin="0,0,8,0"/>
+                                                    Command="{Binding DataContext.ValiderEngagementCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource ValidateButtonStyle}"
+                                                    Margin="0,0,8,0"
+                                                    Visibility="{Binding Converter={StaticResource PermissionToVisibilityConverter}, ConverterParameter=Valider.validate}"/>
                                                 <Button Content="Rejeter"
-                                                        Command="{Binding DataContext.OuvrirRejetEngagementCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                        CommandParameter="{Binding}"
-                                                        Style="{StaticResource RejectButtonStyle}"/>
+                                                    Command="{Binding DataContext.OuvrirRejetEngagementCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource RejectButtonStyle}"
+                                                    Visibility="{Binding Converter={StaticResource PermissionToVisibilityConverter}, ConverterParameter=Validation.rejet}"/>
                                             </StackPanel>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
@@ -356,11 +360,12 @@
 
                         <!-- Bouton Valider tout -->
                         <Button Grid.Row="0" 
-                                Command="{Binding ValiderTousMandatsCommand}"
-                                Style="{StaticResource MaterialDesignRaisedButton}"
-                                Background="#10B981" BorderBrush="#10B981"
-                                HorizontalAlignment="Right" Margin="0,0,0,16"
-                                Height="36" Padding="16,0">
+                            Command="{Binding ValiderTousMandatsCommand}"
+                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            Background="#10B981" BorderBrush="#10B981"
+                            HorizontalAlignment="Right" Margin="0,0,0,16"
+                            Height="36" Padding="16,0"
+                            Visibility="{Binding Converter={StaticResource PermissionToVisibilityConverter}, ConverterParameter=Valider.validate}">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="CheckAll" VerticalAlignment="Center" Margin="0,0,8,0"/>
                                 <TextBlock Text="Valider tous les mandats"/>
@@ -435,14 +440,16 @@
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                                 <Button Content="Valider"
-                                                        Command="{Binding DataContext.ValiderMandatCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                        CommandParameter="{Binding}"
-                                                        Style="{StaticResource ValidateButtonStyle}"
-                                                        Margin="0,0,8,0"/>
+                                                    Command="{Binding DataContext.ValiderMandatCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource ValidateButtonStyle}"
+                                                    Margin="0,0,8,0"
+                                                    Visibility="{Binding Converter={StaticResource PermissionToVisibilityConverter}, ConverterParameter=Valider.validate}"/>
                                                 <Button Content="Rejeter"
-                                                        Command="{Binding DataContext.OuvrirRejetMandatCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                        CommandParameter="{Binding}"
-                                                        Style="{StaticResource RejectButtonStyle}"/>
+                                                    Command="{Binding DataContext.OuvrirRejetMandatCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource RejectButtonStyle}"
+                                                    Visibility="{Binding Converter={StaticResource PermissionToVisibilityConverter}, ConverterParameter=Validation.rejet}"/>
                                             </StackPanel>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
@@ -489,11 +496,12 @@
 
                         <!-- Bouton Valider tout -->
                         <Button Grid.Row="0" 
-                                Command="{Binding ValiderTousOrdresRecetteCommand}"
-                                Style="{StaticResource MaterialDesignRaisedButton}"
-                                Background="#10B981" BorderBrush="#10B981"
-                                HorizontalAlignment="Right" Margin="0,0,0,16"
-                                Height="36" Padding="16,0">
+                            Command="{Binding ValiderTousOrdresRecetteCommand}"
+                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            Background="#10B981" BorderBrush="#10B981"
+                            HorizontalAlignment="Right" Margin="0,0,0,16"
+                            Height="36" Padding="16,0"
+                            Visibility="{Binding Converter={StaticResource PermissionToVisibilityConverter}, ConverterParameter=Valider.validate}">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="CheckAll" VerticalAlignment="Center" Margin="0,0,8,0"/>
                                 <TextBlock Text="Valider tous les ordres"/>
@@ -537,14 +545,16 @@
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                                 <Button Content="Valider"
-                                                        Command="{Binding DataContext.ValiderOrdreRecetteCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                        CommandParameter="{Binding}"
-                                                        Style="{StaticResource ValidateButtonStyle}"
-                                                        Margin="0,0,8,0"/>
+                                                    Command="{Binding DataContext.ValiderOrdreRecetteCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource ValidateButtonStyle}"
+                                                    Margin="0,0,8,0"
+                                                    Visibility="{Binding Converter={StaticResource PermissionToVisibilityConverter}, ConverterParameter=Valider.validate}"/>
                                                 <Button Content="Rejeter"
-                                                        Command="{Binding DataContext.OuvrirRejetOrdreRecetteCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                        CommandParameter="{Binding}"
-                                                        Style="{StaticResource RejectButtonStyle}"/>
+                                                    Command="{Binding DataContext.OuvrirRejetOrdreRecetteCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource RejectButtonStyle}"
+                                                    Visibility="{Binding Converter={StaticResource PermissionToVisibilityConverter}, ConverterParameter=Validation.rejet}"/>
                                             </StackPanel>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>

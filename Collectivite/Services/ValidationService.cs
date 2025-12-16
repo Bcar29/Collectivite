@@ -38,6 +38,10 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<(bool Success, string Message)> ValiderEngagementAsync(int idEngagement)
         {
+            // Vérifier la permission côté service
+            if (!SessionManager.HasPermission("Valider.validate"))
+                return (false, "Vous n'avez pas la permission de valider cet engagement.");
+
             using var context = new AppDbContext();
 
             var engagement = await context.Engagements
@@ -69,6 +73,10 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<(bool Success, string Message)> RejeterEngagementAsync(int idEngagement, string motif)
         {
+            // Vérifier la permission côté service
+            if (!SessionManager.HasPermission("Validation.rejet"))
+                return (false, "Vous n'avez pas la permission de rejeter cet engagement.");
+
             using var context = new AppDbContext();
 
             var engagement = await context.Engagements.FindAsync(idEngagement);
@@ -111,6 +119,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<(bool Success, string Message)> ValiderMandatAsync(int idMandat)
         {
+            if (!SessionManager.HasPermission("Valider.validate"))
+                return (false, "Vous n'avez pas la permission de valider ce mandat.");
+
             using var context = new AppDbContext();
 
             var mandat = await context.Mandats
@@ -140,6 +151,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<(bool Success, string Message)> RejeterMandatAsync(int idMandat, string motif)
         {
+            if (!SessionManager.HasPermission("Validation.rejet"))
+                return (false, "Vous n'avez pas la permission de rejeter ce mandat.");
+
             using var context = new AppDbContext();
 
             var mandat = await context.Mandats.FindAsync(idMandat);
@@ -180,6 +194,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<(bool Success, string Message)> ValiderOrdreRecetteAsync(int idOrdreRecette)
         {
+            if (!SessionManager.HasPermission("Valider.validate"))
+                return (false, "Vous n'avez pas la permission de valider cet ordre de recette.");
+
             using var context = new AppDbContext();
 
             var ordreRecette = await context.OrdreRecettes
@@ -211,6 +228,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<(bool Success, string Message)> RejeterOrdreRecetteAsync(int idOrdreRecette, string motif)
         {
+            if (!SessionManager.HasPermission("Validation.rejet"))
+                return (false, "Vous n'avez pas la permission de rejeter cet ordre de recette.");
+
             using var context = new AppDbContext();
 
             var ordreRecette = await context.OrdreRecettes.FindAsync(idOrdreRecette);

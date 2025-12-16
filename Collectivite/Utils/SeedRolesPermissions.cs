@@ -183,7 +183,7 @@ namespace Collectivite.Utils
 
             // Gestion budgétaire et budget préparatoire
             new Permission { Name = "Voir la synthèse", Code = "Synthese.View", Description = "Permet de consulter la synthèse." },
-            new Permission { Name = "Voir les lignes budgétaires", Code = "BudgetLine.View", Description = "Permet de consulter les lignes budgétaires." },
+            //new Permission { Name = "Voir les lignes budgétaires", Code = "BudgetLine.View", Description = "Permet de consulter les lignes budgétaires." },
             new Permission { Name = "Voir les lignes comptes administratifs", Code = "CompteAdministratif.View", Description = "Permet de consulter les comptes administratifs." },
 
 
@@ -202,9 +202,12 @@ namespace Collectivite.Utils
             new Permission { Name = "Voir les droits au comptant", Code = "DroitAuComptant.View", Description = "Permet de consulter les droits au comptant." },
             new Permission { Name = "Voir les balances mensuelles", Code = "BalanceMensuelle.View", Description = "Permet de consulter les balances mensuelles." },
             new Permission { Name = "Voir les balances annuelles", Code = "BalanceAnnuelle.View", Description = "Permet de consulter les balances annuelles." },
-            new Permission { Name = "Voir les exercices", Code = "Exercice.View", Description = "Permet de consulter les exercices." },
-            new Permission { Name = "Voir les expressions de besoins", Code = "ExpressionBesoin.View", Description = "Permet de consulter les expressions de besoin." },
-
+            //new Permission { Name = "Voir les exercices", Code = "Exercice.View", Description = "Permet de consulter les exercices." },
+            //new Permission { Name = "Voir les expressions de besoins", Code = "ExpressionBesoin.View", Description = "Permet de consulter les expressions de besoin." },
+            // Validation des donnees
+            new Permission { Name = "Accès à l'onglet de validation", Code = "Validation.Access", Description = "Permet d'acceder aux données saisies avant validation." },
+            new Permission { Name = "bouton valider", Code = "Valider.validate", Description = "Permet de valider les données saisies avant clôture." },
+            new Permission { Name = "Rejeter la validation", Code = "Validation.rejet", Description = "Permet de rejeter les données saisies avant clôture." }
 
 
         };

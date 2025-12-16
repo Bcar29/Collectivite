@@ -151,6 +151,12 @@ namespace Collectivite.ViewModels
         {
             if (engagement == null) return;
 
+            if (!SessionManager.HasPermission("Valider.validate"))
+            {
+                MessageBox.Show("Vous n'avez pas la permission de valider cet engagement.", "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             var result = MessageBox.Show(
                 $"Voulez-vous valider l'engagement ?\n\n" +
                 $"Objet : {engagement.Objet}\n" +
@@ -193,6 +199,12 @@ namespace Collectivite.ViewModels
         {
             if (engagement == null) return;
 
+            if (!SessionManager.HasPermission("Validation.rejet"))
+            {
+                MessageBox.Show("Vous n'avez pas la permission de rejeter cet engagement.", "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             _typeRejet = "Engagement";
             _idRejet = engagement.Id;
             RejetDialogTitre = $"Rejeter l'engagement - {engagement.Objet}";
@@ -208,6 +220,12 @@ namespace Collectivite.ViewModels
         public async Task ValiderMandatAsync(Mandat? mandat)
         {
             if (mandat == null) return;
+
+            if (!SessionManager.HasPermission("Valider.validate"))
+            {
+                MessageBox.Show("Vous n'avez pas la permission de valider ce mandat.", "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
             var result = MessageBox.Show(
                 $"Voulez-vous valider le mandat ?\n\n" +
@@ -252,6 +270,12 @@ namespace Collectivite.ViewModels
         {
             if (mandat == null) return;
 
+            if (!SessionManager.HasPermission("Validation.rejet"))
+            {
+                MessageBox.Show("Vous n'avez pas la permission de rejeter ce mandat.", "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             _typeRejet = "Mandat";
             _idRejet = mandat.Id;
             RejetDialogTitre = $"Rejeter le mandat N° {mandat.NumeroMandat}";
@@ -267,6 +291,12 @@ namespace Collectivite.ViewModels
         public async Task ValiderOrdreRecetteAsync(OrdreRecette? ordreRecette)
         {
             if (ordreRecette == null) return;
+
+            if (!SessionManager.HasPermission("Valider.validate"))
+            {
+                MessageBox.Show("Vous n'avez pas la permission de valider cet ordre de recette.", "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
             var result = MessageBox.Show(
                 $"Voulez-vous valider l'ordre de recette ?\n\n" +
@@ -310,6 +340,12 @@ namespace Collectivite.ViewModels
         {
             if (ordreRecette == null) return;
 
+            if (!SessionManager.HasPermission("Validation.rejet"))
+            {
+                MessageBox.Show("Vous n'avez pas la permission de rejeter cet ordre de recette.", "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             _typeRejet = "OrdreRecette";
             _idRejet = ordreRecette.Id;
             RejetDialogTitre = $"Rejeter l'ordre de recette N° {ordreRecette.NumeroOrdre}";
@@ -327,6 +363,12 @@ namespace Collectivite.ViewModels
             if (string.IsNullOrWhiteSpace(MotifRejet))
             {
                 MessageBox.Show("Veuillez saisir un motif de rejet.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!SessionManager.HasPermission("Validation.rejet"))
+            {
+                MessageBox.Show("Vous n'avez pas la permission de rejeter.", "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -392,6 +434,12 @@ namespace Collectivite.ViewModels
                 return;
             }
 
+            if (!SessionManager.HasPermission("Valider.validate"))
+            {
+                MessageBox.Show("Vous n'avez pas la permission de valider les engagements.", "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             var result = MessageBox.Show(
                 $"Voulez-vous valider tous les {CountEngagements} engagement(s) en attente ?\n\n" +
                 $"Montant total : {TotalEngagements:N0} GNF",
@@ -431,6 +479,12 @@ namespace Collectivite.ViewModels
             if (!MandatsNonValides.Any())
             {
                 MessageBox.Show("Aucun mandat à valider.", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            if (!SessionManager.HasPermission("Valider.validate"))
+            {
+                MessageBox.Show("Vous n'avez pas la permission de valider les mandats.", "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -475,6 +529,12 @@ namespace Collectivite.ViewModels
             if (!OrdresRecetteNonValides.Any())
             {
                 MessageBox.Show("Aucun ordre de recette à valider.", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            if (!SessionManager.HasPermission("Valider.validate"))
+            {
+                MessageBox.Show("Vous n'avez pas la permission de valider les ordres de recette.", "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 

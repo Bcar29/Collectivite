@@ -112,11 +112,11 @@
 
                         <!-- Exercice -->
                         <DataGridTextColumn Header="Exercice" 
-                                          Binding="{Binding ExpressionBesoin.Exercice.Annee}" 
-                                          Width="100"/>
+                                          Binding="{Binding ExpressionBesoin.Exercice.Libelle}" 
+                                          Width="160"/>
 
                         <!-- Nombre de détails -->
-                        <DataGridTemplateColumn Header="Nb Lignes" Width="100">
+                        <DataGridTemplateColumn Header="Nombre de Lignes" Width="160">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <Border Background="#E3F2FD" 
