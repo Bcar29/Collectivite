@@ -625,6 +625,9 @@ namespace Collectivite.Migrations
                     b.Property<int?>("OrdreRecetteId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("idExercice")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CompteCreditId");
@@ -636,6 +639,8 @@ namespace Collectivite.Migrations
                     b.HasIndex("MouvementId");
 
                     b.HasIndex("OrdreRecetteId");
+
+                    b.HasIndex("idExercice");
 
                     b.ToTable("EcritureComptables");
                 });
@@ -938,6 +943,9 @@ namespace Collectivite.Migrations
                     b.Property<int>("idCompteComptable")
                         .HasColumnType("int");
 
+                    b.Property<int?>("idExercice")
+                        .HasColumnType("int");
+
                     b.Property<int?>("idMandat")
                         .HasColumnType("int");
 
@@ -947,6 +955,8 @@ namespace Collectivite.Migrations
                     b.HasKey("id");
 
                     b.HasIndex("idCompteComptable");
+
+                    b.HasIndex("idExercice");
 
                     b.HasIndex("idMandat");
 
@@ -1501,9 +1511,15 @@ namespace Collectivite.Migrations
                         .HasForeignKey("OrdreRecetteId")
                         .OnDelete(DeleteBehavior.Cascade);
 
+                    b.HasOne("Collectivite.Models.Exercice", "Exercice")
+                        .WithMany()
+                        .HasForeignKey("idExercice");
+
                     b.Navigation("CompteCredit");
 
                     b.Navigation("CompteDebit");
+
+                    b.Navigation("Exercice");
 
                     b.Navigation("Mandat");
 
@@ -1631,6 +1647,10 @@ namespace Collectivite.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Collectivite.Models.Exercice", "Exercice")
+                        .WithMany()
+                        .HasForeignKey("idExercice");
+
                     b.HasOne("Collectivite.Models.Mandat", "Mandat")
                         .WithMany()
                         .HasForeignKey("idMandat")
@@ -1642,6 +1662,8 @@ namespace Collectivite.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("CompteComptable");
+
+                    b.Navigation("Exercice");
 
                     b.Navigation("Mandat");
 

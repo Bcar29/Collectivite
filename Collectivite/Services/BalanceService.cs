@@ -1,5 +1,5 @@
-﻿
-using Collectivite.Models;
+﻿using Collectivite.Models;
+using DocumentFormat.OpenXml.InkML;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -11,6 +11,7 @@ namespace Collectivite.Services
     public class BalanceService : IBalanceService
     {
         private readonly AppDbContext _context;
+
 
         public BalanceService(AppDbContext context)
         {
@@ -44,12 +45,71 @@ namespace Collectivite.Services
             var debutMois = new DateOnly(filtre.Annee, filtre.Mois, 1);
             var finMois = debutMois.AddMonths(1).AddDays(-1);
 
-            // Récupérer toutes les écritures de l'année
-            var ecritures = await _context.EcritureComptables
-                .Where(e => e.DateEcriture.Year == filtre.Annee && e.DateEcriture <= finMois)
-                .ToListAsync();
+            // ═══════════════════════════════════════
+            // ÉTAPE 1 : Récupérer l'exercice en cours (basé sur filtre.Annee)
+            // Ex: Si filtre.Annee = 2025, on cherche "Exercice 2025"
+            // ═══════════════════════════════════════
+            var exerciceEnCours = ExerciceService.Instance.CurrentExercice;
+            // ═══════════════════════════════════════
+            // ÉTAPE 2 : Extraire l'année du libellé avec GetAnnee()
+            // et calculer l'année précédente
+            // ═══════════════════════════════════════
+            int? anneePrecedente = null;
+            if (exerciceEnCours != null)
+            {
+                // Utilise la méthode GetAnnee() qui extrait l'année du libellé
+                // Ex: "Exercice 2025" → 2025
+                var anneeExercice = exerciceEnCours.GetAnnee();
+                if (anneeExercice.HasValue)
+                {
+                    // Année précédente = 2025 - 1 = 2024
+                    anneePrecedente = anneeExercice.Value - 1;
+                }
+            }
 
-            // Construire la balance
+            // ═══════════════════════════════════════
+            // ÉTAPE 3 : Chercher l'exercice précédent
+            // Ex: Chercher l'exercice dont le libellé contient "2024"
+            // ═══════════════════════════════════════
+            Exercice? exercicePrecedent = null;
+            if (anneePrecedente.HasValue)
+            {
+                exercicePrecedent = await _context.Exercices
+                    .FirstOrDefaultAsync(e => e.Libelle != null && e.Libelle.Contains(anneePrecedente.Value.ToString()));
+            }
+
+            int? idExercicePrecedent = exercicePrecedent?.Id;
+            int? idExerciceEnCours = exerciceEnCours?.Id;
+
+            // ═══════════════════════════════════════
+            // ÉTAPE 4 : Récupérer les écritures de l'exercice PRÉCÉDENT
+            // Pour calculer la Balance d'Entrée
+            // ═══════════════════════════════════════
+            var ecrituresAnneePrecedente = new List<EcritureComptable>();
+
+            if (idExercicePrecedent.HasValue)
+            {
+                ecrituresAnneePrecedente = await _context.EcritureComptables
+                    .Where(e => e.idExercice == idExercicePrecedent.Value)
+                    .ToListAsync();
+            }
+
+            // ═══════════════════════════════════════
+            // ÉTAPE 5 : Récupérer les écritures de l'exercice EN COURS
+            // Filtrées par date (jusqu'à la fin du mois sélectionné)
+            // ═══════════════════════════════════════
+            var ecritures = new List<EcritureComptable>();
+
+            if (idExerciceEnCours.HasValue)
+            {
+                ecritures = await _context.EcritureComptables
+                    .Where(e => e.idExercice == idExerciceEnCours.Value && e.DateEcriture <= finMois)
+                    .ToListAsync();
+            }
+
+            // ═══════════════════════════════════════
+            // CONSTRUIRE LA BALANCE
+            // ═══════════════════════════════════════
             var balance = new List<BalanceLigneDTO>();
 
             foreach (var compte in comptes)
@@ -58,16 +118,34 @@ namespace Collectivite.Services
                 {
                     CompteId = compte.Id,
                     NumeroCompte = compte.NumeroCompte,
-                    IntituleCompte = compte.IntituleCompte
+                    IntituleCompte = compte.IntituleCompte,
                 };
 
                 // ═══════════════════════════════════════
-                // BALANCE D'ENTRÉE (solde initial - exercice précédent)
-                // Pour simplifier, on considère que c'est 0 au début de l'exercice
-                // Dans un système complet, il faudrait récupérer le solde de clôture de l'exercice précédent
+                // BALANCE D'ENTRÉE (solde de l'exercice précédent)
                 // ═══════════════════════════════════════
-                ligne.DebitBalanceEntree = 0;
-                ligne.CreditBalanceEntree = 0;
+                if (ecrituresAnneePrecedente.Count > 0)
+                {
+                    var soldeAnneePrecedente = CalculerSoldeCompte(ecrituresAnneePrecedente, compte.Id);
+
+                    if (soldeAnneePrecedente >= 0)
+                    {
+                        // Solde débiteur → va dans Débit Balance Entrée
+                        ligne.DebitBalanceEntree = soldeAnneePrecedente;
+                        ligne.CreditBalanceEntree = 0;
+                    }
+                    else
+                    {
+                        // Solde créditeur → va dans Crédit Balance Entrée
+                        ligne.DebitBalanceEntree = 0;
+                        ligne.CreditBalanceEntree = Math.Abs(soldeAnneePrecedente);
+                    }
+                }
+                else
+                {
+                    ligne.DebitBalanceEntree = 0;
+                    ligne.CreditBalanceEntree = 0;
+                }
 
                 // ═══════════════════════════════════════
                 // MOUVEMENTS ANTÉRIEURS (du début de l'année jusqu'au mois précédent)
@@ -120,6 +198,24 @@ namespace Collectivite.Services
             }
 
             return balance;
+        }
+
+        /// <summary>
+        /// Calcule le solde d'un compte à partir d'une liste d'écritures
+        /// Solde = Total Débit - Total Crédit
+        /// Positif = Débiteur, Négatif = Créditeur
+        /// </summary>
+        private decimal CalculerSoldeCompte(List<EcritureComptable> ecritures, int compteId)
+        {
+            var totalDebit = ecritures
+                .Where(e => e.CompteDebitId == compteId)
+                .Sum(e => e.Montant);
+
+            var totalCredit = ecritures
+                .Where(e => e.CompteCreditId == compteId)
+                .Sum(e => e.Montant);
+
+            return totalDebit - totalCredit;
         }
 
         /// <summary>

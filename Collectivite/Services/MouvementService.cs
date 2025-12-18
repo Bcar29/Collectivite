@@ -60,7 +60,8 @@ namespace Collectivite.Services
                     MontantBrut = mandat.MontantBrut,
                     MontantNet = mandat.MontantNet,
                     MontantPaye = montantPaye,
-                    Etat = mandat.Etat
+                    Etat = mandat.Etat,
+               
                 };
 
                 // Ne garder que les mandats non totalement payés
@@ -142,6 +143,7 @@ namespace Collectivite.Services
 
                 try
                 {
+                   
                     // 1. Vérifier que le mandat existe
                     if (!dto.IdMandat.HasValue)
                         return ((bool Success, string Message, Mouvement? Mouvement))
@@ -173,6 +175,7 @@ namespace Collectivite.Services
                     var compteTresorerie =
                         await _ecritureHelper.GetCompteTresorerieAsync(dto.ModeReglement);
 
+
                     // 4. Mouvement
                     var mouvement = new Mouvement
                     {
@@ -184,7 +187,8 @@ namespace Collectivite.Services
                         NumBanqueBenef = dto.ModeReglement == ModeReglement.Virement ? dto.NumBanqueBenef : null,
                         RefChèque = dto.ModeReglement == ModeReglement.Cheque ? dto.RefCheque : null,
                         FichierJoint = dto.FichierJoint,
-                        FileName = dto.FileName
+                        FileName = dto.FileName,
+                        idExercice = ExerciceService.Instance.CurrentExercice.Id
                     };
 
                     _context.Mouvements.Add(mouvement);
@@ -381,7 +385,8 @@ namespace Collectivite.Services
                         NumBanqueBenef = dto.ModeReglement == ModeReglement.Virement ? dto.NumBanqueBenef : null,
                         RefChèque = dto.ModeReglement == ModeReglement.Cheque ? dto.RefCheque : null,
                         FichierJoint = dto.FichierJoint,
-                        FileName = dto.FileName
+                        FileName = dto.FileName,
+                        idExercice = ExerciceService.Instance.CurrentExercice.Id
                     };
 
                     _context.Mouvements.Add(mouvement);

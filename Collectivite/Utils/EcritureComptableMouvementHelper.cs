@@ -61,7 +61,8 @@ namespace Collectivite.Utils
                 CompteDebitId = premiereEcriture.CompteCreditId,  // On débite le compte qui était crédité
                 CompteCreditId = compteTresorerie.Id,              // On crédite la trésorerie
                 Montant = mouvement.Montant,
-                MandatId = mandat.Id
+                MandatId = mandat.Id,
+                idExercice = ExerciceService.Instance.CurrentExercice.Id
                 // Note: Ajoutez MouvementId si votre modèle le supporte
             };
 
@@ -105,7 +106,8 @@ namespace Collectivite.Utils
                 CompteDebitId = compteTresorerie.Id,               // On débite la trésorerie (on reçoit)
                 CompteCreditId = premiereEcriture.CompteDebitId,   // On crédite le compte qui était débité
                 Montant = mouvement.Montant,
-                OrdreRecetteId = ordreRecette.Id
+                OrdreRecetteId = ordreRecette.Id,
+                idExercice = ExerciceService.Instance.CurrentExercice.Id
                 // Note: Ajoutez MouvementId si votre modèle le supporte
             };
 

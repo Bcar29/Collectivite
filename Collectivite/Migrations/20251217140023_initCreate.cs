@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Collectivite.Migrations
 {
     /// <inheritdoc />
-    public partial class initialMigration : Migration
+    public partial class initCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -45,7 +45,7 @@ namespace Collectivite.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Region = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Prefecture = table.Column<string>(type: "longtext", nullable: false)
+                    Prefecture = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     CommuneType = table.Column<int>(type: "int", nullable: false),
                     DistanceChefLieuProvince = table.Column<double>(type: "double", nullable: false),
@@ -290,11 +290,11 @@ namespace Collectivite.Migrations
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     Username = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Email = table.Column<string>(type: "longtext", nullable: false)
+                    Email = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Tel = table.Column<string>(type: "longtext", nullable: false)
+                    Tel = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Password = table.Column<string>(type: "longtext", nullable: false)
+                    PasswordHash = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     CommuneId = table.Column<int>(type: "int", nullable: false),
                     RoleId = table.Column<int>(type: "int", nullable: false)
@@ -570,6 +570,29 @@ namespace Collectivite.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "BonCommandes",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    Numero = table.Column<string>(type: "varchar(20)", maxLength: 20, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    DateCreation = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    ExpressionBesoinId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_BonCommandes", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_BonCommandes_ExpressionBesoins_ExpressionBesoinId",
+                        column: x => x.ExpressionBesoinId,
+                        principalTable: "ExpressionBesoins",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "DetailExpressionBesoins",
                 columns: table => new
                 {
@@ -618,7 +641,9 @@ namespace Collectivite.Migrations
                     MontantOrdre = table.Column<decimal>(type: "decimal(65,30)", nullable: false),
                     MontantOrdreLettre = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    DateOrdre = table.Column<DateTime>(type: "datetime(6)", nullable: false)
+                    DateOrdre = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    Etat = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -743,6 +768,30 @@ namespace Collectivite.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "DetailsBonCommandes",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    BonCommandeId = table.Column<int>(type: "int", nullable: false),
+                    Designation = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Quantite = table.Column<int>(type: "int", nullable: false),
+                    PrixUnitaire = table.Column<double>(type: "double", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DetailsBonCommandes", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_DetailsBonCommandes_BonCommandes_BonCommandeId",
+                        column: x => x.BonCommandeId,
+                        principalTable: "BonCommandes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "Engagements",
                 columns: table => new
                 {
@@ -764,11 +813,19 @@ namespace Collectivite.Migrations
                     FichierName = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     ContratId = table.Column<int>(type: "int", nullable: true),
-                    FactureId = table.Column<int>(type: "int", nullable: true)
+                    FactureId = table.Column<int>(type: "int", nullable: true),
+                    Etat = table.Column<int>(type: "int", nullable: false),
+                    BonCommandeId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Engagements", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Engagements_BonCommandes_BonCommandeId",
+                        column: x => x.BonCommandeId,
+                        principalTable: "BonCommandes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
                         name: "FK_Engagements_BudgetLines_BudgetLineId",
                         column: x => x.BudgetLineId,
@@ -807,30 +864,6 @@ namespace Collectivite.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "BonCommandes",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    Numero = table.Column<string>(type: "varchar(20)", maxLength: 20, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    FichierJoin = table.Column<byte[]>(type: "longblob", nullable: false),
-                    EngagementId = table.Column<int>(type: "int", nullable: false),
-                    DateCreation = table.Column<DateTime>(type: "datetime(6)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_BonCommandes", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_BonCommandes_Engagements_EngagementId",
-                        column: x => x.EngagementId,
-                        principalTable: "Engagements",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
-
-            migrationBuilder.CreateTable(
                 name: "Mandats",
                 columns: table => new
                 {
@@ -851,11 +884,11 @@ namespace Collectivite.Migrations
                     DateEmission = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     Objet = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Motif = table.Column<string>(type: "text", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
                     FichierJoin = table.Column<byte[]>(type: "longblob", nullable: true),
                     FichierName = table.Column<sbyte>(type: "tinyint", nullable: true),
-                    DatePaiement = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    DatePaiement = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    Etat = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -864,30 +897,6 @@ namespace Collectivite.Migrations
                         name: "FK_Mandats_Engagements_EngagementId",
                         column: x => x.EngagementId,
                         principalTable: "Engagements",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
-
-            migrationBuilder.CreateTable(
-                name: "DetailsBonCommandes",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    BonCommandeId = table.Column<int>(type: "int", nullable: false),
-                    Designation = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Quantite = table.Column<int>(type: "int", nullable: false),
-                    PrixUnitaire = table.Column<double>(type: "double", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_DetailsBonCommandes", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_DetailsBonCommandes_BonCommandes_BonCommandeId",
-                        column: x => x.BonCommandeId,
-                        principalTable: "BonCommandes",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 })
@@ -912,7 +921,8 @@ namespace Collectivite.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     idCompteComptable = table.Column<int>(type: "int", nullable: false),
                     idOrdreRecette = table.Column<int>(type: "int", nullable: true),
-                    idMandat = table.Column<int>(type: "int", nullable: true)
+                    idMandat = table.Column<int>(type: "int", nullable: true),
+                    idExercice = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -923,6 +933,11 @@ namespace Collectivite.Migrations
                         principalTable: "CompteComptables",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_mouvement_Exercices_idExercice",
+                        column: x => x.idExercice,
+                        principalTable: "Exercices",
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_mouvement_Mandats_idMandat",
                         column: x => x.idMandat,
@@ -950,7 +965,8 @@ namespace Collectivite.Migrations
                     Montant = table.Column<decimal>(type: "decimal(65,30)", nullable: false),
                     OrdreRecetteId = table.Column<int>(type: "int", nullable: true),
                     MandatId = table.Column<int>(type: "int", nullable: true),
-                    MouvementId = table.Column<int>(type: "int", nullable: true)
+                    MouvementId = table.Column<int>(type: "int", nullable: true),
+                    idExercice = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -967,6 +983,11 @@ namespace Collectivite.Migrations
                         principalTable: "CompteComptables",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_EcritureComptables_Exercices_idExercice",
+                        column: x => x.idExercice,
+                        principalTable: "Exercices",
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_EcritureComptables_Mandats_MandatId",
                         column: x => x.MandatId,
@@ -989,9 +1010,15 @@ namespace Collectivite.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateIndex(
-                name: "IX_BonCommandes_EngagementId",
+                name: "IX_BonCommandes_ExpressionBesoinId",
                 table: "BonCommandes",
-                column: "EngagementId");
+                column: "ExpressionBesoinId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BonCommandes_Numero",
+                table: "BonCommandes",
+                column: "Numero",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_BudgetLines_BudgetPrimitifId",
@@ -1082,6 +1109,11 @@ namespace Collectivite.Migrations
                 column: "CompteDebitId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_EcritureComptables_idExercice",
+                table: "EcritureComptables",
+                column: "idExercice");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_EcritureComptables_MandatId",
                 table: "EcritureComptables",
                 column: "MandatId");
@@ -1095,6 +1127,11 @@ namespace Collectivite.Migrations
                 name: "IX_EcritureComptables_OrdreRecetteId",
                 table: "EcritureComptables",
                 column: "OrdreRecetteId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Engagements_BonCommandeId",
+                table: "Engagements",
+                column: "BonCommandeId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Engagements_BudgetLineId",
@@ -1162,6 +1199,11 @@ namespace Collectivite.Migrations
                 name: "IX_mouvement_idCompteComptable",
                 table: "mouvement",
                 column: "idCompteComptable");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_mouvement_idExercice",
+                table: "mouvement",
+                column: "idExercice");
 
             migrationBuilder.CreateIndex(
                 name: "IX_mouvement_idMandat",
@@ -1299,12 +1341,6 @@ namespace Collectivite.Migrations
                 name: "Users");
 
             migrationBuilder.DropTable(
-                name: "ExpressionBesoins");
-
-            migrationBuilder.DropTable(
-                name: "BonCommandes");
-
-            migrationBuilder.DropTable(
                 name: "mouvement");
 
             migrationBuilder.DropTable(
@@ -1326,10 +1362,16 @@ namespace Collectivite.Migrations
                 name: "Engagements");
 
             migrationBuilder.DropTable(
+                name: "BonCommandes");
+
+            migrationBuilder.DropTable(
                 name: "BudgetLines");
 
             migrationBuilder.DropTable(
                 name: "Factures");
+
+            migrationBuilder.DropTable(
+                name: "ExpressionBesoins");
 
             migrationBuilder.DropTable(
                 name: "BudgetsPrimitifs");

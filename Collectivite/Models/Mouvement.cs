@@ -29,5 +29,9 @@ namespace Collectivite.Models
         [ForeignKey(nameof(idMandat))]
         public Mandat? Mandat { get; set; } 
 
+        public int? idExercice { get; set; }
+        [ForeignKey(nameof(idExercice))]
+        public Exercice? Exercice { get; set; }
+
     }
 }
