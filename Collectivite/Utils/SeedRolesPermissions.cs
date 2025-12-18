@@ -372,7 +372,7 @@ namespace Collectivite.Utils
                 Tel = "+224 000 00 00 00",
                 PasswordHash = passwordHash,
                 RoleId = maireRole.Id,
-                CommuneId = premiereCommune?.Id ?? 0
+                //CommuneId = premiereCommune?.Id ?? 0
             };
 
             db.Users.Add(superAdmin);

@@ -27,7 +27,7 @@ namespace Collectivite.Models
         [NotMapped]
         public string Password { get; set; } = string.Empty;
 
-        public int CommuneId { get; set; }
+        public int? CommuneId { get; set; }
         public Commune? Commune { get; set; }
 
         public int RoleId { get; set; }

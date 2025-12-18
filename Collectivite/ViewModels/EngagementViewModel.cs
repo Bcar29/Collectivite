@@ -99,7 +99,6 @@ namespace Collectivite.ViewModels
         {
             await Application.Current.Dispatcher.InvokeAsync(async () =>
             {
-                //System.Diagnostics.Debug.WriteLine($"Rechargement des budgets pour l'exercice : {exercice.Libelle}");
                 await LoadDataAsync();
             });
         }

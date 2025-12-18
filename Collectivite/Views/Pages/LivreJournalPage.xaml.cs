@@ -25,5 +25,12 @@ namespace Collectivite.Views.Pages
         {
             await _viewModel.LoadDataAsync();
         }
+        private void Page_Unloaded(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is LivreJournalViewModel viewModel)
+            {
+                viewModel.Dispose();
+            }
+        }
     }
 }

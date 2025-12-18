@@ -62,7 +62,7 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<(bool Success, string Message, BudgetLine? Line)> UpdateBudgetLineAsync(
             int budgetLineId,
-            int newMontantPrevu)
+            decimal newMontantPrevu)
         {
             try
             {
@@ -290,6 +290,8 @@ namespace Collectivite.Services
             if (await HasChildrenAsync(nomenclatureId))
                 throw new InvalidOperationException(
                     "Impossible de créer une ligne pour une nomenclature ayant des enfants.");
+            if (montantPrevu < 0)
+                throw new InvalidOperationException("le montant de la prevision ne dois etre que positif");
 
             using var context = CreateContext();
             var exist = await context.BudgetLines
@@ -418,7 +420,7 @@ namespace Collectivite.Services
                 var sommeEnfants = await context.BudgetLines
                     .Where(b => b.BudgetPrimitifId == budgetPrimitifId &&
                                 childrenIds.Contains(b.NommenclatureId))
-                    .SumAsync(b => (int?)b.MontantPrevu) ?? 0;
+                    .SumAsync(b => (decimal?)b.MontantPrevu) ?? 0;
 
                 // Trouver ou créer la BudgetLine du parent
                 var parentLine = await context.BudgetLines
