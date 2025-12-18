@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Collectivite.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251217140023_initCreate")]
-    partial class initCreate
+    [Migration("20251218112905_CommuneNulltoUser")]
+    partial class CommuneNulltoUser
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -1312,7 +1312,7 @@ namespace Collectivite.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("CommuneId")
+                    b.Property<int?>("CommuneId")
                         .HasColumnType("int");
 
                     b.Property<string>("Email")
@@ -1787,8 +1787,7 @@ namespace Collectivite.Migrations
                     b.HasOne("Collectivite.Models.Commune", "Commune")
                         .WithMany("Users")
                         .HasForeignKey("CommuneId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Collectivite.Models.Role", "Role")
                         .WithMany("Users")

@@ -96,7 +96,7 @@ namespace Collectivite.ViewModels
                 };
                 var json = JsonSerializer.Serialize(user, options);
                 Properties.Settings.Default.UserJson = json;
-                Properties.Settings.Default.CommuneId = user.CommuneId;
+                Properties.Settings.Default.CommuneId = user.CommuneId ?? 0;
                 Properties.Settings.Default.Save();
                 // Fermer la fenêtre de connexion et ouvrir la fenêtre principale
                 Application.Current.Dispatcher.Invoke(() =>

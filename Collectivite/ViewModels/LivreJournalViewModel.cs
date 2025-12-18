@@ -18,11 +18,13 @@ namespace Collectivite.ViewModels
     /// <summary>
     /// ViewModel pour la page Livre Journal
     /// </summary>
-    public class LivreJournalViewModel : INotifyPropertyChanged
+    public class LivreJournalViewModel : INotifyPropertyChanged, IDisposable
     {
         private readonly LivreJournalExportService _exportService;
 
         public event PropertyChangedEventHandler? PropertyChanged;
+        private bool _isDisposed;
+        private readonly ExerciceService _exerciceService;
 
         protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
@@ -195,6 +197,8 @@ namespace Collectivite.ViewModels
         public LivreJournalViewModel()
         {
             _exportService = new LivreJournalExportService();
+            _exerciceService = ExerciceService.Instance;
+            _exerciceService.ExerciceChanged += OnExerciceChanged;
 
             // Initialiser les commandes
             LoadDataCommand = new RelayCommandAsync(LoadDataAsync);
@@ -217,6 +221,13 @@ namespace Collectivite.ViewModels
         }
 
         #region Méthodes - Chargement
+        private async void OnExerciceChanged(object? sender, Exercice exercice)
+        {
+            await Application.Current.Dispatcher.InvokeAsync(async () =>
+            {
+                await LoadDataAsync();
+            });
+        }
 
         public async Task LoadDataAsync()
         {
@@ -258,13 +269,13 @@ namespace Collectivite.ViewModels
 
                 using var context = new AppDbContext();
                 var exerciceService = ExerciceService.Instance;
-
-                //if (exerciceService.CurrentExercice == null)
-                //{
-                //    return new List<Facture>();
-                //}
+                var exerciceId = 0;
+                if (exerciceService.CurrentExercice != null)
+                {
+                    exerciceId = exerciceService.CurrentExercice.Id;
+                }
                 var query = context.EcritureComptables
-                    //.Where(e => e.)
+                    .Where(e => e.idExercice == exerciceId)
                     .Include(e => e.CompteDebit)
                     .Include(e => e.CompteCredit)
                     .AsQueryable();
@@ -292,8 +303,7 @@ namespace Collectivite.ViewModels
                 }
 
                 var ecritures = await query
-                    .OrderBy(e => e.DateEcriture)
-                    .ThenBy(e => e.Id)
+                    .OrderByDescending(e => e.Id)
                     .ToListAsync();
 
                 Ecritures = new ObservableCollection<EcritureComptable>(ecritures);
@@ -343,6 +353,17 @@ namespace Collectivite.ViewModels
                 IsEquilibre ? MessageBoxImage.Information : MessageBoxImage.Warning);
         }
 
+        /// <summary>
+        /// Nettoyer les ressources et se désabonner des événements
+        /// </summary>
+        public void Dispose()
+        {
+            if (!_isDisposed)
+            {
+                _exerciceService.ExerciceChanged -= OnExerciceChanged;
+                _isDisposed = true;
+            }
+        }
         #endregion
 
         #region Méthodes - Export

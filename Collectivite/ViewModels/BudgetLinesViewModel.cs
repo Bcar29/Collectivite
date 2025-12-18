@@ -745,12 +745,12 @@ namespace Collectivite.ViewModels
         {
             if (IsEditMode)
             {
-                return int.TryParse(MontantPrevu, out var montant) && montant >= 0;
+                return decimal.TryParse(MontantPrevu, out var montant) && montant >= 0;
             }
             else
             {
                 return SelectedNomenclature != null &&
-                       int.TryParse(MontantPrevu, out var montant) &&
+                       decimal.TryParse(MontantPrevu, out var montant) &&
                        montant >= 0;
             }
         }
@@ -759,7 +759,7 @@ namespace Collectivite.ViewModels
         {
             try
             {
-                if (!int.TryParse(MontantPrevu, out var montant))
+                if (!decimal.TryParse(MontantPrevu, out var montant))
                 {
                     MessageBox.Show(
                         "Le montant doit être un nombre entier valide.",
@@ -847,7 +847,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"❌ Erreur : {ex.Message}",
+                MessageBox.Show($"❌ Erreur  : {ex.Message}",
                     "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally

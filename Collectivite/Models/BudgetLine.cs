@@ -40,7 +40,6 @@ namespace Collectivite.Models
         /// Montant prévu initialement dans le budget
         /// </summary>
         [Required(ErrorMessage = "Le montant prévu est obligatoire")]
-        [Range(0, int.MaxValue, ErrorMessage = "Le montant prévu doit être un nombre positif")]
         public required decimal MontantPrevu { get; set; }
 
         /// <summary>
