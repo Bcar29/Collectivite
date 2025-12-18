@@ -56,29 +56,6 @@
                                  Margin="15,0,0,0"
                                  VerticalAlignment="Center"/>
 
-                        <!-- Badge d'état -->
-                        <Border Background="{Binding EtatBackground}"
-                                CornerRadius="12"
-                                Padding="12,6"
-                                Margin="20,0,0,0"
-                                VerticalAlignment="Center">
-                            <TextBlock Text="{Binding Mandat.MandatEtat}"
-                                       FontWeight="SemiBold"
-                                       FontSize="12"
-                                       Foreground="White"/>
-                        </Border>
-
-                        <!-- Badge de statut paiement -->
-                        <Border Background="{Binding StatutBackground}"
-                                CornerRadius="12"
-                                Padding="12,6"
-                                Margin="10,0,0,0"
-                                VerticalAlignment="Center">
-                            <TextBlock Text="{Binding Mandat.MandatStatut}"
-                                       FontWeight="SemiBold"
-                                       FontSize="12"
-                                       Foreground="White"/>
-                        </Border>
                     </StackPanel>
 
                     <!-- Boutons d'action -->

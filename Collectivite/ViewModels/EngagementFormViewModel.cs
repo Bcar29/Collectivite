@@ -10,6 +10,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using System.ComponentModel;
+using System.Windows.Data;
+
 
 namespace Collectivite.ViewModels
 {
@@ -26,6 +29,9 @@ namespace Collectivite.ViewModels
         private bool _isDisposed;
         private BudgetLine? _selectedBudgetLine;
         private int commune = Properties.Settings.Default.CommuneId;
+        private string _budgetLineSearchText = string.Empty;
+        private ICollectionView? _filteredBudgetLines;
+
         public EngagementFormViewModel(int? engagementId = null)
         {
             _exerciceService = ExerciceService.Instance;
@@ -111,6 +117,29 @@ namespace Collectivite.ViewModels
         public string PageTitle => IsEditMode ? "Modifier l'engagement" : "Nouvel engagement";
 
         public decimal DisponibleBudgetaire => Engagement.CreditsBudgetaires - Engagement.EngagementsAnterieurs;
+        public string BudgetLineSearchText
+        {
+            get => _budgetLineSearchText;
+            set
+            {
+                if (SetProperty(ref _budgetLineSearchText, value))
+                {
+                    _filteredBudgetLines?.Refresh();
+                }
+            }
+        }
+        public ICollectionView FilteredBudgetLines
+        {
+            get
+            {
+                if (_filteredBudgetLines == null)
+                {
+                    _filteredBudgetLines = CollectionViewSource.GetDefaultView(BudgetLines);
+                    _filteredBudgetLines.Filter = FilterBudgetLines;
+                }
+                return _filteredBudgetLines;
+            }
+        }
 
         #endregion
 
@@ -174,8 +203,12 @@ namespace Collectivite.ViewModels
                 var budgetLines = await budgetLineService.GetDepenseForEngagement();
                 foreach (var bl in budgetLines)
                 {
-                    BudgetLines.Add(bl);
+                    if (bl.Nommenclature.Article != "662")
+                    {
+                        BudgetLines.Add(bl);
+                    }
                 }
+                FilteredBudgetLines.Refresh();
 
                 // Charger les factures
                 var factureService = new FactureService();
@@ -424,7 +457,21 @@ namespace Collectivite.ViewModels
                 OnPropertyChanged(nameof(Engagement));
             }
         }
+        private bool FilterBudgetLines(object obj)
+        {
+            if (obj is not BudgetLine bl)
+                return false;
 
+            if (string.IsNullOrWhiteSpace(BudgetLineSearchText))
+                return true;
+
+            return
+                (bl.Nommenclature.CodeNomenclature?.Contains(
+                    BudgetLineSearchText, StringComparison.OrdinalIgnoreCase) ?? false)
+                ||
+                (bl.Nommenclature.Intitule?.Contains(
+                    BudgetLineSearchText, StringComparison.OrdinalIgnoreCase) ?? false);
+        }
         /// <summary>
         /// Nettoyer les ressources et se désabonner des événements
         /// </summary>

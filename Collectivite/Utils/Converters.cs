@@ -530,10 +530,48 @@ namespace Collectivite.Utils
 
             return value.ToString();
         }
-
+        
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
         }
+
+
     }
+
+    public class ResponsiveCardWidthConverter : IMultiValueConverter
+    {
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (values[0] == DependencyProperty.UnsetValue || values[1] == DependencyProperty.UnsetValue)
+                return 300.0;
+
+            // Conversion sécurisée pour containerWidth
+            if (!double.TryParse(values[0].ToString(), out double containerWidth))
+                return 300.0;
+
+            // Conversion sécurisée pour minWidth
+            if (!double.TryParse(values[1].ToString(), out double minWidth))
+                minWidth = 300.0;
+
+            double margin = 20; // 10px de chaque côté
+
+            // Calculer combien de cartes peuvent tenir sur une ligne
+            int cardsPerRow = Math.Max(1, (int)Math.Floor(containerWidth / (minWidth + margin)));
+
+            // Calculer la largeur optimale pour remplir l'espace
+            double availableWidth = containerWidth - (margin * cardsPerRow);
+            double cardWidth = availableWidth / cardsPerRow;
+
+            // S'assurer de respecter la largeur minimale
+            return Math.Max(cardWidth, minWidth);
+        }
+
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+
 }

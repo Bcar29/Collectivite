@@ -716,7 +716,7 @@
                             <!-- Nomenclature (visible seulement en mode ajout) -->
                             <ComboBox ItemsSource="{Binding AvailableNomenclatures}"
                                       SelectedItem="{Binding SelectedNomenclature}"
-                                      DisplayMemberPath="Intitule"
+                                      DisplayMemberPath="DisplayLabel"
                                       materialDesign:HintAssist.Hint="Sélectionner une nomenclature *"
                                       Style="{StaticResource MaterialDesignOutlinedComboBox}"
                                       Visibility="{Binding IsAddMode, Converter={StaticResource BooleanToVisibilityConverter}}"

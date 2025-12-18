@@ -130,10 +130,24 @@
                                       Style="{StaticResource MaterialDesignOutlinedComboBox}"
                                       ItemsSource="{Binding BudgetLines}"
                                       SelectedValue="{Binding OrdreRecette.BudgetLineId}"
-                              
                                       SelectedValuePath="Id"
-                                      DisplayMemberPath="Nommenclature.Intitule"
-                                      Margin="0,0,0,15"/>
+                                      Margin="0,0,0,15">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                       <TextBlock Text="{Binding Nommenclature.CodeNomenclature}" 
+                                           FontWeight="SemiBold" 
+                                           Foreground="#1976D2"
+                                           Margin="0,0,10,0"/>
+                                       <TextBlock Text="-" 
+                                            Margin="0,0,5,0"
+                                            Foreground="#666"/>
+                                       <TextBlock Text="{Binding Nommenclature.Intitule}"
+                                            Foreground="#333"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                            </ComboBox>
 
                             <!-- Comptable -->
                             <TextBox Grid.Row="3" Grid.Column="0"

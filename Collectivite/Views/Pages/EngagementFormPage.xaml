@@ -168,14 +168,41 @@
                             DisplayMemberPath="Numero"/>
 
                         <!-- Ligne budgétaire (déplacer à la ligne 8) -->
-                        <ComboBox Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="3"
+                        <ComboBox Grid.Row="8"
+                            Grid.Column="0"
+                            Grid.ColumnSpan="3"
                             materialDesign:HintAssist.Hint="Ligne budgétaire *"
                             Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                            ItemsSource="{Binding BudgetLines}"
+                            ItemsSource="{Binding FilteredBudgetLines}"
                             SelectedItem="{Binding SelectedBudgetLine}"
                             SelectedValue="{Binding Engagement.BudgetLineId}"
                             SelectedValuePath="Id"
-                            DisplayMemberPath="Nommenclature.Intitule"/>
+                            DisplayMemberPath="{x:Null}"
+                            IsEditable="True"
+                            IsTextSearchEnabled="False"
+                            StaysOpenOnEdit="True"
+                            Text="{Binding BudgetLineSearchText, UpdateSourceTrigger=PropertyChanged}"
+                            TextSearch.TextPath="DisplayLabel">
+
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding Nommenclature.CodeNomenclature}"
+                                            FontWeight="SemiBold"
+                                            Foreground="#1976D2"
+                                            Margin="0,0,10,0"/>
+                                        <TextBlock Text="-"
+                                            Margin="0,0,5,0"
+                                            Foreground="#666"/>
+                                        <TextBlock Text="{Binding Nommenclature.Intitule}"
+                                            Foreground="#333"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+
+                        </ComboBox>
+
+
 
                         <!-- Objet (déplacer à la ligne 10) -->
                         <TextBox Grid.Row="10" Grid.Column="0" Grid.ColumnSpan="3"

@@ -87,6 +87,14 @@ namespace Collectivite.Models
                 return "";
             }
         }
+        [NotMapped]
+        public string DisplayLabel
+        {
+            get
+            {
+                return $"{CodeNomenclature} - {Intitule}".Trim(' ', '-');
+            }
+        }
 
     }
 }

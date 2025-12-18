@@ -196,6 +196,17 @@ namespace Collectivite.Models
                 return  MontantRealise - MontantEntreSortie;
             }
         }
+        [NotMapped]
+        public string DisplayLabel
+        {
+            get
+            {
+                var code = Nommenclature.CodeNomenclature ?? string.Empty;
+                var intitule = Nommenclature.Intitule ?? string.Empty;
+
+                return $"{code} - {intitule}".Trim(' ', '-');
+            }
+        }
 
         #endregion
 

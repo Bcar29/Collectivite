@@ -66,15 +66,15 @@ namespace Collectivite.Views.Pages
 
             if (barChartData.Count == 0)
             {
-                System.Diagnostics.Debug.WriteLine("BarChartData est vide");
+                //System.Diagnostics.Debug.WriteLine("BarChartData est vide");
                 return;
             }
 
-            System.Diagnostics.Debug.WriteLine($"BarChartData count: {barChartData.Count}");
-            foreach (var item in barChartData)
-            {
-                System.Diagnostics.Debug.WriteLine($"Category: {item.Category}, Label: {item.Label}, Value: {item.Value}");
-            }
+            //System.Diagnostics.Debug.WriteLine($"BarChartData count: {barChartData.Count}");
+            //foreach (var item in barChartData)
+            //{
+            //    System.Diagnostics.Debug.WriteLine($"Category: {item.Category}, Label: {item.Label}, Value: {item.Value}");
+            //}
 
             // Organiser les données par catégorie et label
             var recettesFonctionnement = barChartData.FirstOrDefault(d => d.Category == "Recettes" && d.Label == "Fonctionnement");
@@ -90,13 +90,13 @@ namespace Collectivite.Views.Pages
                 new { Label = "Dépenses\nInvestissement", Value = depensesInvestissement?.Value ?? 0, Color = "#F44336", X = 460.0 }
             };
 
-            System.Diagnostics.Debug.WriteLine($"Data to draw: {string.Join(", ", data.Select(d => $"{d.Label}={d.Value}"))}");
+            //System.Diagnostics.Debug.WriteLine($"Data to draw: {string.Join(", ", data.Select(d => $"{d.Label}={d.Value}"))}");
 
             // Trouver la valeur maximale pour l'échelle
             double maxValue = data.Max(d => d.Value);
             if (maxValue == 0)
             {
-                System.Diagnostics.Debug.WriteLine("MaxValue est 0, pas de données à afficher");
+                //System.Diagnostics.Debug.WriteLine("MaxValue est 0, pas de données à afficher");
                 return;
             }
 
@@ -104,7 +104,7 @@ namespace Collectivite.Views.Pages
             maxValue = Math.Ceiling(maxValue / 100) * 100;
             if (maxValue < 100) maxValue = 100; // Minimum pour l'échelle
 
-            System.Diagnostics.Debug.WriteLine($"MaxValue: {maxValue}");
+            //System.Diagnostics.Debug.WriteLine($"MaxValue: {maxValue}");
 
             double chartHeight = canvasHeight - 60; // Espace pour les labels
 
@@ -115,7 +115,7 @@ namespace Collectivite.Views.Pages
                 double barHeight = (item.Value / maxValue) * chartHeight;
                 double barWidth = 80;
 
-                System.Diagnostics.Debug.WriteLine($"Drawing bar: {item.Label}, height={barHeight}, value={item.Value}");
+                //System.Diagnostics.Debug.WriteLine($"Drawing bar: {item.Label}, height={barHeight}, value={item.Value}");
 
                 // Créer la barre
                 Rectangle bar = new Rectangle
@@ -167,7 +167,7 @@ namespace Collectivite.Views.Pages
                 canvas.Children.Add(categoryLabel);
             }
 
-            System.Diagnostics.Debug.WriteLine($"Total children in canvas: {canvas.Children.Count}");
+            //System.Diagnostics.Debug.WriteLine($"Total children in canvas: {canvas.Children.Count}");
         }
 
         #endregion
@@ -191,11 +191,11 @@ namespace Collectivite.Views.Pages
 
             if (lineChartData.Count == 0)
             {
-                System.Diagnostics.Debug.WriteLine("LineChartData est vide");
+                //System.Diagnostics.Debug.WriteLine("LineChartData est vide");
                 return;
             }
 
-            System.Diagnostics.Debug.WriteLine($"LineChartData count: {lineChartData.Count}");
+            //System.Diagnostics.Debug.WriteLine($"LineChartData count: {lineChartData.Count}");
 
             // Séparer les recettes et dépenses
             var recettesData = lineChartData.Where(d => d.Category == "Recettes").OrderBy(d => d.Label).ToList();
@@ -204,7 +204,7 @@ namespace Collectivite.Views.Pages
             if (recettesData.Count == 0 || depensesData.Count == 0)
             {
                 //MessageBox.Show($"Pas assez de données: Recettes={recettesData.Count}, Dépenses={depensesData.Count}");
-                System.Diagnostics.Debug.WriteLine($"Pas assez de données: Recettes={recettesData.Count}, Dépenses={depensesData.Count}");
+                //System.Diagnostics.Debug.WriteLine($"Pas assez de données: Recettes={recettesData.Count}, Dépenses={depensesData.Count}");
                 return;
             }
 
@@ -221,7 +221,7 @@ namespace Collectivite.Views.Pages
             double maxValue = Math.Max(recettes.Max(), depenses.Max());
             if (maxValue == 0)
             {
-                System.Diagnostics.Debug.WriteLine("MaxValue est 0 pour line chart");
+                //System.Diagnostics.Debug.WriteLine("MaxValue est 0 pour line chart");
                 maxValue = 1;
             }
 
@@ -229,7 +229,7 @@ namespace Collectivite.Views.Pages
             maxValue = Math.Ceiling(maxValue / 100) * 100;
             if (maxValue < 100) maxValue = 100;
 
-            System.Diagnostics.Debug.WriteLine($"Line chart MaxValue: {maxValue}");
+            //System.Diagnostics.Debug.WriteLine($"Line chart MaxValue: {maxValue}");
 
             double chartHeight = canvasHeight - 40;
             double chartWidth = canvasWidth - 40;
@@ -244,7 +244,7 @@ namespace Collectivite.Views.Pages
             // Dessiner la courbe des dépenses
             DrawLine(canvas, depenses, maxValue, chartHeight, stepX, "#FF9800", months);
 
-            System.Diagnostics.Debug.WriteLine($"Line chart drawn with {canvas.Children.Count} elements");
+            //System.Diagnostics.Debug.WriteLine($"Line chart drawn with {canvas.Children.Count} elements");
         }
 
         private void DrawChartAxis(Canvas canvas, double width, double height)
@@ -311,8 +311,8 @@ namespace Collectivite.Views.Pages
                 Canvas.SetTop(point, y - 4);
                 canvas.Children.Add(point);
 
-                // Ajouter le label du mois (seulement tous les 2 mois pour éviter l'encombrement)
-                if (i < labels.Length && i % 2 == 0)
+                // Ajouter le label du mois 
+                if (i < labels.Length)
                 {
                     TextBlock label = new TextBlock
                     {

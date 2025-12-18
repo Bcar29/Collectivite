@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -38,13 +39,23 @@ namespace Collectivite.Services
                 .Where(e => e.ExerciceId == exerciceId)
                 .SumAsync(e => (decimal?)e.MontantEngagement) ?? 0;
 
-            // 3. Recettes Perçues (somme des ordres de recettes)
-            statistics.RecettesPercues = await context.OrdreRecettes
+            // 3. Depense payées
+            statistics.DepensesPayees = await context.Mouvements
+                .Where(m => m.Mandat != null && m.Mandat.Engagement.ExerciceId == exerciceId)
+                .SumAsync(m => m.Montant);
+
+            // 3. Recettes Perçues 
+            statistics.RecettesPercues = await context.Mouvements
+                .Where(m => m.OrdreRecette != null && m.OrdreRecette.ExerciceId == exerciceId)
+                .SumAsync(m => m.Montant);
+
+            // 3. Recettes Ordonnes (somme des ordres de recettes)
+            statistics.RecettesOrdonnes = await context.OrdreRecettes
                 .Where(o => o.ExerciceId == exerciceId)
                 .SumAsync(o => (decimal?)o.MontantOrdre) ?? 0;
 
-            // 4. Solde Disponible (Budget Total - Dépenses Engagées)
-            statistics.SoldeDisponible = statistics.RecettesPercues - statistics.DepensesEngagees;
+            // 4. Solde Disponible (Budget Total - Dépenses Payées)
+            statistics.SoldeDisponible = statistics.RecettesPercues - statistics.DepensesPayees;
 
             return statistics;
         }
@@ -136,30 +147,37 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<List<ChartDataPoint>> GetLineChartDataAsync(int exerciceId)
         {
-            var data = new List<ChartDataPoint>();
             using var context = CreateContext();
+            var data = new List<ChartDataPoint>();
 
-            // Récupérer l'exercice pour connaître l'année
-            var exercice = await context.Exercices.FindAsync(exerciceId);
-            if (exercice == null) return data;
-
-            var months = new[] { "Jan", "Fév", "Mar", "Avr", "Mai", "Jun", "Jul", "Aoû", "Sep", "Oct", "Nov", "Déc" };
+            var months = new[]
+            {
+                "Jan", "Fév", "Mar", "Avr", "Mai", "Jun",
+                "Jul", "Aoû", "Sep", "Oct", "Nov", "Déc"
+            };
 
             for (int month = 1; month <= 12; month++)
             {
-                // Recettes du mois
-                var recettesMois = await context.OrdreRecettes
-                    .Where(o => o.ExerciceId == exerciceId &&
-                               o.DateOrdre.Month == month)
-                    .SumAsync(o => (decimal?)o.MontantOrdre) ?? 0;
+                // ===================== RECETTES =====================
+                var recettesMois = await context.Mouvements
+                    .Where(m =>
+                        m.OrdreRecette != null &&
+                        m.OrdreRecette.ExerciceId == exerciceId &&
+                        m.Date.Month == month
+                    )
+                    .SumAsync(m => (decimal?)m.Montant) ?? 0;
+                
 
-                // Dépenses du mois
-                var depensesMois = await context.Engagements
-                    .Where(e => e.ExerciceId == exerciceId &&
-                               e.DateEngagement.Month == month)
-                    .SumAsync(e => (decimal?)e.MontantEngagement) ?? 0;
+                // ===================== DÉPENSES =====================
+                var depensesMois = await context.Mouvements
+                    .Where(m =>
+                        m.Mandat != null &&
+                        m.Mandat.Engagement.ExerciceId == exerciceId &&
+                        m.Date.Month == month
+                    )
+                    .SumAsync(m => (decimal?)m.Montant) ?? 0;
 
-                // Conversion en millions
+                // ===================== AJOUT AU GRAPHIQUE =====================
                 data.Add(new ChartDataPoint
                 {
                     Label = months[month - 1],
@@ -175,8 +193,18 @@ namespace Collectivite.Services
                 });
             }
 
+            Debug.WriteLine($"debut de ma boucle");
+
+            foreach (var d in data)
+            {
+                Debug.WriteLine($"{d.Label} | {d.Category} | {d.Value}");
+            }
+
+                Debug.WriteLine($"fin de ma boucle");
+
             return data;
         }
+
 
         /// <summary>
         /// Récupère les données pour le graphique en lignes de l'exercice courant
@@ -310,11 +338,10 @@ namespace Collectivite.Services
                 Color = "#F44336",
                 PercentageChange = await GetPercentageChangeAsync(exerciceId, "depenses")
             });
-
             indicators.Add(new DashboardIndicator
             {
-                Title = "Recettes Perçues",
-                Amount = statistics.RecettesPercues,
+                Title = "Recettes Ordonnées",
+                Amount = statistics.RecettesOrdonnes,
                 Icon = "TrendingUp",
                 Color = "#4CAF50",
                 PercentageChange = await GetPercentageChangeAsync(exerciceId, "recettes")
@@ -327,6 +354,24 @@ namespace Collectivite.Services
                 Icon = "WalletOutline",
                 Color = "#FF9800",
                 PercentageChange = await GetPercentageChangeAsync(exerciceId, "solde")
+            });
+
+            indicators.Add(new DashboardIndicator
+            {
+                Title = "Dépenses Payées",
+                Amount = statistics.DepensesPayees,
+                Icon = "TrendingDown",
+                Color = "#F44336",
+                PercentageChange = await GetPercentageChangeAsync(exerciceId, "depenses")
+            });
+
+            indicators.Add(new DashboardIndicator
+            {
+                Title = "Recettes Perçues",
+                Amount = statistics.RecettesPercues,
+                Icon = "TrendingUp",
+                Color = "#4CAF50",
+                PercentageChange = await GetPercentageChangeAsync(exerciceId, "recettes")
             });
 
             return indicators;

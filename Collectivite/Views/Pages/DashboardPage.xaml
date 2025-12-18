@@ -15,6 +15,7 @@
         <local:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
         <local:CurrencyConverter x:Key="CurrencyConverter"/>
         <local:PercentageConverter x:Key="PercentageConverter"/>
+ 
 
         <!-- Style pour les cards d'indicateurs -->
         <Style x:Key="IndicatorCardStyle" TargetType="materialDesign:Card">
@@ -72,7 +73,7 @@
             <ItemsControl ItemsSource="{Binding Indicators}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <UniformGrid Rows="1" Columns="4"/>
+                        <UniformGrid Rows="2" Columns="3"/>
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
@@ -86,7 +87,7 @@
                                 </Grid.RowDefinitions>
 
                                 <!-- Header avec icône -->
-                                <Grid Grid.Row="0" Margin="0,0,0,15">
+                                <Grid Grid.Row="0" Margin="0,0,0,0">
                                     <StackPanel Orientation="Horizontal">
                                         <Border CornerRadius="8"
                                               Width="48" 
@@ -119,8 +120,8 @@
                                 <!-- Montant -->
                                 <StackPanel Grid.Row="1" Margin="0,10,0,10">
                                     <TextBlock Text="{Binding Amount, Converter={StaticResource CurrencyConverter}}" 
-                                             FontSize="28"
-                                             FontWeight="Bold"
+                                             FontSize="20"
+                                             FontWeight="SemiBold"
                                              Foreground="#212121"/>
                                     <TextBlock Text="GNF" 
                                              FontSize="14"
@@ -178,71 +179,70 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
 
-            <!-- Section Graphiques -->
-            <Grid Margin="0,20,0,20">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
+            <WrapPanel Margin="0,20,0,20"
+           HorizontalAlignment="Center">
 
                 <!-- Graphique en barres -->
-                <materialDesign:Card Grid.Column="0" 
-                                   Style="{StaticResource SectionCardStyle}">
+                <materialDesign:Card
+        Width="500"
+        Margin="10"
+        Style="{StaticResource SectionCardStyle}">
                     <StackPanel>
-                        <TextBlock Text="Répartition par Nature et Section" 
-                                 FontSize="18"
-                                 FontWeight="SemiBold"
-                                 Margin="0,0,0,20"/>
+                        <TextBlock Text="Répartition par Nature et Section"
+                       FontSize="18"
+                       FontWeight="SemiBold"
+                       Margin="0,0,0,20"/>
 
-                        <Canvas Height="300" x:Name="BarChartCanvas">
-                            <!-- Le graphique sera dessiné ici par code-behind -->
-                        </Canvas>
+                        <Canvas Height="300"
+                    x:Name="BarChartCanvas"/>
 
                         <!-- Légende -->
-                        <StackPanel Orientation="Horizontal" 
-                                  HorizontalAlignment="Center"
-                                  Margin="0,20,0,0">
+                        <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Center"
+                        Margin="0,20,0,0">
                             <StackPanel Orientation="Horizontal" Margin="0,0,20,0">
                                 <Border Background="#4CAF50" Width="16" Height="16" CornerRadius="2" Margin="0,0,8,0"/>
-                                <TextBlock Text="Recettes" FontSize="13" VerticalAlignment="Center"/>
+                                <TextBlock Text="Recettes" FontSize="13"/>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal">
                                 <Border Background="#F44336" Width="16" Height="16" CornerRadius="2" Margin="0,0,8,0"/>
-                                <TextBlock Text="Dépenses" FontSize="13" VerticalAlignment="Center"/>
+                                <TextBlock Text="Dépenses" FontSize="13"/>
                             </StackPanel>
                         </StackPanel>
                     </StackPanel>
                 </materialDesign:Card>
 
                 <!-- Graphique en courbes -->
-                <materialDesign:Card Grid.Column="1" 
-                                   Style="{StaticResource SectionCardStyle}">
+                <materialDesign:Card
+        Width="900"
+        Margin="10"
+        Style="{StaticResource SectionCardStyle}">
                     <StackPanel>
-                        <TextBlock Text="Exécution Mensuelle" 
-                                 FontSize="18"
-                                 FontWeight="SemiBold"
-                                 Margin="0,0,0,20"/>
+                        <TextBlock Text="Exécution Mensuelle"
+                       FontSize="18"
+                       FontWeight="SemiBold"
+                       Margin="0,0,0,20"/>
 
-                        <Canvas Height="300" x:Name="LineChartCanvas">
-                            <!-- Le graphique sera dessiné ici par code-behind -->
-                        </Canvas>
+                        <Canvas Height="300"
+                    x:Name="LineChartCanvas"/>
 
                         <!-- Légende -->
-                        <StackPanel Orientation="Horizontal" 
-                                  HorizontalAlignment="Center"
-                                  Margin="0,20,0,0">
+                        <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Center"
+                        Margin="0,20,0,0">
                             <StackPanel Orientation="Horizontal" Margin="0,0,20,0">
                                 <Border Background="#2196F3" Width="16" Height="16" CornerRadius="2" Margin="0,0,8,0"/>
-                                <TextBlock Text="Recettes" FontSize="13" VerticalAlignment="Center"/>
+                                <TextBlock Text="Recettes" FontSize="13"/>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal">
                                 <Border Background="#FF9800" Width="16" Height="16" CornerRadius="2" Margin="0,0,8,0"/>
-                                <TextBlock Text="Dépenses" FontSize="13" VerticalAlignment="Center"/>
+                                <TextBlock Text="Dépenses" FontSize="13"/>
                             </StackPanel>
                         </StackPanel>
                     </StackPanel>
                 </materialDesign:Card>
-            </Grid>
+
+            </WrapPanel>
 
             <!-- Section Activités Récentes et Actions Rapides -->
             <Grid>
