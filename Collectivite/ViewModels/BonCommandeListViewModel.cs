@@ -13,9 +13,19 @@ namespace Collectivite.ViewModels
     {
         private bool _isLoading;
         private BonCommande? _selectedBonCommande;
-
-        public BonCommandeListViewModel()
+        private readonly ExerciceService _exerciceService;
+        private readonly AuditService _auditService;
+        private readonly AuthService _authService;
+        private bool _isDisposed;
+        public BonCommandeListViewModel(AuthService authService, AuditService auditService)
         {
+            _exerciceService = ExerciceService.Instance;
+            _authService = authService;
+            _auditService = auditService;
+
+
+            // S'abonner aux changements d'exercice
+            _exerciceService.ExerciceChanged += OnExerciceChanged;
             // Commandes
             LoadDataCommand = new RelayCommand(async _ => await LoadDataAsync());
             OpenAddPageCommand = new RelayCommand(_ => OpenAddPage());
@@ -68,6 +78,15 @@ namespace Collectivite.ViewModels
 
         #region Methods
 
+        private async void OnExerciceChanged(object? sender, Exercice exercice)
+        {
+            await Application.Current.Dispatcher.InvokeAsync(async () =>
+            {
+                //recharge les expression de besoin 
+                await LoadDataAsync();
+
+            });
+        }
         private async System.Threading.Tasks.Task LoadDataAsync()
         {
             IsLoading = true;
@@ -110,7 +129,7 @@ namespace Collectivite.ViewModels
                     "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-            NavigationService.Instance.NavigateTo(new Views.Pages.BonCommandeFormPage());
+            NavigationService.Instance.NavigateTo(new Views.Pages.BonCommandeFormPage(_authService));
         }
 
         private void OpenEditPage(BonCommande? bonCommande)
@@ -122,7 +141,7 @@ namespace Collectivite.ViewModels
                     "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-            NavigationService.Instance.NavigateTo(new Views.Pages.BonCommandeFormPage(bonCommande.Id));
+            NavigationService.Instance.NavigateTo(new Views.Pages.BonCommandeFormPage(_authService,bonCommande.Id));
         }
 
         private void OpenDetailsPage(BonCommande? bonCommande)
@@ -189,6 +208,17 @@ namespace Collectivite.ViewModels
         private void NavigateFront()
         {
             NavigationService.Instance.GoForward();
+        }
+        /// <summary>
+        /// Nettoyer les ressources et se désabonner des événements
+        /// </summary>
+        public void Dispose()
+        {
+            if (!_isDisposed)
+            {
+                _exerciceService.ExerciceChanged -= OnExerciceChanged;
+                _isDisposed = true;
+            }
         }
 
         #endregion

@@ -180,151 +180,160 @@ namespace Collectivite.Services
 
         #region Création
 
-        public async Task<(bool Success, string Message, Remaniement? Remaniement)> CreateRemaniementAsync(
-            Remaniement remaniement,
-            TypeRemaniement type)
+        public async Task<(bool Success, string Message, Remaniement? Remaniement)>
+    CreateRemaniementAsync(Remaniement remaniement, TypeRemaniement type)
         {
             if (!SessionManager.HasPermission("Remaniement.Create"))
-                return (false, "Permission Remaniement.Create requise pour créer un remaniement.", null);
+                return (false,
+                    "Permission Remaniement.Create requise pour créer un remaniement.",
+                    null);
 
             using var context = CreateContext();
-            using var transaction = await context.Database.BeginTransactionAsync();
+            var strategy = context.Database.CreateExecutionStrategy();
 
-            try
+            return await strategy.ExecuteAsync(async () =>
             {
-                // Validation
-                if (remaniement.IdBudgetLine <= 0)
-                    return (false, "La ligne budgétaire est obligatoire.", null);
+                (bool Success, string Message, Remaniement? Remaniement) result;
 
-                if (remaniement.Montant <= 0)
-                    return (false, "Le montant doit être supérieur à zéro.", null);
+                await using var transaction =
+                    await context.Database.BeginTransactionAsync();
 
-                if (string.IsNullOrWhiteSpace(remaniement.Motif))
-                    return (false, "Le motif est obligatoire.", null);
-
-                // Vérifier que la ligne budgétaire existe
-                var budgetLine = await context.BudgetLines
-                    .Include(bl => bl.Nommenclature)
-                    .Include(bl => bl.Remaniements)
-                    .Include(bl => bl.BudgetPrimitif)
-                    .FirstOrDefaultAsync(bl => bl.Id == remaniement.IdBudgetLine);
-
-                if (budgetLine == null)
-                    return (false, "Ligne budgétaire introuvable.", null);
-
-                // Vérifier que c'est bien une ligne sans enfants
-                var hasChildren = await context.Nommenclatures
-                    .AnyAsync(n => n.ParentId == budgetLine.NommenclatureId);
-
-                if (hasChildren)
-                    return (false, "Impossible de créer un remaniement sur une ligne avec des sous-lignes.", null);
-
-                // ✅ Validation : Vérifier que le remaniement en moins ne rend pas le montant négatif
-                if (type == TypeRemaniement.en_moins)
+                try
                 {
-                    var montantDefinitifActuel = budgetLine.MontantDefinitif;
-                    var nouveauMontant = montantDefinitifActuel - (decimal)remaniement.Montant;
+                    // 🔹 Validations
+                    if (remaniement.IdBudgetLine <= 0)
+                        return (false, "La ligne budgétaire est obligatoire.", null);
 
-                    if (nouveauMontant < 0)
-                    {
+                    if (remaniement.Montant <= 0)
+                        return (false, "Le montant doit être supérieur à zéro.", null);
+
+                    if (string.IsNullOrWhiteSpace(remaniement.Motif))
+                        return (false, "Le motif est obligatoire.", null);
+
+                    // 🔹 Charger la ligne budgétaire
+                    var budgetLine = await context.BudgetLines
+                        .Include(bl => bl.Nommenclature)
+                        .Include(bl => bl.Remaniements)
+                        .Include(bl => bl.BudgetPrimitif)
+                        .FirstOrDefaultAsync(bl => bl.Id == remaniement.IdBudgetLine);
+
+                    if (budgetLine == null)
+                        return (false, "Ligne budgétaire introuvable.", null);
+
+                    // 🔹 Vérifier que c’est une feuille (pas d’enfants)
+                    var hasChildren = await context.Nommenclatures
+                        .AnyAsync(n => n.ParentId == budgetLine.NommenclatureId);
+
+                    if (hasChildren)
                         return (false,
-                            $"⚠️ Impossible : le remaniement en moins rendrait le montant définitif négatif.\n\n" +
-                            $"Montant définitif actuel : {montantDefinitifActuel:N0} GNF\n" +
-                            $"Remaniement demandé : -{remaniement.Montant:N0} GNF\n" +
-                            $"Montant résultant : {nouveauMontant:N0} GNF (NÉGATIF ❌)",
+                            "Impossible de créer un remaniement sur une ligne avec des sous-lignes.",
                             null);
-                    }
-                }
 
-                // 🆕 Récupérer toutes les lignes parentes
-                var parentBudgetLines = await GetParentBudgetLinesAsync(
-                    context, 
-                    budgetLine.NommenclatureId, 
-                    budgetLine.BudgetPrimitifId);
-
-                // ✅ Créer le remaniement principal (sur l'enfant)
-                var newRemaniement = new Remaniement
-                {
-                    IdBudgetLine = remaniement.IdBudgetLine,
-                    Date = remaniement.Date,
-                    Montant = remaniement.Montant,
-                    Motif = remaniement.Motif.Trim(),
-                    TypeRemaniement = type
-                };
-
-                context.Remaniements.Add(newRemaniement);
-                await context.SaveChangesAsync();
-
-                var remaniementsCreated = new List<string>
-                {
-                    $"✅ Ligne enfant : {budgetLine.Nommenclature.Intitule} ({remaniement.Montant:N0} GNF)"
-                };
-
-                // 🆕 Créer les remaniements pour tous les parents
-                foreach (var parentLine in parentBudgetLines)
-                {
-                    var parentRemaniement = new Remaniement
+                    // 🔹 Validation remaniement en moins
+                    if (type == TypeRemaniement.en_moins)
                     {
-                        IdBudgetLine = parentLine.Id,
+                        var montantDefinitifActuel = budgetLine.MontantDefinitif;
+                        var nouveauMontant =
+                            montantDefinitifActuel - (decimal)remaniement.Montant;
+
+                        if (nouveauMontant < 0)
+                        {
+                            return (false,
+                                $"⚠️ Impossible : le remaniement rendrait le montant négatif.\n\n" +
+                                $"Montant définitif actuel : {montantDefinitifActuel:N0} GNF\n" +
+                                $"Remaniement demandé : -{remaniement.Montant:N0} GNF\n" +
+                                $"Montant résultant : {nouveauMontant:N0} GNF ❌",
+                                null);
+                        }
+                    }
+
+                    // 🔹 Récupérer les lignes parentes
+                    var parentBudgetLines = await GetParentBudgetLinesAsync(
+                        context,
+                        budgetLine.NommenclatureId,
+                        budgetLine.BudgetPrimitifId);
+
+                    // 1️⃣ Remaniement enfant
+                    var newRemaniement = new Remaniement
+                    {
+                        IdBudgetLine = remaniement.IdBudgetLine,
                         Date = remaniement.Date,
                         Montant = remaniement.Montant,
-                        Motif = $"[Propagation] {remaniement.Motif.Trim()}",
+                        Motif = remaniement.Motif.Trim(),
                         TypeRemaniement = type
                     };
 
-                    context.Remaniements.Add(parentRemaniement);
-                    remaniementsCreated.Add($"✅ Ligne parente : {parentLine.Nommenclature.Intitule} ({remaniement.Montant:N0} GNF)");
-                }
+                    context.Remaniements.Add(newRemaniement);
+                    await context.SaveChangesAsync();
 
-                await context.SaveChangesAsync();
+                    var remaniementsCreated = new List<string>
+            {
+                $"✅ Ligne enfant : {budgetLine.Nommenclature.Intitule} ({remaniement.Montant:N0} GNF)"
+            };
 
-                // ✅ Mettre à jour MontantActu pour la ligne enfant
-                var updatedBudgetLine = await context.BudgetLines
-                    .Include(bl => bl.Remaniements)
-                    .FirstOrDefaultAsync(bl => bl.Id == remaniement.IdBudgetLine);
-
-                if (updatedBudgetLine != null)
-                {
-                    updatedBudgetLine.UpdateMontantActu();
-                }
-
-                // 🆕 Mettre à jour MontantActu pour toutes les lignes parentes
-                foreach (var parentLine in parentBudgetLines)
-                {
-                    var parentToUpdate = await context.BudgetLines
-                        .Include(bl => bl.Remaniements)
-                        .FirstOrDefaultAsync(bl => bl.Id == parentLine.Id);
-
-                    if (parentToUpdate != null)
+                    // 2️⃣ Remaniements parents
+                    foreach (var parentLine in parentBudgetLines)
                     {
-                        parentToUpdate.UpdateMontantActu();
+                        var parentRemaniement = new Remaniement
+                        {
+                            IdBudgetLine = parentLine.Id,
+                            Date = remaniement.Date,
+                            Montant = remaniement.Montant,
+                            Motif = $"[Propagation] {remaniement.Motif.Trim()}",
+                            TypeRemaniement = type
+                        };
+
+                        context.Remaniements.Add(parentRemaniement);
+
+                        remaniementsCreated.Add(
+                            $"✅ Ligne parente : {parentLine.Nommenclature.Intitule} ({remaniement.Montant:N0} GNF)");
                     }
+
+                    await context.SaveChangesAsync();
+
+                    // 3️⃣ Mise à jour MontantActu enfant
+                    budgetLine.UpdateMontantActu();
+
+                    // 4️⃣ Mise à jour MontantActu parents
+                    foreach (var parentLine in parentBudgetLines)
+                    {
+                        var parentToUpdate = await context.BudgetLines
+                            .Include(bl => bl.Remaniements)
+                            .FirstOrDefaultAsync(bl => bl.Id == parentLine.Id);
+
+                        parentToUpdate?.UpdateMontantActu();
+                    }
+
+                    await context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    // 🔹 Recharger sans cycle
+                    var savedRemaniement =
+                        await GetRemaniementByIdAsync(newRemaniement.Id);
+
+                    var typeText =
+                        type == TypeRemaniement.en_plus ? "augmentation" : "diminution";
+
+                    var message =
+                        $"✅ Remaniement créé avec succès ({typeText} de {remaniement.Montant:N0} GNF).\n\n" +
+                        $"📊 Remaniements créés :\n" +
+                        string.Join("\n", remaniementsCreated);
+
+                    result = (true, message, savedRemaniement);
+                    return result;
                 }
-
-                await context.SaveChangesAsync();
-                await transaction.CommitAsync();
-
-                // ✅ Recharger SANS cycle
-                var savedRemaniement = await GetRemaniementByIdAsync(newRemaniement.Id);
-
-                var typeText = type == TypeRemaniement.en_plus ? "augmentation" : "diminution";
-                var message = $"✅ Remaniement créé avec succès ({typeText} de {remaniement.Montant:N0} GNF).\n\n" +
-                              $"📊 Remaniements créés :\n" +
-                              string.Join("\n", remaniementsCreated);
-
-                return (true, message, savedRemaniement);
-            }
-            catch (DbUpdateException dbEx)
-            {
-                await transaction.RollbackAsync();
-                var innerMessage = dbEx.InnerException?.Message ?? dbEx.Message;
-                return (false, $"Erreur de base de données : {innerMessage}", null);
-            }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync();
-                return (false, $"Erreur : {ex.Message}", null);
-            }
+                catch (DbUpdateException dbEx)
+                {
+                    await transaction.RollbackAsync();
+                    var inner = dbEx.InnerException?.Message ?? dbEx.Message;
+                    return (false, $"Erreur base de données : {inner}", null);
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    return (false, $"Erreur : {ex.Message}", null);
+                }
+            });
         }
 
         #endregion

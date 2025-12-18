@@ -245,7 +245,7 @@ namespace Collectivite
                 return;
             }
             _viewModel.UpdatePageTitle("SAISIE DES PIECES - BON-COMMANDE");
-            NavigationService.Instance.NavigateTo(new Views.Pages.BonCommandeListPage());
+            NavigationService.Instance.NavigateTo(new Views.Pages.BonCommandeListPage(_authService));
             _viewModel.IsMenuOpen = false;
         }
         private void ExpressionBesoin_Click(object sender, RoutedEventArgs e)
@@ -260,7 +260,7 @@ namespace Collectivite
                 return;
             }
             _viewModel.UpdatePageTitle("SAISIE DES PIECES - EXPRESSION DE BESOIN");
-            NavigationService.Instance.NavigateTo(new Views.Pages.ExpressionBesoinListPage());
+            NavigationService.Instance.NavigateTo(new Views.Pages.ExpressionBesoinListPage(_authService));
             _viewModel.IsMenuOpen = false;
         }
         
@@ -368,7 +368,7 @@ namespace Collectivite
                 return;
             }
             _viewModel.UpdatePageTitle("SAISIE DES PIECES - FACTURES ET DETAILS");
-            NavigationService.Instance.NavigateTo(new Views.Pages.FacturePage());
+            NavigationService.Instance.NavigateTo(new Views.Pages.FacturePage(_authService));
             _viewModel.IsMenuOpen = false;
         }
 
@@ -443,7 +443,7 @@ namespace Collectivite
         private void NavigateToDashboard()
         {
             _viewModel.UpdatePageTitle("TABLEAU DE BORD");
-            NavigationService.Instance.NavigateTo(new DashboardPage());
+            NavigationService.Instance.NavigateTo(new DashboardPage(_authService));
         }
 
         private void ExerciceButtonDown_Click(object sender, RoutedEventArgs e)

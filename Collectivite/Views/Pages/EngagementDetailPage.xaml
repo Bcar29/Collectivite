@@ -55,6 +55,18 @@
                                  FontWeight="SemiBold"
                                  Margin="15,0,0,0"
                                  VerticalAlignment="Center"/>
+
+                        <!-- Badge d'état -->
+                        <Border Background="{Binding EtatBackground}"
+                                CornerRadius="12"
+                                Padding="12,6"
+                                Margin="20,0,0,0"
+                                VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Engagement.EngagementEtat}"
+                                       FontWeight="SemiBold"
+                                       FontSize="12"
+                                       Foreground="White"/>
+                        </Border>
                     </StackPanel>
 
                     <!-- Boutons d'action -->
@@ -71,7 +83,7 @@
                             </StackPanel>
                         </Button>
                         <Button Style="{StaticResource MaterialDesignRaisedButton}"
-                            Command="{Binding NavigateToEditCommand}"
+                            Command="{Binding ExportPdfCommand}"
                             Height="36"
                             Background="DarkRed"
                             BorderBrush="DarkRed"
@@ -81,7 +93,6 @@
                                 <TextBlock Text="Export PDF"/>
                             </StackPanel>
                         </Button>
-
                     </StackPanel>
                 </Grid>
 
@@ -113,6 +124,10 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="10"/>
                                 <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="10"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="10"/>
+                                <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
                             <TextBlock Grid.Row="0" Grid.Column="0" Text="Exercice :" FontWeight="SemiBold"/>
@@ -130,8 +145,14 @@
                             <TextBlock Grid.Row="8" Grid.Column="0" Text="Ligne budgétaire :" FontWeight="SemiBold"/>
                             <TextBlock Grid.Row="8" Grid.Column="1" Text="{Binding Engagement.BudgetLine.Nommenclature.Intitule}" TextWrapping="Wrap"/>
 
-                            <TextBlock Grid.Row="10" Grid.Column="0" Text="Objet :" FontWeight="SemiBold"/>
-                            <TextBlock Grid.Row="10" Grid.Column="1" Text="{Binding Engagement.Objet}" TextWrapping="Wrap"/>
+                            <TextBlock Grid.Row="10" Grid.Column="0" Text="Bon de Commande :" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Row="10" Grid.Column="1" Text="{Binding Engagement.BonCommande.Numero, FallbackValue='Non spécifié'}"/>
+
+                            <TextBlock Grid.Row="12" Grid.Column="0" Text="Facture :" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Row="12" Grid.Column="1" Text="{Binding Engagement.Facture.Numero, FallbackValue='Non spécifiée'}"/>
+
+                            <TextBlock Grid.Row="14" Grid.Column="0" Text="Objet :" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Row="14" Grid.Column="1" Text="{Binding Engagement.Objet}" TextWrapping="Wrap"/>
                         </Grid>
 
                         <Separator Margin="0,10,0,20"/>
@@ -202,6 +223,22 @@
                             </Grid>
                         </Border>
 
+                        <!-- Montant en lettres -->
+                        <Border Background="#F9FBE7" CornerRadius="8" Padding="15" Margin="0,0,0,20">
+                            <StackPanel>
+                                <TextBlock Text="Montant en lettres :" 
+                                         FontWeight="SemiBold" 
+                                         FontSize="12"
+                                         Foreground="#666"
+                                         Margin="0,0,0,5"/>
+                                <TextBlock Text="{Binding Engagement.MontantLettre}" 
+                                         FontSize="14"
+                                         FontStyle="Italic"
+                                         TextWrapping="Wrap"
+                                         Foreground="#33691E"/>
+                            </StackPanel>
+                        </Border>
+
                         <Separator Margin="0,10,0,20"/>
 
                         <!-- Fichier joint -->
@@ -223,7 +260,7 @@
                                                        VerticalAlignment="Center"
                                                        Margin="0,0,15,0"/>
                                 <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="Fichier joint disponible" 
+                                    <TextBlock Text="{Binding Engagement.FichierName, FallbackValue='Fichier joint disponible'}" 
                                              FontWeight="SemiBold"
                                              FontSize="14"/>
                                     <Button Style="{StaticResource MaterialDesignFlatButton}"
@@ -236,13 +273,15 @@
                         </Border>
 
                         <TextBlock Text="Aucun fichier joint"
-                                 FontStyle="Italic"
-                                 Foreground="#999"
-                                 Visibility="{Binding HasFile, Converter={StaticResource BoolToVis}}">
+                            FontStyle="Italic"
+                            Foreground="#999">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">
+                                    <!-- Caché par défaut -->
                                     <Setter Property="Visibility" Value="Collapsed"/>
+
                                     <Style.Triggers>
+                                        <!-- Visible seulement s'il n'y a pas de fichier -->
                                         <DataTrigger Binding="{Binding HasFile}" Value="False">
                                             <Setter Property="Visibility" Value="Visible"/>
                                         </DataTrigger>
@@ -251,6 +290,51 @@
                             </TextBlock.Style>
                         </TextBlock>
 
+
+                        <!-- Section Signatures simplifiée (uniquement si engagement validé) -->
+                        <StackPanel Visibility="{Binding IsEngagementValide, Converter={StaticResource BoolToVis}}">
+                            <Separator Margin="0,30,0,20"/>
+
+                            <Grid Margin="0,0,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="60"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                               
+
+                                <!-- Le Maire -->
+                                <StackPanel Grid.Column="2" HorizontalAlignment="Right">
+                                    <TextBlock FontSize="12" 
+                                         Foreground="#666"
+                                         Margin="0,0,0,8">
+                                    <Run Text="{Binding Engagement.Commune.Nom}"/>
+                                    <Run Text=" Le "/>
+                                    <Run Text=".............."/>
+                                    <Run Text=" / "/>
+                                    <Run Text=".............."/>
+                                    <Run Text=" / "/>
+                                    <Run Text=".............."/>
+                                    </TextBlock>
+
+                                    <TextBlock 
+                                         FontSize="13"
+                                         FontWeight="SemiBold"
+                                         Margin="0,30,0,0">
+                                        <Run Text="L'Ordonateur :  "/>
+                                        <Run Text=""/>
+                                    </TextBlock>
+                                    <TextBlock 
+                                         FontSize="13"
+                                         FontWeight="SemiBold"
+                                         Margin="0,40,0,0">
+                                        <Run Text="M./Mme :  "/>
+                                        <Run Text="......................................................"/>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
                     </StackPanel>
                 </materialDesign:Card>
 

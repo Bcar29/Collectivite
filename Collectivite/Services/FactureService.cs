@@ -25,8 +25,14 @@ namespace Collectivite.Services
                 throw new UnauthorizedAccessException("Permission Facture.View requise pour consulter les factures.");
 
             using var context = CreateContext();
+            var exerciceService = ExerciceService.Instance;
 
+            if (exerciceService.CurrentExercice == null)
+            {
+                return new List<Facture>();
+            }
             return await context.Factures
+                .Where(f => f.ExerciceId == exerciceService.CurrentExercice.Id)
                 .Include(f => f.Tiers)
                 .Include(f => f.Exercice)
                 .Include(f => f.Contrats)
@@ -93,6 +99,39 @@ namespace Collectivite.Services
                 .AsNoTracking()
                 .OrderByDescending(f => f.DateFacture)
                 .ToListAsync();
+        }
+
+        #endregion
+
+        #region Numérotation
+
+        /// <summary>
+        /// Génère le prochain numéro de facture (format : F-YYYY-0001)
+        /// </summary>
+        public async Task<string> GenerateNextNumeroAsync()
+        {
+            using var context = CreateContext();
+
+            var currentYear = DateTime.Now.Year;
+            var prefix = $"F-{currentYear}-";
+
+            var facturesThisYear = await context.Factures
+                .Where(f => f.NumeroFacture.StartsWith(prefix))
+                .OrderByDescending(f => f.NumeroFacture)
+                .ToListAsync();
+
+            if (!facturesThisYear.Any())
+                return prefix + "0001";
+
+            var lastNumero = facturesThisYear.First().NumeroFacture;
+            var lastSequence = lastNumero.Substring(lastNumero.LastIndexOf('-') + 1);
+
+            if (int.TryParse(lastSequence, out int seq))
+            {
+                return prefix + (seq + 1).ToString("D4");
+            }
+
+            return prefix + "0001";
         }
 
         #endregion
@@ -193,14 +232,14 @@ namespace Collectivite.Services
         /// <summary>
         /// Met à jour une facture et ses détails
         /// </summary>
-        public async Task<(bool Success, string Message)> UpdateFactureAsync(
+        public async Task<(bool Success, string Message, Facture? fact)> UpdateFactureAsync(
             Facture facture,
             List<DetailsFacture> details)
         {
             using var context = CreateContext();
 
             if (!SessionManager.HasPermission("Facture.Edit"))
-                return (false, "Permission Facture.Edit requise pour modifier une facture.");
+                return (false, "Permission Facture.Edit requise pour modifier une facture.", null);
 
             try
             {
@@ -209,14 +248,14 @@ namespace Collectivite.Services
                     .FirstOrDefaultAsync(f => f.Id == facture.Id);
 
                 if (existingFacture == null)
-                    return (false, "Facture introuvable.");
+                    return (false, "Facture introuvable.", null);
 
                 // Vérifier l'unicité du numéro (sauf pour la facture actuelle)
                 var duplicateNumero = await context.Factures
                     .AnyAsync(f => f.NumeroFacture == facture.NumeroFacture && f.Id != facture.Id);
 
                 if (duplicateNumero)
-                    return (false, $"Le numéro de facture '{facture.NumeroFacture}' existe déjà.");
+                    return (false, $"Le numéro de facture '{facture.NumeroFacture}' existe déjà.", null);
 
                 // Mettre à jour la facture
                 existingFacture.NumeroFacture = facture.NumeroFacture.Trim();
@@ -252,11 +291,11 @@ namespace Collectivite.Services
 
                 await context.SaveChangesAsync();
 
-                return (true, "✅ Facture modifiée avec succès.");
+                return (true, "✅ Facture modifiée avec succès.", existingFacture);
             }
             catch (Exception ex)
             {
-                return (false, $"Erreur : {ex.Message}");
+                return (false, $"Erreur : {ex.Message}", null);
             }
         }
 

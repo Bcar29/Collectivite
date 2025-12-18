@@ -107,7 +107,41 @@ namespace Collectivite.Services
                 Etat = mandat.Etat
             };
         }
+        /// <summary>
+        /// Récupère le dernier mouvement associé à un mandat (le plus récent)
+        /// </summary>
+        public async Task<Mouvement?> GetMouvementByMandatIdAsync(int mandatId)
+        {
+            return await _context.Mouvements
+                .Include(m => m.CompteComptable)
+                .Where(m => m.idMandat == mandatId)
+                .OrderByDescending(m => m.Date)
+                .FirstOrDefaultAsync();
+        }
 
+        /// <summary>
+        /// Récupère tous les mouvements associés à un ordre de recette
+        /// </summary>
+        public async Task<List<Mouvement>> GetMouvementsByOrdreRecetteIdAsync(int ordreRecetteId)
+        {
+            return await _context.Mouvements
+                .Include(m => m.CompteComptable)
+                .Where(m => m.idOrdreRecette == ordreRecetteId)
+                .OrderByDescending(m => m.Date)
+                .ToListAsync();
+        }
+
+        /// <summary>
+        /// Récupère tous les mouvements associés à un mandat
+        /// </summary>
+        public async Task<List<Mouvement>> GetMouvementsByMandatIdAsync(int mandatId)
+        {
+            return await _context.Mouvements
+                .Include(m => m.CompteComptable)
+                .Where(m => m.idMandat == mandatId)
+                .OrderByDescending(m => m.Date)
+                .ToListAsync();
+        }
         /// <summary>
         /// Récupère l'historique des paiements d'un mandat
         /// </summary>

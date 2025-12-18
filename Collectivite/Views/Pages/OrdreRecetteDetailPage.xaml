@@ -22,343 +22,308 @@
                            Width="60"
                            Height="60"/>
                 <TextBlock Text="Chargement..." 
-                           Foreground="White"
-                           FontSize="16"
-                           Margin="0,20,0,0"
-                           HorizontalAlignment="Center"/>
+                         Foreground="White"
+                         FontSize="16"
+                         Margin="0,20,0,0"
+                         HorizontalAlignment="Center"/>
             </StackPanel>
         </Grid>
 
         <!-- Contenu principal -->
-        <ScrollViewer VerticalScrollBarVisibility="Auto">
-            <Grid Margin="40,20,40,40" MaxWidth="1000">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20">
+            <StackPanel MaxWidth="1000">
 
-                <!-- En-tête avec navigation -->
-                <DockPanel Margin="0,0,0,20">
-                    <!-- Bouton retour -->
-                    <Button Style="{StaticResource MaterialDesignIconButton}"
-                            Command="{Binding NavigateBackCommand}"
-                            DockPanel.Dock="Left"
-                            Width="40"
-                            Height="40"
-                            Margin="0,0,15,0"
-                            ToolTip="Retour à la liste">
-                        <materialDesign:PackIcon Kind="ArrowLeft" Width="24" Height="24"/>
-                    </Button>
+                <!-- Header -->
+                <Grid Margin="0,0,0,20">
+                    <StackPanel Orientation="Horizontal">
+                        <Button Style="{StaticResource MaterialDesignIconButton}"
+                              Command="{Binding NavigateBackCommand}"
+                              ToolTip="Retour"
+                              Margin="0,0,10,0">
+                            <materialDesign:PackIcon Kind="ArrowLeft" 
+                                                   Width="24" 
+                                                   Height="24"/>
+                        </Button>
 
-                    <!-- Titre -->
-                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
                         <materialDesign:PackIcon Kind="FileDocumentOutline" 
-                                               Width="28" 
-                                               Height="28"
+                                               Width="32" 
+                                               Height="32"
                                                Foreground="#1976D2"
-                                               VerticalAlignment="Center"
-                                               Margin="0,0,10,0"/>
-                        <TextBlock Text="Détails de l'ordre de recette"
-                                 FontSize="22"
+                                               VerticalAlignment="Center"/>
+                        <TextBlock Text="Détails de l'Ordre de Recette" 
+                                 FontSize="24"
                                  FontWeight="SemiBold"
+                                 Margin="15,0,0,0"
                                  VerticalAlignment="Center"/>
+
                     </StackPanel>
 
                     <!-- Boutons d'action -->
                     <StackPanel Orientation="Horizontal" 
-                                DockPanel.Dock="Right" 
-                                HorizontalAlignment="Right">
+                        DockPanel.Dock="Right" 
+                        HorizontalAlignment="Right">
                         <Button Style="{StaticResource MaterialDesignOutlinedButton}"
-                                Command="{Binding PrintCommand}"
-                                Height="36"
-                                Margin="0,0,10,0">
+                            Command="{Binding PrintCommand}"
+                            Height="36"
+                            Margin="0,0,10,0">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="Printer" Margin="0,0,5,0"/>
                                 <TextBlock Text="Imprimer"/>
                             </StackPanel>
                         </Button>
                         <Button Style="{StaticResource MaterialDesignRaisedButton}"
-                                Command="{Binding NavigateToEditCommand}"
-                                Height="36"
-                                Background="DarkRed"
-                                BorderBrush="DarkRed"
-                                Margin="0,0,10,0">
+                            Command="{Binding ExportPdfCommand}"
+                            Height="36"
+                            Background="DarkRed"
+                            BorderBrush="DarkRed">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="FilePdfBox" Margin="0,0,5,0"/>
                                 <TextBlock Text="Export PDF"/>
                             </StackPanel>
                         </Button>
-                        
-                    </StackPanel>
-                </DockPanel>
-
-                <!-- Bandeau numéro d'ordre -->
-                <Border Grid.Row="1"
-                        Background="#1976D2"
-                        CornerRadius="8"
-                        Padding="20"
-                        Margin="0,0,0,20">
-                    <DockPanel>
-                        <materialDesign:PackIcon Kind="Barcode" 
-                                               Width="32" 
-                                               Height="32"
-                                               Foreground="White"
-                                               VerticalAlignment="Center"
-                                               DockPanel.Dock="Left"
-                                               Margin="0,0,15,0"/>
-                        <StackPanel>
-                            <TextBlock Text="Numéro d'ordre"
-                                       Foreground="White"
-                                       FontSize="12"
-                                       Opacity="0.9"/>
-                            <TextBlock Text="{Binding NumeroOrdre}"
-                                       Foreground="White"
-                                       FontSize="24"
-                                       FontWeight="Bold"/>
-                        </StackPanel>
-
-                        <StackPanel DockPanel.Dock="Right" 
-                                    HorizontalAlignment="Right"
-                                    VerticalAlignment="Center">
-                            <TextBlock Text="Date"
-                                       Foreground="White"
-                                       FontSize="12"
-                                       Opacity="0.9"
-                                       HorizontalAlignment="Right"/>
-                            <TextBlock Text="{Binding DateOrdre}"
-                                       Foreground="White"
-                                       FontSize="18"
-                                       FontWeight="SemiBold"
-                                       HorizontalAlignment="Right"/>
-                        </StackPanel>
-                    </DockPanel>
-                </Border>
-
-                <!-- Contenu des détails -->
-                <Grid Grid.Row="2">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="20"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-
-                    <!-- Colonne gauche -->
-                    <StackPanel Grid.Column="0">
-
-                        <!-- Section Informations générales -->
-                        <materialDesign:Card Padding="20" Margin="0,0,0,20">
-                            <StackPanel>
-                                <TextBlock Text="INFORMATIONS GÉNÉRALES"
-                                         FontSize="14"
-                                         FontWeight="SemiBold"
-                                         Foreground="#1976D2"
-                                         Margin="0,0,0,15"/>
-
-                                <!-- Exercice -->
-                                <DockPanel Margin="0,0,0,12">
-                                    <materialDesign:PackIcon Kind="CalendarRange" 
-                                                           Width="20" 
-                                                           Height="20"
-                                                           Foreground="#666"
-                                                           VerticalAlignment="Top"
-                                                           DockPanel.Dock="Left"
-                                                           Margin="0,2,10,0"/>
-                                    <StackPanel>
-                                        <TextBlock Text="Exercice"
-                                                 FontSize="11"
-                                                 Foreground="#999"/>
-                                        <TextBlock Text="{Binding Exercice}"
-                                                 FontSize="14"
-                                                 FontWeight="SemiBold"
-                                                 Foreground="#424242"/>
-                                    </StackPanel>
-                                </DockPanel>
-
-                                <!-- Commune -->
-                                <DockPanel Margin="0,0,0,12">
-                                    <materialDesign:PackIcon Kind="MapMarker" 
-                                                           Width="20" 
-                                                           Height="20"
-                                                           Foreground="#666"
-                                                           VerticalAlignment="Top"
-                                                           DockPanel.Dock="Left"
-                                                           Margin="0,2,10,0"/>
-                                    <StackPanel>
-                                        <TextBlock Text="Commune"
-                                                 FontSize="11"
-                                                 Foreground="#999"/>
-                                        <TextBlock Text="{Binding Commune}"
-                                                 FontSize="14"
-                                                 FontWeight="SemiBold"
-                                                 Foreground="#424242"/>
-                                    </StackPanel>
-                                </DockPanel>
-
-                                <!-- Comptable -->
-                                <DockPanel Margin="0,0,0,0">
-                                    <materialDesign:PackIcon Kind="AccountTie" 
-                                                           Width="20" 
-                                                           Height="20"
-                                                           Foreground="#666"
-                                                           VerticalAlignment="Top"
-                                                           DockPanel.Dock="Left"
-                                                           Margin="0,2,10,0"/>
-                                    <StackPanel>
-                                        <TextBlock Text="Comptable"
-                                                 FontSize="11"
-                                                 Foreground="#999"/>
-                                        <TextBlock Text="{Binding Comptable}"
-                                                 FontSize="14"
-                                                 FontWeight="SemiBold"
-                                                 Foreground="#424242"/>
-                                    </StackPanel>
-                                </DockPanel>
-                            </StackPanel>
-                        </materialDesign:Card>
-
-                        <!-- Section Ligne budgétaire -->
-                        <materialDesign:Card Padding="20" Margin="0,0,0,20">
-                            <StackPanel>
-                                <TextBlock Text="LIGNE BUDGÉTAIRE"
-                                         FontSize="14"
-                                         FontWeight="SemiBold"
-                                         Foreground="#1976D2"
-                                         Margin="0,0,0,15"/>
-
-                                <!-- Imputation -->
-                                <DockPanel Margin="0,0,0,10">
-                                    <TextBlock Text="Imputation :"
-                                             FontSize="12"
-                                             Foreground="#666"
-                                             Width="80"
-                                             DockPanel.Dock="Left"/>
-                                    <TextBlock Text="{Binding Imputation}"
-                                             FontSize="13"
-                                             FontWeight="SemiBold"
-                                             Foreground="#424242"/>
-                                </DockPanel>
-
-                                <!-- Intitulé -->
-                                <Border Background="#F5F5F5"
-                                        CornerRadius="6"
-                                        Padding="12"
-                                        Margin="0,5,0,0">
-                                    <TextBlock Text="{Binding LigneBudgetaire}"
-                                             TextWrapping="Wrap"
-                                             FontSize="13"
-                                             Foreground="#424242"/>
-                                </Border>
-                            </StackPanel>
-                        </materialDesign:Card>
-
-                        <!-- Section Tiers -->
-                        <materialDesign:Card Padding="20">
-                            <StackPanel>
-                                <TextBlock Text="TIERS"
-                                         FontSize="14"
-                                         FontWeight="SemiBold"
-                                         Foreground="#1976D2"
-                                         Margin="0,0,0,10"/>
-
-                                <DockPanel>
-                                    <materialDesign:PackIcon Kind="AccountCircle" 
-                                                           Width="20" 
-                                                           Height="20"
-                                                           Foreground="#666"
-                                                           VerticalAlignment="Center"
-                                                           DockPanel.Dock="Left"
-                                                           Margin="0,0,10,0"/>
-                                    <TextBlock Text="{Binding Tiers}"
-                                             FontSize="14"
-                                             VerticalAlignment="Center"
-                                             Foreground="#424242"/>
-                                </DockPanel>
-                            </StackPanel>
-                        </materialDesign:Card>
-
-                    </StackPanel>
-
-                    <!-- Colonne droite -->
-                    <StackPanel Grid.Column="2">
-
-                        <!-- Section Montant -->
-                        <materialDesign:Card Padding="20" Margin="0,0,0,20">
-                            <StackPanel>
-                                <TextBlock Text="MONTANT"
-                                         FontSize="14"
-                                         FontWeight="SemiBold"
-                                         Foreground="#1976D2"
-                                         Margin="0,0,0,15"/>
-
-                                <!-- Montant en chiffres -->
-                                <Border Background="#E3F2FD"
-                                        CornerRadius="8"
-                                        Padding="20"
-                                        Margin="0,0,0,15">
-                                    <StackPanel HorizontalAlignment="Center">
-                                        <TextBlock Text="Montant en chiffres"
-                                                 FontSize="12"
-                                                 Foreground="#1976D2"
-                                                 HorizontalAlignment="Center"
-                                                 Opacity="0.8"/>
-                                        <TextBlock Text="{Binding MontantChiffres}"
-                                                 FontSize="28"
-                                                 FontWeight="Bold"
-                                                 Foreground="#1976D2"
-                                                 HorizontalAlignment="Center"
-                                                 Margin="0,5,0,0"/>
-                                    </StackPanel>
-                                </Border>
-
-                                <!-- Montant en lettres -->
-                                <TextBlock Text="Montant en lettres :"
-                                         FontSize="12"
-                                         Foreground="#666"
-                                         Margin="0,0,0,8"/>
-                                <Border Background="#F5F5F5"
-                                        BorderBrush="#E0E0E0"
-                                        BorderThickness="1"
-                                        CornerRadius="6"
-                                        Padding="15">
-                                    <TextBlock Text="{Binding MontantLettres}"
-                                             TextWrapping="Wrap"
-                                             FontSize="13"
-                                             FontStyle="Italic"
-                                             Foreground="#424242"
-                                             LineHeight="20"/>
-                                </Border>
-                            </StackPanel>
-                        </materialDesign:Card>
-
-                        <!-- Section Motifs -->
-                        <materialDesign:Card Padding="20">
-                            <StackPanel>
-                                <TextBlock Text="MOTIFS / OBSERVATIONS"
-                                         FontSize="14"
-                                         FontWeight="SemiBold"
-                                         Foreground="#1976D2"
-                                         Margin="0,0,0,10"/>
-
-                                <Border Background="#FFFDE7"
-                                        BorderBrush="#FFF59D"
-                                        BorderThickness="1"
-                                        CornerRadius="6"
-                                        Padding="15"
-                                        MinHeight="100">
-                                    <TextBlock Text="{Binding Motifs}"
-                                             TextWrapping="Wrap"
-                                             FontSize="13"
-                                             Foreground="#424242"
-                                             LineHeight="20"/>
-                                </Border>
-                            </StackPanel>
-                        </materialDesign:Card>
-
                     </StackPanel>
                 </Grid>
 
-            </Grid>
+                <!-- Contenu -->
+                <materialDesign:Card Padding="30">
+                    <StackPanel>
+
+                        <!-- Informations générales -->
+                        <TextBlock Text="📋 Informations générales"
+                                 FontSize="18"
+                                 FontWeight="SemiBold"
+                                 Foreground="#1976D2"
+                                 Margin="0,0,0,15"/>
+
+                        <Grid Margin="0,0,0,20">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="200"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="10"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="10"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="10"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="10"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="10"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="10"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="10"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="N° Ordre :" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding OrdreRecette.NumeroOrdre}"/>
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Date d'ordre :" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding OrdreRecette.DateOrdre, StringFormat='dd/MM/yyyy'}"/>
+
+                            <TextBlock Grid.Row="4" Grid.Column="0" Text="Exercice :" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding OrdreRecette.Exercice.Libelle}"/>
+
+                            <TextBlock Grid.Row="6" Grid.Column="0" Text="Commune :" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding OrdreRecette.Commune.Nom}"/>
+
+                            <TextBlock Grid.Row="8" Grid.Column="0" Text="Ligne budgétaire :" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Row="8" Grid.Column="1" Text="{Binding OrdreRecette.BudgetLine.Nommenclature.Intitule}" TextWrapping="Wrap"/>
+
+                            <TextBlock Grid.Row="10" Grid.Column="0" Text="Imputation :" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Row="10" Grid.Column="1" Text="{Binding OrdreRecette.BudgetLine.Nommenclature.CodeNomenclature}"/>
+
+                            <TextBlock Grid.Row="12" Grid.Column="0" Text="Tiers :" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Row="12" Grid.Column="1" Text="{Binding OrdreRecette.Tiers.Nom, FallbackValue='Non spécifié'}"/>
+
+                            <TextBlock Grid.Row="14" Grid.Column="0" Text="Comptable :" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Row="14" Grid.Column="1" Text="{Binding OrdreRecette.Comptable, FallbackValue='Non défini'}"/>
+                        </Grid>
+
+                        <Separator Margin="0,10,0,20"/>
+
+                        <!-- Montant -->
+                        <TextBlock Text="💰 Montant"
+                                 FontSize="18"
+                                 FontWeight="SemiBold"
+                                 Foreground="#1976D2"
+                                 Margin="0,0,0,15"/>
+
+                        <!-- Montant en chiffres -->
+                        <Border Background="#E3F2FD" 
+                                BorderBrush="#1976D2"
+                                BorderThickness="2"
+                                CornerRadius="8" 
+                                Padding="15" 
+                                Margin="0,0,0,20">
+                            <Grid>
+                                <TextBlock Text="MONTANT DE L'ORDRE :" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding OrdreRecette.MontantOrdre, StringFormat={}{0:N0} GNF}" 
+                                         FontSize="24" 
+                                         FontWeight="Bold" 
+                                         Foreground="#1976D2"
+                                         HorizontalAlignment="Right"
+                                         VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Montant en lettres -->
+                        <Border Background="#F9FBE7" CornerRadius="8" Padding="15" Margin="0,0,0,20">
+                            <StackPanel>
+                                <TextBlock Text="Montant en lettres :" 
+                                         FontWeight="SemiBold" 
+                                         FontSize="12"
+                                         Foreground="#666"
+                                         Margin="0,0,0,5"/>
+                                <TextBlock Text="{Binding OrdreRecette.MontantOrdreLettre}" 
+                                         FontSize="14"
+                                         FontStyle="Italic"
+                                         TextWrapping="Wrap"
+                                         Foreground="#33691E"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Separator Margin="0,10,0,20"/>
+
+                        <!-- Motifs -->
+                        <TextBlock Text="📝 Motifs / Observations"
+                                 FontSize="18"
+                                 FontWeight="SemiBold"
+                                 Foreground="#1976D2"
+                                 Margin="0,0,0,15"/>
+
+                        <Border Background="#FFFDE7"
+                                BorderBrush="#FFF59D"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="15"
+                                MinHeight="80"
+                                Margin="0,0,0,20">
+                            <TextBlock Text="{Binding OrdreRecette.Motifs, FallbackValue='Aucun motif'}" 
+                                     FontSize="14"
+                                     TextWrapping="Wrap"
+                                     Foreground="#424242"/>
+                        </Border>
+
+                        <Separator Margin="0,10,0,20"/>
+
+                        <!-- Informations d'encaissement (visible seulement si Mouvement existe) -->
+                        <StackPanel Visibility="{Binding HasMouvement, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="💳 Informations d'encaissement"
+                                     FontSize="18"
+                                     FontWeight="SemiBold"
+                                     Foreground="#1976D2"
+                                     Margin="0,0,0,15"/>
+
+                            <Grid Margin="0,0,0,20">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="200"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="10"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="10"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="10"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="10"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- Date d'encaissement -->
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Date d'encaissement :" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Mouvement.Date, StringFormat='dd/MM/yyyy'}"/>
+
+                                <!-- Montant encaissé -->
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Montant encaissé :" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Mouvement.Montant, StringFormat={}{0:N0} GNF}" FontWeight="SemiBold" Foreground="#4CAF50"/>
+
+                                <!-- Mode d'encaissement -->
+                                <TextBlock Grid.Row="4" Grid.Column="0" Text="Mode d'encaissement :" FontWeight="SemiBold"/>
+                                <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="{Binding ModePaiementIcon}" 
+                                                           Width="20" 
+                                                           Height="20"
+                                                           Foreground="#1976D2"
+                                                           Margin="0,0,8,0"
+                                                           VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding ModePaiement}" FontWeight="SemiBold" Foreground="#1976D2"/>
+                                </StackPanel>
+
+                                <!-- Référence Virement (si virement) -->
+                                <TextBlock Grid.Row="6" Grid.Column="0" 
+                                         Text="Référence virement :" 
+                                         FontWeight="SemiBold"
+                                         Visibility="{Binding EstVirement, Converter={StaticResource BoolToVis}}"/>
+                                <TextBlock Grid.Row="6" Grid.Column="1" 
+                                         Text="{Binding Mouvement.RefVirement}"
+                                         Visibility="{Binding EstVirement, Converter={StaticResource BoolToVis}}"/>
+
+                                <!-- Référence Chèque (si chèque) -->
+                                <TextBlock Grid.Row="8" Grid.Column="0" 
+                                         Text="Référence chèque :" 
+                                         FontWeight="SemiBold"
+                                         Visibility="{Binding EstCheque, Converter={StaticResource BoolToVis}}"/>
+                                <TextBlock Grid.Row="8" Grid.Column="1" 
+                                         Text="{Binding Mouvement.RefChèque}"
+                                         Visibility="{Binding EstCheque, Converter={StaticResource BoolToVis}}"/>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- Section Signatures (uniquement si ordre validé) -->
+                        <StackPanel Visibility="{Binding IsOrdreValide, Converter={StaticResource BoolToVis}}">
+                            <Separator Margin="0,30,0,20"/>
+
+                            <Grid Margin="0,0,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="60"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+
+
+                                <!-- Le Maire -->
+                                <StackPanel Grid.Column="0" HorizontalAlignment="Right">
+                                    <TextBlock FontSize="12" 
+                                        Foreground="#666"
+                                        Margin="0,0,0,8">
+                                        <Run Text="{Binding OrdreRecette.Commune.Nom}"/>
+                                        <Run Text=" Le "/>
+                                        <Run Text=".............."/>
+                                        <Run Text=" / "/>
+                                        <Run Text=".............."/>
+                                        <Run Text=" / "/>
+                                        <Run Text=".............."/>
+                                    </TextBlock>
+
+                                    <TextBlock 
+                                         FontSize="13"
+                                         FontWeight="SemiBold"
+                                         Margin="0,30,0,0">
+                                        <Run Text="L'Ordonateur :  "/>
+                                        <Run Text=""/>
+                                    </TextBlock>
+                                    <TextBlock 
+                                         FontSize="13"
+                                         FontWeight="SemiBold"
+                                         Margin="0,40,0,0">
+                                        <Run Text="M./Mme :  "/>
+                                        <Run Text="........................................................................................................"/>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+
+                    </StackPanel>
+                </materialDesign:Card>
+
+            </StackPanel>
         </ScrollViewer>
     </Grid>
 </Page>

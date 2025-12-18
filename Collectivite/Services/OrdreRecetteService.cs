@@ -348,6 +348,35 @@ namespace Collectivite.Services
             }
         }
 
+        /// <summary>
+        /// Génère le prochain numéro d'ordre de recette (format : OR-YYYY-0001)
+        /// </summary>
+        public async Task<string> GenerateNextNumeroAsync()
+        {
+            using var context = CreateContext();
+
+            var currentYear = DateTime.Now.Year;
+            var prefix = $"OR-{currentYear}-";
+
+            var ordresThisYear = await context.OrdreRecettes
+                .Where(o => o.NumeroOrdre.StartsWith(prefix))
+                .OrderByDescending(o => o.NumeroOrdre)
+                .ToListAsync();
+
+            if (!ordresThisYear.Any())
+                return prefix + "0001";
+
+            var lastNumero = ordresThisYear.First().NumeroOrdre;
+            var lastSequence = lastNumero.Substring(lastNumero.LastIndexOf('-') + 1);
+
+            if (int.TryParse(lastSequence, out int seq))
+            {
+                return prefix + (seq + 1).ToString("D4");
+            }
+
+            return prefix + "0001";
+        }
+
 
         public static  async Task RecalculateRealisation(AppDbContext context, int childNomenclatureId, int budgetPrimitifId)
         {

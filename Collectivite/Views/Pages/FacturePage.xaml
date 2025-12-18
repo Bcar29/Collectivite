@@ -5,6 +5,7 @@
       xmlns:models="clr-namespace:Collectivite.Models"
       Language="fr-FR"
       Background="#F5F5F5"
+      Unloaded="Page_Unloaded"
       Title="Gestion des Factures">
 
     <Page.Resources>

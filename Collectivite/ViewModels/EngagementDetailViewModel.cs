@@ -6,17 +6,15 @@ using System;
 using System.IO;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace Collectivite.ViewModels
 {
-    /// <summary>
-    /// ViewModel pour la page de détails d'un engagement
-    /// </summary>
     public class EngagementDetailViewModel : ViewModelBase
     {
         private bool _isLoading;
         private Engagement? _engagement;
-        private readonly int _engagementId;
+        private int _engagementId;
 
         public EngagementDetailViewModel(int engagementId)
         {
@@ -24,10 +22,10 @@ namespace Collectivite.ViewModels
 
             // Commandes
             LoadDataCommand = new RelayCommand(async _ => await LoadDataAsync());
-            EditCommand = new RelayCommand(_ => Edit());
-            DeleteCommand = new RelayCommand(async _ => await DeleteAsync());
+            BackCommand = new RelayCommand(_ => GoBack());
+            PrintCommand = new RelayCommand(_ => Print());
+            ExportPdfCommand = new RelayCommand(_ => ExportPdf());
             DownloadFileCommand = new RelayCommand(_ => DownloadFile());
-            BackCommand = new RelayCommand(_ => NavigateBack());
 
             // Charger les données
             LoadDataCommand.Execute(null);
@@ -44,20 +42,45 @@ namespace Collectivite.ViewModels
         public Engagement? Engagement
         {
             get => _engagement;
-            set => SetProperty(ref _engagement, value);
+            set
+            {
+                if (SetProperty(ref _engagement, value))
+                {
+                    OnPropertyChanged(nameof(HasFile));
+                    OnPropertyChanged(nameof(IsEngagementValide));
+                    OnPropertyChanged(nameof(EtatBackground));
+                }
+            }
         }
 
-        public bool HasFile => Engagement?.FichierJoin != null;
+        public bool HasFile => Engagement?.FichierJoin != null && Engagement.FichierJoin.Length > 0;
+
+        public bool IsEngagementValide => Engagement?.Etat == Engagement.EtatEngagement.Validé;
+
+        public Brush EtatBackground
+        {
+            get
+            {
+                if (Engagement == null) return new SolidColorBrush(Colors.Gray);
+
+                return Engagement.Etat switch
+                {
+                    Engagement.EtatEngagement.Validé => new SolidColorBrush(Color.FromRgb(76, 175, 80)), // Vert
+                    Engagement.EtatEngagement.Non_Validé => new SolidColorBrush(Color.FromRgb(255, 152, 0)), // Orange
+                    _ => new SolidColorBrush(Colors.Gray)
+                };
+            }
+        }
 
         #endregion
 
         #region Commands
 
         public ICommand LoadDataCommand { get; }
-        public ICommand EditCommand { get; }
-        public ICommand DeleteCommand { get; }
-        public ICommand DownloadFileCommand { get; }
         public ICommand BackCommand { get; }
+        public ICommand PrintCommand { get; }
+        public ICommand ExportPdfCommand { get; }
+        public ICommand DownloadFileCommand { get; }
 
         #endregion
 
@@ -75,19 +98,18 @@ namespace Collectivite.ViewModels
                 if (engagement != null)
                 {
                     Engagement = engagement;
-                    OnPropertyChanged(nameof(HasFile));
                 }
                 else
                 {
                     MessageBox.Show("Engagement introuvable.", "Erreur",
                         MessageBoxButton.OK, MessageBoxImage.Warning);
-                    NavigateBack();
+                    GoBack();
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erreur lors du chargement : {ex.Message}",
+                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -95,83 +117,47 @@ namespace Collectivite.ViewModels
             }
         }
 
-        private void Edit()
+        private void GoBack()
         {
-            if (Engagement == null) return;
-
-            // Navigation vers la page de modification
-            var mainWindow = Application.Current.MainWindow;
-            if (mainWindow != null)
-            {
-                var frame = mainWindow.FindName("MainFrame") as System.Windows.Controls.Frame;
-                if (frame != null)
-                {
-                    var formPage = new Views.Pages.EngagementFormPage(Engagement.Id);
-                    frame.Navigate(formPage);
-                }
-            }
+            NavigationService.Instance.GoBack();
         }
 
-        private async System.Threading.Tasks.Task DeleteAsync()
+        private void Print()
         {
-            if (Engagement == null) return;
+            // TODO: Implémenter l'impression
+            MessageBox.Show("Fonctionnalité d'impression en cours de développement.",
+                "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
 
-            var result = MessageBox.Show(
-                $"Êtes-vous sûr de vouloir supprimer cet engagement ?\n\n" +
-                $"Objet : {Engagement.Objet}\n" +
-                $"Montant : {Engagement.MontantEngagement:N0} GNF\n\n" +
-                "Cette action est irréversible.",
-                "Confirmation de suppression",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
-
-            if (result == MessageBoxResult.Yes)
-            {
-                IsLoading = true;
-
-                var service = new EngagementService();
-                var (success, message) = await service.DeleteEngagementAsync(Engagement.Id);
-
-                MessageBox.Show(message,
-                    success ? "Succès" : "Erreur",
-                    MessageBoxButton.OK,
-                    success ? MessageBoxImage.Information : MessageBoxImage.Warning);
-
-                if (success)
-                {
-                    NavigateBack();
-                }
-
-                IsLoading = false;
-            }
+        private void ExportPdf()
+        {
+            // TODO: Implémenter l'export PDF
+            MessageBox.Show("Fonctionnalité d'export PDF en cours de développement.",
+                "Information", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void DownloadFile()
         {
-            if (Engagement?.FichierJoin == null)
+            if (Engagement?.FichierJoin == null || Engagement.FichierJoin.Length == 0)
             {
-                MessageBox.Show("Aucun fichier joint à cet engagement.",
-                    "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("Aucun fichier disponible.", "Information",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
             try
             {
-                string fileName = Engagement.FichierName ?? $"Engagement_{Engagement.Id}_Fichier.bin";
-                string extension = Path.GetExtension(fileName);
-
                 var saveFileDialog = new SaveFileDialog
                 {
-                    Title = "Enregistrer le fichier",
-                    FileName = fileName,
-                    Filter = $"Fichier (*{extension})|*{extension}|Tous les fichiers (*.*)|*.*"
+                    FileName = Engagement.FichierName ?? "fichier_engagement",
+                    Filter = "Tous les fichiers (*.*)|*.*"
                 };
 
                 if (saveFileDialog.ShowDialog() == true)
                 {
                     File.WriteAllBytes(saveFileDialog.FileName, Engagement.FichierJoin);
-                    MessageBox.Show("Fichier téléchargé avec succès.",
-                        "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show("Fichier téléchargé avec succès.", "Succès",
+                        MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }
             catch (Exception ex)
@@ -179,11 +165,6 @@ namespace Collectivite.ViewModels
                 MessageBox.Show($"Erreur lors du téléchargement : {ex.Message}",
                     "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-        }
-
-        private void NavigateBack()
-        {
-            NavigationService.Instance.GoBack();
         }
 
         #endregion

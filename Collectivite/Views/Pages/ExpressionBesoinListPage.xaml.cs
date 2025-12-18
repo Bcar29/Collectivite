@@ -1,4 +1,5 @@
-﻿using Collectivite.ViewModels;
+﻿using Collectivite.Services;
+using Collectivite.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,10 +22,18 @@ namespace Collectivite.Views.Pages
     /// </summary>
     public partial class ExpressionBesoinListPage : Page
     {
-        public ExpressionBesoinListPage()
+        public ExpressionBesoinListPage(AuthService authService)
         {
             InitializeComponent();
-            DataContext = new ExpressionBesoinListViewModel();
+            var auditService = new AuditService();
+            DataContext = new ExpressionBesoinListViewModel(authService, auditService);
+        }
+        private void Page_Unloaded(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is ExpressionBesoinListViewModel viewModel)
+            {
+                viewModel.Dispose();
+            }
         }
     }
 }
