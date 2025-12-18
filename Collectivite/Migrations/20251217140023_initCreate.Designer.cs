@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Collectivite.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251211131250_DeleteMotifToMandat")]
-    partial class DeleteMotifToMandat
+    [Migration("20251217140023_initCreate")]
+    partial class initCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -188,7 +188,6 @@ namespace Collectivite.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("Prefecture")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Region")
@@ -629,6 +628,9 @@ namespace Collectivite.Migrations
                     b.Property<int?>("OrdreRecetteId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("idExercice")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CompteCreditId");
@@ -640,6 +642,8 @@ namespace Collectivite.Migrations
                     b.HasIndex("MouvementId");
 
                     b.HasIndex("OrdreRecetteId");
+
+                    b.HasIndex("idExercice");
 
                     b.ToTable("EcritureComptables");
                 });
@@ -672,6 +676,9 @@ namespace Collectivite.Migrations
 
                     b.Property<decimal>("EngagementsAnterieurs")
                         .HasColumnType("decimal(65,30)");
+
+                    b.Property<int>("Etat")
+                        .HasColumnType("int");
 
                     b.Property<int>("ExerciceId")
                         .HasColumnType("int");
@@ -860,6 +867,9 @@ namespace Collectivite.Migrations
                     b.Property<int>("EngagementId")
                         .HasColumnType("int");
 
+                    b.Property<int>("Etat")
+                        .HasColumnType("int");
+
                     b.Property<byte[]>("FichierJoin")
                         .HasColumnType("longblob");
 
@@ -892,6 +902,9 @@ namespace Collectivite.Migrations
 
                     b.Property<decimal>("Rts")
                         .HasColumnType("decimal(65,30)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -933,6 +946,9 @@ namespace Collectivite.Migrations
                     b.Property<int>("idCompteComptable")
                         .HasColumnType("int");
 
+                    b.Property<int?>("idExercice")
+                        .HasColumnType("int");
+
                     b.Property<int?>("idMandat")
                         .HasColumnType("int");
 
@@ -942,6 +958,8 @@ namespace Collectivite.Migrations
                     b.HasKey("id");
 
                     b.HasIndex("idCompteComptable");
+
+                    b.HasIndex("idExercice");
 
                     b.HasIndex("idMandat");
 
@@ -1016,6 +1034,9 @@ namespace Collectivite.Migrations
                     b.Property<DateTime>("DateOrdre")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<int>("Etat")
+                        .HasColumnType("int");
+
                     b.Property<int>("ExerciceId")
                         .HasColumnType("int");
 
@@ -1034,6 +1055,9 @@ namespace Collectivite.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("varchar(50)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
 
                     b.Property<int?>("TiersId")
                         .HasColumnType("int");
@@ -1292,10 +1316,9 @@ namespace Collectivite.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Email")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<string>("Password")
+                    b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("longtext");
 
@@ -1303,7 +1326,6 @@ namespace Collectivite.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Tel")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Username")
@@ -1492,9 +1514,15 @@ namespace Collectivite.Migrations
                         .HasForeignKey("OrdreRecetteId")
                         .OnDelete(DeleteBehavior.Cascade);
 
+                    b.HasOne("Collectivite.Models.Exercice", "Exercice")
+                        .WithMany()
+                        .HasForeignKey("idExercice");
+
                     b.Navigation("CompteCredit");
 
                     b.Navigation("CompteDebit");
+
+                    b.Navigation("Exercice");
 
                     b.Navigation("Mandat");
 
@@ -1622,6 +1650,10 @@ namespace Collectivite.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Collectivite.Models.Exercice", "Exercice")
+                        .WithMany()
+                        .HasForeignKey("idExercice");
+
                     b.HasOne("Collectivite.Models.Mandat", "Mandat")
                         .WithMany()
                         .HasForeignKey("idMandat")
@@ -1633,6 +1665,8 @@ namespace Collectivite.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("CompteComptable");
+
+                    b.Navigation("Exercice");
 
                     b.Navigation("Mandat");
 

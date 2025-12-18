@@ -177,7 +177,7 @@ namespace Collectivite.Services
         public async Task<List<OrdreRecette>> GetOrdresRecetteNonValidesAsync()
         {
             using var context = new AppDbContext();
-
+            
             return await context.OrdreRecettes
                 .Include(o => o.Exercice)
                 .Include(o => o.Commune)

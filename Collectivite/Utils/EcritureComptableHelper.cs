@@ -66,7 +66,8 @@ namespace Collectivite.Utils
                         CompteDebitId = compteComptable.ContrePartie.Id,
                         CompteCreditId = compteComptable.Id,
                         Montant = or.MontantOrdre,
-                        OrdreRecetteId = or.Id
+                        OrdreRecetteId = or.Id,
+                        idExercice = ExerciceService.Instance.CurrentExercice.Id
                     };
                 }
                 else if (lb.Nommenclature.Nature == NatureType.Depense && md != null)
@@ -80,7 +81,8 @@ namespace Collectivite.Utils
                         CompteDebitId = compteComptable.Id,
                         CompteCreditId = compteComptable.ContrePartie.Id,
                         Montant = md.MontantNet,
-                        MandatId = md.Id
+                        MandatId = md.Id,
+                        idExercice = ExerciceService.Instance.CurrentExercice.Id
                     };
                 }
                 else

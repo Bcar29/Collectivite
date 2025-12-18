@@ -47,5 +47,10 @@ namespace Collectivite.Models
         public int? MouvementId { get; set; }
         [ForeignKey(nameof(MouvementId))]
         public Mouvement? Mouvement { get; set; }
+
+        public int? idExercice { get; set; }
+        [ForeignKey(nameof(idExercice))]
+        public Exercice? Exercice { get; set; }
+
     }
 }
