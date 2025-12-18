@@ -28,6 +28,17 @@ namespace Collectivite.Services
                 .OrderBy(c => c.NumeroCompte)
                 .ToListAsync();
         }
+        // Récupérer tous les comptes de contrepartire
+        public async Task<List<CompteComptable>> GetContrePartie()
+        {
+            if (!SessionManager.HasPermission("CompteComptable.View"))
+                throw new UnauthorizedAccessException("Permission CompteComptable.View requise pour consulter les comptes comptables.");
+
+            return await _appDbContext.CompteComptables
+                .Where(c => c.ContrePartieId == null)
+                .OrderBy(c => c.NumeroCompte)
+                .ToListAsync();
+        }
 
         // Récupérer un compte comptable par ID
         public async Task<CompteComptable?> GetCompteComptableByIdAsync(int id)
@@ -55,19 +66,6 @@ namespace Collectivite.Services
                 .FirstOrDefaultAsync(c => c.NumeroCompte == numeroCompte);
         }
 
-        // Récupérer les comptes racines (sans parent)
-        public async Task<List<CompteComptable>> GetComptesRacinesAsync()
-        {
-            if (!SessionManager.HasPermission("CompteComptable.View"))
-                throw new UnauthorizedAccessException("Permission CompteComptable.View requise pour consulter les comptes comptables.");
-
-            return await _appDbContext.CompteComptables
-                .Where(c => c.ContrePartieId == null)
-                .Include(c => c.SousComptes)
-                .AsNoTracking()
-                .OrderBy(c => c.NumeroCompte)
-                .ToListAsync();
-        }
 
         // Récupérer les sous-comptes d'un compte parent
         public async Task<List<CompteComptable>> GetSousComptesAsync(int contrePartieId)
