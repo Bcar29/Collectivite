@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Collectivite.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251217140023_initCreate")]
-    partial class initCreate
+    [Migration("20251218112110_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
