@@ -16,8 +16,8 @@ namespace Collectivite.Utils
         private readonly AppDbContext _context;
 
         // Numéros de compte standards
-        private const string NUMERO_COMPTE_CAISSE = "53";
-        private const string NUMERO_COMPTE_BANQUE = "55";
+        private const string NUMERO_COMPTE_CAISSE = "55";
+        private const string NUMERO_COMPTE_BANQUE = "53";
 
         public EcritureComptableMouvementHelper(AppDbContext context)
         {
@@ -123,9 +123,9 @@ namespace Collectivite.Utils
         {
             string numeroCompte = modeReglement switch
             {
-                ModeReglement.Espece => NUMERO_COMPTE_CAISSE,       // Compte 53 - Caisse
-                ModeReglement.Virement => NUMERO_COMPTE_BANQUE,     // Compte 55 - Banque
-                ModeReglement.Cheque => NUMERO_COMPTE_BANQUE,       // Compte 55 - Banque
+                ModeReglement.Espece => NUMERO_COMPTE_CAISSE,       // Compte 55 - Caisse
+                ModeReglement.Virement => NUMERO_COMPTE_BANQUE,     // Compte 53 - Banque
+                ModeReglement.Cheque => NUMERO_COMPTE_BANQUE,       // Compte 53 - Banque
                 _ => NUMERO_COMPTE_CAISSE
             };
 

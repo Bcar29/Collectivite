@@ -1,12 +1,19 @@
 ﻿using Collectivite.Models;
 using Collectivite.Services;
 using Collectivite.Utils;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Printing;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Xps;
 
 namespace Collectivite.ViewModels
 {
@@ -17,6 +24,7 @@ namespace Collectivite.ViewModels
         private OrdreRecette? _ordreRecette;
         private Mouvement? _mouvement;
         private List<Mouvement>? _tousLesMouvements;
+        private Commune _commune;
 
         public OrdreRecetteDetailViewModel(int ordreRecetteId)
         {
@@ -24,8 +32,8 @@ namespace Collectivite.ViewModels
 
             // Commandes
             LoadDataCommand = new RelayCommand(async _ => await LoadDataAsync());
-            PrintCommand = new RelayCommand(_ => Print());
-            ExportPdfCommand = new RelayCommand(_ => ExportPdf());
+            PrintCommand = new RelayCommand(async _ => await PrintAsync());
+            ExportPdfCommand = new RelayCommand(async _ => await ExportPdfAsync());
             NavigateBackCommand = new RelayCommand(_ => NavigateBack());
 
             // Charger les données
@@ -38,6 +46,12 @@ namespace Collectivite.ViewModels
         {
             get => _isLoading;
             set => SetProperty(ref _isLoading, value);
+        }
+
+        public Commune Commune
+        {
+            get => _commune;
+            set => SetProperty(ref _commune, value);
         }
 
         public OrdreRecette? OrdreRecette
@@ -172,11 +186,18 @@ namespace Collectivite.ViewModels
 
             try
             {
+                // Charger les infos de la commune avec relations
+                var communeService = new CommuneService();
+                var commune = await communeService.GetCommuneByIdWithRelationsAsync(
+                    Properties.Settings.Default.CommuneId
+                );
+
                 var ordreRecetteService = new OrdreRecetteService();
                 var ordre = await ordreRecetteService.GetOrdreRecetteByIdAsync(_ordreRecetteId);
 
                 if (ordre != null)
                 {
+                    Commune = commune;
                     OrdreRecette = ordre;
 
                     // Charger TOUS les mouvements associés à cet ordre
@@ -220,18 +241,116 @@ namespace Collectivite.ViewModels
             }
         }
 
-        private void Print()
+        /// <summary>
+        /// Exporte l'ordre de recette en PDF
+        /// </summary>
+        private async System.Threading.Tasks.Task ExportPdfAsync()
         {
-            // TODO: Implémenter l'impression
-            MessageBox.Show("Fonctionnalité d'impression en cours de développement.",
-                "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+            if (OrdreRecette == null)
+            {
+                MessageBox.Show("Aucun ordre de recette à exporter.", "Erreur",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                IsLoading = true;
+
+                // Générer le PDF
+                var pdfBytes = await OrdreRecettePdfExporter.ExporterAsync(OrdreRecette, Commune, Mouvement);
+
+                // Ouvrir la boîte de dialogue de sauvegarde
+                var saveDialog = new SaveFileDialog
+                {
+                    Filter = "Fichier PDF (*.pdf)|*.pdf",
+                    FileName = $"OrdreRecette_{OrdreRecette.NumeroOrdre}_{DateTime.Now:yyyyMMdd}",
+                    Title = "Enregistrer l'ordre de recette en PDF"
+                };
+
+                if (saveDialog.ShowDialog() == true)
+                {
+                    // Sauvegarder le fichier
+                    await File.WriteAllBytesAsync(saveDialog.FileName, pdfBytes);
+
+                    // Demander si l'utilisateur veut ouvrir le fichier
+                    var result = MessageBox.Show(
+                        "Le fichier PDF a été créé avec succès.\n\nVoulez-vous l'ouvrir maintenant ?",
+                        "Export réussi",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Question);
+
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        // Ouvrir le fichier avec l'application par défaut
+                        Process.Start(new ProcessStartInfo
+                        {
+                            FileName = saveDialog.FileName,
+                            UseShellExecute = true
+                        });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'export PDF : {ex.Message}",
+                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
         }
 
-        private void ExportPdf()
+        /// <summary>
+        /// Imprime l'ordre de recette (génère un PDF temporaire et l'envoie à l'imprimante)
+        /// </summary>
+        private async System.Threading.Tasks.Task PrintAsync()
         {
-            // TODO: Implémenter l'export PDF
-            MessageBox.Show("Fonctionnalité d'export PDF en cours de développement.",
-                "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+            if (OrdreRecette == null)
+            {
+                MessageBox.Show("Aucun ordre de recette à imprimer.", "Erreur",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                IsLoading = true;
+
+                // Générer le PDF
+                var pdfBytes = await OrdreRecettePdfExporter.ExporterAsync(OrdreRecette, Commune, Mouvement);
+
+                // Créer un fichier temporaire
+                string tempFile = Path.Combine(Path.GetTempPath(), $"OrdreRecette_{OrdreRecette.NumeroOrdre}_{Guid.NewGuid()}.pdf");
+                await File.WriteAllBytesAsync(tempFile, pdfBytes);
+
+                // Ouvrir le fichier PDF avec l'application par défaut pour impression
+                // L'utilisateur pourra utiliser Ctrl+P ou le menu Imprimer
+                var result = MessageBox.Show(
+                    "Le document va s'ouvrir dans votre lecteur PDF.\n\nUtilisez Ctrl+P ou le menu Fichier > Imprimer pour lancer l'impression.",
+                    "Impression",
+                    MessageBoxButton.OKCancel,
+                    MessageBoxImage.Information);
+
+                if (result == MessageBoxResult.OK)
+                {
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = tempFile,
+                        UseShellExecute = true
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'impression : {ex.Message}",
+                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
         }
 
         private void NavigateBack()

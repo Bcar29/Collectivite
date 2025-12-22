@@ -1,9 +1,12 @@
 ﻿using Collectivite.Models;
 using Collectivite.Services;
 using Collectivite.Utils;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -17,6 +20,7 @@ namespace Collectivite.ViewModels
         private Mandat? _mandat;
         private Mouvement? _mouvement;
         private List<Mouvement>? _tousLesMouvements;
+        private Commune _commune;
 
         public MandatDetailViewModel(int mandatId)
         {
@@ -24,8 +28,8 @@ namespace Collectivite.ViewModels
 
             // Commandes
             LoadDataCommand = new RelayCommand(async _ => await LoadDataAsync());
-            PrintCommand = new RelayCommand(_ => Print());
-            ExportPdfCommand = new RelayCommand(_ => ExportPdf());
+            PrintCommand = new RelayCommand(async _ => await PrintAsync());
+            ExportPdfCommand = new RelayCommand(async _ => await ExportPdfAsync());
             RetourCommand = new RelayCommand(_ => RetourListe());
 
             // Charger les données
@@ -38,6 +42,12 @@ namespace Collectivite.ViewModels
         {
             get => _isLoading;
             set => SetProperty(ref _isLoading, value);
+        }
+
+        public Commune Commune
+        {
+            get => _commune;
+            set => SetProperty(ref _commune, value);
         }
 
         public Mandat? Mandat
@@ -166,17 +176,23 @@ namespace Collectivite.ViewModels
 
         #region Methods
 
-        private async System.Threading.Tasks.Task LoadDataAsync()
+        private async Task LoadDataAsync()
         {
             IsLoading = true;
 
             try
             {
+                // Charger les infos de la commune avec relations
+                var communeService = new CommuneService();
+                var commune = await communeService.GetCommuneByIdWithRelationsAsync(
+                    Properties.Settings.Default.CommuneId
+                );
                 var mandatService = new MandatService();
                 var mandat = await mandatService.GetMandatByIdAsync(_mandatId);
 
                 if (mandat != null)
                 {
+                    Commune = commune;
                     Mandat = mandat;
 
                     // Charger TOUS les mouvements associés à ce mandat
@@ -220,18 +236,122 @@ namespace Collectivite.ViewModels
             }
         }
 
-        private void Print()
+        /// <summary>
+        /// Imprime le mandat (génère un PDF temporaire et l'ouvre pour impression)
+        /// </summary>
+        private async Task PrintAsync()
         {
-            // TODO: Implémenter l'impression
-            MessageBox.Show("Fonctionnalité d'impression en cours de développement.",
-                "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+            if (Mandat == null)
+            {
+                MessageBox.Show("Aucun mandat à imprimer.", "Information",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            try
+            {
+                IsLoading = true;
+
+                // Générer le PDF (utilise Task.Run pour éviter le deadlock WPF)
+                byte[] pdfBytes = await Task.Run(() => MandatPdfExporter.Exporter(Mandat, Commune, Mouvement, TousLesMouvements));
+
+                // Créer un fichier temporaire
+                string tempFileName = $"Mandat_{Mandat.NumeroMandat}_{Guid.NewGuid():N}.pdf";
+                string tempPath = Path.Combine(Path.GetTempPath(), tempFileName);
+
+                // Écrire le fichier
+                await File.WriteAllBytesAsync(tempPath, pdfBytes);
+
+                // Ouvrir le PDF avec l'application par défaut
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = tempPath,
+                    UseShellExecute = true
+                });
+
+                MessageBox.Show(
+                    "Le document s'ouvre dans votre lecteur PDF.\n\n" +
+                    "Utilisez Ctrl+P ou le menu Fichier → Imprimer pour lancer l'impression.",
+                    "Impression",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'impression : {ex.Message}",
+                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
         }
 
-        private void ExportPdf()
+        /// <summary>
+        /// Exporte le mandat en PDF et propose la sauvegarde
+        /// </summary>
+        private async Task ExportPdfAsync()
         {
-            // TODO: Implémenter l'export PDF
-            MessageBox.Show("Fonctionnalité d'export PDF en cours de développement.",
-                "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+            if (Mandat == null)
+            {
+                MessageBox.Show("Aucun mandat à exporter.", "Information",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            try
+            {
+                IsLoading = true;
+
+                // Générer le PDF (utilise Task.Run pour éviter le deadlock WPF)
+                byte[] pdfBytes = await Task.Run(() => MandatPdfExporter.Exporter(Mandat, Commune, Mouvement, TousLesMouvements));
+
+                // Nom du fichier par défaut
+                string defaultFileName = $"Mandat_{Mandat.NumeroMandat}_{DateTime.Now:yyyyMMdd}.pdf";
+
+                // Boîte de dialogue de sauvegarde
+                var saveDialog = new SaveFileDialog
+                {
+                    Filter = "Fichiers PDF (*.pdf)|*.pdf",
+                    FileName = defaultFileName,
+                    Title = "Enregistrer le mandat en PDF",
+                    DefaultExt = ".pdf"
+                };
+
+                if (saveDialog.ShowDialog() == true)
+                {
+                    // Sauvegarder le fichier
+                    await File.WriteAllBytesAsync(saveDialog.FileName, pdfBytes);
+
+                    // Demander si l'utilisateur veut ouvrir le fichier
+                    var result = MessageBox.Show(
+                        "Le fichier PDF a été créé avec succès !\n\n" +
+                        $"Emplacement : {saveDialog.FileName}\n\n" +
+                        "Voulez-vous l'ouvrir maintenant ?",
+                        "Export réussi",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Question);
+
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        // Ouvrir le PDF avec l'application par défaut
+                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                        {
+                            FileName = saveDialog.FileName,
+                            UseShellExecute = true
+                        });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'export PDF : {ex.Message}",
+                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
         }
 
         private void RetourListe()

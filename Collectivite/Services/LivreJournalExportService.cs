@@ -355,7 +355,7 @@ namespace Collectivite.Services
             string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
             string fileName = $"LivreJournal_{timestamp}.pdf";
             string tempPath = Path.Combine(Path.GetTempPath(), fileName);
-
+            
             var commune = await _communeService.GetCommuneByIdWithRelationsAsync(idCommune);
             var exercice = ExerciceService.Instance.CurrentExercice;
             var ecrituresTri = ecritures.OrderBy(e => e.DateEcriture).ThenBy(e => e.Id).ToList();
@@ -365,7 +365,7 @@ namespace Collectivite.Services
             decimal difference = totalDebit - totalCredit;
             bool isEquilibre = Math.Abs(difference) < 0.01m;
 
-            string typeCommune = commune?.TypCommune ?? "URBAINE";
+            string typeCommune = commune.TypCommune;
             string nomCommune = commune?.NomCommune ?? "............................";
             string region = commune?.RegionCommune ?? "............................";
             string prefecture = commune?.PrefectureCommune ?? "............................";

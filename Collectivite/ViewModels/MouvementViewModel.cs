@@ -1,4 +1,5 @@
-﻿using Collectivite.Services;
+﻿using Collectivite.Models;
+using Collectivite.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
@@ -109,6 +110,7 @@ namespace Collectivite.ViewModels
         public MouvementViewModel(IMouvementService mouvementService)
         {
             _mouvementService = mouvementService;
+            ExerciceService.Instance.ExerciceChanged += OnExerciceChanged;
         }
 
         #region Commandes - Initialisation
@@ -467,6 +469,23 @@ namespace Collectivite.ViewModels
 
         #region Méthodes privées
 
+        // ════════════════════════════════════════════════════════════
+        // MÉTHODE APPELÉE QUAND L'EXERCICE CHANGE
+        // ════════════════════════════════════════════════════════════
+        private async void OnExerciceChanged(object? sender, Exercice exercice)
+        {
+            await Application.Current.Dispatcher.InvokeAsync(async () =>
+            {
+                await ChargerDonneesAsync();
+            });
+        }
+        // ════════════════════════════════════════════════════════════
+        // MÉTHODE POUR SE DÉSABONNER (éviter les fuites mémoire)
+        // ════════════════════════════════════════════════════════════
+        public void Cleanup()
+        {
+            ExerciceService.Instance.ExerciceChanged -= OnExerciceChanged;
+        }
         /// <summary>
         /// Valide les champs du formulaire de mouvement
         /// </summary>

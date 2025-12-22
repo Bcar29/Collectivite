@@ -1,4 +1,5 @@
 ﻿
+using Collectivite.Models;
 using Collectivite.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -65,6 +66,8 @@ namespace Collectivite.ViewModels
         public BalanceAnnuelleViewModel(IBalanceAnnuelleService balanceAnnuelleService)
         {
             _balanceAnnuelleService = balanceAnnuelleService;
+            // S'abonner au changement d'exercice
+            ExerciceService.Instance.ExerciceChanged += OnExerciceChanged;
         }
 
         /// <summary>
@@ -344,6 +347,24 @@ namespace Collectivite.ViewModels
 
         #region Méthodes privées
 
+        // ════════════════════════════════════════════════════════════
+        // MÉTHODE APPELÉE QUAND L'EXERCICE CHANGE
+        // ════════════════════════════════════════════════════════════
+        private async void OnExerciceChanged(object? sender, Exercice exercice)
+        {
+            await Application.Current.Dispatcher.InvokeAsync(async () =>
+            {
+                await ChargerBalanceAnnuelleAsync();
+            });
+        }
+
+        // ════════════════════════════════════════════════════════════
+        // MÉTHODE POUR SE DÉSABONNER (éviter les fuites mémoire)
+        // ════════════════════════════════════════════════════════════
+        public void Cleanup()
+        {
+            ExerciceService.Instance.ExerciceChanged -= OnExerciceChanged;
+        }
         private BalanceAnnuelleFiltreDTO ConstruireFiltre()
         {
             return new BalanceAnnuelleFiltreDTO

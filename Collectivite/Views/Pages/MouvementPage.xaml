@@ -598,7 +598,7 @@
                                               HorizontalAlignment="Center"
                                               Background="{Binding Etat, Converter={StaticResource StatutToBackground}}">
                                                 <TextBlock Text="{Binding Etat, Converter={StaticResource StatutToText}}"
-                                                 Foreground="{Binding ordre.Etat, Converter={StaticResource StatutToColor}}"
+                                                 Foreground="{Binding Etat, Converter={StaticResource StatutToColor}}"
                                                  FontSize="11" 
                                                  FontWeight="SemiBold" 
                                                  HorizontalAlignment="Left"/>

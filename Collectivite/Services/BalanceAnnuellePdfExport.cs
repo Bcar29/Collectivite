@@ -4,6 +4,7 @@ using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Collectivite.Services
 {
@@ -52,13 +53,23 @@ namespace Collectivite.Services
         private static readonly Color BorderBleuClair = Color.FromHex("#C7D2FE");
 
         /// <summary>
-        /// Exporte la Balance Annuelle en fichier PDF
+        /// Exporte la Balance Annuelle en fichier PDF avec en-tête officiel (version async)
         /// </summary>
-        public static byte[] Exporter(List<BalanceAnnuelleLigneDTO> lignes, BalanceAnnuelleTotauxDTO totaux, BalanceAnnuelleFiltreDTO filtre)
+        public static async Task<byte[]> ExporterAsync(List<BalanceAnnuelleLigneDTO> lignes, BalanceAnnuelleTotauxDTO totaux, BalanceAnnuelleFiltreDTO filtre)
         {
             QuestPDF.Settings.License = LicenseType.Community;
 
-            string periode = $"BALANCE ANNUELLE {filtre.Annee}";
+            // ═══════════════════════════════════════════════════════════
+            // RÉCUPÉRER LES DONNÉES DE LA COMMUNE
+            // ═══════════════════════════════════════════════════════════
+            var _communeService = new CommuneService();
+            var commune = await _communeService.GetCommuneByIdWithRelationsAsync(Properties.Settings.Default.CommuneId);
+            var exercice = ExerciceService.Instance.CurrentExercice;
+
+            string typeCommune = commune?.TypCommune ?? "..........";
+            string nomCommune = commune?.NomCommune ?? "............................";
+            string region = commune?.RegionCommune ?? "............................";
+            string prefecture = commune?.PrefectureCommune ?? "............................";
 
             var document = Document.Create(container =>
             {
@@ -68,37 +79,104 @@ namespace Collectivite.Services
                     page.Margin(1, Unit.Centimetre);
                     page.DefaultTextStyle(x => x.FontSize(8));
 
-                    // En-tête
-                    page.Header().Column(col =>
+                    // ═══════════════════════════════════════════════════════════
+                    // EN-TÊTE OFFICIEL GUINÉEN
+                    // ═══════════════════════════════════════════════════════════
+                    page.Header().Column(headerCol =>
                     {
-                        col.Item().AlignCenter().Text("BALANCE DES COMPTES")
-                            .FontSize(20).Bold().FontColor(GrisArdoise);
-                        col.Item().AlignCenter().Text(periode)
-                            .FontSize(13).Bold().FontColor(GrisFonce);
-                        col.Item().PaddingTop(8).LineHorizontal(2).LineColor(BleuIndigo);
-                        col.Item().PaddingBottom(12);
+                        // Ligne 1 : Ministère (gauche) et République (droite)
+                        headerCol.Item().Row(row =>
+                        {
+                            row.RelativeItem(2).Column(leftCol =>
+                            {
+                                leftCol.Item().Text("Ministère de l'Administration du Territoire")
+                                    .FontSize(10).Bold();
+                                leftCol.Item().Text("et de la Décentralisation")
+                                    .FontSize(10).Bold();
+                                leftCol.Item().PaddingTop(3).Text("Direction Générale des Collectivités Locales")
+                                    .FontSize(9).Bold();
+                                leftCol.Item().PaddingTop(8).Text($"REGION ADMINISTRATIVE DE {region.ToUpper()}")
+                                    .FontSize(9);
+                                leftCol.Item().Text($"PREFECTURE DE {prefecture.ToUpper()}")
+                                    .FontSize(9);
+                                leftCol.Item().Text($"COMMUNE {typeCommune.ToUpper()} DE {nomCommune.ToUpper()}")
+                                    .FontSize(9);
+                            });
+
+                            row.RelativeItem(1).AlignCenter().AlignMiddle().Text("⚜")
+                                .FontSize(30);
+
+                            row.RelativeItem(2).AlignRight().Column(rightCol =>
+                            {
+                                rightCol.Item().AlignRight().Text("REPUBLIQUE DE GUINEE")
+                                    .FontSize(11).Bold();
+                                rightCol.Item().AlignRight().Text("Travail - Justice - Solidarité")
+                                    .FontSize(10).Italic();
+                            });
+                        });
+
+                        headerCol.Item().PaddingTop(12);
+
+                        // Titre principal
+                        headerCol.Item().AlignCenter().Text("BALANCE ANNUELLE DES COMPTES")
+                            .FontSize(18).Bold().FontColor(GrisArdoise);
+
+                        // Bandeau avec commune
+                        headerCol.Item().PaddingVertical(5)
+                            .BorderTop(2).BorderBottom(2).BorderColor(VertEmeraude)
+                            .Padding(6).AlignCenter()
+                            .Text($"DE LA COMMUNE {typeCommune.ToUpper()} DE {nomCommune.ToUpper()}")
+                            .FontSize(12).Bold();
+
+                        // Exercice / Année
+                        headerCol.Item().PaddingTop(6).AlignCenter()
+                            .Text($" {ExerciceService.Instance.CurrentExercice.Libelle}")
+                            .FontSize(14).Bold();
+
+                        headerCol.Item().PaddingTop(8).LineHorizontal(1).LineColor(GrisBordure);
+                        headerCol.Item().PaddingBottom(8);
                     });
 
-                    // Contenu
+                    // ═══════════════════════════════════════════════════════════
+                    // CONTENU - Tableau
+                    // ═══════════════════════════════════════════════════════════
                     page.Content().Element(c => ComposeTable(c, lignes, totaux));
 
-                    // Pied de page
+                    // ═══════════════════════════════════════════════════════════
+                    // PIED DE PAGE
+                    // ═══════════════════════════════════════════════════════════
                     page.Footer().Row(row =>
                     {
-                        row.RelativeItem().Text($"Édité le : {DateTime.Now:dd/MM/yyyy à HH:mm}")
-                            .FontSize(8).FontColor(GrisTexte);
-                        row.RelativeItem().AlignRight().Text(x =>
+                        row.RelativeItem().AlignLeft()
+                            .Text($"Édité le : {DateTime.Now:dd/MM/yyyy à HH:mm}")
+                            .FontSize(8).Italic().FontColor(GrisTexte);
+
+                        row.RelativeItem().AlignCenter().Text(text =>
                         {
-                            x.Span("Page ").FontSize(8).FontColor(GrisTexte);
-                            x.CurrentPageNumber().FontSize(8).FontColor(GrisFonce);
-                            x.Span(" / ").FontSize(8).FontColor(GrisTexte);
-                            x.TotalPages().FontSize(8).FontColor(GrisFonce);
+                            text.DefaultTextStyle(x => x.FontSize(8).FontColor(GrisTexte));
+                            text.Span("Page ");
+                            text.CurrentPageNumber().FontColor(GrisFonce);
+                            text.Span(" / ");
+                            text.TotalPages().FontColor(GrisFonce);
                         });
+
+                        row.RelativeItem().AlignRight()
+                            .Text($"Nombre de comptes : {lignes.Count}")
+                            .FontSize(8).Italic().FontColor(GrisTexte);
                     });
                 });
             });
 
             return document.GeneratePdf();
+        }
+
+        /// <summary>
+        /// Version synchrone pour compatibilité (évite le deadlock WPF)
+        /// </summary>
+        public static byte[] Exporter(List<BalanceAnnuelleLigneDTO> lignes, BalanceAnnuelleTotauxDTO totaux, BalanceAnnuelleFiltreDTO filtre)
+        {
+            // Utiliser Task.Run pour éviter le deadlock WPF
+            return Task.Run(() => ExporterAsync(lignes, totaux, filtre)).GetAwaiter().GetResult();
         }
 
         private static void ComposeTable(IContainer container, List<BalanceAnnuelleLigneDTO> lignes, BalanceAnnuelleTotauxDTO totaux)

@@ -1,5 +1,5 @@
-﻿
-using Collectivite.Services;
+﻿using Collectivite.Services;
+using Collectivite.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
@@ -87,6 +87,27 @@ namespace Collectivite.ViewModels
         public GrandLivreViewModel(IGrandLivreService grandLivreService)
         {
             _grandLivreService = grandLivreService;
+
+            // ✅ S'abonner à l'événement de changement d'exercice
+            // ✅ AJOUTER CETTE LIGNE
+            ExerciceService.Instance.ExerciceChanged += OnExerciceChanged;
+        }
+
+        // ═══════════════════════════════════════
+        // ✅ ÉVÉNEMENT CHANGEMENT D'EXERCICE
+        // ═══════════════════════════════════════
+        private async void OnExerciceChanged(object? sender, EventArgs e)
+        {
+            // Recharger les données automatiquement quand l'exercice change
+            await ChargerGrandLivreAsync();
+        }
+
+        // ═══════════════════════════════════════
+        // ✅ MÉTHODE POUR SE DÉSABONNER
+        // ═══════════════════════════════════════
+        public void Cleanup()
+        {
+            ExerciceService.Instance.ExerciceChanged -= OnExerciceChanged;
         }
 
         /// <summary>
@@ -290,6 +311,13 @@ namespace Collectivite.ViewModels
 
         #region Méthodes privées
 
+        private async void OnExerciceChanged(object? sender, Exercice exercice)
+        {
+            await Application.Current.Dispatcher.InvokeAsync(async () =>
+            {
+                await ChargerGrandLivreAsync();
+            });
+        }
         private GrandLivreFiltreDTO ConstruireFiltre()
         {
             return new GrandLivreFiltreDTO
@@ -355,8 +383,6 @@ namespace Collectivite.ViewModels
 
         partial void OnRechercheTexteChanged(string value)
         {
-            // Délai pour éviter trop de requêtes lors de la saisie
-            // En production, utiliser un debounce
             if (!IsLoading)
             {
                 _ = ChargerGrandLivreAsync();

@@ -29,7 +29,7 @@ namespace Collectivite.ViewModels
     {
         private bool _isExpanded;
         private bool _isVisible = true;
-
+        
         public BudgetLine BudgetLine { get; set; }
         public ObservableCollection<BudgetLineHierarchyViewModel> Children { get; set; }
         public BudgetLineHierarchyViewModel? Parent { get; set; }
@@ -215,7 +215,7 @@ namespace Collectivite.ViewModels
         private readonly ExerciceService _exerciceService;
         private readonly AuditService _auditService;
         private readonly AuthService _authService;
-
+        private Commune _commune;
         // 🆕 Collections pour la hiérarchie
         private List<BudgetLineHierarchyViewModel> _fullHierarchy = new();
 
@@ -1492,11 +1492,23 @@ namespace Collectivite.ViewModels
                 _isDisposed = true;
             }
         }
+        public Commune Commune
+        {
+            get => _commune;
+            set => SetProperty(ref _commune, value);
+        }
+        // Charger la commune
+        
 
         private async Task ExportToPdfAsync()
         {
             try
             {
+                // Charger les infos de la commune avec relations
+                var communeService = new CommuneService();
+                var commune = await communeService.GetCommuneByIdWithRelationsAsync(
+                    Properties.Settings.Default.CommuneId
+                );
                 var saveFileDialog = new SaveFileDialog
                 {
                     Filter = "Fichiers PDF|*.pdf",
@@ -1505,7 +1517,8 @@ namespace Collectivite.ViewModels
 
                 if (saveFileDialog.ShowDialog() == true)
                 {
-                    await Task.Run(() => GeneratePdfBudgetPrimitif(saveFileDialog.FileName));
+                    Commune = commune;
+                    await Task.Run(() => GeneratePdfBudgetPrimitif(saveFileDialog.FileName,Commune));
 
                     MessageBox.Show(
                         "Export PDF réalisé avec succès !",
@@ -1531,6 +1544,11 @@ namespace Collectivite.ViewModels
         {
             try
             {
+                // Charger les infos de la commune avec relations
+                var communeService = new CommuneService();
+                var commune = await communeService.GetCommuneByIdWithRelationsAsync(
+                    Properties.Settings.Default.CommuneId
+                );
                 var saveFileDialog = new SaveFileDialog
                 {
                     Filter = "Fichiers PDF|*.pdf",
@@ -1539,7 +1557,8 @@ namespace Collectivite.ViewModels
 
                 if (saveFileDialog.ShowDialog() == true)
                 {
-                    await Task.Run(() => GeneratePdfCompteAdmin(saveFileDialog.FileName));
+                    Commune = commune;
+                    await Task.Run(() => GeneratePdfCompteAdmin(saveFileDialog.FileName,Commune));
 
                     MessageBox.Show(
                         "Export PDF réalisé avec succès !",
@@ -1565,6 +1584,11 @@ namespace Collectivite.ViewModels
         {
             try
             {
+                // Charger les infos de la commune avec relations
+                var communeService = new CommuneService();
+                var commune = await communeService.GetCommuneByIdWithRelationsAsync(
+                    Properties.Settings.Default.CommuneId
+                );
                 var saveFileDialog = new SaveFileDialog
                 {
                     Filter = "Fichiers PDF|*.pdf",
@@ -1573,7 +1597,8 @@ namespace Collectivite.ViewModels
 
                 if (saveFileDialog.ShowDialog() == true)
                 {
-                    await Task.Run(() => GeneratePdfCompteGestion(saveFileDialog.FileName));
+                    Commune = commune;
+                    await Task.Run(() => GeneratePdfCompteGestion(saveFileDialog.FileName,Commune));
 
                     MessageBox.Show(
                         "Export PDF réalisé avec succès !",
@@ -1620,13 +1645,23 @@ namespace Collectivite.ViewModels
             };
         }
 
-        private void GeneratePdfBudgetPrimitif(string filePath)
+        private void GeneratePdfBudgetPrimitif(string filePath,Commune _commune)
         {
+
             // ✅ Format paysage déjà présent : PageSize.A4.Rotate()
             Document document = new Document(PageSize.A4.Rotate(), 25, 25, 30, 30);
             PdfWriter writer = PdfWriter.GetInstance(document, new FileStream(filePath, FileMode.Create));
 
             document.Open();
+
+            // ✅  l'en-tête  !
+            PdfHeaderHelper.AjouterEnTeteOfficiel(
+                document,
+                _commune,
+                titre: "BUDGET PRIMITIF",
+                sousTitre: GetTabFullName(SelectedTabIndex),
+                exercice: _exerciceService.CurrentExercice?.Libelle
+            );
 
             // Polices
             var titleFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 18);
@@ -1704,11 +1739,18 @@ namespace Collectivite.ViewModels
 
             // Totaux selon l'onglet
             AddTotalsSection(document, headerFont, boldFont, normalFont);
+            // ✅ Signatures en une ligne
+            PdfHeaderHelper.AjouterSignatures(document, _commune?.NomCommune);
+
+            var exerciceCourant = ExerciceService.Instance.CurrentExercice;
+            // ✅ Pied de page en une ligne
+            PdfHeaderHelper.AjouterPiedDePage(document, $"Édité le : {DateTime.Now:dd/MM/yyyy à HH:mm}", "Budget Primitif",exerciceCourant.Libelle);
+
 
             document.Close();
             writer.Close();
         }
-        private void GeneratePdfCompteAdmin(string filePath)
+        private void GeneratePdfCompteAdmin(string filePath, Commune _commune)
         {
             // ✅ Format paysage déjà présent : PageSize.A4.Rotate()
             Document document = new Document(PageSize.A4.Rotate(), 25, 25, 30, 30);
@@ -1716,6 +1758,14 @@ namespace Collectivite.ViewModels
 
             document.Open();
 
+            // ✅  l'en-tête  !
+            PdfHeaderHelper.AjouterEnTeteOfficiel(
+                document,
+                _commune,
+                titre: "COMPTE ADMINISTRATIF",
+                sousTitre: GetTabFullName(SelectedTabIndex),
+                exercice: _exerciceService.CurrentExercice?.Libelle
+            );
             // Polices
             var titleFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 18);
             var headerFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12);
@@ -1799,10 +1849,14 @@ namespace Collectivite.ViewModels
             // Totaux selon l'onglet
             AddTotalsSectionCompteAdmin(document, headerFont, boldFont, normalFont);
 
+            var exerciceCourant = ExerciceService.Instance.CurrentExercice;
+            // ✅ Pied de page en une ligne
+            PdfHeaderHelper.AjouterPiedDePage(document, $"Édité le : {DateTime.Now:dd/MM/yyyy à HH:mm}", "Compte Administratif", exerciceCourant.Libelle);
+
             document.Close();
             writer.Close();
         }
-        private void GeneratePdfCompteGestion(string filePath)
+        private void GeneratePdfCompteGestion(string filePath, Commune _commune)
         {
             // ✅ Format paysage déjà présent : PageSize.A4.Rotate()
             Document document = new Document(PageSize.A4.Rotate(), 25, 25, 30, 30);
@@ -1810,6 +1864,14 @@ namespace Collectivite.ViewModels
 
             document.Open();
 
+            // ✅  l'en-tête  !
+            PdfHeaderHelper.AjouterEnTeteOfficiel(
+                document,
+                _commune,
+                titre: "COMPTE GESTION",
+                sousTitre: GetTabFullName(SelectedTabIndex),
+                exercice: _exerciceService.CurrentExercice?.Libelle
+            );
             // Polices
             var titleFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 18);
             var headerFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12);
@@ -1907,9 +1969,14 @@ namespace Collectivite.ViewModels
             // Totaux selon l'onglet
             AddTotalsSectionCompteGestion(document, headerFont, boldFont, normalFont);
 
+            var exerciceCourant = ExerciceService.Instance.CurrentExercice;
+            // ✅ Pied de page en une ligne
+            PdfHeaderHelper.AjouterPiedDePage(document, $"Édité le : {DateTime.Now:dd/MM/yyyy à HH:mm}", "Compte Gestion", exerciceCourant.Libelle);
+
             document.Close();
             writer.Close();
         }
+
         private void AddCellWithColor(PdfPTable table, string text, iTextSharp.text.Font font, BaseColor backgroundColor, int alignment)
         {
             PdfPCell cell = new PdfPCell(new Phrase(text, font));
