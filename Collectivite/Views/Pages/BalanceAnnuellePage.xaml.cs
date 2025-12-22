@@ -45,5 +45,14 @@ namespace Collectivite.Views.Pages
         {
             await _viewModel.InitialiserAsync();
         }
+
+        private void UserControl_Unloaded(object sender, RoutedEventArgs e)
+        {
+            // Appeler Cleanup quand la page se ferme
+            if (DataContext is BalanceAnnuelleViewModel vm)
+            {
+                vm.Cleanup();
+            }
+        }
     }
 }

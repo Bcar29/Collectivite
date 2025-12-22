@@ -30,10 +30,13 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<List<MandatPaiementDTO>> GetMandatsNonPayesAsync()
         {
+            var exerciceEncours = ExerciceService.Instance.CurrentExercice;
             var mandats = await _context.Mandats
+
                 .Where(m => m.Etat == Mandat.EtatMandat.Validé)
                 .Include(m => m.Engagement)
                     .ThenInclude(e => e.Tiers)
+                .Where(m => m.Engagement.ExerciceId == exerciceEncours.Id) 
                 .OrderByDescending(m => m.DateEmission)
                 .ToListAsync();
 
@@ -262,8 +265,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<List<OrdreRecetteEncaissementDTO>> GetOrdresRecetteNonEncaissesAsync()
         {
+            var exerciceEncours = ExerciceService.Instance.CurrentExercice;
             var ordres = await _context.OrdreRecettes
-                .Where(o => o.Etat == OrdreRecette.EtatOdre.Validé)
+                .Where(o => o.Etat == OrdreRecette.EtatOdre.Validé && o.ExerciceId == exerciceEncours.Id)
                 .Include(o => o.Tiers)
                 .OrderByDescending(o => o.DateOrdre)
                 .ToListAsync();
@@ -285,7 +289,8 @@ namespace Collectivite.Services
                     Motifs = ordre.Motifs,
                     Debiteur = ordre.Tiers?.Nom ?? "Non spécifié",
                     MontantOrdre = ordre.MontantOrdre,
-                    MontantEncaisse = montantEncaisse
+                    MontantEncaisse = montantEncaisse,
+                    Etat = ordre.Etat
                 };
 
                 // Ne garder que les ordres non totalement encaissés
@@ -321,7 +326,8 @@ namespace Collectivite.Services
                 Motifs = ordre.Motifs,
                 Debiteur = ordre.Tiers?.Nom ?? "Non spécifié",
                 MontantOrdre = ordre.MontantOrdre,
-                MontantEncaisse = montantEncaisse
+                MontantEncaisse = montantEncaisse,
+                Etat = ordre.Etat
             };
         }
 

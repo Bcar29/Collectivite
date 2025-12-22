@@ -232,7 +232,7 @@ namespace Collectivite.Services
         public async Task<byte[]> ExportExcelAsync(GrandLivreFiltreDTO? filtre = null)
         {
             var grandLivre = await GetGrandLivreAsync(filtre);
-            return GrandLivreExcelExporter.Exporter(grandLivre, filtre);
+            return await GrandLivreExcelExporter.ExporterAsync(grandLivre, filtre);
         }
 
         /// <summary>
@@ -241,7 +241,7 @@ namespace Collectivite.Services
         public async Task<byte[]> ExportPdfAsync(GrandLivreFiltreDTO? filtre = null)
         {
             var grandLivre = await GetGrandLivreAsync(filtre);
-            return GrandLivrePdfExporter.Exporter(grandLivre, filtre);
+            return await GrandLivrePdfExporter.ExporterAsync(grandLivre, filtre);  // ← Avec commune
         }
 
         #region Méthodes privées

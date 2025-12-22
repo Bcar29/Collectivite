@@ -89,6 +89,15 @@ namespace Collectivite.Views.Pages
                     "Erreur Loaded", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
+        private void UserControl_Unloaded(object sender, RoutedEventArgs e)
+        {
+            // Appeler Cleanup quand la page se ferme
+            if (DataContext is MouvementViewModel vm)
+            {
+                vm.Cleanup();
+            }
+        }
     }
 
     

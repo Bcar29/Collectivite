@@ -41,5 +41,13 @@ namespace Collectivite.Views
             // Initialiser le ViewModel au chargement de la page
             await _viewModel.InitialiserAsync();
         }
+        private void UserControl_Unloaded(object sender, RoutedEventArgs e)
+        {
+            // Appeler Cleanup quand la page se ferme
+            if (DataContext is GrandLivreViewModel vm)
+            {
+                vm.Cleanup();
+            }
+        }
     }
 }

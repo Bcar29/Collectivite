@@ -298,9 +298,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<byte[]> ExportExcelAsync(BalanceFiltreDTO filtre)
         {
-            var balance = await GetBalanceAsync(filtre);
+            var lignes = await GetBalanceAsync(filtre);
             var totaux = await GetTotauxAsync(filtre);
-            return BalanceExcelExporter.Exporter(balance, totaux, filtre);
+            return await BalanceExcelExporter.ExporterAsync(lignes, totaux, filtre);  // ✅ await
         }
 
         /// <summary>
@@ -308,9 +308,9 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<byte[]> ExportPdfAsync(BalanceFiltreDTO filtre)
         {
-            var balance = await GetBalanceAsync(filtre);
+            var lignes = await GetBalanceAsync(filtre);
             var totaux = await GetTotauxAsync(filtre);
-            return BalancePdfExporter.Exporter(balance, totaux, filtre);
+            return await BalancePdfExporter.ExporterAsync(lignes, totaux, filtre);  // ✅ await
         }
     }
 }
