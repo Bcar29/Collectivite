@@ -180,21 +180,21 @@
             </ItemsControl>
 
             <WrapPanel Margin="0,20,0,20"
-           HorizontalAlignment="Center">
+                HorizontalAlignment="Center">
 
                 <!-- Graphique en barres -->
                 <materialDesign:Card
-        Width="500"
-        Margin="10"
-        Style="{StaticResource SectionCardStyle}">
+                    Width="700"
+                    Margin="10"
+                    Style="{StaticResource SectionCardStyle}">
                     <StackPanel>
                         <TextBlock Text="Répartition par Nature et Section"
                        FontSize="18"
                        FontWeight="SemiBold"
                        Margin="0,0,0,20"/>
 
-                        <Canvas Height="300"
-                    x:Name="BarChartCanvas"/>
+                        <Canvas Height="500"
+                            x:Name="BarChartCanvas"/>
 
                         <!-- Légende -->
                         <StackPanel Orientation="Horizontal"
@@ -214,16 +214,16 @@
 
                 <!-- Graphique en courbes -->
                 <materialDesign:Card
-        Width="900"
-        Margin="10"
-        Style="{StaticResource SectionCardStyle}">
+                    Width="700"
+                    Margin="10"
+                    Style="{StaticResource SectionCardStyle}">
                     <StackPanel>
                         <TextBlock Text="Exécution Mensuelle"
                        FontSize="18"
                        FontWeight="SemiBold"
                        Margin="0,0,0,20"/>
 
-                        <Canvas Height="300"
+                        <Canvas Height="500"
                     x:Name="LineChartCanvas"/>
 
                         <!-- Légende -->

@@ -111,7 +111,7 @@ namespace Collectivite.Services
                 .ToListAsync();
 
             var lignesSansEnfants = budgetLines
-                .Where(b => !nomenclaturesWithChildren.Contains(b.NommenclatureId))
+                .Where(b => !nomenclaturesWithChildren.Contains(b.NommenclatureId) && b.Nommenclature.CodeNomenclature != "110")
                 .ToList();
 
             var imputations = new List<ImputationDTO>();
@@ -134,7 +134,7 @@ namespace Collectivite.Services
                 {
                     BudgetLineId = ligne.Id,
                     NumeroCompte = nomenclature.CodeNomenclature,
-                    Libelle = nomenclature.Intitule,
+                    Libelle = nomenclature.Intitule!,
                     TotalMouvement = totalMouvement,
                     CompteComptableId = compteComptable?.Id ?? 0
                 });
@@ -267,15 +267,17 @@ namespace Collectivite.Services
                     context.EcritureComptables.Add(ecritureComptable);
 
                     // 4️⃣ Mise à jour BudgetLine
-                    budgetLine.MontantRealise += dto.Montant;
+                    budgetLine.MontantEntreSortie += dto.Montant;
 
                     await context.SaveChangesAsync();
 
                     // 5️⃣ Recalcul hiérarchie
-                    await OrdreRecetteService.RecalculateRealisation(
+                    await OrdreRecetteService.RecalculateEntreSortie(
                         context,
                         budgetLine.NommenclatureId,
                         budgetLine.BudgetPrimitifId);
+                    await context.SaveChangesAsync();
+
 
                     await transaction.CommitAsync();
 

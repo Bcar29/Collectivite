@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Collectivite.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251218112905_CommuneNulltoUser")]
-    partial class CommuneNulltoUser
+    [Migration("20251218164801_initial")]
+    partial class initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

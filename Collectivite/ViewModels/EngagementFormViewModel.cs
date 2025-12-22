@@ -94,6 +94,7 @@ namespace Collectivite.ViewModels
                     }
                 }
             }
+            
         }
 
         public Engagement Engagement

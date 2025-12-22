@@ -51,6 +51,7 @@ namespace Collectivite
             _authService = authService ?? SessionManager.AuthService;
 
             // Initialiser le ViewModel
+
             _viewModel = new MainViewModel(_authService);
             DataContext = _viewModel;
 

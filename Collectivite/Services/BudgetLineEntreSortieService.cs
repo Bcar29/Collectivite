@@ -1,4 +1,5 @@
 ﻿
+using Collectivite.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 
@@ -29,6 +30,7 @@ namespace Collectivite.Services
                 return false;
 
             mandat.Engagement.BudgetLine.MontantEntreSortie += montantPaye;
+            await OrdreRecetteService.RecalculateEntreSortie(context, mandat.Engagement.BudgetLine.NommenclatureId, mandat.Engagement.BudgetLine.BudgetPrimitifId);
             await context.SaveChangesAsync();
 
             return true;
@@ -52,6 +54,7 @@ namespace Collectivite.Services
                 return false;
 
             ordreRecette.BudgetLine.MontantEntreSortie += montantEncaisse;
+            await OrdreRecetteService.RecalculateEntreSortie(context, ordreRecette.BudgetLine.NommenclatureId, ordreRecette.BudgetLine.BudgetPrimitifId);
             await context.SaveChangesAsync();
 
             return true;

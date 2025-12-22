@@ -21,6 +21,12 @@ namespace Collectivite.Services
         public async Task<List<Engagement>> GetEngagementsNonValidesAsync()
         {
             using var context = new AppDbContext();
+            var exerciceService = ExerciceService.Instance;
+
+            if (exerciceService.CurrentExercice == null)
+            {
+                return new List<Engagement>();
+            }
 
             return await context.Engagements
                 .Include(e => e.Exercice)
@@ -28,7 +34,7 @@ namespace Collectivite.Services
                 .Include(e => e.BudgetLine)
                     .ThenInclude(bl => bl.Nommenclature)
                 .Include(e => e.Tiers)
-                .Where(e => e.Etat == Engagement.EtatEngagement.Non_Validé)
+                .Where(e => e.Etat == Engagement.EtatEngagement.Non_Validé && e.ExerciceId == exerciceService.CurrentExercice.Id)
                 .OrderByDescending(e => e.DateEngagement)
                 .ToListAsync();
         }
@@ -56,12 +62,6 @@ namespace Collectivite.Services
 
             // Valider l'engagement
             engagement.Etat = Engagement.EtatEngagement.Validé;
-
-            // Mettre à jour le MontantRealise du BudgetLine
-            if (engagement.BudgetLine != null)
-            {
-                engagement.BudgetLine.MontantRealise += engagement.MontantEngagement;
-            }
 
             await context.SaveChangesAsync();
 
@@ -102,6 +102,12 @@ namespace Collectivite.Services
         public async Task<List<Mandat>> GetMandatsNonValidesAsync()
         {
             using var context = new AppDbContext();
+            var exerciceService = ExerciceService.Instance;
+
+            if (exerciceService.CurrentExercice == null)
+            {
+                return new List<Mandat>();
+            }
 
             return await context.Mandats
                 .Include(m => m.Engagement)
@@ -109,7 +115,7 @@ namespace Collectivite.Services
                 .Include(m => m.Engagement)
                     .ThenInclude(e => e.BudgetLine)
                         .ThenInclude(bl => bl.Nommenclature)
-                .Where(m => m.Etat == Mandat.EtatMandat.Non_Validé)
+                .Where(m => m.Etat == Mandat.EtatMandat.Non_Validé && exerciceService.CurrentExercice.Id == m.Engagement.ExerciceId)
                 .OrderByDescending(m => m.DateEmission)
                 .ToListAsync();
         }
@@ -119,32 +125,59 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<(bool Success, string Message)> ValiderMandatAsync(int idMandat)
         {
-            if (!SessionManager.HasPermission("Valider.validate"))
-                return (false, "Vous n'avez pas la permission de valider ce mandat.");
+            try
+            {
+                if (!SessionManager.HasPermission("Valider.validate"))
+                    return (false, "Vous n'avez pas la permission de valider ce mandat.");
 
-            using var context = new AppDbContext();
+                using var context = new AppDbContext();
 
-            var mandat = await context.Mandats
-                .Include(m => m.Engagement)
-                .FirstOrDefaultAsync(m => m.Id == idMandat);
+                var mandat = await context.Mandats
+                    .Include(m => m.Engagement)
+                        .ThenInclude(e => e.BudgetLine)
+                    .FirstOrDefaultAsync(m => m.Id == idMandat);
 
-            if (mandat == null)
-                return (false, "Mandat introuvable.");
+                if (mandat == null)
+                    return (false, "Mandat introuvable.");
 
-            if (mandat.Etat == Mandat.EtatMandat.Validé)
-                return (false, "Ce mandat est déjà validé.");
+                if (mandat.Etat == Mandat.EtatMandat.Validé)
+                    return (false, "Ce mandat est déjà validé.");
 
-            // Vérifier que l'engagement est validé
-            if (mandat.Engagement?.Etat != Engagement.EtatEngagement.Validé)
-                return (false, "L'engagement associé doit être validé avant de valider ce mandat.");
+                // Vérifier que l'engagement est validé
+                if (mandat.Engagement?.Etat != Engagement.EtatEngagement.Validé)
+                    return (false, "L'engagement associé doit être validé avant de valider ce mandat.");
 
-            // Valider le mandat
-            mandat.Etat = Mandat.EtatMandat.Validé;
+                // 1️⃣ Valider le mandat
+                mandat.Etat = Mandat.EtatMandat.Validé;
+                await context.SaveChangesAsync(); // ← tu voulais garder ça 👍
 
-            await context.SaveChangesAsync();
+                // 2️⃣ Mettre à jour la ligne budgétaire + recalcul hiérarchique
+                if (mandat.Engagement.BudgetLine != null)
+                {
+                    mandat.Engagement.BudgetLine.MontantRealise += mandat.MontantNet;
 
-            return (true, $"Mandat validé avec succès.");
+                    await OrdreRecetteService.RecalculateRealisation(
+                        context,
+                        mandat.Engagement.BudgetLine.NommenclatureId,
+                        mandat.Engagement.BudgetLine.BudgetPrimitifId
+                    );
+
+                    await context.SaveChangesAsync(); // 🔥 indispensable
+                }
+
+                return (true, "Mandat validé avec succès.");
+            }
+            catch (DbUpdateException dbEx)
+            {
+                var inner = dbEx.InnerException?.Message ?? dbEx.Message;
+                return (false, $"Erreur de base de données : {inner}");
+            }
+            catch (Exception ex)
+            {
+                return (false, $"Erreur : {ex.Message}");
+            }
         }
+
 
         /// <summary>
         /// Rejette un mandat
@@ -177,14 +210,20 @@ namespace Collectivite.Services
         public async Task<List<OrdreRecette>> GetOrdresRecetteNonValidesAsync()
         {
             using var context = new AppDbContext();
-            
+            var exerciceService = ExerciceService.Instance;
+
+            if (exerciceService.CurrentExercice == null)
+            {
+                return new List<OrdreRecette>();
+            }
+
             return await context.OrdreRecettes
                 .Include(o => o.Exercice)
                 .Include(o => o.Commune)
                 .Include(o => o.BudgetLine)
                     .ThenInclude(bl => bl.Nommenclature)
                 .Include(o => o.Tiers)
-                .Where(o => o.Etat == OrdreRecette.EtatOdre.Non_Validé)
+                .Where(o => o.Etat == OrdreRecette.EtatOdre.Non_Validé && o.ExerciceId == exerciceService.CurrentExercice.Id)
                 .OrderByDescending(o => o.DateOrdre)
                 .ToListAsync();
         }
@@ -194,34 +233,54 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<(bool Success, string Message)> ValiderOrdreRecetteAsync(int idOrdreRecette)
         {
-            if (!SessionManager.HasPermission("Valider.validate"))
-                return (false, "Vous n'avez pas la permission de valider cet ordre de recette.");
-
-            using var context = new AppDbContext();
-
-            var ordreRecette = await context.OrdreRecettes
-                .Include(o => o.BudgetLine)
-                .FirstOrDefaultAsync(o => o.Id == idOrdreRecette);
-
-            if (ordreRecette == null)
-                return (false, "Ordre de recette introuvable.");
-
-            if (ordreRecette.Etat == OrdreRecette.EtatOdre.Validé)
-                return (false, "Cet ordre de recette est déjà validé.");
-
-            // Valider l'ordre de recette
-            ordreRecette.Etat = OrdreRecette.EtatOdre.Validé;
-
-            // Mettre à jour le MontantRealise du BudgetLine
-            if (ordreRecette.BudgetLine != null)
+            try
             {
-                ordreRecette.BudgetLine.MontantRealise += ordreRecette.MontantOrdre;
+                if (!SessionManager.HasPermission("Valider.validate"))
+                    return (false, "Vous n'avez pas la permission de valider cet ordre de recette.");
+
+                using var context = new AppDbContext();
+
+                var ordreRecette = await context.OrdreRecettes
+                    .Include(o => o.BudgetLine)
+                    .FirstOrDefaultAsync(o => o.Id == idOrdreRecette);
+
+                if (ordreRecette == null)
+                    return (false, "Ordre de recette introuvable.");
+
+                if (ordreRecette.Etat == OrdreRecette.EtatOdre.Validé)
+                    return (false, "Cet ordre de recette est déjà validé.");
+
+                // 1️⃣ Valider l'ordre de recette
+                ordreRecette.Etat = OrdreRecette.EtatOdre.Validé;
+                await context.SaveChangesAsync(); // ← même logique que Mandat ✔️
+
+                // 2️⃣ Mise à jour budgétaire + recalcul hiérarchique
+                if (ordreRecette.BudgetLine != null)
+                {
+                    ordreRecette.BudgetLine.MontantRealise += ordreRecette.MontantOrdre;
+
+                    await OrdreRecetteService.RecalculateRealisation(
+                        context,
+                        ordreRecette.BudgetLine.NommenclatureId,
+                        ordreRecette.BudgetLine.BudgetPrimitifId
+                    );
+
+                    await context.SaveChangesAsync(); // 🔥 indispensable
+                }
+
+                return (true, "Ordre de recette validé avec succès.");
             }
-
-            await context.SaveChangesAsync();
-
-            return (true, $"Ordre de recette validé avec succès.");
+            catch (DbUpdateException dbEx)
+            {
+                var inner = dbEx.InnerException?.Message ?? dbEx.Message;
+                return (false, $"Erreur de base de données : {inner}");
+            }
+            catch (Exception ex)
+            {
+                return (false, $"Erreur : {ex.Message}");
+            }
         }
+
 
         /// <summary>
         /// Rejette un ordre de recette

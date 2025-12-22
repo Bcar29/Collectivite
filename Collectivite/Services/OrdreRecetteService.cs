@@ -271,10 +271,10 @@ namespace Collectivite.Services
 
                 // Vérifier si la nomenclature existe dans la table CompteComptable
                 var compteComptableExists = await context.CompteComptables
-                    .AnyAsync(cc => cc.NumeroCompte == budgetLine.CodeNomenclature);
+                    .FirstOrDefaultAsync(cc => cc.NumeroCompte == budgetLine.CodeNomenclature);
 
-                if (!compteComptableExists)
-                    return (false, $"La nomenclature '{budgetLine.CodeNomenclature}' de la ligne budgétaire n'a pas de ContrePartie dans les Comptes Comptables.", null);
+                if (compteComptableExists == null || compteComptableExists.ContrePartieId == null)
+                    return (false, $"Veuillez configurer '{budgetLine.CodeNomenclature}' dans le plan comptable.", null);
 
                 // Vérifier l'unicité du numéro d'ordre
                 if (string.IsNullOrWhiteSpace(ordreRecette.MontantOrdreLettre))
@@ -311,25 +311,6 @@ namespace Collectivite.Services
 
                 context.OrdreRecettes.Add(newOrdre);
                 await context.SaveChangesAsync();
-
-
-                // --- Mise à jour du montant réalisé ---
-                var bl = await context.BudgetLines
-                    .FirstOrDefaultAsync(b => b.Id == newOrdre.BudgetLineId);
-
-                if (bl != null)
-                {
-                    bl.MontantRealise += newOrdre.MontantOrdre;
-                    await context.SaveChangesAsync();
-
-                    // 🔥 recalcul hiérarchique
-                    using var ctx = CreateContext();
-                    await RecalculateRealisation(
-                        ctx,
-                        bl.NommenclatureId,
-                        bl.BudgetPrimitifId
-                    );
-                }
 
 
                 // --- Recharger avec ses relations ---
@@ -414,6 +395,51 @@ namespace Collectivite.Services
 
                 if (parentLine != null)
                     parentLine.MontantRealise = sommeEnfants;
+
+                // Monter au parent suivant
+                parentId = allNodes
+                    .FirstOrDefault(n => n.Id == parentId.Value)?
+                    .ParentId;
+            }
+
+            await context.SaveChangesAsync();
+        }
+        public static  async Task RecalculateEntreSortie(AppDbContext context, int childNomenclatureId, int budgetPrimitifId)
+        {
+            
+            // Charger toute la hiérarchie une seule fois
+            var allNodes = await context.Nommenclatures.ToListAsync();
+
+            // Charger toutes les lignes budget pour éviter les requêtes répétées
+            var allBudgetLines = await context.BudgetLines
+                .Where(b => b.BudgetPrimitifId == budgetPrimitifId)
+                .ToListAsync();
+
+            // Trouver le point de départ
+            var child = allNodes.FirstOrDefault(n => n.Id == childNomenclatureId);
+            if (child == null) return;
+
+            var parentId = child.ParentId;
+
+            while (parentId.HasValue)
+            {
+                // Récupérer les enfants directs du parent
+                var childrenIds = allNodes
+                    .Where(n => n.ParentId == parentId.Value)
+                    .Select(n => n.Id)
+                    .ToList();
+
+                // SOMME des montants entres sorties des enfants
+                var sommeEnfants = allBudgetLines
+                    .Where(b => childrenIds.Contains(b.NommenclatureId))
+                    .Sum(b => b.MontantEntreSortie);
+
+                // Trouver la ligne budget du parent
+                var parentLine = allBudgetLines
+                    .FirstOrDefault(b => b.NommenclatureId == parentId.Value);
+
+                if (parentLine != null)
+                    parentLine.MontantEntreSortie = sommeEnfants;
 
                 // Monter au parent suivant
                 parentId = allNodes

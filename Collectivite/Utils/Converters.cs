@@ -539,32 +539,16 @@ namespace Collectivite.Utils
 
     }
 
-    public class ResponsiveCardWidthConverter : IMultiValueConverter
+    public class BooleanAndToVisibilityConverter : IMultiValueConverter
     {
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
         {
-            if (values[0] == DependencyProperty.UnsetValue || values[1] == DependencyProperty.UnsetValue)
-                return 300.0;
+            if (values.Length != 2) return Visibility.Collapsed;
 
-            // Conversion sécurisée pour containerWidth
-            if (!double.TryParse(values[0].ToString(), out double containerWidth))
-                return 300.0;
+            bool hasChildren = values[0] is bool b1 && b1;
+            bool isNotTotalRow = values[1] is bool b2 && b2;
 
-            // Conversion sécurisée pour minWidth
-            if (!double.TryParse(values[1].ToString(), out double minWidth))
-                minWidth = 300.0;
-
-            double margin = 20; // 10px de chaque côté
-
-            // Calculer combien de cartes peuvent tenir sur une ligne
-            int cardsPerRow = Math.Max(1, (int)Math.Floor(containerWidth / (minWidth + margin)));
-
-            // Calculer la largeur optimale pour remplir l'espace
-            double availableWidth = containerWidth - (margin * cardsPerRow);
-            double cardWidth = availableWidth / cardsPerRow;
-
-            // S'assurer de respecter la largeur minimale
-            return Math.Max(cardWidth, minWidth);
+            return hasChildren && isNotTotalRow ? Visibility.Visible : Visibility.Collapsed;
         }
 
         public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
@@ -572,6 +556,5 @@ namespace Collectivite.Utils
             throw new NotImplementedException();
         }
     }
-
 
 }
