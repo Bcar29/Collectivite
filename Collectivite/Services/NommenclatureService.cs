@@ -194,7 +194,7 @@ namespace Collectivite.Services
             var query = _context.Nommenclatures
                 .Include(n => n.Enfants)
                 .Include(n => n.Parent)
-                .Where(n => n.Enfants == null || n.Enfants.Count == 0);
+                .Where(n => n.Enfants == null || n.Enfants.Count == 0 );
 
             // Appliquer le filtre Nature si spécifié
             if (nature.HasValue)

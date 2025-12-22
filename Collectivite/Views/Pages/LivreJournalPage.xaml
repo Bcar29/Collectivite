@@ -251,10 +251,10 @@
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel>
-                                    <TextBlock FontSize="13">
+                                    <TextBlock FontSize="13" TextAlignment="Center" FontWeight="Bold">
                                         <Run Text="{Binding CompteDebit.IntituleCompte}" />
                                     </TextBlock>
-                                    <TextBlock FontSize="13" Margin="0,10,0,0">
+                                    <TextBlock FontSize="13" Margin="0,10,0,0" TextAlignment="Center" FontWeight="Bold">
                                         <Run Text="{Binding CompteCredit.IntituleCompte}" />
                                     </TextBlock>
                                 </StackPanel>
@@ -297,6 +297,7 @@
                     <DataGridTextColumn Header="Date" 
                                         Binding="{Binding DateEcriture, StringFormat='dd/MM/yyyy'}" 
                                         Width="110"
+                                        FontWeight="Bold"
                                         HeaderStyle="{StaticResource DataGridHeaderStyle}"
                                         CellStyle="{StaticResource DataGridCellCenterStyle}"/>
 

@@ -26,8 +26,8 @@
       OVERLAY DE CHARGEMENT
       ═══════════════════════════════════════════════════════════ -->
         <Grid Background="#80000000" 
-       Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"
-       Panel.ZIndex="999" Grid.ColumnSpan="2">
+            Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"
+            Panel.ZIndex="999" Grid.ColumnSpan="2">
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                 <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}"
                     Value="0"

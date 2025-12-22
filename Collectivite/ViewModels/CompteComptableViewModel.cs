@@ -42,7 +42,6 @@ namespace Collectivite.ViewModels
 
             // Commandes existantes
             LoadCompteCommand = new RelayCommand(async _ => await LoadCompteAsync());
-            LoadComptesRacinesCommand = new RelayCommand(async _ => await LoadComptesRacinesAsync());
             LoadSousComptesCommand = new RelayCommand<int?>(async parentId => await LoadSousComptesAsync(parentId));
             OppenAddCompteCommand = new RelayCommand(_ => OpenAddCompte());
             OppenEditCompteCommand = new RelayCommand<CompteComptable>(compte => OpenEditCompte(compte));
@@ -166,7 +165,7 @@ namespace Collectivite.ViewModels
 
         #region Commands
         public ICommand LoadCompteCommand { get; }
-        public ICommand LoadComptesRacinesCommand { get; }
+        //public ICommand LoadComptesRacinesCommand { get; }
         public ICommand LoadSousComptesCommand { get; }
         public ICommand OppenAddCompteCommand { get; }
         public ICommand OppenEditCompteCommand { get; }
@@ -217,41 +216,6 @@ namespace Collectivite.ViewModels
             }
         }
 
-        // Charger uniquement les comptes racines (sans parent)
-        public async System.Threading.Tasks.Task LoadComptesRacinesAsync()
-        {
-            if (!CanViewCompteComptable)
-            {
-                MessageBox.Show(
-                    "Accès refusé : vous n'avez pas la permission de consulter les comptes comptables.",
-                    "Accès refusé",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
-
-                CompteComptables.Clear();
-                return;
-            }
-
-            IsLoading = true;
-            try
-            {
-                var comptes = await _compteService.GetComptesRacinesAsync();
-                CompteComptables.Clear();
-                foreach (var compte in comptes)
-                {
-                    CompteComptables.Add(compte);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Erreur lors du chargement des comptes racines : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-            finally
-            {
-                IsLoading = false;
-            }
-        }
 
         // Charger les sous-comptes d'un compte parent
         public async System.Threading.Tasks.Task LoadSousComptesAsync(int? parentId)
@@ -297,16 +261,16 @@ namespace Collectivite.ViewModels
         {
             try
             {
-                var comptes = await _compteService.GetCompteComptablesAsync();
+                var comptes = await _compteService.GetContrePartie();
                 ComptesParentDisponibles.Clear();
 
                 // Ajouter une option "Aucun parent" (compte racine)
-                ComptesParentDisponibles.Add(new CompteComptable
-                {
-                    Id = 0,
-                    NumeroCompte = "",
-                    IntituleCompte = "-- Aucun parent (Compte racine) --"
-                });
+                //ComptesParentDisponibles.Add(new CompteComptable
+                //{
+                //    Id = 0,
+                //    NumeroCompte = "",
+                //    IntituleCompte = "-- Aucun parent (Compte racine) --"
+                //});
 
                 foreach (var compte in comptes)
                 {
@@ -392,14 +356,21 @@ namespace Collectivite.ViewModels
                 ContrePartieId = null
             };
 
-            // Réinitialiser les sélections
-            IsNommenclatureMode = true;
-            NommenclatureSelectionnee = null;
-            NatureSelectionnee = NatureType.Recette;
-            SectionSelectionnee = SectionType.Fonctionnement;
+            // Réinitialiser les sélections SANS déclencher les événements
+            _isNommenclatureMode = true;
+            _nomenclatureSelectionnee = null;
+            _natureSelectionnee = NatureType.Recette;
+            _sectionSelectionnee = SectionType.Fonctionnement;
 
+            // Notifier APRÈS avoir tout défini
+            OnPropertyChanged(nameof(IsNommenclatureMode));
+            OnPropertyChanged(nameof(NommenclatureSelectionnee));
+            OnPropertyChanged(nameof(NatureSelectionnee));
+            OnPropertyChanged(nameof(SectionSelectionnee));
+
+            // Charger les données de manière séquentielle
             await LoadComptesForParentSelectionAsync();
-            LoadNomenclaturesCommand.Execute(null);
+            await LoadNomenclaturesAsync(); // Au lieu d'utiliser Execute
 
             OnPropertyChanged(nameof(DialogCompte));
             IsDialogOpen = true;
