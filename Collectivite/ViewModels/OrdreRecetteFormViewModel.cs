@@ -116,7 +116,10 @@ namespace Collectivite.ViewModels
                 BudgetLines.Clear();
                 foreach (var bl in budgetLines)
                 {
-                    BudgetLines.Add(bl);
+                    if (bl.Nommenclature.Article != "110")
+                    {
+                        BudgetLines.Add(bl);
+                    }
                 }
 
                 // Charger les exercices

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Collectivite.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251218111505_initial")]
-    partial class initial
+    [Migration("20251222180350_MontantIntToDecimalInRemaniement")]
+    partial class MontantIntToDecimalInRemaniement
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -1155,8 +1155,8 @@ namespace Collectivite.Migrations
                     b.Property<int>("IdBudgetLine")
                         .HasColumnType("int");
 
-                    b.Property<double>("Montant")
-                        .HasColumnType("double");
+                    b.Property<decimal>("Montant")
+                        .HasColumnType("decimal(65,30)");
 
                     b.Property<string>("Motif")
                         .IsRequired()
@@ -1312,7 +1312,7 @@ namespace Collectivite.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("CommuneId")
+                    b.Property<int?>("CommuneId")
                         .HasColumnType("int");
 
                     b.Property<string>("Email")
@@ -1787,8 +1787,7 @@ namespace Collectivite.Migrations
                     b.HasOne("Collectivite.Models.Commune", "Commune")
                         .WithMany("Users")
                         .HasForeignKey("CommuneId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Collectivite.Models.Role", "Role")
                         .WithMany("Users")

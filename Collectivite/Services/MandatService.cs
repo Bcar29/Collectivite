@@ -309,12 +309,10 @@ namespace Collectivite.Services
 
                 // 👉 Vérification du compte comptable AVANT de créer le mandat
                 var compteComptableExists = await context.CompteComptables
-                    .AnyAsync(cc => cc.NumeroCompte == budgetLine.CodeNomenclature);
+                    .FirstOrDefaultAsync(cc => cc.NumeroCompte == budgetLine.CodeNomenclature);
 
-                if (!compteComptableExists)
-                    return (false,
-                        $"La nomenclature '{budgetLine.CodeNomenclature}' de la ligne budgétaire n'a pas de correspondance dans les Comptes Comptables.",
-                        null);
+                if (compteComptableExists == null || compteComptableExists.ContrePartieId == null)
+                    return (false, $"Veuillez configurer '{budgetLine.CodeNomenclature}' dans le plan comptable.", null);
 
 
                 // ----------------------------
@@ -341,26 +339,6 @@ namespace Collectivite.Services
 
                 context.Mandats.Add(newMandat);
                 await context.SaveChangesAsync();
-
-
-                // --------------------------------------
-                // 6️⃣ MISE À JOUR DU MONTANT ACTU
-                // --------------------------------------
-                var bl = await context.Engagements
-                    .Where(e => e.Id == newMandat.EngagementId)
-                    .Select(e => e.BudgetLine)
-                    .FirstOrDefaultAsync();
-
-                if (bl != null)
-                {
-                    bl.MontantActu -= newMandat.MontantNet;
-                    await context.SaveChangesAsync();
-
-                    // 🔥 Recalcul hiérarchique
-                    using var ctx = CreateContext();
-                    await OrdreRecetteService.RecalculateRealisation(ctx, bl.NommenclatureId, bl.BudgetPrimitifId);
-                }
-
 
                 // -------------------------------
                 // 7️⃣ RECHARGER LE MANDAT COMPLET

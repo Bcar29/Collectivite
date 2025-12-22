@@ -40,7 +40,7 @@ namespace Collectivite.Models
         /// Montant prévu initialement dans le budget
         /// </summary>
         [Required(ErrorMessage = "Le montant prévu est obligatoire")]
-        public required decimal MontantPrevu { get; set; }
+        public  decimal MontantPrevu { get; set; }
 
         /// <summary>
         /// Montant actuel (peut être modifié par les remaniements)
@@ -93,6 +93,10 @@ namespace Collectivite.Models
                     .Sum(r => (decimal)r.Montant);
 
                 return MontantPrevu + remaniementPlus - remaniementMoins;
+            }
+            set
+            {
+                // Setter vide pour permettre l'affectation si nécessaire
             }
         }
 
@@ -166,6 +170,10 @@ namespace Collectivite.Models
                     return (MontantRealise/MontantDefinitif)*100;
                 return 0;
             }
+            set
+            {
+                // Setter vide pour permettre l'affectation si nécessaire
+            }
         }
 
         [NotMapped]
@@ -177,6 +185,10 @@ namespace Collectivite.Models
                     return (MontantEntreSortie/MontantRealise)*100;
                 return 0;
             }
+            set
+            {
+                // Setter vide pour permettre l'affectation si nécessaire
+            }
         }
 
         [NotMapped]
@@ -186,6 +198,10 @@ namespace Collectivite.Models
             {
                 return MontantDefinitif - MontantRealise;
             }
+            set
+            {
+                // Setter vide pour permettre l'affectation si nécessaire
+            }
         }
         [NotMapped]
         public decimal ResteEntreSortie
@@ -193,6 +209,10 @@ namespace Collectivite.Models
             get
             {
                 return  MontantRealise - MontantEntreSortie;
+            }
+            set
+            {
+                // Setter vide pour permettre l'affectation si nécessaire
             }
         }
         [NotMapped]
@@ -234,7 +254,7 @@ namespace Collectivite.Models
         /// </summary>
         public void UpdateMontantActu()
         {
-            MontantActu = (int)MontantDefinitif;
+            MontantActu = MontantDefinitif;
         }
 
         /// <summary>

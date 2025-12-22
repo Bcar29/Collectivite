@@ -25,7 +25,7 @@ namespace Collectivite.ViewModels
     /// <summary>
     /// ViewModel pour affichage hiérarchique des lignes budgétaires
     /// </summary>
-    public class BudgetLineHierarchyViewModel : INotifyPropertyChanged
+    public class BudgetLineHierarchyViewModel : ViewModelBase
     {
         private bool _isExpanded;
         private bool _isVisible = true;
@@ -38,7 +38,7 @@ namespace Collectivite.ViewModels
         /// Niveau hiérarchique (0=Chapitre, 1=Article, 2=Paragraphe, 3=SousParagraphe)
         /// </summary>
         public int Level { get; set; }
-
+ 
         /// <summary>
         /// Indique si l'élément est plié ou déplié
         /// </summary>
@@ -169,6 +169,31 @@ namespace Collectivite.ViewModels
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
+        // 🆕 Propriété pour identifier une ligne de totaux
+        private bool _isTotalRow;
+        public bool IsTotalRow
+        {
+            get => _isTotalRow;
+            set => SetProperty(ref _isTotalRow, value);
+        }
+
+        // 🆕 Niveau de la ligne de totaux (0 = total simple, 1 = sous-total, 2 = total général)
+        private int _totalRowLevel;
+        public int TotalRowLevel
+        {
+            get => _totalRowLevel;
+            set => SetProperty(ref _totalRowLevel, value);
+        }
+
+        // 🆕 Couleur de fond selon le niveau de total
+        public string TotalRowBackground => TotalRowLevel switch
+        {
+            0 => "#FFF9C4", // Jaune clair - Total simple
+            1 => "#FFE082", // Jaune moyen - Sous-total
+            2 => "#FFD54F", // Jaune foncé - Total général
+            _ => "#FFFFFF"
+        };
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -323,6 +348,245 @@ namespace Collectivite.ViewModels
             set => SetProperty(ref _montantPrevu, value);
         }
 
+        // ═══════════════════════════════════════════════════════════
+        // PROPRIÉTÉS - TOTAUX COMPTE ADMINISTRATIF
+        // ═══════════════════════════════════════════════════════════
+
+        // Recette Fonctionnement
+        private decimal _totalRecetteFonctionnementDefinitif;
+        public decimal TotalRecetteFonctionnementDefinitif
+        {
+            get => _totalRecetteFonctionnementDefinitif;
+            set => SetProperty(ref _totalRecetteFonctionnementDefinitif, value);
+        }
+
+        private decimal _totalRecetteFonctionnementRealise;
+        public decimal TotalRecetteFonctionnementRealise
+        {
+            get => _totalRecetteFonctionnementRealise;
+            set => SetProperty(ref _totalRecetteFonctionnementRealise, value);
+        }
+
+        private decimal _totalRecetteFonctionnementTauxRealisation;
+        public decimal TotalRecetteFonctionnementTauxRealisation
+        {
+            get => _totalRecetteFonctionnementTauxRealisation;
+            set => SetProperty(ref _totalRecetteFonctionnementTauxRealisation, value);
+        }
+
+        private decimal _totalRecetteFonctionnementResteRealise;
+        public decimal TotalRecetteFonctionnementResteRealise
+        {
+            get => _totalRecetteFonctionnementResteRealise;
+            set => SetProperty(ref _totalRecetteFonctionnementResteRealise, value);
+        }
+
+        // Recette Investissement
+        private decimal _totalRecetteInvestissementDefinitif;
+        public decimal TotalRecetteInvestissementDefinitif
+        {
+            get => _totalRecetteInvestissementDefinitif;
+            set => SetProperty(ref _totalRecetteInvestissementDefinitif, value);
+        }
+
+        private decimal _totalRecetteInvestissementRealise;
+        public decimal TotalRecetteInvestissementRealise
+        {
+            get => _totalRecetteInvestissementRealise;
+            set => SetProperty(ref _totalRecetteInvestissementRealise, value);
+        }
+
+        private decimal _totalRecetteInvestissementTauxRealisation;
+        public decimal TotalRecetteInvestissementTauxRealisation
+        {
+            get => _totalRecetteInvestissementTauxRealisation;
+            set => SetProperty(ref _totalRecetteInvestissementTauxRealisation, value);
+        }
+
+        private decimal _totalRecetteInvestissementResteRealise;
+        public decimal TotalRecetteInvestissementResteRealise
+        {
+            get => _totalRecetteInvestissementResteRealise;
+            set => SetProperty(ref _totalRecetteInvestissementResteRealise, value);
+        }
+
+        // Dépense Fonctionnement
+        private decimal _totalDepenseFonctionnementDefinitif;
+        public decimal TotalDepenseFonctionnementDefinitif
+        {
+            get => _totalDepenseFonctionnementDefinitif;
+            set => SetProperty(ref _totalDepenseFonctionnementDefinitif, value);
+        }
+
+        private decimal _totalDepenseFonctionnementRealise;
+        public decimal TotalDepenseFonctionnementRealise
+        {
+            get => _totalDepenseFonctionnementRealise;
+            set => SetProperty(ref _totalDepenseFonctionnementRealise, value);
+        }
+
+        private decimal _totalDepenseFonctionnementTauxRealisation;
+        public decimal TotalDepenseFonctionnementTauxRealisation
+        {
+            get => _totalDepenseFonctionnementTauxRealisation;
+            set => SetProperty(ref _totalDepenseFonctionnementTauxRealisation, value);
+        }
+
+        private decimal _totalDepenseFonctionnementResteRealise;
+        public decimal TotalDepenseFonctionnementResteRealise
+        {
+            get => _totalDepenseFonctionnementResteRealise;
+            set => SetProperty(ref _totalDepenseFonctionnementResteRealise, value);
+        }
+
+        // Dépense Investissement
+        private decimal _totalDepenseInvestissementDefinitif;
+        public decimal TotalDepenseInvestissementDefinitif
+        {
+            get => _totalDepenseInvestissementDefinitif;
+            set => SetProperty(ref _totalDepenseInvestissementDefinitif, value);
+        }
+
+        private decimal _totalDepenseInvestissementRealise;
+        public decimal TotalDepenseInvestissementRealise
+        {
+            get => _totalDepenseInvestissementRealise;
+            set => SetProperty(ref _totalDepenseInvestissementRealise, value);
+        }
+
+        private decimal _totalDepenseInvestissementTauxRealisation;
+        public decimal TotalDepenseInvestissementTauxRealisation
+        {
+            get => _totalDepenseInvestissementTauxRealisation;
+            set => SetProperty(ref _totalDepenseInvestissementTauxRealisation, value);
+        }
+
+        private decimal _totalDepenseInvestissementResteRealise;
+        public decimal TotalDepenseInvestissementResteRealise
+        {
+            get => _totalDepenseInvestissementResteRealise;
+            set => SetProperty(ref _totalDepenseInvestissementResteRealise, value);
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // PROPRIÉTÉS - TOTAUX COMPTE DE GESTION
+        // ═══════════════════════════════════════════════════════════
+
+        // Recette Fonctionnement - Gestion
+        private decimal _totalRecetteFonctionnementEmis;
+        public decimal TotalRecetteFonctionnementEmis
+        {
+            get => _totalRecetteFonctionnementEmis;
+            set => SetProperty(ref _totalRecetteFonctionnementEmis, value);
+        }
+
+        private decimal _totalRecetteFonctionnementRecouvre;
+        public decimal TotalRecetteFonctionnementRecouvre
+        {
+            get => _totalRecetteFonctionnementRecouvre;
+            set => SetProperty(ref _totalRecetteFonctionnementRecouvre, value);
+        }
+
+        private decimal _totalRecetteFonctionnementTauxRecouvrement;
+        public decimal TotalRecetteFonctionnementTauxRecouvrement
+        {
+            get => _totalRecetteFonctionnementTauxRecouvrement;
+            set => SetProperty(ref _totalRecetteFonctionnementTauxRecouvrement, value);
+        }
+
+        private decimal _totalRecetteFonctionnementResteRecouvre;
+        public decimal TotalRecetteFonctionnementResteRecouvre
+        {
+            get => _totalRecetteFonctionnementResteRecouvre;
+            set => SetProperty(ref _totalRecetteFonctionnementResteRecouvre, value);
+        }
+
+        // Recette Investissement - Gestion
+        private decimal _totalRecetteInvestissementEmis;
+        public decimal TotalRecetteInvestissementEmis
+        {
+            get => _totalRecetteInvestissementEmis;
+            set => SetProperty(ref _totalRecetteInvestissementEmis, value);
+        }
+
+        private decimal _totalRecetteInvestissementRecouvre;
+        public decimal TotalRecetteInvestissementRecouvre
+        {
+            get => _totalRecetteInvestissementRecouvre;
+            set => SetProperty(ref _totalRecetteInvestissementRecouvre, value);
+        }
+
+        private decimal _totalRecetteInvestissementTauxRecouvrement;
+        public decimal TotalRecetteInvestissementTauxRecouvrement
+        {
+            get => _totalRecetteInvestissementTauxRecouvrement;
+            set => SetProperty(ref _totalRecetteInvestissementTauxRecouvrement, value);
+        }
+
+        private decimal _totalRecetteInvestissementResteRecouvre;
+        public decimal TotalRecetteInvestissementResteRecouvre
+        {
+            get => _totalRecetteInvestissementResteRecouvre;
+            set => SetProperty(ref _totalRecetteInvestissementResteRecouvre, value);
+        }
+
+        // Dépense Fonctionnement - Gestion
+        private decimal _totalDepenseFonctionnementEmis;
+        public decimal TotalDepenseFonctionnementEmis
+        {
+            get => _totalDepenseFonctionnementEmis;
+            set => SetProperty(ref _totalDepenseFonctionnementEmis, value);
+        }
+
+        private decimal _totalDepenseFonctionnementPaye;
+        public decimal TotalDepenseFonctionnementPaye
+        {
+            get => _totalDepenseFonctionnementPaye;
+            set => SetProperty(ref _totalDepenseFonctionnementPaye, value);
+        }
+
+        private decimal _totalDepenseFonctionnementTauxPaiement;
+        public decimal TotalDepenseFonctionnementTauxPaiement
+        {
+            get => _totalDepenseFonctionnementTauxPaiement;
+            set => SetProperty(ref _totalDepenseFonctionnementTauxPaiement, value);
+        }
+
+        private decimal _totalDepenseFonctionnementRestePaye;
+        public decimal TotalDepenseFonctionnementRestePaye
+        {
+            get => _totalDepenseFonctionnementRestePaye;
+            set => SetProperty(ref _totalDepenseFonctionnementRestePaye, value);
+        }
+
+        // Dépense Investissement - Gestion
+        private decimal _totalDepenseInvestissementEmis;
+        public decimal TotalDepenseInvestissementEmis
+        {
+            get => _totalDepenseInvestissementEmis;
+            set => SetProperty(ref _totalDepenseInvestissementEmis, value);
+        }
+
+        private decimal _totalDepenseInvestissementPaye;
+        public decimal TotalDepenseInvestissementPaye
+        {
+            get => _totalDepenseInvestissementPaye;
+            set => SetProperty(ref _totalDepenseInvestissementPaye, value);
+        }
+
+        private decimal _totalDepenseInvestissementTauxPaiement;
+        public decimal TotalDepenseInvestissementTauxPaiement
+        {
+            get => _totalDepenseInvestissementTauxPaiement;
+            set => SetProperty(ref _totalDepenseInvestissementTauxPaiement, value);
+        }
+
+        private decimal _totalDepenseInvestissementRestePaye;
+        public decimal TotalDepenseInvestissementRestePaye
+        {
+            get => _totalDepenseInvestissementRestePaye;
+            set => SetProperty(ref _totalDepenseInvestissementRestePaye, value);
+        }
         public string NomenclatureLibelle => _currentLine?.Nommenclature?.Intitule ?? "N/A";
         #endregion
         // ═══════════════════════════════════════════════════════════
@@ -387,6 +651,9 @@ namespace Collectivite.ViewModels
 
             item.ToggleExpanded();
             RefreshDisplayedLines();
+            // Rajouter la ligne de totaux
+            AddTotalRowToDisplayedLines();
+
         }
 
         // ═══════════════════════════════════════════════════════════
@@ -485,8 +752,233 @@ namespace Collectivite.ViewModels
             {
                 DisplayedLines.Add(item);
             }
+
+            // 🆕 Ajouter la ligne de totaux selon l'onglet sélectionné
+            //AddTotalRowToDisplayedLines();
         }
 
+        private void AddTotalRowToDisplayedLines()
+        {
+            if (DisplayedLines.Count == 0) return;
+
+            var totalRows = new List<BudgetLineHierarchyViewModel>();
+
+            switch (SelectedTabIndex)
+            {
+                case 0: // Recette - Fonctionnement
+                    {
+                        var totalBudgetLine = new BudgetLine
+                        {
+                            Nommenclature = new Nommenclature
+                            {
+                                Chapitre = "TOTAL",
+                                Intitule = "Total Recettes de Fonctionnement"
+                            },
+                            MontantPrevu = TotalRecetteFonctionnement,
+                            MontantDefinitif = TotalRecetteFonctionnementDefinitif,
+                            MontantRealise = TotalRecetteFonctionnementRealise,
+                            TauxRealisation = TotalRecetteFonctionnementTauxRealisation,
+                            ResteRealise = TotalRecetteFonctionnementResteRealise,
+                            MontantEntreSortie = TotalRecetteFonctionnementRecouvre,
+                            TauxEntreSortie = TotalRecetteFonctionnementTauxRecouvrement,
+                            ResteEntreSortie = TotalRecetteFonctionnementResteRecouvre
+                        };
+
+                        totalRows.Add(new BudgetLineHierarchyViewModel(totalBudgetLine, 0)
+                        {
+                            IsTotalRow = true,
+                            TotalRowLevel = 0 // Total simple
+                        });
+                    }
+                    break;
+
+                case 1: // Recette - Investissement
+                    {
+                        // LIGNE 1 : Total Recette Investissement
+                        var totalRecetteInvest = new BudgetLine
+                        {
+                            Nommenclature = new Nommenclature
+                            {
+                                Chapitre = "",
+                                Intitule = "Total Recettes d'Investissement"
+                            },
+                            MontantPrevu = TotalRecetteInvestissement,
+                            MontantDefinitif = TotalRecetteInvestissementDefinitif,
+                            MontantRealise = TotalRecetteInvestissementRealise,
+                            TauxRealisation = TotalRecetteInvestissementTauxRealisation,
+                            ResteRealise = TotalRecetteInvestissementResteRealise,
+                            MontantEntreSortie = TotalRecetteInvestissementRecouvre,
+                            TauxEntreSortie = TotalRecetteInvestissementTauxRecouvrement,
+                            ResteEntreSortie = TotalRecetteInvestissementResteRecouvre
+                        };
+
+                        totalRows.Add(new BudgetLineHierarchyViewModel(totalRecetteInvest, 0)
+                        {
+                            IsTotalRow = true,
+                            TotalRowLevel = 0 // Total simple
+                        });
+
+                        // LIGNE 2 : Total Recette Réels Investissement
+                        var totalRecetteReelsInvest = new BudgetLine
+                        {
+                            Nommenclature = new Nommenclature
+                            {
+                                Chapitre = "",
+                                Intitule = "Total Recettes Réels d'Investissement"
+                            },
+                            MontantPrevu = TotalRecetteReelsInvestissement,
+                            MontantDefinitif = TotalRecetteReelsInvestissement,
+                            MontantRealise = 0,
+                            TauxRealisation = 0,
+                            ResteRealise = 0,
+                            MontantEntreSortie = 0,
+                            TauxEntreSortie = 0,
+                            ResteEntreSortie = 0
+                        };
+
+                        totalRows.Add(new BudgetLineHierarchyViewModel(totalRecetteReelsInvest, 0)
+                        {
+                            IsTotalRow = true,
+                            TotalRowLevel = 1 // Sous-total
+                        });
+
+                        // LIGNE 3 : Total Général Recettes Réels
+                        var totalGeneralRecettes = new BudgetLine
+                        {
+                            Nommenclature = new Nommenclature
+                            {
+                                Chapitre = "TOTAL GÉNÉRAL",
+                                Intitule = "Total Général des Recettes Réels"
+                            },
+                            MontantPrevu = TotalGeneralRecettesReels,
+                            MontantDefinitif = TotalGeneralRecettesReels,
+                            MontantRealise = 0,
+                            TauxRealisation = 0,
+                            ResteRealise = 0,
+                            MontantEntreSortie = 0,
+                            TauxEntreSortie = 0,
+                            ResteEntreSortie = 0
+                        };
+
+                        totalRows.Add(new BudgetLineHierarchyViewModel(totalGeneralRecettes, 0)
+                        {
+                            IsTotalRow = true,
+                            TotalRowLevel = 2 // Total général
+                        });
+                    }
+                    break;
+
+                case 2: // Dépense - Fonctionnement
+                    {
+                        // LIGNE 1 : Total Dépense Fonctionnement
+                        var totalDepenseFonct = new BudgetLine
+                        {
+                            Nommenclature = new Nommenclature
+                            {
+                                Chapitre = "",
+                                Intitule = "Total Dépenses de Fonctionnement"
+                            },
+                            MontantPrevu = TotalDepenseFonctionnement,
+                            MontantDefinitif = TotalDepenseFonctionnementDefinitif,
+                            MontantRealise = TotalDepenseFonctionnementRealise,
+                            TauxRealisation = TotalDepenseFonctionnementTauxRealisation,
+                            ResteRealise = TotalDepenseFonctionnementResteRealise,
+                            MontantEntreSortie = TotalDepenseFonctionnementPaye,
+                            TauxEntreSortie = TotalDepenseFonctionnementTauxPaiement,
+                            ResteEntreSortie = TotalDepenseFonctionnementRestePaye
+                        };
+
+                        totalRows.Add(new BudgetLineHierarchyViewModel(totalDepenseFonct, 0)
+                        {
+                            IsTotalRow = true,
+                            TotalRowLevel = 0
+                        });
+
+                        // LIGNE 2 : Total Dépense Réels Fonctionnement
+                        var totalDepenseReelsFonct = new BudgetLine
+                        {
+                            Nommenclature = new Nommenclature
+                            {
+                                Chapitre = "",
+                                Intitule = "Total Dépenses Réels de Fonctionnement"
+                            },
+                            MontantPrevu = TotalDepenseReelsFonctionnement,
+                            MontantDefinitif = TotalDepenseReelsFonctionnement,
+                            MontantRealise = 0,
+                            TauxRealisation = 0,
+                            ResteRealise = 0,
+                            MontantEntreSortie = 0,
+                            TauxEntreSortie = 0,
+                            ResteEntreSortie = 0
+                        };
+
+                        totalRows.Add(new BudgetLineHierarchyViewModel(totalDepenseReelsFonct, 0)
+                        {
+                            IsTotalRow = true,
+                            TotalRowLevel = 1
+                        });
+                    }
+                    break;
+
+                case 3: // Dépense - Investissement
+                    {
+                        // LIGNE 1 : Total Dépense Investissement
+                        var totalDepenseInvest = new BudgetLine
+                        {
+                            Nommenclature = new Nommenclature
+                            {
+                                Chapitre = "",
+                                Intitule = "Total Dépenses d'Investissement"
+                            },
+                            MontantPrevu = TotalDepenseInvestissement,
+                            MontantDefinitif = TotalDepenseInvestissementDefinitif,
+                            MontantRealise = TotalDepenseInvestissementRealise,
+                            TauxRealisation = TotalDepenseInvestissementTauxRealisation,
+                            ResteRealise = TotalDepenseInvestissementResteRealise,
+                            MontantEntreSortie = TotalDepenseInvestissementPaye,
+                            TauxEntreSortie = TotalDepenseInvestissementTauxPaiement,
+                            ResteEntreSortie = TotalDepenseInvestissementRestePaye
+                        };
+
+                        totalRows.Add(new BudgetLineHierarchyViewModel(totalDepenseInvest, 0)
+                        {
+                            IsTotalRow = true,
+                            TotalRowLevel = 0
+                        });
+
+                        // LIGNE 2 : Total Général Dépenses Réels
+                        var totalGeneralDepenses = new BudgetLine
+                        {
+                            Nommenclature = new Nommenclature
+                            {
+                                Chapitre = "TOTAL GÉNÉRAL",
+                                Intitule = "Total Général des Dépenses Réels"
+                            },
+                            MontantPrevu = TotalGeneralDepensesReels,
+                            MontantDefinitif = TotalGeneralDepensesReels,
+                            MontantRealise = 0,
+                            TauxRealisation = 0,
+                            ResteRealise = 0,
+                            MontantEntreSortie = 0,
+                            TauxEntreSortie = 0,
+                            ResteEntreSortie = 0
+                        };
+
+                        totalRows.Add(new BudgetLineHierarchyViewModel(totalGeneralDepenses, 0)
+                        {
+                            IsTotalRow = true,
+                            TotalRowLevel = 2
+                        });
+                    }
+                    break;
+            }
+
+            // Ajouter toutes les lignes de totaux
+            foreach (var totalRow in totalRows)
+            {
+                DisplayedLines.Add(totalRow);
+            }
+        }
         // ═══════════════════════════════════════════════════════════
         // GESTION DU CHANGEMENT D'EXERCICE
         // ═══════════════════════════════════════════════════════════
@@ -527,16 +1019,6 @@ namespace Collectivite.ViewModels
             {
                 IsLoading = false;
             }
-        }
-
-        private async Task LoadBudgetPrimitifAsync()
-        {
-            using var context = new AppDbContext();
-            _budgetPrimitif = await context.BudgetsPrimitifs
-                .FirstOrDefaultAsync(b => b.Id == _budgetPrimitifId);
-
-            OnPropertyChanged(nameof(IsBudgetValidated));
-            OnPropertyChanged(nameof(CanModifyBudget));
         }
 
         /// <summary>
@@ -609,6 +1091,9 @@ namespace Collectivite.ViewModels
                 var filter = TabToFilter(SelectedTabIndex);
                 var all = await _service.GetBudgetLinesForBudgetPrimitifAsync(_budgetPrimitifId);
 
+                // ═══════════════════════════════════════════════════════════
+                // CALCUL DES TOTAUX - BUDGET PRIMITIF
+                // ═══════════════════════════════════════════════════════════
                 TotalRecetteFonctionnement = _service.RecetteFonctionnementPrevu(all);
                 TotalRecetteInvestissement = _service.RecetteInvestissementPrevu(all);
                 TotalRecetteReelsInvestissement = _service.TotalRecetteReelInvestissementPrevu(all);
@@ -617,11 +1102,87 @@ namespace Collectivite.ViewModels
                 TotalDepenseReelsFonctionnement = _service.TotalDepenseReelFonctionnementPrevu(all);
                 TotalDepenseInvestissement = _service.DepenseInvestissementPrevu(all);
                 TotalGeneralDepensesReels = _service.TotalGeneralDepenseReelPrevu(all);
-                // 🆕 Construire la hiérarchie au lieu de simplement filtrer
+
+                // ═══════════════════════════════════════════════════════════
+                // CALCUL DES TOTAUX - COMPTE ADMINISTRATIF
+                // ═══════════════════════════════════════════════════════════
+
+                // Recette Fonctionnement
+                TotalRecetteFonctionnementDefinitif = _service.RecetteFonctionnementDefinitif(all);
+                TotalRecetteFonctionnementRealise = _service.RecetteFonctionnementRealise(all);
+                TotalRecetteFonctionnementResteRealise = _service.RecetteFonctionnementResteRealiser(all);
+                TotalRecetteFonctionnementTauxRealisation = TotalRecetteFonctionnementDefinitif != 0
+                    ? (TotalRecetteFonctionnementRealise / TotalRecetteFonctionnementDefinitif) * 100
+                    : 0;
+
+                // Recette Investissement
+                TotalRecetteInvestissementDefinitif = _service.RecetteInvestissementDefinitif(all);
+                TotalRecetteInvestissementRealise = _service.RecetteInvestissementRealise(all);
+                TotalRecetteInvestissementResteRealise = _service.RecetteInvestissementResteRealiser(all);
+                TotalRecetteInvestissementTauxRealisation = TotalRecetteInvestissementDefinitif != 0
+                    ? (TotalRecetteInvestissementRealise / TotalRecetteInvestissementDefinitif) * 100
+                    : 0;
+
+                // Dépense Fonctionnement
+                TotalDepenseFonctionnementDefinitif = _service.DepenseFonctionnementDefinitif(all);
+                TotalDepenseFonctionnementRealise = _service.DepenseFonctionnementRealise(all);
+                TotalDepenseFonctionnementResteRealise = _service.DepenseFonctionnementResteRealiser(all);
+                TotalDepenseFonctionnementTauxRealisation = TotalDepenseFonctionnementDefinitif != 0
+                    ? (TotalDepenseFonctionnementRealise / TotalDepenseFonctionnementDefinitif) * 100
+                    : 0;
+
+                // Dépense Investissement
+                TotalDepenseInvestissementDefinitif = _service.DepenseInvestissementDefinitif(all);
+                TotalDepenseInvestissementRealise = _service.DepenseInvestissementRealise(all);
+                TotalDepenseInvestissementResteRealise = _service.DepenseInvestissementResteRealiser(all);
+                TotalDepenseInvestissementTauxRealisation = TotalDepenseInvestissementDefinitif != 0
+                    ? (TotalDepenseInvestissementRealise / TotalDepenseInvestissementDefinitif) * 100
+                    : 0;
+
+                // ═══════════════════════════════════════════════════════════
+                // CALCUL DES TOTAUX - COMPTE DE GESTION
+                // ═══════════════════════════════════════════════════════════
+
+                // Recette Fonctionnement - Gestion
+                TotalRecetteFonctionnementEmis = _service.RecetteFonctionnementRealise(all);
+                TotalRecetteFonctionnementRecouvre = _service.RecetteFonctionnementEntreSortie(all);
+                TotalRecetteFonctionnementResteRecouvre = _service.RecetteFonctionnementResteEntreSortie(all);
+                TotalRecetteFonctionnementTauxRecouvrement = TotalRecetteFonctionnementEmis != 0
+                    ? (TotalRecetteFonctionnementRecouvre / TotalRecetteFonctionnementEmis) * 100
+                    : 0;
+
+                // Recette Investissement - Gestion
+                TotalRecetteInvestissementEmis = _service.RecetteInvestissementRealise(all);
+                TotalRecetteInvestissementRecouvre = _service.RecetteInvestissementEntreSortie(all);
+                TotalRecetteInvestissementResteRecouvre = _service.RecetteInvestissementResteEntreSortie(all);
+                TotalRecetteInvestissementTauxRecouvrement = TotalRecetteInvestissementEmis != 0
+                    ? (TotalRecetteInvestissementRecouvre / TotalRecetteInvestissementEmis) * 100
+                    : 0;
+
+                // Dépense Fonctionnement - Gestion
+                TotalDepenseFonctionnementEmis = _service.DepenseFonctionnementRealise(all);
+                TotalDepenseFonctionnementPaye = _service.DepenseFonctionnementEntreSortie(all);
+                TotalDepenseFonctionnementRestePaye = _service.DepenseFonctionnementResteEntreSortie(all);
+                TotalDepenseFonctionnementTauxPaiement = TotalDepenseFonctionnementEmis != 0
+                    ? (TotalDepenseFonctionnementPaye / TotalDepenseFonctionnementEmis) * 100
+                    : 0;
+
+                // Dépense Investissement - Gestion
+                TotalDepenseInvestissementEmis = _service.DepenseInvestissementRealise(all);
+                TotalDepenseInvestissementPaye = _service.DepenseInvestissementEntreSortie(all);
+                TotalDepenseInvestissementRestePaye = _service.DepenseInvestissementResteEntreSortie(all);
+                TotalDepenseInvestissementTauxPaiement = TotalDepenseInvestissementEmis != 0
+                    ? (TotalDepenseInvestissementPaye / TotalDepenseInvestissementEmis) * 100
+                    : 0;
+
+                // 🆕 Construire la hiérarchie
                 _fullHierarchy = BuildHierarchy(all, filter.nature, filter.section);
 
-                // 🆕 Afficher la vue aplatie
+                // 🆕 Afficher la vue aplatie (SANS totaux)
                 RefreshDisplayedLines();
+
+                // ✅ MAINTENANT ajouter la ligne de totaux APRÈS que tout soit calculé
+                AddTotalRowToDisplayedLines();
             }
             catch (Exception ex)
             {
@@ -633,7 +1194,6 @@ namespace Collectivite.ViewModels
                 IsLoading = false;
             }
         }
-
         // ═══════════════════════════════════════════════════════════
         // DIALOG - AJOUT
         // ═══════════════════════════════════════════════════════════
@@ -686,7 +1246,7 @@ namespace Collectivite.ViewModels
                 MontantPrevu = "0";
 
                 AvailableNomenclatures.Clear();
-                foreach (var nom in available.OrderBy(n => n.Intitule))
+                foreach (var nom in available.OrderBy(n => n.CodeNomenclature))
                 {
                     AvailableNomenclatures.Add(nom);
                 }
@@ -1287,7 +1847,7 @@ namespace Collectivite.ViewModels
             document.Add(new Paragraph(" "));
 
             // Totaux selon l'onglet
-            AddTotalsSection(document, headerFont, boldFont, normalFont);
+            AddTotalsSectionCompteAdmin(document, headerFont, boldFont, normalFont);
 
             var exerciceCourant = ExerciceService.Instance.CurrentExercice;
             // ✅ Pied de page en une ligne
@@ -1407,7 +1967,7 @@ namespace Collectivite.ViewModels
             document.Add(new Paragraph(" "));
 
             // Totaux selon l'onglet
-            AddTotalsSection(document, headerFont, boldFont, normalFont);
+            AddTotalsSectionCompteGestion(document, headerFont, boldFont, normalFont);
 
             var exerciceCourant = ExerciceService.Instance.CurrentExercice;
             // ✅ Pied de page en une ligne
@@ -1476,6 +2036,122 @@ namespace Collectivite.ViewModels
             document.Add(totalsTable);
         }
 
+        private void AddTotalsSectionCompteAdmin(Document document, iTextSharp.text.Font headerFont, iTextSharp.text.Font boldFont, iTextSharp.text.Font normalFont)
+        {
+            Paragraph totalsTitle = new Paragraph("Totaux", headerFont);
+            totalsTitle.SpacingBefore = 15;
+            totalsTitle.SpacingAfter = 10;
+            document.Add(totalsTitle);
+
+            PdfPTable totalsTable = new PdfPTable(4) { WidthPercentage = 100 };
+            totalsTable.SetWidths(new float[] { 40f, 20f, 20f, 20f });
+
+            // En-têtes
+            AddCellWithColor(totalsTable, "Description", boldFont, BaseColor.LIGHT_GRAY, Element.ALIGN_LEFT);
+            AddCellWithColor(totalsTable, "Montant Définitif", boldFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
+            AddCellWithColor(totalsTable, "Montant Réalisé", boldFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
+            AddCellWithColor(totalsTable, "Taux (%)", boldFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
+            AddCellWithColor(totalsTable, "Reste à Réaliser", boldFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
+
+            switch (SelectedTabIndex)
+            {
+                case 0: // Recette - Fonctionnement
+                    AddCellWithColor(totalsTable, "Total Recettes de Fonctionnement", boldFont, new BaseColor(200, 230, 201), Element.ALIGN_LEFT);
+                    AddCellWithColor(totalsTable, $"{TotalRecetteFonctionnementDefinitif:N2} GNF", normalFont, BaseColor.WHITE, Element.ALIGN_RIGHT);
+                    AddCellWithColor(totalsTable, $"{TotalRecetteFonctionnementRealise:N2} GNF", normalFont, BaseColor.WHITE, Element.ALIGN_RIGHT);
+                    AddCellWithColor(totalsTable, $"{TotalRecetteFonctionnementTauxRealisation:N2} %", normalFont, BaseColor.WHITE, Element.ALIGN_RIGHT);
+                    AddCellWithColor(totalsTable, $"{TotalRecetteFonctionnementResteRealise:N2} GNF", normalFont, BaseColor.WHITE, Element.ALIGN_RIGHT);
+                    break;
+
+                case 1: // Recette - Investissement
+                    AddCellWithColor(totalsTable, "Total Recettes d'Investissement", boldFont, new BaseColor(200, 230, 201), Element.ALIGN_LEFT);
+                    AddCellWithColor(totalsTable, $"{TotalRecetteInvestissementDefinitif:N2} GNF", normalFont, BaseColor.WHITE, Element.ALIGN_RIGHT);
+                    AddCellWithColor(totalsTable, $"{TotalRecetteInvestissementRealise:N2} GNF", normalFont, BaseColor.WHITE, Element.ALIGN_RIGHT);
+                    AddCellWithColor(totalsTable, $"{TotalRecetteInvestissementTauxRealisation:N2} %", normalFont, BaseColor.WHITE, Element.ALIGN_RIGHT);
+                    AddCellWithColor(totalsTable, $"{TotalRecetteInvestissementResteRealise:N2} GNF", normalFont, BaseColor.WHITE, Element.ALIGN_RIGHT);
+                    break;
+
+                case 2: // Dépense - Fonctionnement
+                    AddCellWithColor(totalsTable, "Total Dépenses de Fonctionnement", boldFont, new BaseColor(239, 154, 154), Element.ALIGN_LEFT);
+                    AddCellWithColor(totalsTable, $"{TotalDepenseFonctionnementDefinitif:N2} GNF", normalFont, BaseColor.WHITE, Element.ALIGN_RIGHT);
+                    AddCellWithColor(totalsTable, $"{TotalDepenseFonctionnementRealise:N2} GNF", normalFont, BaseColor.WHITE, Element.ALIGN_RIGHT);
+                    AddCellWithColor(totalsTable, $"{TotalDepenseFonctionnementTauxRealisation:N2} %", normalFont, BaseColor.WHITE, Element.ALIGN_RIGHT);
+                    AddCellWithColor(totalsTable, $"{TotalDepenseFonctionnementResteRealise:N2} GNF", normalFont, BaseColor.WHITE, Element.ALIGN_RIGHT);
+                    break;
+
+                case 3: // Dépense - Investissement
+                    AddCellWithColor(totalsTable, "Total Dépenses d'Investissement", boldFont, new BaseColor(239, 154, 154), Element.ALIGN_LEFT);
+                    AddCellWithColor(totalsTable, $"{TotalDepenseInvestissementDefinitif:N2} GNF", normalFont, BaseColor.WHITE, Element.ALIGN_RIGHT);
+                    AddCellWithColor(totalsTable, $"{TotalDepenseInvestissementRealise:N2} GNF", normalFont, BaseColor.WHITE, Element.ALIGN_RIGHT);
+                    AddCellWithColor(totalsTable, $"{TotalDepenseInvestissementTauxRealisation:N2} %", normalFont, BaseColor.WHITE, Element.ALIGN_RIGHT);
+                    AddCellWithColor(totalsTable, $"{TotalDepenseInvestissementResteRealise:N2} GNF", normalFont, BaseColor.WHITE, Element.ALIGN_RIGHT);
+                    break;
+            }
+
+            document.Add(totalsTable);
+        }
+
+        private void AddTotalsSectionCompteGestion(Document document, iTextSharp.text.Font headerFont, iTextSharp.text.Font boldFont, iTextSharp.text.Font normalFont)
+        {
+            Paragraph totalsTitle = new Paragraph("Totaux", headerFont);
+            totalsTitle.SpacingBefore = 15;
+            totalsTitle.SpacingAfter = 10;
+            document.Add(totalsTitle);
+
+            PdfPTable totalsTable = new PdfPTable(5) { WidthPercentage = 100 };
+            totalsTable.SetWidths(new float[] { 35f, 17f, 17f, 17f, 14f });
+
+            bool isRecette = SelectedTabIndex == 0 || SelectedTabIndex == 1;
+
+            // En-têtes
+            AddCellWithColor(totalsTable, "Description", boldFont, BaseColor.LIGHT_GRAY, Element.ALIGN_LEFT);
+            AddCellWithColor(totalsTable, "Montant Définitif", boldFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
+            AddCellWithColor(totalsTable, "Montant Émis", boldFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
+            AddCellWithColor(totalsTable, isRecette ? "Montant Recouvré" : "Montant Payé", boldFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
+            AddCellWithColor(totalsTable, isRecette ? "Taux Recouvrement" : "Taux Paiement", boldFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
+            AddCellWithColor(totalsTable, isRecette ? "Reste à Recouvrer" : "Reste à Payer", boldFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
+
+            switch (SelectedTabIndex)
+            {
+                case 0: // Recette - Fonctionnement
+                    AddCellWithColor(totalsTable, "Total Recettes de Fonctionnement", boldFont, new BaseColor(200, 230, 201), Element.ALIGN_LEFT);
+                    AddCellWithColor(totalsTable, $"{TotalRecetteFonctionnementDefinitif:N2} GNF", normalFont, BaseColor.WHITE, Element.ALIGN_RIGHT);
+                    AddCellWithColor(totalsTable, $"{TotalRecetteFonctionnementEmis:N2} GNF", normalFont, BaseColor.WHITE, Element.ALIGN_RIGHT);
+                    AddCellWithColor(totalsTable, $"{TotalRecetteFonctionnementRecouvre:N2} GNF", normalFont, BaseColor.WHITE, Element.ALIGN_RIGHT);
+                    AddCellWithColor(totalsTable, $"{TotalRecetteFonctionnementTauxRecouvrement:N2} %", normalFont, BaseColor.WHITE, Element.ALIGN_RIGHT);
+                    AddCellWithColor(totalsTable, $"{TotalRecetteFonctionnementResteRecouvre:N2} GNF", normalFont, BaseColor.WHITE, Element.ALIGN_RIGHT);
+                    break;
+
+                case 1: // Recette - Investissement
+                    AddCellWithColor(totalsTable, "Total Recettes d'Investissement", boldFont, new BaseColor(200, 230, 201), Element.ALIGN_LEFT);
+                    AddCellWithColor(totalsTable, $"{TotalRecetteInvestissementDefinitif:N2} GNF", normalFont, BaseColor.WHITE, Element.ALIGN_RIGHT);
+                    AddCellWithColor(totalsTable, $"{TotalRecetteInvestissementEmis:N2} GNF", normalFont, BaseColor.WHITE, Element.ALIGN_RIGHT);
+                    AddCellWithColor(totalsTable, $"{TotalRecetteInvestissementRecouvre:N2} GNF", normalFont, BaseColor.WHITE, Element.ALIGN_RIGHT);
+                    AddCellWithColor(totalsTable, $"{TotalRecetteInvestissementTauxRecouvrement:N2} %", normalFont, BaseColor.WHITE, Element.ALIGN_RIGHT);
+                    AddCellWithColor(totalsTable, $"{TotalRecetteInvestissementResteRecouvre:N2} GNF", normalFont, BaseColor.WHITE, Element.ALIGN_RIGHT);
+                    break;
+
+                case 2: // Dépense - Fonctionnement
+                    AddCellWithColor(totalsTable, "Total Dépenses de Fonctionnement", boldFont, new BaseColor(239, 154, 154), Element.ALIGN_LEFT);
+                    AddCellWithColor(totalsTable, $"{TotalDepenseFonctionnementDefinitif:N2} GNF", normalFont, BaseColor.WHITE, Element.ALIGN_RIGHT);
+                    AddCellWithColor(totalsTable, $"{TotalDepenseFonctionnementEmis:N2} GNF", normalFont, BaseColor.WHITE, Element.ALIGN_RIGHT);
+                    AddCellWithColor(totalsTable, $"{TotalDepenseFonctionnementPaye:N2} GNF", normalFont, BaseColor.WHITE, Element.ALIGN_RIGHT);
+                    AddCellWithColor(totalsTable, $"{TotalDepenseFonctionnementTauxPaiement:N2} %", normalFont, BaseColor.WHITE, Element.ALIGN_RIGHT);
+                    AddCellWithColor(totalsTable, $"{TotalDepenseFonctionnementRestePaye:N2} GNF", normalFont, BaseColor.WHITE, Element.ALIGN_RIGHT);
+                    break;
+
+                case 3: // Dépense - Investissement
+                    AddCellWithColor(totalsTable, "Total Dépenses d'Investissement", boldFont, new BaseColor(239, 154, 154), Element.ALIGN_LEFT);
+                    AddCellWithColor(totalsTable, $"{TotalDepenseInvestissementDefinitif:N2} GNF", normalFont, BaseColor.WHITE, Element.ALIGN_RIGHT);
+                    AddCellWithColor(totalsTable, $"{TotalDepenseInvestissementEmis:N2} GNF", normalFont, BaseColor.WHITE, Element.ALIGN_RIGHT);
+                    AddCellWithColor(totalsTable, $"{TotalDepenseInvestissementPaye:N2} GNF", normalFont, BaseColor.WHITE, Element.ALIGN_RIGHT);
+                    AddCellWithColor(totalsTable, $"{TotalDepenseInvestissementTauxPaiement:N2} %", normalFont, BaseColor.WHITE, Element.ALIGN_RIGHT);
+                    AddCellWithColor(totalsTable, $"{TotalDepenseInvestissementRestePaye:N2} GNF", normalFont, BaseColor.WHITE, Element.ALIGN_RIGHT);
+                    break;
+            }
+
+            document.Add(totalsTable);
+        }
         private void Print()
         {
             MessageBox.Show(

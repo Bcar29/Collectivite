@@ -249,6 +249,7 @@ namespace Collectivite.Services
             return await context.BudgetLines
                 .Include(b => b.Nommenclature)
                 .ThenInclude(n => n.Enfants)
+                .Include(r => r.Remaniements)
                 .Where(b => b.BudgetPrimitif.ExerciceId == exerciceService.CurrentExercice.Id && b.BudgetPrimitif.Status == BudgetPrimitif.Statusbudget.VALIDATED && b.Nommenclature.Nature == NatureType.Depense && (b.Nommenclature.Enfants == null || !b.Nommenclature.Enfants.Any()))
                 .ToListAsync();
         }

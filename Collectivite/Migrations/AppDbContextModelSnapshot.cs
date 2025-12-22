@@ -1152,8 +1152,8 @@ namespace Collectivite.Migrations
                     b.Property<int>("IdBudgetLine")
                         .HasColumnType("int");
 
-                    b.Property<double>("Montant")
-                        .HasColumnType("double");
+                    b.Property<decimal>("Montant")
+                        .HasColumnType("decimal(65,30)");
 
                     b.Property<string>("Motif")
                         .IsRequired()

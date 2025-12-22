@@ -36,8 +36,7 @@ namespace Collectivite.Models
         public int Id { get; set; }
 
         [Required(ErrorMessage = "Le montant est obligatoire")]
-        [Range(0.01, double.MaxValue, ErrorMessage = "Le montant doit être supérieur à 0")]
-        public double Montant { get; set; }
+        public decimal Montant { get; set; }
 
         [Required(ErrorMessage = "Le motif est obligatoire")]
         [StringLength(500, ErrorMessage = "Le motif ne peut pas dépasser 500 caractères")]
@@ -91,7 +90,7 @@ namespace Collectivite.Models
         /// Retourne le montant avec le signe approprié
         /// </summary>
         [NotMapped]
-        public double MontantSigne
+        public decimal MontantSigne
         {
             get
             {

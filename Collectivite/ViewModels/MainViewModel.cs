@@ -17,6 +17,7 @@ namespace Collectivite.ViewModels
         private readonly NavigationService _navigationService;
         private readonly RelayCommand _openProfileCommand;
         private readonly RelayCommand _openSettingsCommand;
+        private readonly RelayCommand _openLoginCommand;
         private string _currentPageTitle = "TABLEAU DE BORD";
         private string _exerciceText = "";
         private string _communeName = string.Empty;
@@ -37,9 +38,11 @@ namespace Collectivite.ViewModels
             LogoutCommand = new RelayCommand(_ => Logout());
             _openProfileCommand = new RelayCommand(_ => ShowProfile(), _ => _authService.CurrentUser != null);
             _openSettingsCommand = new RelayCommand(_ => ShowSettings());
+            _openLoginCommand = new RelayCommand(_ => OpenLogin());
             SelectExerciceCommand = new RelayCommand(param => SelectExercice(param));
             OpenProfileCommand = _openProfileCommand;
             OpenSettingsCommand = _openSettingsCommand;
+            OpenLoginCommand = _openLoginCommand;
             OpenMenuCommand = new RelayCommand(_ => IsMenuOpen = true);
             CloseMenuCommand = new RelayCommand(_ => IsMenuOpen = false);
 
@@ -127,10 +130,16 @@ namespace Collectivite.ViewModels
             set => SetProperty(ref _isMenuOpen, value);
         }
 
+        /// <summary>
+        /// Indique si un utilisateur est actuellement connecté.
+        /// </summary>
+        public bool IsUserLoggedIn => _authService.CurrentUser != null;
+
         #endregion
         public ICommand LogoutCommand { get; }
         public ICommand OpenProfileCommand { get; }
         public ICommand OpenSettingsCommand { get; }
+        public ICommand OpenLoginCommand { get; }
         public ICommand OpenMenuCommand { get; }
         public ICommand CloseMenuCommand { get; }
 
@@ -250,7 +259,8 @@ namespace Collectivite.ViewModels
                 OnPropertyChanged(nameof(UserEmail));
                 OnPropertyChanged(nameof(UserPhone));
                 OnPropertyChanged(nameof(UserFullName));
-                    OnPropertyChanged(nameof(UserRole));
+                OnPropertyChanged(nameof(UserRole));
+                OnPropertyChanged(nameof(IsUserLoggedIn));
 
                 _openProfileCommand.RaiseCanExecuteChanged();
             }
@@ -267,7 +277,8 @@ namespace Collectivite.ViewModels
                 OnPropertyChanged(nameof(UserIdentifier));
                 OnPropertyChanged(nameof(UserEmail));
                 OnPropertyChanged(nameof(UserPhone));
-                    OnPropertyChanged(nameof(UserRole));
+                OnPropertyChanged(nameof(UserRole));
+                OnPropertyChanged(nameof(IsUserLoggedIn));
 
                 _openProfileCommand.RaiseCanExecuteChanged();
             }
@@ -295,6 +306,16 @@ namespace Collectivite.ViewModels
                 Application.Current.Windows.OfType<Window>()
                     .FirstOrDefault(w => w is MainWindow)?.Close();
             }
+        }
+
+        private void OpenLogin()
+        {
+            // Ouvre la fenêtre de connexion et ferme la fenêtre principale actuelle
+            var loginWindow = new Views.LoginWindow();
+            loginWindow.Show();
+
+            Application.Current.Windows.OfType<Window>()
+                .FirstOrDefault(w => w is MainWindow)?.Close();
         }
 
         private void ShowProfile()

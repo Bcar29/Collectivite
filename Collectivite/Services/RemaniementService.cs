@@ -180,8 +180,7 @@ namespace Collectivite.Services
 
         #region Création
 
-        public async Task<(bool Success, string Message, Remaniement? Remaniement)>
-    CreateRemaniementAsync(Remaniement remaniement, TypeRemaniement type)
+        public async Task<(bool Success, string Message, Remaniement? Remaniement)> CreateRemaniementAsync(Remaniement remaniement, TypeRemaniement type)
         {
             if (!SessionManager.HasPermission("Remaniement.Create"))
                 return (false,
@@ -267,9 +266,9 @@ namespace Collectivite.Services
                     await context.SaveChangesAsync();
 
                     var remaniementsCreated = new List<string>
-            {
-                $"✅ Ligne enfant : {budgetLine.Nommenclature.Intitule} ({remaniement.Montant:N0} GNF)"
-            };
+                        {
+                            $"✅ Ligne enfant : {budgetLine.Nommenclature.Intitule} ({remaniement.Montant:N0} GNF)"
+                        };
 
                     // 2️⃣ Remaniements parents
                     foreach (var parentLine in parentBudgetLines)
@@ -465,10 +464,10 @@ namespace Collectivite.Services
     public class RemaniementStatistiques
     {
         public int TotalRemaniements { get; set; }
-        public double TotalEnPlus { get; set; }
-        public double TotalEnMoins { get; set; }
+        public decimal TotalEnPlus { get; set; }
+        public decimal TotalEnMoins { get; set; }
         public int CountEnPlus { get; set; }
         public int CountEnMoins { get; set; }
-        public double SoldeNet { get; set; }
+        public decimal SoldeNet { get; set; }
     }
 }

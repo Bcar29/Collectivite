@@ -117,6 +117,16 @@
                             <Style TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
                                 <Setter Property="Background" Value="{Binding BackgroundColor, Converter={StaticResource BackgroundColorConverter}}"/>
                                 <Setter Property="Visibility" Value="{Binding IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                <!-- 🆕 Style spécial pour la ligne de totaux -->
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsTotalRow}" Value="True">
+                                        <Setter Property="Background" Value="LightBlue"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                        <Setter Property="FontSize" Value="14"/>
+                                        <Setter Property="BorderThickness" Value="0,2,0,0"/>
+                                        <Setter Property="BorderBrush" Value="DarkBlue"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
                             </Style>
                         </DataGrid.RowStyle>
 
@@ -214,6 +224,16 @@
                             <Style TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
                                 <Setter Property="Background" Value="{Binding BackgroundColor, Converter={StaticResource BackgroundColorConverter}}"/>
                                 <Setter Property="Visibility" Value="{Binding IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                <!-- 🆕 Style spécial pour la ligne de totaux -->
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsTotalRow}" Value="True">
+                                        <Setter Property="Background" Value="LightBlue"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                        <Setter Property="FontSize" Value="14"/>
+                                        <Setter Property="BorderThickness" Value="0,2,0,0"/>
+                                        <Setter Property="BorderBrush" Value="DarkBlue"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
                             </Style>
                         </DataGrid.RowStyle>
 
@@ -307,6 +327,16 @@
                             <Style TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
                                 <Setter Property="Background" Value="{Binding BackgroundColor, Converter={StaticResource BackgroundColorConverter}}"/>
                                 <Setter Property="Visibility" Value="{Binding IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                <!-- 🆕 Style spécial pour la ligne de totaux -->
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsTotalRow}" Value="True">
+                                        <Setter Property="Background" Value="LightBlue"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                        <Setter Property="FontSize" Value="14"/>
+                                        <Setter Property="BorderThickness" Value="0,2,0,0"/>
+                                        <Setter Property="BorderBrush" Value="DarkBlue"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
                             </Style>
                         </DataGrid.RowStyle>
 
@@ -400,6 +430,16 @@
                             <Style TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
                                 <Setter Property="Background" Value="{Binding BackgroundColor, Converter={StaticResource BackgroundColorConverter}}"/>
                                 <Setter Property="Visibility" Value="{Binding IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                <!-- 🆕 Style spécial pour la ligne de totaux -->
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsTotalRow}" Value="True">
+                                        <Setter Property="Background" Value="LightBlue"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                        <Setter Property="FontSize" Value="14"/>
+                                        <Setter Property="BorderThickness" Value="0,2,0,0"/>
+                                        <Setter Property="BorderBrush" Value="DarkBlue"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
                             </Style>
                         </DataGrid.RowStyle>
 

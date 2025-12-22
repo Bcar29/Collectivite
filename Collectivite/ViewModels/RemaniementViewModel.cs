@@ -125,7 +125,7 @@ namespace Collectivite.ViewModels
             }
         }
 
-        public int TotalRemaniements => _allBudgetLines.Sum(bl => bl.Remaniements?.Count ?? 0);
+        public decimal TotalRemaniements => _allBudgetLines.Sum(bl => bl.Remaniements?.Count ?? 0);
         public decimal TotalVariation => _allBudgetLines.Sum(bl => bl.VariationTotale);
 
         public bool IsDetailDialogOpen
@@ -141,7 +141,103 @@ namespace Collectivite.ViewModels
         }
 
         #endregion
+        
+        #region Propriétés de totaux
 
+        // ═══════════════════════════════════════════════════════════
+        // TOTAUX PAR ONGLET
+        // ═══════════════════════════════════════════════════════════
+
+        // Recette Fonctionnement
+        private decimal _totalRecetteFonctionnementPrevu;
+        public decimal TotalRecetteFonctionnementPrevu
+        {
+            get => _totalRecetteFonctionnementPrevu;
+            set => SetProperty(ref _totalRecetteFonctionnementPrevu, value);
+        }
+
+        private decimal _totalRecetteFonctionnementRemaniement;
+        public decimal TotalRecetteFonctionnementRemaniement
+        {
+            get => _totalRecetteFonctionnementRemaniement;
+            set => SetProperty(ref _totalRecetteFonctionnementRemaniement, value);
+        }
+
+        private decimal _totalRecetteFonctionnementDefinitif;
+        public decimal TotalRecetteFonctionnementDefinitif
+        {
+            get => _totalRecetteFonctionnementDefinitif;
+            set => SetProperty(ref _totalRecetteFonctionnementDefinitif, value);
+        }
+
+        // Recette Investissement
+        private decimal _totalRecetteInvestissementPrevu;
+        public decimal TotalRecetteInvestissementPrevu
+        {
+            get => _totalRecetteInvestissementPrevu;
+            set => SetProperty(ref _totalRecetteInvestissementPrevu, value);
+        }
+
+        private decimal _totalRecetteInvestissementRemaniement;
+        public decimal TotalRecetteInvestissementRemaniement
+        {
+            get => _totalRecetteInvestissementRemaniement;
+            set => SetProperty(ref _totalRecetteInvestissementRemaniement, value);
+        }
+
+        private decimal _totalRecetteInvestissementDefinitif;
+        public decimal TotalRecetteInvestissementDefinitif
+        {
+            get => _totalRecetteInvestissementDefinitif;
+            set => SetProperty(ref _totalRecetteInvestissementDefinitif, value);
+        }
+
+        // Dépense Fonctionnement
+        private decimal _totalDepenseFonctionnementPrevu;
+        public decimal TotalDepenseFonctionnementPrevu
+        {
+            get => _totalDepenseFonctionnementPrevu;
+            set => SetProperty(ref _totalDepenseFonctionnementPrevu, value);
+        }
+
+        private decimal _totalDepenseFonctionnementRemaniement;
+        public decimal TotalDepenseFonctionnementRemaniement
+        {
+            get => _totalDepenseFonctionnementRemaniement;
+            set => SetProperty(ref _totalDepenseFonctionnementRemaniement, value);
+        }
+
+        private decimal _totalDepenseFonctionnementDefinitif;
+        public decimal TotalDepenseFonctionnementDefinitif
+        {
+            get => _totalDepenseFonctionnementDefinitif;
+            set => SetProperty(ref _totalDepenseFonctionnementDefinitif, value);
+        }
+
+        // Dépense Investissement
+        private decimal _totalDepenseInvestissementPrevu;
+        public decimal TotalDepenseInvestissementPrevu
+        {
+            get => _totalDepenseInvestissementPrevu;
+            set => SetProperty(ref _totalDepenseInvestissementPrevu, value);
+        }
+
+        private decimal _totalDepenseInvestissementRemaniement;
+        public decimal TotalDepenseInvestissementRemaniement
+        {
+            get => _totalDepenseInvestissementRemaniement;
+            set => SetProperty(ref _totalDepenseInvestissementRemaniement, value);
+        }
+
+        private decimal _totalDepenseInvestissementDefinitif;
+        public decimal TotalDepenseInvestissementDefinitif
+        {
+            get => _totalDepenseInvestissementDefinitif;
+            set => SetProperty(ref _totalDepenseInvestissementDefinitif, value);
+        }
+
+        #endregion
+        
         #region Commandes
 
         public ICommand LoadDataCommand { get; }
@@ -162,7 +258,19 @@ namespace Collectivite.ViewModels
             if (item == null) return;
 
             item.ToggleExpanded();
+
+            // Supprimer l'ancienne ligne de totaux
+            var totalRow = BudgetLines.FirstOrDefault(x => x.IsTotalRow);
+            if (totalRow != null)
+            {
+                BudgetLines.Remove(totalRow);
+            }
+
+            // Rafraîchir l'affichage
             RefreshDisplayedLines();
+
+            // Rajouter la ligne de totaux
+            AddTotalRowToDisplayedLines();
         }
 
         private List<BudgetLineHierarchyViewModel> BuildHierarchy(
@@ -289,7 +397,7 @@ namespace Collectivite.ViewModels
             if (!_allBudgetLines.Any())
                 return;
 
-            // 🆕 Déterminer nature et section selon l'onglet
+            // Déterminer nature et section selon l'onglet
             (NatureType nature, SectionType section) filter = SelectedTabIndex switch
             {
                 0 => (NatureType.Recette, SectionType.Fonctionnement),
@@ -299,18 +407,116 @@ namespace Collectivite.ViewModels
                 _ => (NatureType.Recette, SectionType.Fonctionnement)
             };
 
-            // 🆕 Construire la hiérarchie
+            // ═══════════════════════════════════════════════════════════
+            // CALCUL DES TOTAUX PAR ONGLET
+            // ═══════════════════════════════════════════════════════════
+
+            // Filtrer les lignes selon nature et section (uniquement les parents)
+            var filteredLines = _allBudgetLines
+                .Where(bl => bl.Nommenclature.Nature == filter.nature &&
+                            bl.Nommenclature.Section == filter.section &&
+                            bl.Nommenclature.ParentId == null)
+                .ToList();
+
+            // Recette Fonctionnement
+            if (filter.nature == NatureType.Recette && filter.section == SectionType.Fonctionnement)
+            {
+                TotalRecetteFonctionnementPrevu = filteredLines.Sum(bl => bl.MontantPrevu);
+                TotalRecetteFonctionnementRemaniement = filteredLines.Sum(bl => bl.VariationTotale);
+                TotalRecetteFonctionnementDefinitif = filteredLines.Sum(bl => bl.MontantActu);
+            }
+            // Recette Investissement
+            else if (filter.nature == NatureType.Recette && filter.section == SectionType.Investissement)
+            {
+                TotalRecetteInvestissementPrevu = filteredLines.Sum(bl => bl.MontantPrevu);
+                TotalRecetteInvestissementRemaniement = filteredLines.Sum(bl => bl.VariationTotale);
+                TotalRecetteInvestissementDefinitif = filteredLines.Sum(bl => bl.MontantActu);
+            }
+            // Dépense Fonctionnement
+            else if (filter.nature == NatureType.Depense && filter.section == SectionType.Fonctionnement)
+            {
+                TotalDepenseFonctionnementPrevu = filteredLines.Sum(bl => bl.MontantPrevu);
+                TotalDepenseFonctionnementRemaniement = filteredLines.Sum(bl => bl.VariationTotale);
+                TotalDepenseFonctionnementDefinitif = filteredLines.Sum(bl => bl.MontantActu);
+            }
+            // Dépense Investissement
+            else if (filter.nature == NatureType.Depense && filter.section == SectionType.Investissement)
+            {
+                TotalDepenseInvestissementPrevu = filteredLines.Sum(bl => bl.MontantPrevu);
+                TotalDepenseInvestissementRemaniement = filteredLines.Sum(bl => bl.VariationTotale);
+                TotalDepenseInvestissementDefinitif = filteredLines.Sum(bl => bl.MontantActu);
+            }
+
+            // Construire la hiérarchie
             _fullHierarchy = BuildHierarchy(_allBudgetLines, filter.nature, filter.section);
 
-            // 🆕 Afficher la vue aplatie
+            // Afficher la vue aplatie
             RefreshDisplayedLines();
+
+            // Ajouter la ligne de totaux
+            AddTotalRowToDisplayedLines();
 
             OnPropertyChanged(nameof(TotalRemaniements));
             OnPropertyChanged(nameof(TotalVariation));
         }
+        #endregion
+        
+        #region Gestion des totaux
+
+        private void AddTotalRowToDisplayedLines()
+        {
+            if (BudgetLines.Count == 0) return;
+
+            // Créer une ligne budgétaire factice pour les totaux
+            var totalBudgetLine = new BudgetLine
+            {
+                Nommenclature = new Nommenclature
+                {
+                    Chapitre = "TOTAL",
+                    Intitule = "Total Général"
+                }
+            };
+
+            // Définir les montants selon l'onglet
+            switch (SelectedTabIndex)
+            {
+                case 0: // Recette - Fonctionnement
+                    totalBudgetLine.MontantPrevu = TotalRecetteFonctionnementPrevu;
+                    //totalBudgetLine.VariationTotale = TotalRecetteFonctionnementRemaniement;
+                    totalBudgetLine.MontantActu = TotalRecetteFonctionnementDefinitif;
+                    break;
+
+                case 1: // Recette - Investissement
+                    totalBudgetLine.MontantPrevu = TotalRecetteInvestissementPrevu;
+                    //totalBudgetLine.VariationTotale = TotalRecetteInvestissementRemaniement;
+                    totalBudgetLine.MontantActu = TotalRecetteInvestissementDefinitif;
+                    break;
+
+                case 2: // Dépense - Fonctionnement
+                    totalBudgetLine.MontantPrevu = TotalDepenseFonctionnementPrevu;
+                    //totalBudgetLine.VariationTotale = TotalDepenseFonctionnementRemaniement;
+                    totalBudgetLine.MontantActu = TotalDepenseFonctionnementDefinitif;
+                    break;
+
+                case 3: // Dépense - Investissement
+                    totalBudgetLine.MontantPrevu = TotalDepenseInvestissementPrevu;
+                    //totalBudgetLine.VariationTotale = TotalDepenseInvestissementRemaniement;
+                    totalBudgetLine.MontantActu = TotalDepenseInvestissementDefinitif;
+                    break;
+            }
+
+            // Créer le ViewModel pour la ligne de totaux
+            var totalRow = new BudgetLineHierarchyViewModel(totalBudgetLine, 0)
+            {
+                IsTotalRow = true,
+                TotalRowLevel = 0
+            };
+
+            BudgetLines.Add(totalRow);
+        }
 
         #endregion
-
+        
         #region Dialog Remaniement
 
         private System.Threading.Tasks.Task OpenAddDialogAsync(BudgetLine? budgetLine)

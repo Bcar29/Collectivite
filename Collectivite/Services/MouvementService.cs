@@ -30,10 +30,14 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<List<MandatPaiementDTO>> GetMandatsNonPayesAsync()
         {
-            var exerciceEncours = ExerciceService.Instance.CurrentExercice;
-            var mandats = await _context.Mandats
+            var exerciceService = ExerciceService.Instance;
 
-                .Where(m => m.Etat == Mandat.EtatMandat.Validé)
+            if (exerciceService.CurrentExercice == null)
+            {
+                return new List<MandatPaiementDTO>();
+            }
+            var mandats = await _context.Mandats
+                .Where(m => m.Etat == Mandat.EtatMandat.Validé && exerciceService.CurrentExercice.Id == m.Engagement.ExerciceId)
                 .Include(m => m.Engagement)
                     .ThenInclude(e => e.Tiers)
                 .Where(m => m.Engagement.ExerciceId == exerciceEncours.Id) 
@@ -213,20 +217,28 @@ namespace Collectivite.Services
                         await _ecritureHelper.GetCompteTresorerieAsync(dto.ModeReglement);
 
 
-                    // 4. Mouvement
+                    var exercice = ExerciceService.Instance.CurrentExercice;
+                    if (exercice == null)
+                    {
+                        throw new InvalidOperationException(
+                            "Aucun exercice actif n’est sélectionné. Impossible de créer le mouvement."
+                        );
+                    }
+
                     var mouvement = new Mouvement
                     {
                         Date = dto.Date,
                         Montant = dto.Montant,
                         idCompteComptable = compteTresorerie.Id,
-                        idMandat = dto.IdMandat.Value,
+                        idMandat = dto.IdMandat!.Value,
                         RefVirement = dto.ModeReglement == ModeReglement.Virement ? dto.RefVirement : null,
                         NumBanqueBenef = dto.ModeReglement == ModeReglement.Virement ? dto.NumBanqueBenef : null,
                         RefChèque = dto.ModeReglement == ModeReglement.Cheque ? dto.RefCheque : null,
                         FichierJoint = dto.FichierJoint,
                         FileName = dto.FileName,
-                        idExercice = ExerciceService.Instance.CurrentExercice.Id
+                        idExercice = exercice.Id
                     };
+
 
                     _context.Mouvements.Add(mouvement);
                     //await _context.SaveChangesAsync();
@@ -265,9 +277,14 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<List<OrdreRecetteEncaissementDTO>> GetOrdresRecetteNonEncaissesAsync()
         {
-            var exerciceEncours = ExerciceService.Instance.CurrentExercice;
+            var exerciceService = ExerciceService.Instance;
+
+            if (exerciceService.CurrentExercice == null)
+            {
+                return new List<OrdreRecetteEncaissementDTO>();
+            }
             var ordres = await _context.OrdreRecettes
-                .Where(o => o.Etat == OrdreRecette.EtatOdre.Validé && o.ExerciceId == exerciceEncours.Id)
+                .Where(o => o.Etat == OrdreRecette.EtatOdre.Validé && o.ExerciceId == exerciceService.CurrentExercice.Id)
                 .Include(o => o.Tiers)
                 .OrderByDescending(o => o.DateOrdre)
                 .ToListAsync();
@@ -413,7 +430,13 @@ namespace Collectivite.Services
                     // 3. Compte trésorerie
                     var compteTresorerie =
                         await _ecritureHelper.GetCompteTresorerieAsync(dto.ModeReglement);
-
+                    var exercice = ExerciceService.Instance.CurrentExercice;
+                    if (exercice == null)
+                    {
+                        throw new InvalidOperationException(
+                            "Aucun exercice actif n’est sélectionné. Impossible de créer le mouvement."
+                        );
+                    }
                     // 4. Mouvement
                     var mouvement = new Mouvement
                     {
@@ -426,7 +449,7 @@ namespace Collectivite.Services
                         RefChèque = dto.ModeReglement == ModeReglement.Cheque ? dto.RefCheque : null,
                         FichierJoint = dto.FichierJoint,
                         FileName = dto.FileName,
-                        idExercice = ExerciceService.Instance.CurrentExercice.Id
+                        idExercice = exercice.Id
                     };
 
                     _context.Mouvements.Add(mouvement);
