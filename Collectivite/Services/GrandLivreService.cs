@@ -1,5 +1,4 @@
-﻿
-using Collectivite.Models;
+﻿using Collectivite.Models;
 using Collectivite.Services;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -28,6 +27,12 @@ namespace Collectivite.Services
                 .OrderBy(c => c.NumeroCompte)
                 .ToListAsync();
 
+            // ═══════════════════════════════════════
+            // RÉCUPÉRER L'EXERCICE EN COURS
+            // ═══════════════════════════════════════
+            var exerciceEnCours = ExerciceService.Instance.CurrentExercice;
+            int? idExerciceEnCours = exerciceEnCours?.Id;
+
             // Récupérer toutes les écritures avec filtres
             var ecrituresQuery = _context.EcritureComptables
                 .Include(e => e.CompteDebit)
@@ -36,14 +41,17 @@ namespace Collectivite.Services
                 .Include(e => e.Mandat)
                 .AsQueryable();
 
-            // Appliquer les filtres
+            // ═══════════════════════════════════════
+            // FILTRER PAR EXERCICE EN COURS
+            // ═══════════════════════════════════════
+            if (idExerciceEnCours.HasValue)
+            {
+                ecrituresQuery = ecrituresQuery.Where(e => e.idExercice == idExerciceEnCours.Value);
+            }
+
+            // Appliquer les autres filtres
             if (filtre != null)
             {
-                if (filtre.Annee.HasValue)
-                {
-                    ecrituresQuery = ecrituresQuery.Where(e => e.DateEcriture.Year == filtre.Annee.Value);
-                }
-
                 if (filtre.Mois.HasValue)
                 {
                     ecrituresQuery = ecrituresQuery.Where(e => e.DateEcriture.Month == filtre.Mois.Value);
@@ -128,7 +136,6 @@ namespace Collectivite.Services
                 }
 
                 // Filtrer les comptes vides si demandé
-                // ✅ Correct
                 if (filtre?.InclureComptesVides == false && compteGL.Mouvements.Count == 0)
                 {
                     continue;
@@ -222,24 +229,6 @@ namespace Collectivite.Services
         /// <summary>
         /// Exporte le Grand Livre en Excel
         /// </summary>
-        //public async Task<byte[]> ExportExcelAsync(GrandLivreFiltreDTO? filtre = null)
-        //{
-        //    var grandLivre = await GetGrandLivreAsync(filtre);
-        //    return GrandLivreExcelExporter.Exporter(grandLivre, filtre);
-        //}
-
-        ///// <summary>
-        ///// Exporte le Grand Livre en PDF
-        ///// </summary>
-        //public async Task<byte[]> ExportPdfAsync(GrandLivreFiltreDTO? filtre = null)
-        //{
-        //    var grandLivre = await GetGrandLivreAsync(filtre);
-        //    return GrandLivrePdfExporter.Exporter(grandLivre, filtre);
-        //}
-
-        /// <summary>
-        /// Exporte le Grand Livre en Excel
-        /// </summary>
         public async Task<byte[]> ExportExcelAsync(GrandLivreFiltreDTO? filtre = null)
         {
             var grandLivre = await GetGrandLivreAsync(filtre);
@@ -254,6 +243,7 @@ namespace Collectivite.Services
             var grandLivre = await GetGrandLivreAsync(filtre);
             return GrandLivrePdfExporter.Exporter(grandLivre, filtre);
         }
+
         #region Méthodes privées
 
         private static string GetLibelleEcriture(EcritureComptable ecriture)

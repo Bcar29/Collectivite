@@ -1,4 +1,4 @@
-﻿
+﻿using Collectivite.Models;
 using Collectivite.Services;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -26,19 +26,83 @@ namespace Collectivite.Services
         public async Task<List<BalanceAnnuelleLigneDTO>> GetBalanceAnnuelleAsync(BalanceAnnuelleFiltreDTO filtre)
         {
             // Récupérer tous les comptes
-            var comptes = await _context.CompteComptables
-                .OrderBy(c => c.NumeroCompte)
-                .ToListAsync();
+            var comptesQuery = _context.CompteComptables.AsQueryable();
 
-            // Définir la période de l'année
-            var debutAnnee = new DateOnly(filtre.Annee, 1, 1);
-            var finAnnee = new DateOnly(filtre.Annee, 12, 31);
+            // Filtrer par classe de compte si spécifié
+            if (!string.IsNullOrWhiteSpace(filtre.ClasseCompte))
+            {
+                comptesQuery = comptesQuery.Where(c => c.NumeroCompte.StartsWith(filtre.ClasseCompte));
+            }
 
-            // Récupérer toutes les écritures de l'année
-            var ecritures = await _context.EcritureComptables
-                .Where(e => e.DateEcriture >= debutAnnee && e.DateEcriture <= finAnnee)
-                .ToListAsync();
+            // Filtrer par numéro de compte spécifique
+            if (!string.IsNullOrWhiteSpace(filtre.NumeroCompte))
+            {
+                comptesQuery = comptesQuery.Where(c => c.NumeroCompte == filtre.NumeroCompte);
+            }
 
+            var comptes = await comptesQuery.OrderBy(c => c.NumeroCompte).ToListAsync();
+
+            // ═══════════════════════════════════════
+            // ÉTAPE 1 : Récupérer l'exercice en cours via ExerciceService
+            // ═══════════════════════════════════════
+            var exerciceEnCours = ExerciceService.Instance.CurrentExercice;
+
+            // ═══════════════════════════════════════
+            // ÉTAPE 2 : Extraire l'année du libellé avec GetAnnee()
+            // et calculer l'année précédente
+            // ═══════════════════════════════════════
+            int? anneePrecedente = null;
+            if (exerciceEnCours != null)
+            {
+                var anneeExercice = exerciceEnCours.GetAnnee();
+                if (anneeExercice.HasValue)
+                {
+                    anneePrecedente = anneeExercice.Value - 1;
+                }
+            }
+
+            // ═══════════════════════════════════════
+            // ÉTAPE 3 : Chercher l'exercice précédent
+            // ═══════════════════════════════════════
+            Exercice? exercicePrecedent = null;
+            if (anneePrecedente.HasValue)
+            {
+                exercicePrecedent = await _context.Exercices
+                    .FirstOrDefaultAsync(e => e.Libelle != null && e.Libelle.Contains(anneePrecedente.Value.ToString()));
+            }
+
+            int? idExercicePrecedent = exercicePrecedent?.Id;
+            int? idExerciceEnCours = exerciceEnCours?.Id;
+
+            // ═══════════════════════════════════════
+            // ÉTAPE 4 : Récupérer les écritures de l'exercice PRÉCÉDENT
+            // Pour calculer la Balance d'Entrée
+            // ═══════════════════════════════════════
+            var ecrituresAnneePrecedente = new List<EcritureComptable>();
+
+            if (idExercicePrecedent.HasValue)
+            {
+                ecrituresAnneePrecedente = await _context.EcritureComptables
+                    .Where(e => e.idExercice == idExercicePrecedent.Value)
+                    .ToListAsync();
+            }
+
+            // ═══════════════════════════════════════
+            // ÉTAPE 5 : Récupérer les écritures de l'exercice EN COURS
+            // (toute l'année pour la balance annuelle)
+            // ═══════════════════════════════════════
+            var ecritures = new List<EcritureComptable>();
+
+            if (idExerciceEnCours.HasValue)
+            {
+                ecritures = await _context.EcritureComptables
+                    .Where(e => e.idExercice == idExerciceEnCours.Value)
+                    .ToListAsync();
+            }
+
+            // ═══════════════════════════════════════
+            // CONSTRUIRE LA BALANCE ANNUELLE
+            // ═══════════════════════════════════════
             var lignes = new List<BalanceAnnuelleLigneDTO>();
 
             foreach (var compte in comptes)
@@ -50,13 +114,35 @@ namespace Collectivite.Services
                     IntituleCompte = compte.IntituleCompte
                 };
 
-                // Balance d'entrée (solde de clôture de l'exercice précédent)
-                // Dans un système complet, on récupérerait le solde de clôture N-1
-                // Pour l'instant, on initialise à 0
-                ligne.DebitBalanceEntree = 0;
-                ligne.CreditBalanceEntree = 0;
+                // ═══════════════════════════════════════
+                // BALANCE D'ENTRÉE (solde de l'exercice précédent)
+                // ═══════════════════════════════════════
+                if (ecrituresAnneePrecedente.Count > 0)
+                {
+                    var soldeAnneePrecedente = CalculerSoldeCompte(ecrituresAnneePrecedente, compte.Id);
 
-                // Mouvements annuels (tous les mouvements de l'année)
+                    if (soldeAnneePrecedente >= 0)
+                    {
+                        // Solde débiteur → va dans Débit Balance Entrée
+                        ligne.DebitBalanceEntree = soldeAnneePrecedente;
+                        ligne.CreditBalanceEntree = 0;
+                    }
+                    else
+                    {
+                        // Solde créditeur → va dans Crédit Balance Entrée
+                        ligne.DebitBalanceEntree = 0;
+                        ligne.CreditBalanceEntree = Math.Abs(soldeAnneePrecedente);
+                    }
+                }
+                else
+                {
+                    ligne.DebitBalanceEntree = 0;
+                    ligne.CreditBalanceEntree = 0;
+                }
+
+                // ═══════════════════════════════════════
+                // MOUVEMENTS ANNUELS (tous les mouvements de l'année)
+                // ═══════════════════════════════════════
                 ligne.DebitMouvAnnuel = ecritures
                     .Where(e => e.CompteDebitId == compte.Id)
                     .Sum(e => e.Montant);
@@ -65,41 +151,48 @@ namespace Collectivite.Services
                     .Where(e => e.CompteCreditId == compte.Id)
                     .Sum(e => e.Montant);
 
+                // Filtrer les comptes vides si demandé
+                if (!filtre.AfficherComptesVides &&
+                    ligne.DebitBalanceEntree == 0 && ligne.CreditBalanceEntree == 0 &&
+                    ligne.DebitMouvAnnuel == 0 && ligne.CreditMouvAnnuel == 0)
+                {
+                    continue;
+                }
+
                 lignes.Add(ligne);
             }
 
-            // Appliquer les filtres
-            if (!string.IsNullOrEmpty(filtre.ClasseCompte))
-            {
-                lignes = lignes.Where(l => l.NumeroCompte.StartsWith(filtre.ClasseCompte)).ToList();
-            }
-
-            if (!string.IsNullOrEmpty(filtre.NumeroCompte))
-            {
-                lignes = lignes.Where(l => l.NumeroCompte == filtre.NumeroCompte).ToList();
-            }
-
-            if (!string.IsNullOrEmpty(filtre.RechercheTexte))
+            // ═══════════════════════════════════════
+            // APPLIQUER LES FILTRES
+            // ═══════════════════════════════════════
+            if (!string.IsNullOrWhiteSpace(filtre.RechercheTexte))
             {
                 var recherche = filtre.RechercheTexte.ToLower();
-                lignes = lignes.Where(l =>
-                    l.NumeroCompte.ToLower().Contains(recherche) ||
-                    l.IntituleCompte.ToLower().Contains(recherche)
-                ).ToList();
-            }
-
-            // Filtrer les comptes vides si demandé
-            if (!filtre.AfficherComptesVides)
-            {
-                lignes = lignes.Where(l =>
-                    l.DebitBalanceEntree != 0 ||
-                    l.DebitMouvAnnuel != 0 ||
-                    l.CreditBalanceEntree != 0 ||
-                    l.CreditMouvAnnuel != 0
-                ).ToList();
+                lignes = lignes
+                    .Where(l => l.NumeroCompte.ToLower().Contains(recherche) ||
+                                l.IntituleCompte.ToLower().Contains(recherche))
+                    .ToList();
             }
 
             return lignes;
+        }
+
+        /// <summary>
+        /// Calcule le solde d'un compte à partir d'une liste d'écritures
+        /// Solde = Total Débit - Total Crédit
+        /// Positif = Débiteur, Négatif = Créditeur
+        /// </summary>
+        private decimal CalculerSoldeCompte(List<EcritureComptable> ecritures, int compteId)
+        {
+            var totalDebit = ecritures
+                .Where(e => e.CompteDebitId == compteId)
+                .Sum(e => e.Montant);
+
+            var totalCredit = ecritures
+                .Where(e => e.CompteCreditId == compteId)
+                .Sum(e => e.Montant);
+
+            return totalDebit - totalCredit;
         }
 
         /// <summary>
@@ -148,11 +241,9 @@ namespace Collectivite.Services
                 .OrderByDescending(a => a)
                 .ToListAsync();
 
-            // S'assurer que l'année courante est présente
-            var anneeCourante = DateTime.Now.Year;
-            if (!annees.Contains(anneeCourante))
+            if (!annees.Contains(DateTime.Now.Year))
             {
-                annees.Insert(0, anneeCourante);
+                annees.Insert(0, DateTime.Now.Year);
             }
 
             return annees;
