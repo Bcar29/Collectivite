@@ -1,0 +1,4 @@
+# Configuration pour MainWindow - toujours garder notre version locale lors des merges
+Collectivite/MainWindow.xaml merge=ours
+Collectivite/MainWindow.xaml.cs merge=ours
+
