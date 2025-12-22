@@ -818,10 +818,15 @@
                             </materialDesign:PopupBox.ToggleContent>
 
                             <StackPanel Width="240" Margin="0">
-                                <Button Style="{StaticResource MaterialDesignFlatButton}"
-                                       HorizontalContentAlignment="Left"
-                                       Padding="15,10"
-                                       Command="{Binding OpenProfileCommand}">
+                                <!-- Bouton Profil (toujours visible mais actif seulement si connecté) -->
+                                <Button HorizontalContentAlignment="Left"
+                                        Padding="15,10"
+                                        Command="{Binding OpenProfileCommand}">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignFlatButton}">
+                                            <Setter Property="IsEnabled" Value="{Binding IsUserLoggedIn}"/>
+                                        </Style>
+                                    </Button.Style>
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="AccountCircle"
                                                                  VerticalAlignment="Center"
@@ -830,24 +835,44 @@
                                     </StackPanel>
                                 </Button>
 
-                                <Button Style="{StaticResource MaterialDesignFlatButton}"
-                                       HorizontalContentAlignment="Left"
-                                       Padding="15,10"
-                                       Command="{Binding OpenSettingsCommand}">
+                                <!-- Bouton Connexion (visible uniquement si NON connecté) -->
+                                <Button HorizontalContentAlignment="Left"
+                                        Padding="15,10"
+                                        Command="{Binding OpenLoginCommand}">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignFlatButton}">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsUserLoggedIn}" Value="False">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
                                     <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="Cog"
+                                        <materialDesign:PackIcon Kind="Login"
                                                                  VerticalAlignment="Center"
                                                                  Margin="0,0,10,0"/>
-                                        <TextBlock Text="Paramètres" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Se connecter" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
 
                                 <Separator Margin="0,5"/>
 
-                                <Button Style="{StaticResource MaterialDesignFlatButton}"
-                                       HorizontalContentAlignment="Left"
-                                       Padding="15,10"
-                                       Command="{Binding LogoutCommand}">
+                                <!-- Bouton Déconnexion (visible uniquement si connecté) -->
+                                <Button HorizontalContentAlignment="Left"
+                                        Padding="15,10"
+                                        Command="{Binding LogoutCommand}">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignFlatButton}">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsUserLoggedIn}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="Logout" 
                                                                VerticalAlignment="Center"
