@@ -18,6 +18,7 @@ namespace Collectivite.Services
         public async Task<List<Exercice>> GetAllExercie()
         {
             return await _appDbContext.Exercices
+                .Where(e => e.EstCloture != true)
                 .OrderByDescending(e => e.DateFin)
                 .ToListAsync();
         }
@@ -26,11 +27,12 @@ namespace Collectivite.Services
         {
             if (!SessionManager.HasPermission("Contrats.View"))
                 throw new UnauthorizedAccessException("Permission Contrats.View requise pour consulter les contrats.");
-
+            var exericeCourant = ExerciceService.Instance.CurrentExercice;
             return await _appDbContext.Contrats
                 .AsNoTracking()  // ✅ Ne pas tracker
                 .Include(c => c.Exercice)
                 .Include(c => c.Tiers) // charger le tiers lié pour pouvoir binder Tiers.Nom dans l'UI
+                .Where(c => c.ExerciceId == exericeCourant.Id)
                 .ToListAsync();
         }
 

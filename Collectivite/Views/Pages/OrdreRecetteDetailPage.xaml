@@ -139,17 +139,28 @@
                                 </StackPanel>
                             </StackPanel>
 
-                            <!-- Colonne centrale : Symbole -->
+                            <!-- Colonne centrale : Drapeau -->
                             <StackPanel Grid.Column="1" 
-                                       VerticalAlignment="Top"
-                                       HorizontalAlignment="Center"
-                                       Margin="20,0">
-                                <TextBlock Text="⚜" 
-                                         FontSize="36" 
-                                         Foreground="#059669"
-                                         HorizontalAlignment="Center"/>
+            VerticalAlignment="Top"
+            HorizontalAlignment="Center"
+            Margin="30,0">
+                                <Border CornerRadius="3" 
+            BorderBrush="#424242" 
+            BorderThickness="1"
+            HorizontalAlignment="Center"
+            Effect="{StaticResource MaterialDesignShadowDepth1}">
+                                    <Grid Width="54" Height="36">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Rectangle Grid.Column="0" Fill="#CE1126"/>
+                                        <Rectangle Grid.Column="1" Fill="#FCD116"/>
+                                        <Rectangle Grid.Column="2" Fill="#009460"/>
+                                    </Grid>
+                                </Border>
                             </StackPanel>
-
                             <!-- Colonne droite : République -->
                             <StackPanel Grid.Column="2" HorizontalAlignment="Right">
                                 <TextBlock Text="REPUBLIQUE DE GUINEE"

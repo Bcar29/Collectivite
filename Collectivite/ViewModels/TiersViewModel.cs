@@ -40,8 +40,10 @@ namespace Collectivite.ViewModels
 
         public TiersViewModel()
         {
+
             try
             {
+                ExerciceService.Instance.ExerciceChanged += OnExerciceChanged;
                 _dialogTiers = new Tiers
                 {
                     IsActif = true,
@@ -107,6 +109,17 @@ namespace Collectivite.ViewModels
         public ObservableCollection<CompteBancaire> ComptesOfSelectedTiers { get; } = new();
         public ObservableCollection<DocumentTiers> DocumentsOfSelectedTiers { get; } = new();
 
+        private async void OnExerciceChanged(object? sender, Exercice exercice)
+        {
+            await Application.Current.Dispatcher.InvokeAsync(async () =>
+            {
+                await LoadDataAsync();
+            });
+        }
+        public void Cleanup()
+        {
+            ExerciceService.Instance.ExerciceChanged -= OnExerciceChanged;
+        }
         public bool IsLoading
         {
             get => _isLoading;

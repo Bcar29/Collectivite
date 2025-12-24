@@ -553,6 +553,8 @@ namespace Collectivite.ViewModels
         public ICommand ExportPdfCompteAdminCommand { get; }
         public ICommand ExportPdfCompteGestionCommand { get; }
         public ICommand PrintCommand { get; }
+        public ICommand PrintCompteAdminCommand { get; }
+        public ICommand PrintCompteGestionCommand { get; }
         // ═══════════════════════════════════════════════════════════
         // CONSTRUCTEUR
         // ═══════════════════════════════════════════════════════════
@@ -584,7 +586,10 @@ namespace Collectivite.ViewModels
             ExportPdfCommand = new RelayCommand(async _ => await ExportToPdfAsync());
             ExportPdfCompteAdminCommand = new RelayCommand(async _ => await ExportToPdfCompteAdminAsync());
             ExportPdfCompteGestionCommand = new RelayCommand(async _ => await ExportToPdfCompteGestionAsync());
-            PrintCommand = new RelayCommand(_ => Print());
+            PrintCommand = new RelayCommand(async _ => await PrintAsync());
+            PrintCompteAdminCommand = new RelayCommand(async _ => await PrintCompteAdminAsync());
+            PrintCompteGestionCommand = new RelayCommand(async _ => await PrintCompteGestionAsync());
+
 
             // Charger les données initiales
             _ = InitializeAsync();
@@ -1373,12 +1378,13 @@ namespace Collectivite.ViewModels
                 _isDisposed = true;
             }
         }
+        // Charger la commune
         public Commune Commune
         {
             get => _commune;
             set => SetProperty(ref _commune, value);
         }
-        // Charger la commune
+        
         
 
         private async Task ExportToPdfAsync()
@@ -2190,14 +2196,176 @@ namespace Collectivite.ViewModels
 
             document.Add(totalsTable);
         }
-        private void Print()
+        /// <summary>
+        /// Imprime les lignes budgétaires (génère un PDF temporaire et l'ouvre pour impression)
+        /// </summary>
+        private async Task PrintAsync()
         {
-            MessageBox.Show(
-                "Fonctionnalité d'impression en cours de développement.\n" +
-                "Veuillez utiliser l'export PDF puis imprimer le fichier généré.",
-                "Information",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            if (_budgetPrimitifId == 0)
+            {
+                MessageBox.Show("Aucun budget primitif disponible pour cet exercice.",
+                    "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            try
+            {
+                IsLoading = true;
+
+                // Charger la commune si nécessaire
+                if (Commune == null)
+                {
+                    var communeService = new CommuneService();
+                    Commune = await communeService.GetCommuneByIdWithRelationsAsync(
+                        Properties.Settings.Default.CommuneId
+                    );
+                }
+
+                // Créer un fichier temporaire
+                string tempFileName = $"BudgetPrimitif_{GetTabName(SelectedTabIndex)}_{_exerciceService.CurrentExercice?.Libelle}_{Guid.NewGuid():N}.pdf";
+                string tempPath = Path.Combine(Path.GetTempPath(), tempFileName);
+
+                // Générer le PDF (utilise Task.Run pour éviter le deadlock WPF)
+                await Task.Run(() => GeneratePdfBudgetPrimitif(tempPath, Commune));
+
+                // Ouvrir le PDF avec l'application par défaut
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = tempPath,
+                    UseShellExecute = true
+                });
+
+                MessageBox.Show(
+                    "Le document s'ouvre dans votre lecteur PDF.\n\n" +
+                    "Utilisez Ctrl+P ou le menu Fichier → Imprimer pour lancer l'impression.",
+                    "Impression",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'impression : {ex.Message}",
+                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+
+        /// <summary>
+        /// Imprime le Compte Administratif
+        /// </summary>
+        private async Task PrintCompteAdminAsync()
+        {
+            if (_budgetPrimitifId == 0)
+            {
+                MessageBox.Show("Aucun budget primitif disponible pour cet exercice.",
+                    "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            try
+            {
+                IsLoading = true;
+
+                // Charger la commune si nécessaire
+                if (Commune == null)
+                {
+                    var communeService = new CommuneService();
+                    Commune = await communeService.GetCommuneByIdWithRelationsAsync(
+                        Properties.Settings.Default.CommuneId
+                    );
+                }
+
+                // Créer un fichier temporaire
+                string tempFileName = $"CompteAdmin_{GetTabName(SelectedTabIndex)}_{_exerciceService.CurrentExercice?.Libelle}_{Guid.NewGuid():N}.pdf";
+                string tempPath = Path.Combine(Path.GetTempPath(), tempFileName);
+
+                // Générer le PDF
+                await Task.Run(() => GeneratePdfCompteAdmin(tempPath, Commune));
+
+                // Ouvrir le PDF avec l'application par défaut
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = tempPath,
+                    UseShellExecute = true
+                });
+
+                MessageBox.Show(
+                    "Le document s'ouvre dans votre lecteur PDF.\n\n" +
+                    "Utilisez Ctrl+P ou le menu Fichier → Imprimer pour lancer l'impression.",
+                    "Impression",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'impression : {ex.Message}",
+                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        /// <summary>
+        /// Imprime le Compte de Gestion
+        /// </summary>
+        private async Task PrintCompteGestionAsync()
+        {
+            if (_budgetPrimitifId == 0)
+            {
+                MessageBox.Show("Aucun budget primitif disponible pour cet exercice.",
+                    "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            try
+            {
+                IsLoading = true;
+
+                // Charger la commune si nécessaire
+                if (Commune == null)
+                {
+                    var communeService = new CommuneService();
+                    Commune = await communeService.GetCommuneByIdWithRelationsAsync(
+                        Properties.Settings.Default.CommuneId
+                    );
+                }
+
+                // Créer un fichier temporaire
+                string tempFileName = $"CompteGestion_{GetTabName(SelectedTabIndex)}_{_exerciceService.CurrentExercice?.Libelle}_{Guid.NewGuid():N}.pdf";
+                string tempPath = Path.Combine(Path.GetTempPath(), tempFileName);
+
+                // Générer le PDF
+                await Task.Run(() => GeneratePdfCompteGestion(tempPath, Commune));
+
+                // Ouvrir le PDF avec l'application par défaut
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = tempPath,
+                    UseShellExecute = true
+                });
+
+                MessageBox.Show(
+                    "Le document s'ouvre dans votre lecteur PDF.\n\n" +
+                    "Utilisez Ctrl+P ou le menu Fichier → Imprimer pour lancer l'impression.",
+                    "Impression",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'impression : {ex.Message}",
+                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
         }
     }
 }

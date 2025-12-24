@@ -62,79 +62,286 @@
                     </StackPanel>
                 </DockPanel>
 
-                <!-- Informations générales -->
+                <!-- Boutons d'action -->
+                <StackPanel Orientation="Horizontal" 
+    DockPanel.Dock="Right" 
+    HorizontalAlignment="Right">
+                    <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+        Command="{Binding PrintCommand}"
+        Height="36"
+        Margin="0,0,10,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Printer" Margin="0,0,5,0"/>
+                            <TextBlock Text="Imprimer"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource MaterialDesignRaisedButton}"
+        Command="{Binding ExportPdfCommand}"
+        Height="36"
+        Background="DarkRed"
+        BorderBrush="DarkRed"
+        Margin="0,0,10,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="FilePdfBox" Margin="0,0,5,0"/>
+                            <TextBlock Text="Export PDF"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+
+
                 <materialDesign:Card Grid.Row="1" Padding="20" Margin="0,0,0,20">
                     <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="20"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
+                            <!-- En-tête officiel -->
                             <RowDefinition Height="Auto"/>
+                            <!-- Titre + Bandeau -->
                             <RowDefinition Height="Auto"/>
+                            <!-- Séparateur -->
+                            <RowDefinition Height="Auto"/>
+                            <!-- Titre section -->
+                            <RowDefinition Height="Auto"/>
+                            <!-- Ligne 1: Numéro + Date -->
+                            <RowDefinition Height="Auto"/>
+                            <!-- Ligne 2: Exercice + Nombre lignes -->
                         </Grid.RowDefinitions>
 
-                        <!-- Titre section -->
-                        <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3"
-                                   Text="Informations Générales"
-                                   FontSize="18"
-                                   FontWeight="SemiBold"
-                                   Margin="0,0,0,20"/>
+                        <!-- ═══════════════════════════════════════════════════════════ -->
+                        <!-- ROW 0 : EN-TÊTE OFFICIEL GUINÉEN -->
+                        <!-- ═══════════════════════════════════════════════════════════ -->
+                        <Grid Grid.Row="0" Margin="0,0,0,25">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
 
-                        <!-- Numéro -->
-                        <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,0,15">
-                            <TextBlock Text="N° Expression de Besoin"
-                                       FontSize="12"
-                                       Foreground="#666"
-                                       Margin="0,0,0,5"/>
-                            <TextBlock Text="{Binding ExpressionBesoin.Numero}"
-                                       FontSize="16"
-                                       FontWeight="SemiBold"/>
-                        </StackPanel>
+                            <!-- Colonne gauche : Ministère -->
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Ministère de l'Administration du Territoire"
+                           FontSize="13"
+                           FontWeight="Bold"
+                           Foreground="#1E293B"/>
+                                <TextBlock Text="et de la Décentralisation"
+                           FontSize="13"
+                           FontWeight="Bold"
+                           Foreground="#1E293B"/>
+                                <TextBlock Text="Direction Générale des Collectivités Locales"
+                           FontSize="12"
+                           FontWeight="SemiBold"
+                           Foreground="#475569"
+                           Margin="0,5,0,0"/>
 
-                        <!-- Date -->
-                        <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,0,0,15">
-                            <TextBlock Text="Date de Création"
-                                       FontSize="12"
-                                       Foreground="#666"
-                                       Margin="0,0,0,5"/>
-                            <TextBlock Text="{Binding ExpressionBesoin.DateCreation, StringFormat='dd/MM/yyyy'}"
-                                       FontSize="16"
-                                       FontWeight="SemiBold"/>
-                        </StackPanel>
+                                <!-- Infos géographiques -->
+                                <StackPanel Margin="0,12,0,0">
+                                    <TextBlock FontSize="12" Foreground="#64748B">
+                        <Run Text="REGION ADMINISTRATIVE DE "/>
+                        <Run Text="{Binding Commune.RegionCommune, FallbackValue='............................', Mode=OneWay}" 
+                             FontWeight="SemiBold" Foreground="#1E293B"/>
+                                    </TextBlock>
+                                    <TextBlock FontSize="12" Foreground="#64748B">
+                        <Run Text="PREFECTURE DE "/>
+                        <Run Text="{Binding Commune.PrefectureCommune, FallbackValue='............................', Mode=OneWay}" 
+                             FontWeight="SemiBold" Foreground="#1E293B"/>
+                                    </TextBlock>
+                                    <TextBlock FontSize="12" Foreground="#64748B">
+                        <Run Text="COMMUNE "/>
+                        <Run Text="{Binding Commune.TypCommune, FallbackValue='..........', Mode=OneWay}" 
+                             FontWeight="SemiBold" Foreground="#1E293B"/>
+                        <Run Text=" DE "/>
+                        <Run Text="{Binding Commune.NomCommune, FallbackValue='............................', Mode=OneWay}" 
+                             FontWeight="SemiBold" Foreground="#1E293B"/>
+                                    </TextBlock>
+                                </StackPanel>
+                            </StackPanel>
 
-                        <!-- Exercice -->
-                        <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,0,15">
-                            <TextBlock Text="Exercice "
-                                       FontSize="12"
-                                       Foreground="#666"
-                                       Margin="0,0,0,5"/>
-                            <TextBlock Text="{Binding ExpressionBesoin.Exercice.Libelle}"
-                                       FontSize="16"
-                                       FontWeight="SemiBold"
-                                       Foreground="#1976D2"/>
-                        </StackPanel>
+                            
+                            <!-- Colonne centrale : Drapeau de la Guinée -->
+                            <StackPanel Grid.Column="1" 
+            VerticalAlignment="Top"
+            HorizontalAlignment="Center"
+            Margin="30,0">
+                                <Border CornerRadius="3" 
+            BorderBrush="#424242" 
+            BorderThickness="1"
+            HorizontalAlignment="Center"
+            Effect="{StaticResource MaterialDesignShadowDepth1}">
+                                    <Grid Width="54" Height="36">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <!-- Rouge -->
+                                        <Rectangle Grid.Column="0" Fill="#CE1126"/>
+                                        <!-- Jaune -->
+                                        <Rectangle Grid.Column="1" Fill="#FCD116"/>
+                                        <!-- Vert -->
+                                        <Rectangle Grid.Column="2" Fill="#009460"/>
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
 
-                        <!-- Nombre de lignes -->
-                        <StackPanel Grid.Row="2" Grid.Column="2">
-                            <TextBlock Text="Nombre de lignes"
-                                       FontSize="12"
-                                       Foreground="#666"
-                                       Margin="0,0,0,5"/>
-                            <Border Background="#E3F2FD" 
-                                    CornerRadius="8"
-                                    Padding="10,5"
-                                    HorizontalAlignment="Left">
-                                <TextBlock Text="{Binding Details.Count}"
-                                           FontSize="16"
-                                           FontWeight="Bold"
-                                           Foreground="#1976D2"/>
+                            <!-- Colonne droite : République -->
+                            <StackPanel Grid.Column="2" HorizontalAlignment="Right">
+                                <TextBlock Text="REPUBLIQUE DE GUINEE"
+                           FontSize="13"
+                           FontWeight="Bold"
+                           Foreground="#1E293B"
+                           HorizontalAlignment="Right"/>
+                                <TextBlock Text="Travail - Justice - Solidarité"
+                           FontSize="12"
+                           FontStyle="Italic"
+                           Foreground="#475569"
+                           HorizontalAlignment="Right"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- ═══════════════════════════════════════════════════════════ -->
+                        <!-- ROW 1 : TITRE + BANDEAU -->
+                        <!-- ═══════════════════════════════════════════════════════════ -->
+                        <StackPanel Grid.Row="1" Margin="0,0,0,25">
+                            <!-- Titre principal -->
+                            <TextBlock Text="EXPRESSION DE BES"
+                       FontSize="22"
+                       FontWeight="Bold"
+                       Foreground="#1E293B"
+                       HorizontalAlignment="Center"
+                       Margin="0,0,0,8"/>
+
+                            <!-- Bandeau avec commune -->
+                            <Border Background="#D1FAE5"
+                    BorderBrush="#059669"
+                    BorderThickness="0,2"
+                    Padding="15,8"
+                    HorizontalAlignment="Center"
+                    MinWidth="400">
+                                <TextBlock HorizontalAlignment="Center"
+                           FontSize="15"
+                           FontWeight="SemiBold"
+                           Foreground="#065F46">
+                    <Run Text="DE LA COMMUNE "/>
+                    <Run Text="{Binding Commune.TypCommune, FallbackValue='..........', Mode=OneWay}"/>
+                    <Run Text=" DE "/>
+                    <Run Text="{Binding Commune.NomCommune, FallbackValue='............................', Mode=OneWay}"/>
+                                </TextBlock>
                             </Border>
+
+                            <!-- Exercice -->
+                            <TextBlock FontSize="16"
+                       FontWeight="SemiBold"
+                       Foreground="#1E293B"
+                       HorizontalAlignment="Center"
+                       Margin="0,10,0,0">
+                <Run Text="{Binding ExpressionBesoin.Exercice.Libelle, FallbackValue='2025'}"/>
+                            </TextBlock>
                         </StackPanel>
+
+                        <!-- ═══════════════════════════════════════════════════════════ -->
+                        <!-- ROW 2 : SÉPARATEUR -->
+                        <!-- ═══════════════════════════════════════════════════════════ -->
+                        <Separator Grid.Row="2" Margin="0,0,0,20"/>
+
+                        <!-- ═══════════════════════════════════════════════════════════ -->
+                        <!-- ROW 3 : TITRE SECTION -->
+                        <!-- ═══════════════════════════════════════════════════════════ -->
+                        <TextBlock Grid.Row="3"
+                   Text="📋 Informations Générales"
+                   FontSize="18"
+                   FontWeight="SemiBold"
+                   Foreground="#1976D2"
+                   Margin="0,0,0,20"/>
+
+                        <!-- ═══════════════════════════════════════════════════════════ -->
+                        <!-- ROW 4 : NUMÉRO + DATE -->
+                        <!-- ═══════════════════════════════════════════════════════════ -->
+                        <Grid Grid.Row="4" Margin="0,0,0,15">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="20"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Numéro -->
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="N° Expression de Besoin"
+                           FontSize="12"
+                           Foreground="#666"
+                           Margin="0,0,0,5"/>
+                                <Border Background="#F5F5F5" 
+                        CornerRadius="4" 
+                        Padding="10,8">
+                                    <TextBlock Text="{Binding ExpressionBesoin.Numero}"
+                               FontSize="16"
+                               FontWeight="SemiBold"/>
+                                </Border>
+                            </StackPanel>
+
+                            <!-- Date -->
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Date de Création"
+                           FontSize="12"
+                           Foreground="#666"
+                           Margin="0,0,0,5"/>
+                                <Border Background="#F5F5F5" 
+                        CornerRadius="4" 
+                        Padding="10,8">
+                                    <TextBlock Text="{Binding ExpressionBesoin.DateCreation, StringFormat='dd/MM/yyyy'}"
+                               FontSize="16"
+                               FontWeight="SemiBold"/>
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- ═══════════════════════════════════════════════════════════ -->
+                        <!-- ROW 5 : EXERCICE + NOMBRE DE LIGNES -->
+                        <!-- ═══════════════════════════════════════════════════════════ -->
+                        <Grid Grid.Row="5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="20"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Exercice -->
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Exercice"
+                           FontSize="12"
+                           Foreground="#666"
+                           Margin="0,0,0,5"/>
+                                <Border Background="#E3F2FD" 
+                        CornerRadius="4" 
+                        Padding="10,8">
+                                    <TextBlock Text="{Binding ExpressionBesoin.Exercice.Libelle}"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               Foreground="#1976D2"/>
+                                </Border>
+                            </StackPanel>
+
+                            <!-- Nombre de lignes -->
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Nombre de lignes"
+                           FontSize="12"
+                           Foreground="#666"
+                           Margin="0,0,0,5"/>
+                                <Border Background="#E8F5E9" 
+                        CornerRadius="4"
+                        Padding="10,8"
+                        HorizontalAlignment="Left"
+                        MinWidth="80">
+                                    <TextBlock Text="{Binding Details.Count}"
+                               FontSize="16"
+                               FontWeight="Bold"
+                               Foreground="#388E3C"
+                               HorizontalAlignment="Center"/>
+                                </Border>
+                            </StackPanel>
+                        </Grid>
                     </Grid>
                 </materialDesign:Card>
+
 
                 <!-- Détails de l'expression de besoin -->
                 <materialDesign:Card Grid.Row="2" Padding="20">

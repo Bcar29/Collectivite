@@ -19,7 +19,10 @@ namespace Collectivite.Services
     public class LivreJournalExportService
     {
         private readonly CommuneService _communeService;
-
+        // Couleurs du drapeau guinéen
+        private static readonly string DrapeauRouge = "#CE1126";
+        private static readonly string DrapeauJaune = "#FCD116";
+        private static readonly string DrapeauVert = "#009460";
         public LivreJournalExportService()
         {
             _communeService = new CommuneService();
@@ -401,8 +404,23 @@ namespace Collectivite.Services
                                     .FontSize(9);
                             });
 
-                            row.RelativeItem(1).AlignCenter().AlignMiddle().Text("⚜")
-                                .FontSize(30);
+                            // Colonne centrale : Drapeau guinéen
+                            row.RelativeItem(1).AlignCenter().AlignMiddle().Element(c =>
+                            {
+                                c.Border(1).BorderColor("#424242").Table(flag =>
+                                {
+                                    flag.ColumnsDefinition(cols =>
+                                    {
+                                        cols.ConstantColumn(18);
+                                        cols.ConstantColumn(18);
+                                        cols.ConstantColumn(18);
+                                    });
+
+                                    flag.Cell().Height(36).Background(DrapeauRouge);
+                                    flag.Cell().Height(36).Background(DrapeauJaune);
+                                    flag.Cell().Height(36).Background(DrapeauVert);
+                                });
+                            });
 
                             row.RelativeItem(2).AlignRight().Column(rightCol =>
                             {

@@ -74,16 +74,7 @@ namespace Collectivite.Utils
             leftCell.AddElement(leftContent);
             headerTable.AddCell(leftCell);
 
-            // ─────────────────────────────────────────────────────────────
-            // COLONNE CENTRALE : Symbole ⚜
-            // ─────────────────────────────────────────────────────────────
-            PdfPCell centerCell = new PdfPCell { Border = Rectangle.NO_BORDER, HorizontalAlignment = Element.ALIGN_CENTER, VerticalAlignment = Element.ALIGN_MIDDLE };
-
-            Paragraph symbolPara = new Paragraph("⚜", GetFont(36, Font.BOLD, VertEmeraude));
-            symbolPara.Alignment = Element.ALIGN_CENTER;
-            centerCell.AddElement(symbolPara);
-            headerTable.AddCell(centerCell);
-
+            
             // ─────────────────────────────────────────────────────────────
             // COLONNE DROITE : République + Devise
             // ─────────────────────────────────────────────────────────────
