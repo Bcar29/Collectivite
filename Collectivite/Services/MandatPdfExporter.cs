@@ -27,7 +27,7 @@ namespace Collectivite.Services
         private static readonly string VertPaleClair = "#E8F5E9";
         private static readonly string OrangeClair = "#FFF3E0";
         private static readonly string RougeClair = "#FFEBEE";
-        private static readonly string GrisClair = "#F5F5F5";
+        // private static readonly string GrisClair = "#F5F5F5";
         private static readonly string VertLettres = "#F9FBE7";
 
         private static readonly string GrisArdoise = "#1E293B";
@@ -213,7 +213,7 @@ namespace Collectivite.Services
                                     });
 
                                     AjouterLigneInfo(table, "Exercice :", mandat.Engagement?.Exercice?.Libelle ?? "-");
-                                    AjouterLigneInfo(table, "Tiers :", mandat.Engagement?.Tiers?.Nom ?? "Non spécifié");
+                                    AjouterLigneInfo(table, "Tiers :", mandat.Engagement?.Tiers?.NomComplet ?? "Non spécifié");
                                     AjouterLigneInfo(table, "Engagement :", TronquerTexte(mandat.Engagement?.Objet, 30));
                                     AjouterLigneInfo(table, "Objet :", TronquerTexte(mandat.Objet, 30));
                                 });

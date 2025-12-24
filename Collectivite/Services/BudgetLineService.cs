@@ -205,6 +205,9 @@ namespace Collectivite.Services
         public async Task<List<BudgetLine>> GetBudgetLinesForBudgetPrimitifAsync(int budgetPrimitifId)
         {
             using var context = CreateContext();
+
+            // ✅ Permettre le chargement même pour un exercice clôturé (affichage en lecture seule)
+            // Le blocage des actions se fait au niveau de l'UI (boutons masqués/désactivés)
             return await context.BudgetLines
                 .Include(b => b.Nommenclature)
                 .ThenInclude(n => n.Enfants)
@@ -246,6 +249,14 @@ namespace Collectivite.Services
             {
                 return new List<BudgetLine>();
             }
+
+            // ⛔ Par sûreté, si jamais l'exercice courant est marqué comme clôturé,
+            // on ne renvoie aucune ligne de dépense pour empêcher de nouvelles opérations.
+            if (exerciceService.CurrentExercice.EstCloture)
+            {
+                return new List<BudgetLine>();
+            }
+
             return await context.BudgetLines
                 .Include(b => b.Nommenclature)
                 .ThenInclude(n => n.Enfants)

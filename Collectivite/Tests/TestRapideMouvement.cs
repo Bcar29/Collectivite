@@ -140,7 +140,7 @@ namespace Collectivite.Tests
                             if (mandatAvecRelations.Engagement.Tiers != null)
                             {
                                 // Essayer différentes propriétés pour le nom
-                                var nomTiers = mandatAvecRelations.Engagement.Tiers.Nom ??
+                                var nomTiers = mandatAvecRelations.Engagement.Tiers.NomComplet ??
                                                mandatAvecRelations.Engagement.Tiers.RaisonSociale ??
                                                "Propriété nom introuvable";
                                 rapport.AppendLine($"  - Nom Tiers : {nomTiers}");

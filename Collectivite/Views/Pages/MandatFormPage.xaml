@@ -143,7 +143,7 @@
                                             <Run Text="Imputation "/>
                                             <Run Text="{Binding BudgetLine.Nommenclature.CodeNomenclature, Mode=OneWay}"/>
                                             <Run Text=" - "/>
-                                            <Run Text="{Binding Tiers.Nom, Mode=OneWay}"/>
+                                            <Run Text="{Binding Tiers.NomComplet, Mode=OneWay}"/>
                                         </TextBlock>
                                         <TextBlock Text="{Binding Objet}" 
                                                  FontSize="11" 

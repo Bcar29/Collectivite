@@ -184,34 +184,61 @@
                                                   HorizontalAlignment="Center">
 
                                             <!-- Bouton Modifier -->
-                                            <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                  ToolTip="Modifier"
+                                            <Button ToolTip="Modifier"
                                                   Command="{Binding DataContext.OpenEditDialogCommand, 
                                                           RelativeSource={RelativeSource AncestorType=Page}}"
                                                   CommandParameter="{Binding}"
                                                   Margin="4,0">
+                                                <Button.Style>
+                                                    <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignIconButton}">
+                                                        <Style.Triggers>
+                                                            <!-- Si l'exercice est clôturé, on masque complètement le bouton -->
+                                                            <DataTrigger Binding="{Binding EstCloture}" Value="True">
+                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Style>
                                                 <materialDesign:PackIcon Kind="Pencil" 
                                                                        Foreground="#1976D2"/>
                                             </Button>
 
                                             <!-- Bouton Clôturer -->
-                                            <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                  ToolTip="Clôturer l'exercice"
+                                            <Button ToolTip="Clôturer l'exercice"
                                                   Command="{Binding DataContext.CloturerCommand, 
                                                           RelativeSource={RelativeSource AncestorType=Page}}"
                                                   CommandParameter="{Binding}"
                                                   Margin="4,0">
+                                                <Button.Style>
+                                                    <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignIconButton}">
+                                                        <!-- Visible uniquement tant que l'exercice n'est pas clôturé -->
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding EstCloture}" Value="True">
+                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Style>
                                                 <materialDesign:PackIcon Kind="Lock" 
                                                                        Foreground="#FF9800"/>
                                             </Button>
 
                                             <!-- Bouton Supprimer -->
-                                            <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                  ToolTip="Supprimer"
+                                            <Button ToolTip="Supprimer"
                                                   Command="{Binding DataContext.DeleteCommand, 
                                                           RelativeSource={RelativeSource AncestorType=Page}}"
                                                   CommandParameter="{Binding}"
                                                   Margin="4,0">
+                                                <Button.Style>
+                                                    <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignIconButton}">
+                                                        <Style.Triggers>
+                                                            <!-- Si l'exercice est clôturé, on masque complètement le bouton -->
+                                                            <DataTrigger Binding="{Binding EstCloture}" Value="True">
+                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Style>
                                                 <materialDesign:PackIcon Kind="Delete" 
                                                                        Foreground="#F44336"/>
                                             </Button>

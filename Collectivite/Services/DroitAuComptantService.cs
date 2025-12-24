@@ -62,7 +62,7 @@ namespace Collectivite.Services
                         Imputation = nomenclature != null
                             ? $"{nomenclature.CodeNomenclature} - {nomenclature.Intitule}"
                             : "Non spécifié",
-                        Debiteur = ordre.Tiers?.Nom ?? "Non spécifié",
+                        Debiteur = ordre.Tiers?.NomComplet ?? "Non spécifié",
                         MontantOrdre = ordre.MontantOrdre,
                         MontantEncaisse = mouvement?.Montant ?? ordre.MontantOrdre,
                         ModeReglement = DeterminerModeReglement(mouvement),

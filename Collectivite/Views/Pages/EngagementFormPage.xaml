@@ -148,7 +148,7 @@
                                 ItemsSource="{Binding TiersList}"
                                 SelectedValue="{Binding Engagement.TiersId}"
                                 SelectedValuePath="Id"
-                                DisplayMemberPath="Nom"/>
+                                DisplayMemberPath="NomComplet"/>
                         <!-- Facture -->
                         <ComboBox Grid.Row="6" Grid.Column="0"
                             materialDesign:HintAssist.Hint="Facture (optionnel)"

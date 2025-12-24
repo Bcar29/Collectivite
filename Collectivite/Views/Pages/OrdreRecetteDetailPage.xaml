@@ -255,7 +255,7 @@
                             <TextBlock Grid.Row="10" Grid.Column="1" Text="{Binding OrdreRecette.BudgetLine.Nommenclature.CodeNomenclature}"/>
 
                             <TextBlock Grid.Row="12" Grid.Column="0" Text="Tiers :" FontWeight="SemiBold"/>
-                            <TextBlock Grid.Row="12" Grid.Column="1" Text="{Binding OrdreRecette.Tiers.Nom, FallbackValue='Non spécifié'}"/>
+                            <TextBlock Grid.Row="12" Grid.Column="1" Text="{Binding OrdreRecette.Tiers.NomComplet, FallbackValue='Non spécifié'}"/>
 
                             <TextBlock Grid.Row="14" Grid.Column="0" Text="Comptable :" FontWeight="SemiBold"/>
                             <TextBlock Grid.Row="14" Grid.Column="1" Text="{Binding OrdreRecette.Comptable, FallbackValue='Non défini'}"/>

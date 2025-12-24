@@ -145,7 +145,7 @@
 
                             <!-- Le Tiers -->
                             <DataGridTextColumn Header="Tiers" 
-                                  Binding="{Binding Tiers.Nom}"
+                                  Binding="{Binding Tiers.NomComplet}"
                                   Width="200"
                                   FontWeight="Medium"/>
                             
@@ -294,7 +294,7 @@
                           ItemsSource="{Binding TiersList}"
                           SelectedValue="{Binding DialogContrat.TiersId}"
                           SelectedValuePath="Id"
-                          DisplayMemberPath="Nom"
+                          DisplayMemberPath="NomComplet"
                           Margin="0,0,0,15"/>
 
                     <!-- Objet du contrat  -->

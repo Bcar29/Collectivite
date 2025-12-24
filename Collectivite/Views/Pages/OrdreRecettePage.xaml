@@ -233,7 +233,7 @@
                                       ItemsSource="{Binding TiersList}"
                                       SelectedValue="{Binding FilterTiersId}"
                                       SelectedValuePath="Id"
-                                      DisplayMemberPath="Nom"/>
+                                      DisplayMemberPath="NomComplet"/>
 
                             <!-- Date début -->
                             <DatePicker Grid.Row="2" Grid.Column="0"
@@ -319,7 +319,7 @@
 
                             <!-- Tiers -->
                             <DataGridTextColumn Header="Tiers" 
-                                  Binding="{Binding Tiers.Nom}" 
+                                  Binding="{Binding Tiers.NomComplet}" 
                                   Width="150"/>
 
                             <!-- Comptable -->

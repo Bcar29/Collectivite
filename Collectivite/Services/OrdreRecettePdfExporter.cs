@@ -31,7 +31,7 @@ namespace Collectivite.Services
 
         private static readonly string JauneBordure = "#FFF59D";
         private static readonly string GrisBordure = "#E0E0E0";
-        private static readonly string GrisFiligrane = "#F0F0F0";
+        // private static readonly string GrisFiligrane = "#F0F0F0";
 
         /// <summary>
         /// Exporte l'ordre de recette en PDF sur une seule page A4
@@ -159,7 +159,7 @@ namespace Collectivite.Services
                                     AjouterLigneInfo(table, "N° Ordre :", ordre.NumeroOrdre ?? "-");
                                     AjouterLigneInfo(table, "Date :", ordre.DateOrdre.ToString("dd/MM/yyyy"));
                                     AjouterLigneInfo(table, "Exercice :", ordre.Exercice?.Libelle ?? "-");
-                                    AjouterLigneInfo(table, "Tiers :", ordre.Tiers?.Nom ?? "Non spécifié");
+                                    AjouterLigneInfo(table, "Tiers :", ordre.Tiers?.NomComplet ?? "Non spécifié");
                                 });
 
                                 infoRow.ConstantItem(20);

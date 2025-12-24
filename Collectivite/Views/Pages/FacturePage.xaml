@@ -144,7 +144,7 @@
 
                         <!-- Tiers -->
                         <DataGridTextColumn Header="Tiers" 
-                                          Binding="{Binding Tiers.Nom}" 
+                                      Binding="{Binding Tiers.NomComplet}" 
                                           Width="*" 
                                           MinWidth="150"/>
 
@@ -301,7 +301,7 @@
                               ItemsSource="{Binding TiersList}"
                               SelectedValue="{Binding DialogFacture.TiersId}"
                               SelectedValuePath="Id"
-                              DisplayMemberPath="Nom"
+                              DisplayMemberPath="NomComplet"
                               Margin="0,0,0,10"/>
 
                             <!-- Exercice -->

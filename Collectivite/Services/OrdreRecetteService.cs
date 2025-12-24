@@ -200,8 +200,16 @@ namespace Collectivite.Services
                 throw new InvalidOperationException("Aucun exercice n'est sélectionné.");
             }
 
+            // ⛔ Si l'exercice courant est clôturé, on ne renvoie aucune ligne budgétaire
+            if (exerciceService.CurrentExercice.EstCloture)
+            {
+                return new List<BudgetLine>();
+            }
+
             var allLines = await context.BudgetLines
-                .Where(bl => bl.BudgetPrimitif.ExerciceId == exerciceService.CurrentExercice.Id && bl.BudgetPrimitif.Status == BudgetPrimitif.Statusbudget.VALIDATED && bl.Nommenclature.Nature == NatureType.Recette)
+                .Where(bl => bl.BudgetPrimitif.ExerciceId == exerciceService.CurrentExercice.Id
+                             && bl.BudgetPrimitif.Status == BudgetPrimitif.Statusbudget.VALIDATED
+                             && bl.Nommenclature.Nature == NatureType.Recette)
                 .Include(bl => bl.Nommenclature)
                 //.Include(bl => bl.Remaniements)
                 .AsNoTracking()

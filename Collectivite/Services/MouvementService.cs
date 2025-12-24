@@ -40,7 +40,6 @@ namespace Collectivite.Services
                 .Where(m => m.Etat == Mandat.EtatMandat.Validé && exerciceService.CurrentExercice.Id == m.Engagement.ExerciceId)
                 .Include(m => m.Engagement)
                     .ThenInclude(e => e.Tiers)
-                .Where(m => m.Engagement.ExerciceId == exerciceEncours.Id) 
                 .OrderByDescending(m => m.DateEmission)
                 .ToListAsync();
 
@@ -304,7 +303,7 @@ namespace Collectivite.Services
                     NumeroOrdre = ordre.NumeroOrdre,
                     DateOrdre = ordre.DateOrdre,
                     Motifs = ordre.Motifs,
-                    Debiteur = ordre.Tiers?.Nom ?? "Non spécifié",
+                    Debiteur = ordre.Tiers?.NomComplet ?? "Non spécifié",
                     MontantOrdre = ordre.MontantOrdre,
                     MontantEncaisse = montantEncaisse,
                     Etat = ordre.Etat
@@ -341,7 +340,7 @@ namespace Collectivite.Services
                 NumeroOrdre = ordre.NumeroOrdre,
                 DateOrdre = ordre.DateOrdre,
                 Motifs = ordre.Motifs,
-                Debiteur = ordre.Tiers?.Nom ?? "Non spécifié",
+                Debiteur = ordre.Tiers?.NomComplet ?? "Non spécifié",
                 MontantOrdre = ordre.MontantOrdre,
                 MontantEncaisse = montantEncaisse,
                 Etat = ordre.Etat
