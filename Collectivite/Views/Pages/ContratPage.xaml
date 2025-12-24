@@ -101,147 +101,7 @@
                 </Grid>
             </Border>
 
-                            <!-- Numero contrat -->
-                            <DataGridTextColumn Header="Numéro Contrat" 
-                                Binding="{Binding NumeroContrat}"
-                                Width="100"
-                                FontWeight="Medium"/>
-
-                            <!-- Exercice -->
-                            <DataGridTextColumn Header="Exercice" 
-                                Binding="{Binding Exercice.Libelle}"
-                                Width="170"
-                                FontWeight="Medium"/>
-
-                            <!-- Date signature -->
-                            <DataGridTemplateColumn Header="Date Signature" Width="180">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Horizontal">
-                                            <materialDesign:PackIcon Kind="CalendarCheck" 
-                                        Width="16" 
-                                        Height="16"
-                                        Foreground="#F57C00"
-                                        VerticalAlignment="Center"
-                                        Margin="0,0,8,0"/>
-                                            <TextBlock Text="{Binding DateSignature, StringFormat='dd/MM/yyyy'}"
-                                                 VerticalAlignment="Center"/>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-
-                            <!-- Date Echeance -->
-                            <DataGridTemplateColumn Header="Date Echéance" Width="180">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Horizontal">
-                                            <materialDesign:PackIcon Kind="CalendarCheck" 
-                                        Width="16" 
-                                        Height="16"
-                                        Foreground="#F57C00"
-                                        VerticalAlignment="Center"
-                                        Margin="0,0,8,0"/>
-                                            <TextBlock Text="{Binding DateEcheance, StringFormat='dd/MM/yyyy'}"
-                                                VerticalAlignment="Center"/>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-
-                            <!-- Le Tiers -->
-                            <DataGridTextColumn Header="Tiers" 
-                                  Binding="{Binding Tiers.NomComplet}"
-                                  Width="200"
-                                  FontWeight="Medium"/>
-                            
-                            <!-- L'Objet -->
-                            <DataGridTextColumn Header="Objet" 
-                                  Binding="{Binding Objet}"
-                                  Width="230"
-                                  FontWeight="Medium"/>
-                            
-                            <!-- Montant Contrat -->
-                            <DataGridTemplateColumn Header="Montant" Width="200">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Horizontal">
-                                            <materialDesign:PackIcon Kind="CurrencyUsd" 
-                                       Width="18" 
-                                       Height="18"
-                                       Foreground="#388E3C"
-                                       VerticalAlignment="Center"
-                                       Margin="0,0,8,0"/>
-                                            <TextBlock VerticalAlignment="Center"
-                                                 FontWeight="SemiBold"
-                                                 Foreground="#388E3C">
-                                                <TextBlock.Text>
-                                                    <MultiBinding StringFormat="{}{0:N0} GNF">
-                                                        <Binding Path="MontantContrat"/>
-                                                    </MultiBinding>
-                                                </TextBlock.Text>
-                                            </TextBlock>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-
-                            <!-- Actions -->
-                            <DataGridTemplateColumn Header="Actions" Width="180">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Horizontal" 
-                                          HorizontalAlignment="Center">
-
-                                            <!-- Bouton Modifier -->
-                                                <Button Style="{StaticResource MaterialDesignIconButton}"
-                                              ToolTip="Modifier"
-                                              Command="{Binding DataContext.OppenEditContratCommand, 
-                                                  RelativeSource={RelativeSource AncestorType=Page}}"
-                                              CommandParameter="{Binding}"
-                                              Margin="4,0"
-                                              Visibility="{Binding DataContext.CanEditContrat, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
-                                                <materialDesign:PackIcon Kind="Pencil" 
-                                                           Foreground="#1976D2"/>
-                                                </Button>
-
-                                            <!-- Bouton Supprimer -->
-                                                <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                    ToolTip="Supprimer"
-                                                    Command="{Binding DataContext.DeleteContratCommand, 
-                                                    RelativeSource={RelativeSource AncestorType=Page}}"
-                                                    CommandParameter="{Binding}"
-                                                    Margin="4,0"
-                                                    Visibility="{Binding DataContext.CanDeleteContrat, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
-                                                   <materialDesign:PackIcon Kind="Delete" 
-                                                               Foreground="#F44336"/>
-                                                </Button>
-
-                                            <!-- ✅ Bouton Détail (NOUVEAU) 
-                                            <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                   ToolTip="Voir les détails"
-                                                   Command="{Binding DataContext.OpenDetailCommuneCommand, 
-                                                     RelativeSource={RelativeSource AncestorType=Page}}"
-                                                   CommandParameter="{Binding}"
-                                                   Margin="4,0">
-                                                    <materialDesign:PackIcon Kind="InformationOutline" 
-                                                     Foreground="#009688"/>
-                                            </Button>
-                                                        -->
-                                        </StackPanel>
-
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </materialDesign:Card>
-
-            </StackPanel>
-        </ScrollViewer>
-
-        <!-- ═══════════════════════════════════════════════════════════
+            <!-- ═══════════════════════════════════════════════════════════
       DIALOG MODAL AJOUT/MODIFICATION
       ═══════════════════════════════════════════════════════════ -->
         <materialDesign:DialogHost IsOpen="{Binding IsDialogOpen}"
@@ -345,33 +205,10 @@
                                 <Binding RelativeSource="{RelativeSource Self}"/>
                             </Button.CommandParameter>
                         </Button>
-                    </Grid>
-                    <Expander Grid.Row="1" Header="Filtres avancés" Margin="0,10,0,0" Background="Transparent">
-                        <Grid Margin="0,15,0,0">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="15"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="15"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="30"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="15"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <DatePicker Grid.Row="0" Grid.Column="0" materialDesign:HintAssist.Hint="Signature du" Style="{StaticResource MaterialDesignOutlinedDatePicker}" SelectedDate="{Binding DateSignatureDebut}"/>
-                            <DatePicker Grid.Row="0" Grid.Column="2" materialDesign:HintAssist.Hint="Signature au" Style="{StaticResource MaterialDesignOutlinedDatePicker}" SelectedDate="{Binding DateSignatureFin}"/>
-                            <DatePicker Grid.Row="0" Grid.Column="4" materialDesign:HintAssist.Hint="Échéance du" Style="{StaticResource MaterialDesignOutlinedDatePicker}" SelectedDate="{Binding DateEcheanceDebut}"/>
-                            <DatePicker Grid.Row="0" Grid.Column="6" materialDesign:HintAssist.Hint="Échéance au" Style="{StaticResource MaterialDesignOutlinedDatePicker}" SelectedDate="{Binding DateEcheanceFin}"/>
-                            <TextBox Grid.Row="2" Grid.Column="0" materialDesign:HintAssist.Hint="Montant min (GNF)" Style="{StaticResource MaterialDesignOutlinedTextBox}" Text="{Binding MontantMin, UpdateSourceTrigger=PropertyChanged, StringFormat=N0}"/>
-                            <TextBox Grid.Row="2" Grid.Column="2" materialDesign:HintAssist.Hint="Montant max (GNF)" Style="{StaticResource MaterialDesignOutlinedTextBox}" Text="{Binding MontantMax, UpdateSourceTrigger=PropertyChanged, StringFormat=N0}"/>
-                        </Grid>
-                    </Expander>
-                </Grid>
-            </Border>
+                    </StackPanel>
+                </StackPanel>
+            </materialDesign:DialogHost.DialogContent>
+        </materialDesign:DialogHost>
 
             <materialDesign:Card Grid.Row="3" Padding="0" Margin="20,15,20,10" UniformCornerRadius="8">
                 <DataGrid ItemsSource="{Binding Contrats}" SelectedItem="{Binding SelectedContrat}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="True" SelectionMode="Single" AlternatingRowBackground="#FAFAFA" materialDesign:DataGridAssist.CellPadding="13 8 8 8" materialDesign:DataGridAssist.ColumnHeaderPadding="8">

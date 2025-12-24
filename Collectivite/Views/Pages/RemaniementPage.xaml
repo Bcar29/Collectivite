@@ -481,7 +481,7 @@
                                                     </MultiBinding>
                                                 </StackPanel.Visibility>
 
-                                                <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                <Button 
                                                         ToolTip="Ajouter un remaniement"
                                                         Command="{Binding DataContext.OpenAddDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                                         CommandParameter="{Binding BudgetLine}"
@@ -623,7 +623,7 @@
                                                     </MultiBinding>
                                                 </StackPanel.Visibility>
 
-                                                <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                <Button
                                                         ToolTip="Ajouter un remaniement"
                                                         Command="{Binding DataContext.OpenAddDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                                         CommandParameter="{Binding BudgetLine}"
