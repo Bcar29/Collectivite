@@ -400,8 +400,9 @@
 
                         <!-- Tiers -->
                         <DataGridTextColumn Header="Tiers" 
-                                          Binding="{Binding Tiers.Nom}" 
-                                          Width="150"/>
+                                          Binding="{Binding Tiers.NomComplet}"
+                                          Width="150"
+                                          Visibility="{Binding DataContext.ShowTiers, Source={StaticResource ProxyElement}, Converter={StaticResource BoolToVis}}"/>
 
                         <!-- Montant recensé -->
                         <DataGridTemplateColumn Header="Montant Recensé" Width="140">
@@ -571,7 +572,7 @@
                                   ItemsSource="{Binding TiersList}"
                                   SelectedValue="{Binding DialogRecensement.TiersId}"
                                   SelectedValuePath="Id"
-                                  DisplayMemberPath="Nom"
+                                  DisplayMemberPath="NomComplet"
                                   Margin="0,0,0,15"/>
 
                         <!-- Montant recensé -->

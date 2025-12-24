@@ -335,7 +335,7 @@
 
                         <!-- Tiers -->
                         <DataGridTextColumn Header="Tiers" 
-                                          Binding="{Binding Engagement.Tiers.Nom}" 
+                                          Binding="{Binding Engagement.Tiers.NomComplet}" 
                                           Width="150"/>
 
                         <!-- Objet -->

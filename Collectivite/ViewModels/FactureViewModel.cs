@@ -234,7 +234,7 @@ private void ExportToPdf(Facture? facture)
 
             AddInfoRow(infoTable, "Date de facture:", facture.DateFacture.ToString("dd/MM/yyyy"), normalFont);
             AddInfoRow(infoTable, "Date d'échéance:", facture.DateEcheance.ToString("dd/MM/yyyy"), normalFont);
-            AddInfoRow(infoTable, "Tiers:", facture.Tiers?.Nom ?? "N/A", normalFont);
+            AddInfoRow(infoTable, "Tiers:", facture.Tiers?.NomComplet ?? "N/A", normalFont);
             AddInfoRow(infoTable, "Exercice:", facture.Exercice?.Libelle ?? "N/A", normalFont);
             AddInfoRow(infoTable, "Statut:", facture.Status.ToString().ToUpper(), normalFont);
             if (facture.Contrats != null)
@@ -412,7 +412,7 @@ private void ExportToExcel(Facture? facture)
                 row++;
 
                 worksheet.Cell(row, 1).Value = "Tiers:";
-                worksheet.Cell(row, 2).Value = facture.Tiers?.Nom ?? "N/A";
+                worksheet.Cell(row, 2).Value = facture.Tiers?.NomComplet ?? "N/A";
                 row++;
 
                 worksheet.Cell(row, 1).Value = "Exercice:";

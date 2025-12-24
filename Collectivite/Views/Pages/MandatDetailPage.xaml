@@ -263,7 +263,7 @@
                             <TextBlock Grid.Row="8" Grid.Column="1" Text="{Binding Mandat.Engagement.Objet}" TextWrapping="Wrap"/>
 
                             <TextBlock Grid.Row="10" Grid.Column="0" Text="Tiers :" FontWeight="SemiBold"/>
-                            <TextBlock Grid.Row="10" Grid.Column="1" Text="{Binding Mandat.Engagement.Tiers.Nom}"/>
+                            <TextBlock Grid.Row="10" Grid.Column="1" Text="{Binding Mandat.Engagement.Tiers.NomComplet}"/>
 
                             <TextBlock Grid.Row="12" Grid.Column="0" Text="Exercice :" FontWeight="SemiBold"/>
                             <TextBlock Grid.Row="12" Grid.Column="1" Text="{Binding Mandat.Engagement.Exercice.Libelle}"/>

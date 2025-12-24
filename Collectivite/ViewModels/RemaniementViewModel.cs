@@ -28,6 +28,7 @@ namespace Collectivite.ViewModels
 
         // Pour la hiérarchie
         private List<BudgetLineHierarchyViewModel> _fullHierarchy = new();
+        private readonly ExerciceService _exerciceService = ExerciceService.Instance;
 
         public RemaniementViewModel()
         {
@@ -53,7 +54,16 @@ namespace Collectivite.ViewModels
 
         // Permissions dynamiques
         public bool CanViewRemaniement => SessionManager.HasPermission("Remaniement.View");
-        public bool CanCreateRemaniement => SessionManager.HasPermission("Remaniement.Create");
+
+        /// <summary>
+        /// On peut créer un remaniement seulement si :
+        /// - l'utilisateur a la permission Remaniement.Create
+        /// - l'exercice courant n'est pas clôturé
+        /// </summary>
+        public bool CanCreateRemaniement =>
+            SessionManager.HasPermission("Remaniement.Create") &&
+            (_exerciceService.CurrentExercice?.EstCloture != true);
+
         public bool CanDeleteRemaniement => SessionManager.HasPermission("Remaniement.Delete");
 
         #region Collections exposées

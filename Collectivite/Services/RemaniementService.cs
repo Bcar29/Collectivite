@@ -111,6 +111,14 @@ namespace Collectivite.Services
         {
             using var context = CreateContext();
 
+            // Si un exercice courant existe et qu'il est clôturé, on ne permet plus
+            // de charger les lignes pour remaniement.
+            var exerciceService = ExerciceService.Instance;
+            if (exerciceService.CurrentExercice != null && exerciceService.CurrentExercice.EstCloture)
+            {
+                return new List<BudgetLine>();
+            }
+
             // ✅ ICI on peut charger les Remaniements car on part de BudgetLine
             var allLines = await context.BudgetLines
                 .Include(bl => bl.Nommenclature)
@@ -290,10 +298,121 @@ namespace Collectivite.Services
 
                     await context.SaveChangesAsync();
 
-                    // 3️⃣ Mise à jour MontantActu enfant
+                    // 3️⃣ Remaniements automatiques sur 662 et 110 pour Recette Fonctionnement
+                    if (budgetLine.Nommenclature.Section == SectionType.Fonctionnement &&
+                        budgetLine.Nommenclature.Nature == NatureType.Recette)
+                    {
+                        // Calculer 60% du montant remanié
+                        var montant60Pourcent = remaniement.Montant * 0.6m;
+
+                        // Récupérer les nomenclatures 662 et 110
+                        var m662 = await context.Nommenclatures
+                            .FirstOrDefaultAsync(n => n.Article == "662");
+
+                        var m110 = await context.Nommenclatures
+                            .FirstOrDefaultAsync(n => n.Article == "110");
+
+                        // Créer remaniement sur 662 si la nomenclature existe
+                        if (m662 != null)
+                        {
+                            var budgetLine662 = await context.BudgetLines
+                                .FirstOrDefaultAsync(bl => bl.BudgetPrimitifId == budgetLine.BudgetPrimitifId &&
+                                                           bl.NommenclatureId == m662.Id);
+
+                            if (budgetLine662 != null)
+                            {
+                                // Remaniement sur la ligne 662
+                                var remaniement662 = new Remaniement
+                                {
+                                    IdBudgetLine = budgetLine662.Id,
+                                    Date = remaniement.Date,
+                                    Montant = montant60Pourcent,
+                                    Motif = $"[Auto - 60%] {remaniement.Motif.Trim()}",
+                                    TypeRemaniement = type
+                                };
+
+                                context.Remaniements.Add(remaniement662);
+                                remaniementsCreated.Add(
+                                    $"✅ Ligne 662 (auto) : {m662.Intitule} ({montant60Pourcent:N0} GNF)");
+
+                                // Récupérer les parents de 662 et créer des remaniements
+                                var parents662 = await GetParentBudgetLinesAsync(
+                                    context,
+                                    m662.Id,
+                                    budgetLine.BudgetPrimitifId);
+
+                                foreach (var parent662 in parents662)
+                                {
+                                    var parentRemaniement662 = new Remaniement
+                                    {
+                                        IdBudgetLine = parent662.Id,
+                                        Date = remaniement.Date,
+                                        Montant = montant60Pourcent,
+                                        Motif = $"[Auto - 60% - Propagation] {remaniement.Motif.Trim()}",
+                                        TypeRemaniement = type
+                                    };
+
+                                    context.Remaniements.Add(parentRemaniement662);
+                                    remaniementsCreated.Add(
+                                        $"✅ Ligne parente 662 (auto) : {parent662.Nommenclature.Intitule} ({montant60Pourcent:N0} GNF)");
+                                }
+                            }
+                        }
+
+                        // Créer remaniement sur 110 si la nomenclature existe
+                        if (m110 != null)
+                        {
+                            var budgetLine110 = await context.BudgetLines
+                                .FirstOrDefaultAsync(bl => bl.BudgetPrimitifId == budgetLine.BudgetPrimitifId &&
+                                                           bl.NommenclatureId == m110.Id);
+
+                            if (budgetLine110 != null)
+                            {
+                                // Remaniement sur la ligne 110
+                                var remaniement110 = new Remaniement
+                                {
+                                    IdBudgetLine = budgetLine110.Id,
+                                    Date = remaniement.Date,
+                                    Montant = montant60Pourcent,
+                                    Motif = $"[Auto - 60%] {remaniement.Motif.Trim()}",
+                                    TypeRemaniement = type
+                                };
+
+                                context.Remaniements.Add(remaniement110);
+                                remaniementsCreated.Add(
+                                    $"✅ Ligne 110 (auto) : {m110.Intitule} ({montant60Pourcent:N0} GNF)");
+
+                                // Récupérer les parents de 110 et créer des remaniements
+                                var parents110 = await GetParentBudgetLinesAsync(
+                                    context,
+                                    m110.Id,
+                                    budgetLine.BudgetPrimitifId);
+
+                                foreach (var parent110 in parents110)
+                                {
+                                    var parentRemaniement110 = new Remaniement
+                                    {
+                                        IdBudgetLine = parent110.Id,
+                                        Date = remaniement.Date,
+                                        Montant = montant60Pourcent,
+                                        Motif = $"[Auto - 60% - Propagation] {remaniement.Motif.Trim()}",
+                                        TypeRemaniement = type
+                                    };
+
+                                    context.Remaniements.Add(parentRemaniement110);
+                                    remaniementsCreated.Add(
+                                        $"✅ Ligne parente 110 (auto) : {parent110.Nommenclature.Intitule} ({montant60Pourcent:N0} GNF)");
+                                }
+                            }
+                        }
+
+                        await context.SaveChangesAsync();
+                    }
+
+                    // 4️⃣ Mise à jour MontantActu enfant
                     budgetLine.UpdateMontantActu();
 
-                    // 4️⃣ Mise à jour MontantActu parents
+                    // 5️⃣ Mise à jour MontantActu parents
                     foreach (var parentLine in parentBudgetLines)
                     {
                         var parentToUpdate = await context.BudgetLines
@@ -301,6 +420,113 @@ namespace Collectivite.Services
                             .FirstOrDefaultAsync(bl => bl.Id == parentLine.Id);
 
                         parentToUpdate?.UpdateMontantActu();
+                    }
+
+                    // 6️⃣ Mise à jour MontantActu des lignes 662 et 110 et leurs parents (si remaniements automatiques créés)
+                    if (budgetLine.Nommenclature.Section == SectionType.Fonctionnement &&
+                        budgetLine.Nommenclature.Nature == NatureType.Recette)
+                    {
+                        var m662 = await context.Nommenclatures
+                            .FirstOrDefaultAsync(n => n.Article == "662");
+
+                        var m110 = await context.Nommenclatures
+                            .FirstOrDefaultAsync(n => n.Article == "110");
+
+                        if (m662 != null)
+                        {
+                            var budgetLine662 = await context.BudgetLines
+                                .Include(bl => bl.Remaniements)
+                                .FirstOrDefaultAsync(bl => bl.BudgetPrimitifId == budgetLine.BudgetPrimitifId &&
+                                                           bl.NommenclatureId == m662.Id);
+
+                            if (budgetLine662 != null)
+                            {
+                                budgetLine662.UpdateMontantActu();
+
+                                // Mettre à jour les parents de 662
+                                var parents662 = await GetParentBudgetLinesAsync(
+                                    context,
+                                    m662.Id,
+                                    budgetLine.BudgetPrimitifId);
+
+                                foreach (var parent662 in parents662)
+                                {
+                                    var parentToUpdate662 = await context.BudgetLines
+                                        .Include(bl => bl.Remaniements)
+                                        .FirstOrDefaultAsync(bl => bl.Id == parent662.Id);
+
+                                    parentToUpdate662?.UpdateMontantActu();
+                                }
+                            }
+                        }
+
+                        if (m110 != null)
+                        {
+                            var budgetLine110 = await context.BudgetLines
+                                .Include(bl => bl.Remaniements)
+                                .FirstOrDefaultAsync(bl => bl.BudgetPrimitifId == budgetLine.BudgetPrimitifId &&
+                                                           bl.NommenclatureId == m110.Id);
+
+                            if (budgetLine110 != null)
+                            {
+                                budgetLine110.UpdateMontantActu();
+
+                                // Mettre à jour les parents de 110
+                                var parents110 = await GetParentBudgetLinesAsync(
+                                    context,
+                                    m110.Id,
+                                    budgetLine.BudgetPrimitifId);
+
+                                foreach (var parent110 in parents110)
+                                {
+                                    var parentToUpdate110 = await context.BudgetLines
+                                        .Include(bl => bl.Remaniements)
+                                        .FirstOrDefaultAsync(bl => bl.Id == parent110.Id);
+
+                                    parentToUpdate110?.UpdateMontantActu();
+                                }
+                            }
+                        }
+                    }
+
+                    await context.SaveChangesAsync();
+
+                    // 7️⃣ Mise à jour du MontantTotal, MontantRecette ou MontantDepense du BudgetPrimitif
+                    var budgetPrimitif = await context.BudgetsPrimitifs
+                        .FirstOrDefaultAsync(bp => bp.Id == budgetLine.BudgetPrimitifId);
+
+                    if (budgetPrimitif != null)
+                    {
+                        // Déterminer si c'est une recette ou une dépense
+                        var isRecette = budgetLine.Nommenclature.Nature == NatureType.Recette;
+                        var isDepense = budgetLine.Nommenclature.Nature == NatureType.Depense;
+
+                        if (type == TypeRemaniement.en_plus)
+                        {
+                            budgetPrimitif.MontantTotal += remaniement.Montant;
+                            
+                            if (isRecette)
+                            {
+                                budgetPrimitif.MontantRecette += remaniement.Montant;
+                            }
+                            else if (isDepense)
+                            {
+                                budgetPrimitif.MontantDepense += remaniement.Montant;
+                            }
+                        }
+                        else if (type == TypeRemaniement.en_moins)
+                        {
+                            budgetPrimitif.MontantTotal -= remaniement.Montant;
+                            
+                            if (isRecette)
+                            {
+                                budgetPrimitif.MontantRecette -= remaniement.Montant;
+                            }
+                            else if (isDepense)
+                            {
+                                budgetPrimitif.MontantDepense -= remaniement.Montant;
+                            }
+                        }
                     }
 
                     await context.SaveChangesAsync();
@@ -409,6 +635,48 @@ namespace Collectivite.Services
                     if (parentToUpdate != null)
                     {
                         parentToUpdate.UpdateMontantActu();
+                    }
+                }
+
+                await context.SaveChangesAsync();
+
+                // 🔹 Mise à jour du MontantTotal, MontantRecette ou MontantDepense du BudgetPrimitif (inverser l'effet)
+                var budgetPrimitif = await context.BudgetsPrimitifs
+                    .FirstOrDefaultAsync(bp => bp.Id == budgetLine.BudgetPrimitifId);
+
+                if (budgetPrimitif != null)
+                {
+                    // Déterminer si c'est une recette ou une dépense
+                    var isRecette = budgetLine.Nommenclature.Nature == NatureType.Recette;
+                    var isDepense = budgetLine.Nommenclature.Nature == NatureType.Depense;
+
+                    // Inverser l'effet : si c'était en_plus, on soustrait maintenant
+                    // Si c'était en_moins, on ajoute maintenant
+                    if (remaniement.TypeRemaniement == TypeRemaniement.en_plus)
+                    {
+                        budgetPrimitif.MontantTotal -= remaniement.Montant;
+                        
+                        if (isRecette)
+                        {
+                            budgetPrimitif.MontantRecette -= remaniement.Montant;
+                        }
+                        else if (isDepense)
+                        {
+                            budgetPrimitif.MontantDepense -= remaniement.Montant;
+                        }
+                    }
+                    else if (remaniement.TypeRemaniement == TypeRemaniement.en_moins)
+                    {
+                        budgetPrimitif.MontantTotal += remaniement.Montant;
+                        
+                        if (isRecette)
+                        {
+                            budgetPrimitif.MontantRecette += remaniement.Montant;
+                        }
+                        else if (isDepense)
+                        {
+                            budgetPrimitif.MontantDepense += remaniement.Montant;
+                        }
                     }
                 }
 

@@ -139,40 +139,18 @@
                                   Margin="0,0,0,15">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-
-                                        <StackPanel Grid.Column="0" Orientation="Horizontal">
-                                            <Border Background="#E3F2FD" CornerRadius="4" Padding="6,2" Margin="0,0,10,0">
-                                                <TextBlock Text="{Binding BudgetLine.Nommenclature.CodeNomenclature, Mode=OneWay}" 
-                                                           FontWeight="Bold" 
-                                                           Foreground="#1976D2"
-                                                           FontSize="11"/>
-                                            </Border>
-                                        </StackPanel>
-
-                                        <StackPanel Grid.Column="1">
-                                            <TextBlock FontWeight="SemiBold" TextTrimming="CharacterEllipsis">
-                                                <Run Text="{Binding Tiers.Nom, Mode=OneWay}"/>
-                                            </TextBlock>
-                                            <TextBlock Text="{Binding Objet, Mode=OneWay}" 
-                                                       FontSize="11" 
-                                                       Foreground="#757575"
-                                                       TextTrimming="CharacterEllipsis"
-                                                       MaxWidth="400"/>
-                                        </StackPanel>
-
-                                        <Border Grid.Column="2" Background="#E8F5E9" CornerRadius="4" Padding="8,4" Margin="10,0,0,0">
-                                            <TextBlock Text="{Binding MontantEngagement, StringFormat={}{0:N0} GNF, Mode=OneWay}" 
-                                                       FontWeight="Bold" 
-                                                       Foreground="#388E3C"
-                                                       FontSize="11"/>
-                                        </Border>
-                                    </Grid>
+                                    <StackPanel>
+                                        <TextBlock FontWeight="SemiBold">
+                                            <Run Text="Imputation "/>
+                                            <Run Text="{Binding BudgetLine.Nommenclature.CodeNomenclature, Mode=OneWay}"/>
+                                            <Run Text=" - "/>
+                                            <Run Text="{Binding Tiers.NomComplet, Mode=OneWay}"/>
+                                        </TextBlock>
+                                        <TextBlock Text="{Binding Objet}" 
+                                                 FontSize="11" 
+                                                 Foreground="#757575"
+                                                 TextWrapping="Wrap"/>
+                                    </StackPanel>
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
                         </ComboBox>

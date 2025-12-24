@@ -31,7 +31,7 @@ namespace Collectivite.Services
 
             if (budgetPrimitif != null)
             {
-                statistics.BudgetTotal = budgetPrimitif.MontantRecette;
+                statistics.BudgetTotal = budgetPrimitif.MontantTotal;
             }
 
             // 2. Dépenses Engagées (somme des engagements)

@@ -163,7 +163,7 @@
                                       ItemsSource="{Binding TiersList}"
                                       SelectedValue="{Binding OrdreRecette.TiersId}"
                                       SelectedValuePath="Id"
-                                      DisplayMemberPath="Nom"
+                                      DisplayMemberPath="NomComplet"
                                       Margin="0,0,0,15"/>
                         </Grid>
 

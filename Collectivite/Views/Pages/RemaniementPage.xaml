@@ -202,11 +202,21 @@
                                                     </MultiBinding>
                                                 </StackPanel.Visibility>
 
-                                                <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                        ToolTip="Ajouter un remaniement"
+                                                <Button ToolTip="Ajouter un remaniement"
                                                         Command="{Binding DataContext.OpenAddDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                                         CommandParameter="{Binding BudgetLine}"
                                                         Margin="4,0">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignIconButton}">
+                                                            <Style.Triggers>
+                                                                <!-- Masquer le bouton si on n'a pas le droit de créer un remaniement
+                                                                     (exercice clôturé ou permission manquante) -->
+                                                                <DataTrigger Binding="{Binding DataContext.CanCreateRemaniement, RelativeSource={RelativeSource AncestorType=Page}}" Value="False">
+                                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Style>
                                                     <materialDesign:PackIcon Kind="PlusCircle" Foreground="#4CAF50"/>
                                                 </Button>
 
@@ -327,19 +337,22 @@
                                 <DataGridTemplateColumn Header="Actions" Width="140">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                <StackPanel.Visibility>
-                                                    <MultiBinding Converter="{StaticResource ShowActionsConverter}">
-                                                        <Binding Path="BudgetLine.Nommenclature.Enfants"/>
-                                                        <Binding Path="IsTotalRow"/>
-                                                    </MultiBinding>
-                                                </StackPanel.Visibility>
-
-                                                <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                        ToolTip="Ajouter un remaniement"
+                                            <StackPanel Orientation="Horizontal"
+                                                        HorizontalAlignment="Center"
+                                                        Visibility="{Binding BudgetLine.Nommenclature.Enfants, Converter={StaticResource CollectionHasItemsToVisibilityConverter}}">
+                                                <Button ToolTip="Ajouter un remaniement"
                                                         Command="{Binding DataContext.OpenAddDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                                         CommandParameter="{Binding BudgetLine}"
                                                         Margin="4,0">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignIconButton}">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding DataContext.CanCreateRemaniement, RelativeSource={RelativeSource AncestorType=Page}}" Value="False">
+                                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Style>
                                                     <materialDesign:PackIcon Kind="PlusCircle" Foreground="#4CAF50"/>
                                                 </Button>
 
@@ -460,19 +473,22 @@
                                 <DataGridTemplateColumn Header="Actions" Width="140">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                <StackPanel.Visibility>
-                                                    <MultiBinding Converter="{StaticResource ShowActionsConverter}">
-                                                        <Binding Path="BudgetLine.Nommenclature.Enfants"/>
-                                                        <Binding Path="IsTotalRow"/>
-                                                    </MultiBinding>
-                                                </StackPanel.Visibility>
-
-                                                <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                        ToolTip="Ajouter un remaniement"
+                                            <StackPanel Orientation="Horizontal"
+                                                        HorizontalAlignment="Center"
+                                                        Visibility="{Binding BudgetLine.Nommenclature.Enfants, Converter={StaticResource CollectionHasItemsToVisibilityConverter}}">
+                                                <Button ToolTip="Ajouter un remaniement"
                                                         Command="{Binding DataContext.OpenAddDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                                         CommandParameter="{Binding BudgetLine}"
                                                         Margin="4,0">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignIconButton}">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding DataContext.CanCreateRemaniement, RelativeSource={RelativeSource AncestorType=Page}}" Value="False">
+                                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Style>
                                                     <materialDesign:PackIcon Kind="PlusCircle" Foreground="#4CAF50"/>
                                                 </Button>
 
@@ -593,19 +609,22 @@
                                 <DataGridTemplateColumn Header="Actions" Width="140">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                <StackPanel.Visibility>
-                                                    <MultiBinding Converter="{StaticResource ShowActionsConverter}">
-                                                        <Binding Path="BudgetLine.Nommenclature.Enfants"/>
-                                                        <Binding Path="IsTotalRow"/>
-                                                    </MultiBinding>
-                                                </StackPanel.Visibility>
-
-                                                <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                        ToolTip="Ajouter un remaniement"
+                                            <StackPanel Orientation="Horizontal"
+                                                        HorizontalAlignment="Center"
+                                                        Visibility="{Binding BudgetLine.Nommenclature.Enfants, Converter={StaticResource CollectionHasItemsToVisibilityConverter}}">
+                                                <Button ToolTip="Ajouter un remaniement"
                                                         Command="{Binding DataContext.OpenAddDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                                         CommandParameter="{Binding BudgetLine}"
                                                         Margin="4,0">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignIconButton}">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding DataContext.CanCreateRemaniement, RelativeSource={RelativeSource AncestorType=Page}}" Value="False">
+                                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Style>
                                                     <materialDesign:PackIcon Kind="PlusCircle" Foreground="#4CAF50"/>
                                                 </Button>
 

@@ -161,7 +161,7 @@ namespace Collectivite.ViewModels
                 $"Voulez-vous valider l'engagement ?\n\n" +
                 $"Objet : {engagement.Objet}\n" +
                 $"Montant : {engagement.MontantEngagement:N0} GNF\n" +
-                $"Tiers : {engagement.Tiers?.Nom ?? "N/A"}",
+                $"Tiers : {engagement.Tiers?.NomComplet ?? "N/A"}",
                 "Confirmation de validation",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question);
@@ -232,7 +232,7 @@ namespace Collectivite.ViewModels
                 $"N° : {mandat.NumeroMandat}\n" +
                 $"Objet : {mandat.Objet}\n" +
                 $"Montant Net : {mandat.MontantNet:N0} GNF\n" +
-                $"Bénéficiaire : {mandat.Engagement?.Tiers?.Nom ?? "N/A"}",
+                $"Bénéficiaire : {mandat.Engagement?.Tiers?.NomComplet ?? "N/A"}",
                 "Confirmation de validation",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question);
@@ -302,7 +302,7 @@ namespace Collectivite.ViewModels
                 $"Voulez-vous valider l'ordre de recette ?\n\n" +
                 $"N° : {ordreRecette.NumeroOrdre}\n" +
                 $"Montant : {ordreRecette.MontantOrdre:N0} GNF\n" +
-                $"Débiteur : {ordreRecette.Tiers?.Nom ?? "N/A"}",
+                $"Débiteur : {ordreRecette.Tiers?.NomComplet ?? "N/A"}",
                 "Confirmation de validation",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question);

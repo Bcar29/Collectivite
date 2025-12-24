@@ -285,7 +285,7 @@
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Date" Binding="{Binding DateEngagement, StringFormat=dd/MM/yyyy}" Width="100"/>
                                 <DataGridTextColumn Header="Objet" Binding="{Binding Objet}" Width="*"/>
-                                <DataGridTextColumn Header="Tiers" Binding="{Binding Tiers.Nom}" Width="150"/>
+                                <DataGridTextColumn Header="Tiers" Binding="{Binding Tiers.NomComplet}" Width="150"/>
                                 <DataGridTextColumn Header="Ligne budgétaire" Binding="{Binding BudgetLine.Nommenclature.Intitule}" Width="200"/>
 
                                 <DataGridTemplateColumn Header="Montant" Width="140">
@@ -390,7 +390,7 @@
                                 <DataGridTextColumn Header="N° Mandat" Binding="{Binding NumeroMandat}" Width="120"/>
                                 <DataGridTextColumn Header="Date" Binding="{Binding DateEmission, StringFormat=dd/MM/yyyy}" Width="100"/>
                                 <DataGridTextColumn Header="Objet" Binding="{Binding Objet}" Width="*"/>
-                                <DataGridTextColumn Header="Bénéficiaire" Binding="{Binding Engagement.Tiers.Nom}" Width="150"/>
+                                <DataGridTextColumn Header="Bénéficiaire" Binding="{Binding Engagement.Tiers.NomComplet}" Width="150"/>
 
                                 <DataGridTemplateColumn Header="Montant Net" Width="140">
                                     <DataGridTemplateColumn.CellTemplate>
@@ -525,7 +525,7 @@
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="N° Ordre" Binding="{Binding NumeroOrdre}" Width="130"/>
                                 <DataGridTextColumn Header="Date" Binding="{Binding DateOrdre, StringFormat=dd/MM/yyyy}" Width="100"/>
-                                <DataGridTextColumn Header="Débiteur" Binding="{Binding Tiers.Nom}" Width="150"/>
+                                <DataGridTextColumn Header="Débiteur" Binding="{Binding Tiers.NomComplet}" Width="150"/>
                                 <DataGridTextColumn Header="Ligne budgétaire" Binding="{Binding BudgetLine.Nommenclature.Intitule}" Width="*"/>
                                 <DataGridTextColumn Header="Comptable" Binding="{Binding Comptable}" Width="120"/>
 

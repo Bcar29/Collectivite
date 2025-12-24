@@ -101,58 +101,114 @@
                 </Grid>
             </Border>
 
-            <Border Grid.Row="2" Background="White" Padding="20,15" BorderBrush="#E0E0E0" BorderThickness="0,0,0,1">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-                    <Grid Grid.Row="0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="15"/>
-                            <ColumnDefinition Width="200"/>
-                            <ColumnDefinition Width="15"/>
-                            <ColumnDefinition Width="180"/>
-                            <ColumnDefinition Width="15"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBox Grid.Column="0" materialDesign:HintAssist.Hint="Rechercher (numéro, objet, tiers...)" Style="{StaticResource MaterialDesignOutlinedTextBox}" Text="{Binding RechercheTexte, UpdateSourceTrigger=PropertyChanged, Delay=300}" VerticalAlignment="Center"/>
-                        <ComboBox Grid.Column="2" materialDesign:HintAssist.Hint="Tiers" Style="{StaticResource MaterialDesignOutlinedComboBox}" ItemsSource="{Binding TiersList}" SelectedItem="{Binding TiersFiltre}" DisplayMemberPath="Nom" VerticalAlignment="Center"/>
-                        <ComboBox Grid.Column="4" materialDesign:HintAssist.Hint="Statut" Style="{StaticResource MaterialDesignOutlinedComboBox}" ItemsSource="{Binding StatutsDisponibles}" SelectedItem="{Binding StatutContratItemSelectionne}" DisplayMemberPath="Libelle" VerticalAlignment="Center"/>
-                        <Button Grid.Column="6" Style="{StaticResource MaterialDesignOutlinedButton}" Command="{Binding ReinitialiserFiltresCommand}" ToolTip="Réinitialiser" Height="40" Visibility="{Binding FiltresActifs, Converter={StaticResource BoolToVis}}">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="FilterRemove" Margin="0,0,5,0"/>
-                                <TextBlock Text="Réinitialiser"/>
-                            </StackPanel>
+            <!-- ═══════════════════════════════════════════════════════════
+      DIALOG MODAL AJOUT/MODIFICATION
+      ═══════════════════════════════════════════════════════════ -->
+        <materialDesign:DialogHost IsOpen="{Binding IsDialogOpen}"
+                          CloseOnClickAway="False"
+                          Panel.ZIndex="1000">
+            <materialDesign:DialogHost.DialogContent>
+                <StackPanel Width="550" Margin="20">
+
+                    <!-- Titre du dialog -->
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+                        <materialDesign:PackIcon Kind="City" 
+                                        Width="24" 
+                                        Height="24"
+                                        Foreground="#1976D2"
+                                        VerticalAlignment="Center"
+                                        Margin="0,0,10,0"/>
+                        <TextBlock Text="{Binding DialogTitle}"
+                          FontSize="20"
+                          FontWeight="SemiBold"
+                          VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <!-- Sélection de l'exercice -->
+                    <ComboBox materialDesign:HintAssist.Hint="Exercice *"
+                        Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                        ItemsSource="{Binding Exercices}"
+                        SelectedValue="{Binding DialogContrat.ExerciceId, UpdateSourceTrigger=PropertyChanged}"
+                        SelectedValuePath="Id"
+                        DisplayMemberPath="Libelle"
+                        Margin="0,0,0,15"/>
+                    
+                    <!-- Numéro du contrat  -->
+                    <TextBox materialDesign:HintAssist.Hint="Numéro du contrat *"
+                        Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                        Text="{Binding DialogContrat.NumeroContrat, UpdateSourceTrigger=PropertyChanged}"
+                        Margin="0,0,0,15"
+                        MaxLength="200"/>
+
+                    <!-- Date signature -->
+                    <DatePicker materialDesign:HintAssist.Hint="Date signature *"
+                          Style="{StaticResource MaterialDesignOutlinedDatePicker}"
+                          SelectedDate="{Binding DialogContratDateSignature, Mode=TwoWay}"
+                          Margin="0,0,0,15"/>
+
+                    <!-- Date echeance -->
+                    <DatePicker materialDesign:HintAssist.Hint="Date d'écheance *"
+                          Style="{StaticResource MaterialDesignOutlinedDatePicker}"
+                          SelectedDate="{Binding DialogContratDateEcheance, Mode=TwoWay}"
+                          Margin="0,0,0,15"/>
+
+                    <!-- Sélection du tiers -->
+                    <!-- Tiers -->
+                    <ComboBox Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3"
+                          materialDesign:HintAssist.Hint="Tiers *"
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                          ItemsSource="{Binding TiersList}"
+                          SelectedValue="{Binding DialogContrat.TiersId}"
+                          SelectedValuePath="Id"
+                          DisplayMemberPath="NomComplet"
+                          Margin="0,0,0,15"/>
+
+                    <!-- Objet du contrat  -->
+                    <TextBox materialDesign:HintAssist.Hint="Objet du contrat *"
+                        Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                        Text="{Binding DialogContrat.Objet, UpdateSourceTrigger=PropertyChanged}"
+                        Margin="0,0,0,15"
+                        MaxLength="200"/>
+
+                    <!-- Montant du contrat  -->
+                    
+                    <TextBox materialDesign:HintAssist.Hint="Montant du contrat (GNF) *"
+                       Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                       Text="{Binding DialogContrat.MontantContrat, UpdateSourceTrigger=PropertyChanged, StringFormat=N0}"
+                       Margin="0,0,0,15">
+                        <TextBox.InputBindings>
+                            <KeyBinding Key="Enter" Command="{Binding SaveContratCommand}"/>
+                        </TextBox.InputBindings>
+                    </TextBox>
+
+                    <!-- Note explicative -->
+                    <TextBlock Text="* Champs obligatoires"
+                      FontSize="11"
+                      Foreground="#666"
+                      FontStyle="Italic"
+                      Margin="0,0,0,15"/>
+
+                    <!-- Boutons Annuler et Enregistrer -->
+                    <StackPanel Orientation="Horizontal" 
+                       HorizontalAlignment="Right">
+                        <Button Style="{StaticResource MaterialDesignFlatButton}"
+                       Content="Annuler"
+                       Command="{Binding CancelContratCommand}"
+                       Margin="0,0,10,0"
+                       Width="100"/>
+
+                        <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                       Content="Enregistrer"
+                       Command="{Binding SaveContratCommand}"
+                       Width="120">
+                            <Button.CommandParameter>
+                                <Binding RelativeSource="{RelativeSource Self}"/>
+                            </Button.CommandParameter>
                         </Button>
-                    </Grid>
-                    <Expander Grid.Row="1" Header="Filtres avancés" Margin="0,10,0,0" Background="Transparent">
-                        <Grid Margin="0,15,0,0">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="15"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="15"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="30"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="15"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <DatePicker Grid.Row="0" Grid.Column="0" materialDesign:HintAssist.Hint="Signature du" Style="{StaticResource MaterialDesignOutlinedDatePicker}" SelectedDate="{Binding DateSignatureDebut}"/>
-                            <DatePicker Grid.Row="0" Grid.Column="2" materialDesign:HintAssist.Hint="Signature au" Style="{StaticResource MaterialDesignOutlinedDatePicker}" SelectedDate="{Binding DateSignatureFin}"/>
-                            <DatePicker Grid.Row="0" Grid.Column="4" materialDesign:HintAssist.Hint="Échéance du" Style="{StaticResource MaterialDesignOutlinedDatePicker}" SelectedDate="{Binding DateEcheanceDebut}"/>
-                            <DatePicker Grid.Row="0" Grid.Column="6" materialDesign:HintAssist.Hint="Échéance au" Style="{StaticResource MaterialDesignOutlinedDatePicker}" SelectedDate="{Binding DateEcheanceFin}"/>
-                            <TextBox Grid.Row="2" Grid.Column="0" materialDesign:HintAssist.Hint="Montant min (GNF)" Style="{StaticResource MaterialDesignOutlinedTextBox}" Text="{Binding MontantMin, UpdateSourceTrigger=PropertyChanged, StringFormat=N0}"/>
-                            <TextBox Grid.Row="2" Grid.Column="2" materialDesign:HintAssist.Hint="Montant max (GNF)" Style="{StaticResource MaterialDesignOutlinedTextBox}" Text="{Binding MontantMax, UpdateSourceTrigger=PropertyChanged, StringFormat=N0}"/>
-                        </Grid>
-                    </Expander>
-                </Grid>
-            </Border>
+                    </StackPanel>
+                </StackPanel>
+            </materialDesign:DialogHost.DialogContent>
+        </materialDesign:DialogHost>
 
             <materialDesign:Card Grid.Row="3" Padding="0" Margin="20,15,20,10" UniformCornerRadius="8">
                 <DataGrid ItemsSource="{Binding Contrats}" SelectedItem="{Binding SelectedContrat}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="True" SelectionMode="Single" AlternatingRowBackground="#FAFAFA" materialDesign:DataGridAssist.CellPadding="13 8 8 8" materialDesign:DataGridAssist.ColumnHeaderPadding="8">

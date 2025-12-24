@@ -231,7 +231,7 @@ namespace Collectivite.Services
                                     });
 
                                     AjouterLigneInfo(table, "Exercice :", mandat.Engagement?.Exercice?.Libelle ?? "-");
-                                    AjouterLigneInfo(table, "Tiers :", mandat.Engagement?.Tiers?.Nom ?? "Non spécifié");
+                                    AjouterLigneInfo(table, "Tiers :", mandat.Engagement?.Tiers?.NomComplet ?? "Non spécifié");
                                     AjouterLigneInfo(table, "Engagement :", TronquerTexte(mandat.Engagement?.Objet, 30));
                                     AjouterLigneInfo(table, "Objet :", TronquerTexte(mandat.Objet, 30));
                                 });

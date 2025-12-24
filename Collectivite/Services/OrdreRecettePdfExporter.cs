@@ -39,6 +39,7 @@ namespace Collectivite.Services
         private static readonly string DrapeauJaune = "#FCD116";
         private static readonly string DrapeauVert = "#009460";
 
+
         /// <summary>
         /// Exporte l'ordre de recette en PDF
         /// </summary>
@@ -183,7 +184,7 @@ namespace Collectivite.Services
                                     AjouterLigneInfo(table, "N° Ordre :", ordre.NumeroOrdre ?? "-");
                                     AjouterLigneInfo(table, "Date :", ordre.DateOrdre.ToString("dd/MM/yyyy"));
                                     AjouterLigneInfo(table, "Exercice :", ordre.Exercice?.Libelle ?? "-");
-                                    AjouterLigneInfo(table, "Tiers :", ordre.Tiers?.Nom ?? "Non spécifié");
+                                    AjouterLigneInfo(table, "Tiers :", ordre.Tiers?.NomComplet ?? "Non spécifié");
                                 });
 
                                 infoRow.ConstantItem(20);

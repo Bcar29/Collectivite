@@ -303,7 +303,7 @@ namespace Collectivite.Services
                     NumeroOrdre = ordre.NumeroOrdre,
                     DateOrdre = ordre.DateOrdre,
                     Motifs = ordre.Motifs,
-                    Debiteur = ordre.Tiers?.Nom ?? "Non spécifié",
+                    Debiteur = ordre.Tiers?.NomComplet ?? "Non spécifié",
                     MontantOrdre = ordre.MontantOrdre,
                     MontantEncaisse = montantEncaisse,
                     Etat = ordre.Etat
@@ -340,7 +340,7 @@ namespace Collectivite.Services
                 NumeroOrdre = ordre.NumeroOrdre,
                 DateOrdre = ordre.DateOrdre,
                 Motifs = ordre.Motifs,
-                Debiteur = ordre.Tiers?.Nom ?? "Non spécifié",
+                Debiteur = ordre.Tiers?.NomComplet ?? "Non spécifié",
                 MontantOrdre = ordre.MontantOrdre,
                 MontantEncaisse = montantEncaisse,
                 Etat = ordre.Etat
