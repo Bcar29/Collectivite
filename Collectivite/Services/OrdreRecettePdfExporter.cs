@@ -32,6 +32,10 @@ namespace Collectivite.Services
         private static readonly string JauneBordure = "#FFF59D";
         private static readonly string GrisBordure = "#E0E0E0";
         private static readonly string GrisFiligrane = "#F0F0F0";
+        // Couleurs du drapeau guinéen
+        private static readonly string DrapeauRouge = "#CE1126";
+        private static readonly string DrapeauJaune = "#FCD116";
+        private static readonly string DrapeauVert = "#009460";
 
         /// <summary>
         /// Exporte l'ordre de recette en PDF sur une seule page A4
@@ -105,9 +109,23 @@ namespace Collectivite.Services
                                     });
                                 });
 
-                                row.RelativeItem(1).AlignCenter().AlignMiddle()
-                                    .Text("⚜").FontSize(32).FontColor(Color.FromHex(VertEmeraude));
+                                // Colonne centrale : Drapeau guinéen
+                                row.RelativeItem(1).AlignCenter().AlignMiddle().Element(c =>
+                                {
+                                    c.Border(1).BorderColor("#424242").Table(flag =>
+                                    {
+                                        flag.ColumnsDefinition(cols =>
+                                        {
+                                            cols.ConstantColumn(18);
+                                            cols.ConstantColumn(18);
+                                            cols.ConstantColumn(18);
+                                        });
 
+                                        flag.Cell().Height(36).Background(DrapeauRouge);
+                                        flag.Cell().Height(36).Background(DrapeauJaune);
+                                        flag.Cell().Height(36).Background(DrapeauVert);
+                                    });
+                                });
                                 row.RelativeItem(2).AlignRight().Column(rightCol =>
                                 {
                                     rightCol.Item().AlignRight().Text("REPUBLIQUE DE GUINEE")

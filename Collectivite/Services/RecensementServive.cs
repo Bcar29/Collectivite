@@ -140,6 +140,11 @@ namespace Collectivite.Services
 
             System.Diagnostics.Debug.WriteLine($"   Total BudgetLines : {allLines.Count}");
 
+            // ✅ Charger toutes les lignes budgétaires avec leurs nomenclatures
+            var allExercices = await context.Exercices
+                .AsNoTracking()
+                .ToListAsync();
+
             // ✅ Charger toutes les nomenclatures avec relation parent-enfant
             var allNommenclatures = await context.Nommenclatures
                 .Include(n => n.Enfants)

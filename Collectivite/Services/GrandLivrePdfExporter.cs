@@ -21,6 +21,11 @@ namespace Collectivite.Services
         private static readonly string GRIS_BORDURE = "#E0E0E0";     // Bordures
         private static readonly string BLANC = "#FFFFFF";            // Fond carte
 
+        // Couleurs du drapeau guinéen
+        private static readonly string DrapeauRouge = "#CE1126";
+        private static readonly string DrapeauJaune = "#FCD116";
+        private static readonly string DrapeauVert = "#009460";
+
         /// <summary>
         /// Exporte le Grand Livre en fichier PDF (format cartes comme l'application)
         /// </summary>
@@ -40,6 +45,17 @@ namespace Collectivite.Services
             string region = commune?.RegionCommune ?? "............................";
             string prefecture = commune?.PrefectureCommune ?? "............................";
 
+            // Préparer le texte de période si filtre
+            string? periodeTexte = null;
+            if (filtre != null && filtre.Mois.HasValue)
+            {
+                string[] moisNoms = { "", "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+                                     "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre" };
+                periodeTexte = $"Mois de {moisNoms[filtre.Mois.Value]}";
+                if (filtre.Annee.HasValue)
+                    periodeTexte += $" {filtre.Annee.Value}";
+            }
+
             var document = Document.Create(container =>
             {
                 container.Page(page =>
@@ -49,76 +65,127 @@ namespace Collectivite.Services
                     page.DefaultTextStyle(x => x.FontSize(9));
 
                     // ═══════════════════════════════════════════════════════════
-                    // EN-TÊTE OFFICIEL
+                    // EN-TÊTE SIMPLE (pages 2 et suivantes uniquement)
                     // ═══════════════════════════════════════════════════════════
                     page.Header().Column(headerCol =>
                     {
-                        headerCol.Item().Row(row =>
+                        // En-tête simplifié pour les pages suivantes (page > 1)
+                        headerCol.Item().ShowIf(ctx => ctx.PageNumber > 1).Row(row =>
                         {
-                            row.RelativeItem(2).Column(leftCol =>
-                            {
-                                leftCol.Item().Text("Ministère de l'Administration du Territoire")
-                                    .FontSize(10).Bold();
-                                leftCol.Item().Text("et de la Décentralisation")
-                                    .FontSize(10).Bold();
-                                leftCol.Item().PaddingTop(3).Text("Direction Générale des Collectivités Locales")
-                                    .FontSize(9).Bold();
-                                leftCol.Item().PaddingTop(8).Text($"REGION ADMINISTRATIVE DE {region.ToUpper()}")
-                                    .FontSize(9);
-                                leftCol.Item().Text($"PREFECTURE DE {prefecture.ToUpper()}")
-                                    .FontSize(9);
-                                leftCol.Item().Text($"COMMUNE {typeCommune.ToUpper()} DE {nomCommune.ToUpper()}")
-                                    .FontSize(9);
-                            });
+                            row.RelativeItem().AlignLeft().Text($"GRAND LIVRE - {nomCommune.ToUpper()}")
+                                .FontSize(10).Bold().FontColor(Color.FromHex(BLEU_TITRE));
 
-                            row.RelativeItem(1).AlignCenter().AlignMiddle().Text("⚜")
-                                .FontSize(30);
+                            row.RelativeItem().AlignCenter().Text($"Exercice {exercice?.GetAnnee() ?? DateTime.Now.Year}")
+                                .FontSize(10).Bold();
 
-                            row.RelativeItem(2).AlignRight().Column(rightCol =>
+                            row.RelativeItem().AlignRight().Text(text =>
                             {
-                                rightCol.Item().AlignRight().Text("REPUBLIQUE GUINEE")
-                                    .FontSize(11).Bold();
-                                rightCol.Item().AlignRight().Text("Travail-Justice-Solidarité")
-                                    .FontSize(10).Italic();
+                                text.Span("Page ").FontSize(9);
+                                text.CurrentPageNumber().FontSize(9);
+                                text.Span(" / ").FontSize(9);
+                                text.TotalPages().FontSize(9);
                             });
                         });
 
-                        headerCol.Item().PaddingTop(15);
+                        headerCol.Item().ShowIf(ctx => ctx.PageNumber > 1)
+                            .PaddingTop(5).LineHorizontal(1).LineColor(Color.FromHex(GRIS_BORDURE));
 
-                        headerCol.Item().AlignCenter().Text("GRAND LIVRE")
-                            .FontSize(18).Bold().FontColor(Color.FromHex(BLEU_TITRE));
-
-                        headerCol.Item().PaddingVertical(5)
-                            .BorderTop(2).BorderBottom(2).BorderColor(Color.FromHex(BLEU_TITRE))
-                            .Padding(8).AlignCenter()
-                            .Text($"DE LA COMMUNE {typeCommune.ToUpper()} DE {nomCommune.ToUpper()}")
-                            .FontSize(12);
-
-                        headerCol.Item().PaddingTop(10).AlignCenter()
-                            .Text($"Exercice {exercice?.GetAnnee() ?? DateTime.Now.Year}")
-                            .FontSize(14).Bold();
-
-                        if (filtre != null && filtre.Mois.HasValue)
-                        {
-                            string[] moisNoms = { "", "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
-                                                 "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre" };
-                            string periode = $"Mois de {moisNoms[filtre.Mois.Value]}";
-                            if (filtre.Annee.HasValue)
-                                periode += $" {filtre.Annee.Value}";
-
-                            headerCol.Item().AlignCenter().Text(periode).FontSize(10).Italic();
-                        }
-
-                        headerCol.Item().PaddingTop(10).LineHorizontal(1).LineColor(Color.FromHex(GRIS_BORDURE));
+                        headerCol.Item().ShowIf(ctx => ctx.PageNumber > 1).PaddingBottom(10);
                     });
 
                     // ═══════════════════════════════════════════════════════════
-                    // CONTENU - Grille de cartes
+                    // CONTENU - En-tête officiel (première page) + Grille de cartes
                     // ═══════════════════════════════════════════════════════════
-                    page.Content().PaddingVertical(10).Element(c => ComposeContent(c, comptesAvecMouvements));
+                    page.Content().Column(contentCol =>
+                    {
+                        // ═══════════════════════════════════════════════════════════
+                        // EN-TÊTE OFFICIEL (PREMIÈRE PAGE UNIQUEMENT)
+                        // ═══════════════════════════════════════════════════════════
+                        contentCol.Item().ShowOnce().Column(headerCol =>
+                        {
+                            headerCol.Item().Row(row =>
+                            {
+                                // Colonne gauche : Ministère
+                                row.RelativeItem(2).Column(leftCol =>
+                                {
+                                    leftCol.Item().Text("Ministère de l'Administration du Territoire")
+                                        .FontSize(10).Bold();
+                                    leftCol.Item().Text("et de la Décentralisation")
+                                        .FontSize(10).Bold();
+                                    leftCol.Item().PaddingTop(3).Text("Direction Générale des Collectivités Locales")
+                                        .FontSize(9).Bold();
+                                    leftCol.Item().PaddingTop(8).Text($"REGION ADMINISTRATIVE DE {region.ToUpper()}")
+                                        .FontSize(9);
+                                    leftCol.Item().Text($"PREFECTURE DE {prefecture.ToUpper()}")
+                                        .FontSize(9);
+                                    leftCol.Item().Text($"COMMUNE {typeCommune.ToUpper()} DE {nomCommune.ToUpper()}")
+                                        .FontSize(9);
+                                });
+
+                                // Colonne centrale : Drapeau guinéen
+                                row.RelativeItem(1).AlignCenter().AlignMiddle().Element(c =>
+                                {
+                                    c.Border(1).BorderColor("#424242").Table(flag =>
+                                    {
+                                        flag.ColumnsDefinition(cols =>
+                                        {
+                                            cols.ConstantColumn(18);
+                                            cols.ConstantColumn(18);
+                                            cols.ConstantColumn(18);
+                                        });
+
+                                        flag.Cell().Height(36).Background(DrapeauRouge);
+                                        flag.Cell().Height(36).Background(DrapeauJaune);
+                                        flag.Cell().Height(36).Background(DrapeauVert);
+                                    });
+                                });
+
+                                // Colonne droite : République
+                                row.RelativeItem(2).AlignRight().Column(rightCol =>
+                                {
+                                    rightCol.Item().AlignRight().Text("REPUBLIQUE DE GUINEE")
+                                        .FontSize(11).Bold();
+                                    rightCol.Item().AlignRight().Text("Travail - Justice - Solidarité")
+                                        .FontSize(10).Italic();
+                                });
+                            });
+
+                            headerCol.Item().PaddingTop(15);
+
+                            // Titre du document
+                            headerCol.Item().AlignCenter().Text("GRAND LIVRE")
+                                .FontSize(18).Bold().FontColor(Color.FromHex(BLEU_TITRE));
+
+                            // Bandeau avec commune
+                            headerCol.Item().PaddingVertical(5)
+                                .BorderTop(2).BorderBottom(2).BorderColor(Color.FromHex(BLEU_TITRE))
+                                .Padding(8).AlignCenter()
+                                .Text($"DE LA COMMUNE {typeCommune.ToUpper()} DE {nomCommune.ToUpper()}")
+                                .FontSize(12);
+
+                            // Exercice
+                            headerCol.Item().PaddingTop(10).AlignCenter()
+                                .Text($"Exercice {exercice?.GetAnnee() ?? DateTime.Now.Year}")
+                                .FontSize(14).Bold();
+
+                            // Période (si filtre)
+                            if (!string.IsNullOrEmpty(periodeTexte))
+                            {
+                                headerCol.Item().AlignCenter().Text(periodeTexte).FontSize(10).Italic();
+                            }
+
+                            headerCol.Item().PaddingTop(10).LineHorizontal(1).LineColor(Color.FromHex(GRIS_BORDURE));
+                            headerCol.Item().PaddingBottom(10);
+                        });
+
+                        // ═══════════════════════════════════════════════════════════
+                        // GRILLE DE CARTES (toutes les pages)
+                        // ═══════════════════════════════════════════════════════════
+                        contentCol.Item().Element(c => ComposeContent(c, comptesAvecMouvements));
+                    });
 
                     // ═══════════════════════════════════════════════════════════
-                    // PIED DE PAGE
+                    // PIED DE PAGE (toutes les pages)
                     // ═══════════════════════════════════════════════════════════
                     page.Footer().Row(row =>
                     {
@@ -166,11 +233,13 @@ namespace Collectivite.Services
                 {
                     var comptesLigne = comptes.Skip(i).Take(comptesParLigne).ToList();
 
-                    column.Item().Row(row =>
+                    // ✅ ShowEntire() empêche la ligne d'être coupée entre deux pages
+                    column.Item().ShowEntire().Row(row =>
                     {
                         foreach (var compte in comptesLigne)
                         {
-                            row.RelativeItem().Padding(4).Element(c => DessinerCarte(c, compte));
+                            // ✅ ShowEntire() sur chaque carte pour éviter toute coupure
+                            row.RelativeItem().Padding(4).ShowEntire().Element(c => DessinerCarte(c, compte));
                         }
 
                         int casesVides = comptesParLigne - comptesLigne.Count;

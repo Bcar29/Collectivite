@@ -40,7 +40,6 @@ namespace Collectivite.Services
                 .Where(m => m.Etat == Mandat.EtatMandat.Validé && exerciceService.CurrentExercice.Id == m.Engagement.ExerciceId)
                 .Include(m => m.Engagement)
                     .ThenInclude(e => e.Tiers)
-                .Where(m => m.Engagement.ExerciceId == exerciceEncours.Id) 
                 .OrderByDescending(m => m.DateEmission)
                 .ToListAsync();
 

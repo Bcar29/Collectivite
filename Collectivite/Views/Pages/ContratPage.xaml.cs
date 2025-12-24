@@ -32,5 +32,14 @@ namespace Collectivite.Views.Pages
             // ⚠️ IMPORTANT : Définir le DataContext pour le binding
             DataContext = viewModel;
         }
+
+        private void UserControl_Unloaded(object sender, RoutedEventArgs e)
+        {
+            // Appeler Cleanup quand la page se ferme
+            if (DataContext is ContratViewModel vm)
+            {
+                vm.Cleanup();
+            }
+        }
     }
 }

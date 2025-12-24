@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Collectivite.Migrations
 {
     /// <inheritdoc />
-    public partial class initial : Migration
+    public partial class initialMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -723,7 +723,7 @@ namespace Collectivite.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    Montant = table.Column<double>(type: "double", nullable: false),
+                    Montant = table.Column<decimal>(type: "decimal(65,30)", nullable: false),
                     Motif = table.Column<string>(type: "text", maxLength: 500, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Date = table.Column<DateTime>(type: "datetime(6)", nullable: false),

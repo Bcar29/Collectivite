@@ -54,7 +54,9 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- En-tête avec titre -->
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <!-- EN-TÊTE AVEC TITRE ET BOUTONS -->
+        <!-- ═══════════════════════════════════════════════════════════ -->
         <Border Grid.Row="0" Background="White" Padding="20,15" 
                 BorderBrush="#E0E0E0" BorderThickness="0,0,0,1">
             <Grid>
@@ -73,6 +75,42 @@
 
                 <!-- Boutons d'action -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+
+                    <!-- 🆕 BOUTON BASCULER MODE D'AFFICHAGE -->
+                    <Button Command="{Binding BasculerModeAffichageCommand}"
+                            Margin="0,0,16,0" Padding="12,6"
+                            ToolTip="Basculer entre vue Cartes et vue Tableau">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
+                                <Setter Property="BorderBrush" Value="#1976D2"/>
+                                <Setter Property="Foreground" Value="#1976D2"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding EstModeDataGrid}" Value="True">
+                                        <Setter Property="Background" Value="#E3F2FD"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon VerticalAlignment="Center" Margin="0,0,6,0">
+                                <materialDesign:PackIcon.Style>
+                                    <Style TargetType="materialDesign:PackIcon">
+                                        <Setter Property="Kind" Value="TableLarge"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding EstModeCartes}" Value="False">
+                                                <Setter Property="Kind" Value="Cards"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </materialDesign:PackIcon.Style>
+                            </materialDesign:PackIcon>
+                            <TextBlock Text="{Binding LibelleBoutonMode}"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" 
+                               Margin="0,4,16,4"/>
+
                     <Button Style="{StaticResource MaterialDesignOutlinedButton}"
                             Command="{Binding ExporterExcelCommand}"
                             Margin="0,0,8,0" Padding="12,6">
@@ -101,7 +139,9 @@
             </Grid>
         </Border>
 
-        <!-- Barre de filtres -->
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <!-- BARRE DE FILTRES -->
+        <!-- ═══════════════════════════════════════════════════════════ -->
         <Border Grid.Row="1" Background="White" Padding="16,12" 
                 BorderBrush="#E0E0E0" BorderThickness="0,0,0,1">
             <Grid>
@@ -113,15 +153,6 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Filtre Année 
-                <StackPanel Grid.Column="0" Margin="0,0,16,0">
-                    <TextBlock Text="Année" FontSize="11" Foreground="#666666" Margin="0,0,0,4"/>
-                    <ComboBox Width="100" 
-                              ItemsSource="{Binding AnneesDisponibles}"
-                              SelectedItem="{Binding AnneeSelectionnee}"
-                              Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
-                </StackPanel>
-                 -->
                 <!-- Filtre Mois -->
                 <StackPanel Grid.Column="1" Margin="0,0,16,0">
                     <TextBlock Text="Mois" FontSize="11" Foreground="#666666" Margin="0,0,0,4"/>
@@ -164,7 +195,9 @@
             </Grid>
         </Border>
 
-        <!-- Statistiques -->
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <!-- STATISTIQUES + INDICATEUR MODE -->
+        <!-- ═══════════════════════════════════════════════════════════ -->
         <Border Grid.Row="2" Background="#E3F2FD" Padding="16,10"
                 Visibility="{Binding Statistiques, Converter={StaticResource BoolToVisConverter}}">
             <Grid>
@@ -173,6 +206,7 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0" HorizontalAlignment="Center">
@@ -198,147 +232,284 @@
                     <TextBlock Text="{Binding Statistiques.TotalCreditsFormate}" 
                                FontSize="18" FontWeight="Bold" Foreground="#D32F2F"/>
                 </StackPanel>
+
+                <!-- 🆕 Indicateur du mode d'affichage actuel -->
+                <Border Grid.Column="4" 
+                        Background="White"
+                        CornerRadius="12" Padding="10,4" Margin="10,0,0,0"
+                        VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Width="16" Height="16"
+                                                 Foreground="#1976D2"
+                                                 VerticalAlignment="Center" Margin="0,0,5,0">
+                            <materialDesign:PackIcon.Style>
+                                <Style TargetType="materialDesign:PackIcon">
+                                    <Setter Property="Kind" Value="Cards"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding EstModeDataGrid}" Value="True">
+                                            <Setter Property="Kind" Value="TableLarge"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </materialDesign:PackIcon.Style>
+                        </materialDesign:PackIcon>
+                        <TextBlock FontSize="11" Foreground="#1976D2" VerticalAlignment="Center">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Text" Value="Mode Cartes"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding EstModeDataGrid}" Value="True">
+                                            <Setter Property="Text" Value="Mode Tableau"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
             </Grid>
         </Border>
 
-        <!-- Contenu principal - Liste des comptes en grille -->
-        <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" 
-              HorizontalScrollBarVisibility="Disabled">
-            <ItemsControl ItemsSource="{Binding Comptes}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <WrapPanel Orientation="Horizontal"/>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <!-- CONTENU PRINCIPAL - DEUX MODES D'AFFICHAGE -->
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <Grid Grid.Row="3">
 
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <Border Style="{StaticResource CompteCardStyle}" 
-                        Width="280" MinHeight="200" MaxHeight="350">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="*"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
+            <!-- ═══════════════════════════════════════════════════════════ -->
+            <!-- 🃏 MODE CARTES (WrapPanel) -->
+            <!-- ═══════════════════════════════════════════════════════════ -->
+            <ScrollViewer VerticalScrollBarVisibility="Auto" 
+                          HorizontalScrollBarVisibility="Disabled"
+                          Visibility="{Binding EstModeCartes, Converter={StaticResource BoolToVisConverter}}">
+                <ItemsControl ItemsSource="{Binding Comptes}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
 
-                                <!-- En-tête du compte -->
-                                <StackPanel Grid.Row="0" Margin="0,0,0,8">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource CompteCardStyle}" 
+                                    Width="280" MinHeight="200" MaxHeight="350">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <!-- En-tête du compte -->
+                                    <StackPanel Grid.Row="0" Margin="0,0,0,8">
+                                        <TextBlock Text="{Binding NumeroCompte}" 
+                                                   FontSize="18" FontWeight="Bold" 
+                                                   Foreground="#1976D2"
+                                                   HorizontalAlignment="Center"/>
+                                        <TextBlock Text="{Binding IntituleCompte}" 
+                                                   FontSize="11" Foreground="#666666"
+                                                   TextWrapping="Wrap" TextAlignment="Center"
+                                                   MaxHeight="36"/>
+                                    </StackPanel>
+
+                                    <Separator Grid.Row="1" Margin="0,4"/>
+
+                                    <!-- Liste des mouvements avec ScrollViewer -->
+                                    <ScrollViewer Grid.Row="2" 
+                                                  VerticalScrollBarVisibility="Auto"
+                                                  HorizontalScrollBarVisibility="Disabled"
+                                                  MaxHeight="150">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <!-- Colonne Débit -->
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock Text="Débit" Style="{StaticResource HeaderTextStyle}"
+                                                           HorizontalAlignment="Center"/>
+                                                <ItemsControl ItemsSource="{Binding Mouvements}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <TextBlock Text="{Binding DebitFormate}" 
+                                                                       Style="{StaticResource MontantTextStyle}"
+                                                                       Foreground="#388E3C"
+                                                                       HorizontalAlignment="Center"
+                                                                       Margin="0,2"/>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+
+                                            <!-- Colonne Crédit -->
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="Crédit" Style="{StaticResource HeaderTextStyle}"
+                                                           HorizontalAlignment="Center"/>
+                                                <ItemsControl ItemsSource="{Binding Mouvements}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <TextBlock Text="{Binding CreditFormate}" 
+                                                                       Style="{StaticResource MontantTextStyle}"
+                                                                       Foreground="#D32F2F"
+                                                                       HorizontalAlignment="Center"
+                                                                       Margin="0,2"/>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </Grid>
+                                    </ScrollViewer>
+
+                                    <!-- Totaux -->
+                                    <Border Grid.Row="3" Background="#F5F5F5" 
+                                            CornerRadius="4" Padding="8" Margin="0,8,0,0">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+
+                                            <TextBlock Grid.Row="0" Grid.Column="0" 
+                                                       Text="{Binding TotalDebitFormate}" 
+                                                       FontWeight="Bold" Foreground="#388E3C"
+                                                       HorizontalAlignment="Center"/>
+                                            <TextBlock Grid.Row="0" Grid.Column="1" 
+                                                       Text="{Binding TotalCreditFormate}" 
+                                                       FontWeight="Bold" Foreground="#D32F2F"
+                                                       HorizontalAlignment="Center"/>
+
+                                            <TextBlock Grid.Row="1" Grid.ColumnSpan="2" 
+                                                       Text="{Binding SoldeFormate}" 
+                                                       FontSize="11" Foreground="#666666"
+                                                       HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                        </Grid>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <!-- ═══════════════════════════════════════════════════════════ -->
+            <!-- 📊 MODE DATAGRID (Tableau) -->
+            <!-- ═══════════════════════════════════════════════════════════ -->
+            <materialDesign:Card Padding="0" Margin="10"
+                                 Visibility="{Binding EstModeDataGrid, Converter={StaticResource BoolToVisConverter}}">
+                <DataGrid ItemsSource="{Binding LignesDataGrid}"
+                          AutoGenerateColumns="False"
+                          CanUserAddRows="False"
+                          IsReadOnly="True"
+                          SelectionMode="Single"
+                          AlternatingRowBackground="#FAFAFA"
+                          GridLinesVisibility="Horizontal"
+                          HorizontalGridLinesBrush="#E0E0E0"
+                          materialDesign:DataGridAssist.CellPadding="12 8 12 8"
+                          materialDesign:DataGridAssist.ColumnHeaderPadding="12 8 12 8">
+
+                    <DataGrid.RowStyle>
+                        <Style TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
+                            <Style.Triggers>
+                                <!-- Style spécial pour les lignes de total : BLEU CIEL -->
+                                <DataTrigger Binding="{Binding EstLigneTotal}" Value="True">
+                                    <Setter Property="Background" Value="#E3F2FD"/>
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGrid.RowStyle>
+
+                    <DataGrid.Columns>
+                        <!-- N° Compte -->
+                        <DataGridTemplateColumn Header="N° Compte" Width="120" IsReadOnly="True">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
                                     <TextBlock Text="{Binding NumeroCompte}" 
-                                       FontSize="18" FontWeight="Bold" 
-                                       Foreground="#1976D2"
-                                       HorizontalAlignment="Center"/>
-                                    <TextBlock Text="{Binding IntituleCompte}" 
-                                       FontSize="11" Foreground="#666666"
-                                       TextWrapping="Wrap" TextAlignment="Center"
-                                       MaxHeight="36"/>
-                                </StackPanel>
+                                               FontWeight="SemiBold"
+                                               Foreground="#1976D2"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
 
-                                <Separator Grid.Row="1" Margin="0,4"/>
+                        <!-- Intitulé -->
+                        <DataGridTextColumn Header="Intitulé" 
+                                            Binding="{Binding IntituleCompte}" 
+                                            Width="*" MinWidth="250"/>
 
-                                <!-- Liste des mouvements avec ScrollViewer -->
-                                <ScrollViewer Grid.Row="2" 
-                                      VerticalScrollBarVisibility="Auto"
-                                      HorizontalScrollBarVisibility="Disabled"
-                                      MaxHeight="150">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
+                        <!-- Date -->
+                        <DataGridTemplateColumn Header="Date" Width="110" IsReadOnly="True">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding DateFormatee}" 
+                                               Foreground="#666666"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
 
-                                        <!-- Colonne Débit -->
-                                        <StackPanel Grid.Column="0">
-                                            <TextBlock Text="Débit" Style="{StaticResource HeaderTextStyle}"
-                                               HorizontalAlignment="Center"/>
-                                            <ItemsControl ItemsSource="{Binding Mouvements}">
-                                                <ItemsControl.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <TextBlock Text="{Binding DebitFormate}" 
-                                                           Style="{StaticResource MontantTextStyle}"
-                                                           Foreground="#388E3C"
-                                                           HorizontalAlignment="Center"
-                                                           Margin="0,2"/>
-                                                    </DataTemplate>
-                                                </ItemsControl.ItemTemplate>
-                                            </ItemsControl>
-                                        </StackPanel>
+                        <!-- Débit -->
+                        <DataGridTemplateColumn Header="Débit" Width="140" IsReadOnly="True">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding DebitFormate}" 
+                                               FontWeight="SemiBold"
+                                               Foreground="#388E3C"
+                                               HorizontalAlignment="Right"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
 
-                                        <!-- Colonne Crédit -->
-                                        <StackPanel Grid.Column="1">
-                                            <TextBlock Text="Crédit" Style="{StaticResource HeaderTextStyle}"
-                                               HorizontalAlignment="Center"/>
-                                            <ItemsControl ItemsSource="{Binding Mouvements}">
-                                                <ItemsControl.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <TextBlock Text="{Binding CreditFormate}" 
-                                                           Style="{StaticResource MontantTextStyle}"
-                                                           Foreground="#D32F2F"
-                                                           HorizontalAlignment="Center"
-                                                           Margin="0,2"/>
-                                                    </DataTemplate>
-                                                </ItemsControl.ItemTemplate>
-                                            </ItemsControl>
-                                        </StackPanel>
-                                    </Grid>
-                                </ScrollViewer>
+                        <!-- Crédit -->
+                        <DataGridTemplateColumn Header="Crédit" Width="140" IsReadOnly="True">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding CreditFormate}" 
+                                               FontWeight="SemiBold"
+                                               Foreground="#D32F2F"
+                                               HorizontalAlignment="Right"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
 
-                                <!-- Totaux -->
-                                <Border Grid.Row="3" Background="#F5F5F5" 
-                                CornerRadius="4" Padding="8" Margin="0,8,0,0">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                        </Grid.RowDefinitions>
+                        <!-- Solde -->
+                        <DataGridTemplateColumn Header="Solde" Width="140" IsReadOnly="True">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding SoldeFormate}" 
+                                               FontWeight="Bold"
+                                               Foreground="#1976D2"
+                                               HorizontalAlignment="Right"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </materialDesign:Card>
 
-                                        <TextBlock Grid.Row="0" Grid.Column="0" 
-                                           Text="{Binding TotalDebitFormate}" 
-                                           FontWeight="Bold" Foreground="#388E3C"
-                                           HorizontalAlignment="Center"/>
-                                        <TextBlock Grid.Row="0" Grid.Column="1" 
-                                           Text="{Binding TotalCreditFormate}" 
-                                           FontWeight="Bold" Foreground="#D32F2F"
-                                           HorizontalAlignment="Center"/>
+            <!-- Message si pas de données -->
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                        Visibility="{Binding Comptes.Count, Converter={StaticResource BoolToVisConverter}, ConverterParameter=Invert}">
+                <materialDesign:PackIcon Kind="DatabaseOff" Width="64" Height="64" 
+                                         Foreground="#BDBDBD" HorizontalAlignment="Center"/>
+                <TextBlock Text="Aucune donnée à afficher" 
+                           FontSize="16" Foreground="#9E9E9E" Margin="0,12,0,0"/>
+                <TextBlock Text="Modifiez les filtres pour voir les comptes" 
+                           FontSize="12" Foreground="#BDBDBD"/>
+            </StackPanel>
 
-                                        <TextBlock Grid.Row="1" Grid.ColumnSpan="2" 
-                                           Text="{Binding SoldeFormate}" 
-                                           FontSize="11" Foreground="#666666"
-                                           HorizontalAlignment="Center" Margin="0,4,0,0"/>
-                                    </Grid>
-                                </Border>
-                            </Grid>
-                        </Border>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </ScrollViewer>
+            <!-- Barre de chargement -->
+            <ProgressBar IsIndeterminate="True" 
+                         Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisConverter}}"
+                         VerticalAlignment="Top"/>
+        </Grid>
 
-
-        <!-- Message si pas de données -->
-        <StackPanel Grid.Row="3" 
-                    HorizontalAlignment="Center" VerticalAlignment="Center"
-                    Visibility="{Binding Comptes.Count, Converter={StaticResource BoolToVisConverter}, ConverterParameter=Invert}">
-            <materialDesign:PackIcon Kind="DatabaseOff" Width="64" Height="64" 
-                                     Foreground="#BDBDBD" HorizontalAlignment="Center"/>
-            <TextBlock Text="Aucune donnée à afficher" 
-                       FontSize="16" Foreground="#9E9E9E" Margin="0,12,0,0"/>
-            <TextBlock Text="Modifiez les filtres pour voir les comptes" 
-                       FontSize="12" Foreground="#BDBDBD"/>
-        </StackPanel>
-
-        <!-- Barre de chargement -->
-        <ProgressBar Grid.Row="3" 
-                     IsIndeterminate="True" 
-                     Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisConverter}}"
-                     VerticalAlignment="Top"/>
-
-        <!-- Barre de statut -->
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <!-- BARRE DE STATUT -->
+        <!-- ═══════════════════════════════════════════════════════════ -->
         <Border Grid.Row="4" Background="White" Padding="12,8"
                 BorderBrush="#E0E0E0" BorderThickness="0,1,0,0">
             <Grid>
