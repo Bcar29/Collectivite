@@ -1,9 +1,10 @@
 ﻿using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using QuestPDF.Drawing;
 using Collectivite.Models;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Collectivite.Services
@@ -22,6 +23,7 @@ namespace Collectivite.Services
         private static readonly string VertClair = "#D1FAE5";
         private static readonly string JauneClair = "#FFFDE7";
         private static readonly string VertPaleClair = "#F9FBE7";
+        private static readonly string GrisClair = "#F5F5F5";
 
         private static readonly string GrisArdoise = "#1E293B";
         private static readonly string GrisFonce = "#475569";
@@ -34,9 +36,9 @@ namespace Collectivite.Services
         private static readonly string GrisFiligrane = "#F0F0F0";
 
         /// <summary>
-        /// Exporte l'ordre de recette en PDF sur une seule page A4
+        /// Exporte l'ordre de recette en PDF
         /// </summary>
-        public static async Task<byte[]> ExporterAsync(OrdreRecette ordre, Commune commune, Mouvement? mouvement = null)
+        public static async Task<byte[]> ExporterAsync(OrdreRecette ordre, Commune commune, Mouvement? mouvement = null, List<Mouvement>? tousLesMouvements = null)
         {
             QuestPDF.Settings.License = LicenseType.Community;
 
@@ -63,9 +65,13 @@ namespace Collectivite.Services
                     page.Content().Layers(layers =>
                     {
                         // ═══════════════════════════════════════════════════════════
-                        // LAYER 1 : FILIGRANE DIAGONAL UNIQUE (45°)
+                        // LAYER 1 : FILIGRANE
                         // ═══════════════════════════════════════════════════════════
-                     
+                        layers.Layer().AlignCenter().AlignMiddle()
+                            .Text(filigraneTexte)
+                            .FontSize(50)
+                            .Bold()
+                            .FontColor(Color.FromHex(GrisFiligrane));
 
                         // ═══════════════════════════════════════════════════════════
                         // LAYER 2 : CONTENU PRINCIPAL
@@ -143,8 +149,8 @@ namespace Collectivite.Services
                             // ═══════════════════════════════════════════════════════════
                             // INFORMATIONS GÉNÉRALES
                             // ═══════════════════════════════════════════════════════════
-                            col.Item().PaddingTop(20).Text("Informations générales")
-                                .FontSize(11).SemiBold().FontColor(Color.FromHex(BleuPrimaire));
+                            col.Item().PaddingTop(10).Text("📋 Informations générales")
+                                .FontSize(10).SemiBold().FontColor(Color.FromHex(BleuPrimaire));
 
                             col.Item().PaddingTop(6).Row(infoRow =>
                             {
@@ -184,8 +190,8 @@ namespace Collectivite.Services
                             // ═══════════════════════════════════════════════════════════
                             // MONTANT
                             // ═══════════════════════════════════════════════════════════
-                            col.Item().PaddingTop(20).Text("Montant")
-                                .FontSize(11).SemiBold().FontColor(Color.FromHex(BleuPrimaire));
+                            col.Item().PaddingTop(10).Text("💰 Montant")
+                                .FontSize(10).SemiBold().FontColor(Color.FromHex(BleuPrimaire));
 
                             col.Item().PaddingTop(6).Background(Color.FromHex(BleuTresClair))
                                 .Border(1.5f).BorderColor(Color.FromHex(BleuPrimaire))
@@ -202,7 +208,7 @@ namespace Collectivite.Services
                                 .Padding(8).Column(innerCol =>
                                 {
                                     innerCol.Item().Text("Montant en lettres :")
-                                        .FontSize(8).SemiBold().FontColor(Color.FromHex(GrisTexte));
+                                        .FontSize(7).SemiBold().FontColor(Color.FromHex(GrisTexte));
                                     innerCol.Item().PaddingTop(2)
                                         .Text(ordre.MontantOrdreLettre ?? "-")
                                         .FontSize(9).Italic().FontColor(Color.FromHex(VertTexte));
@@ -213,8 +219,8 @@ namespace Collectivite.Services
                             // ═══════════════════════════════════════════════════════════
                             // MOTIFS
                             // ═══════════════════════════════════════════════════════════
-                            col.Item().PaddingTop(10).Text("Motifs / Observations")
-                                .FontSize(11).SemiBold().FontColor(Color.FromHex(BleuPrimaire));
+                            col.Item().PaddingTop(10).Text("📝 Motifs / Observations")
+                                .FontSize(10).SemiBold().FontColor(Color.FromHex(BleuPrimaire));
 
                             col.Item().PaddingTop(6).Background(Color.FromHex(JauneClair))
                                 .Border(0.5f).BorderColor(Color.FromHex(JauneBordure))
@@ -223,78 +229,99 @@ namespace Collectivite.Services
                                 .FontSize(9).FontColor(Color.FromHex(GrisArdoise));
 
                             // ═══════════════════════════════════════════════════════════
-                            // ENCAISSEMENT (si mouvement existe)
+                            // HISTORIQUE DES ENCAISSEMENTS (TOUS les mouvements)
                             // ═══════════════════════════════════════════════════════════
-                            if (mouvement != null)
+                            if (tousLesMouvements != null && tousLesMouvements.Any())
                             {
                                 col.Item().PaddingTop(10).LineHorizontal(0.5f).LineColor(Color.FromHex(GrisBordure));
 
-                                col.Item().PaddingTop(20).Text("Informations d'encaissement")
-                                    .FontSize(11).SemiBold().FontColor(Color.FromHex(BleuPrimaire));
+                                col.Item().PaddingTop(10).Text("💳 Historique des encaissements")
+                                    .FontSize(10).SemiBold().FontColor(Color.FromHex(BleuPrimaire));
 
-                                string modePaiement = GetModePaiement(mouvement);
-
-                                col.Item().PaddingTop(6).Row(encRow =>
+                                // Boucle sur TOUS les mouvements
+                                foreach (var mvt in tousLesMouvements)
                                 {
-                                    encRow.RelativeItem().Table(table =>
-                                    {
-                                        table.ColumnsDefinition(columns =>
+                                    col.Item().PaddingTop(6).Background(Color.FromHex(GrisClair))
+                                        .Padding(8).Column(mvtCol =>
                                         {
-                                            columns.ConstantColumn(110);
-                                            columns.RelativeColumn();
+                                            mvtCol.Item().Row(mvtRow =>
+                                            {
+                                                // Colonne gauche
+                                                mvtRow.RelativeItem().Table(table =>
+                                                {
+                                                    table.ColumnsDefinition(columns =>
+                                                    {
+                                                        columns.ConstantColumn(80);
+                                                        columns.RelativeColumn();
+                                                    });
+
+                                                    AjouterLigneInfo(table, "Date :", mvt.Date.ToString("dd/MM/yyyy"));
+
+                                                    table.Cell().PaddingVertical(2).Text("Montant :").FontSize(8).SemiBold();
+                                                    table.Cell().PaddingVertical(2).Text($"{mvt.Montant:N0} GNF")
+                                                        .FontSize(8).SemiBold().FontColor(Color.FromHex(VertSucces));
+                                                });
+
+                                                mvtRow.ConstantItem(15);
+
+                                                // Colonne droite
+                                                mvtRow.RelativeItem().Table(table =>
+                                                {
+                                                    table.ColumnsDefinition(columns =>
+                                                    {
+                                                        columns.ConstantColumn(80);
+                                                        columns.RelativeColumn();
+                                                    });
+
+                                                    string modePaiement = GetModePaiement(mvt);
+                                                    table.Cell().PaddingVertical(2).Text("Mode :").FontSize(8).SemiBold();
+                                                    table.Cell().PaddingVertical(2).Text(modePaiement)
+                                                        .FontSize(8).SemiBold().FontColor(Color.FromHex(BleuPrimaire));
+
+                                                    // Afficher la référence selon le mode
+                                                    if (!string.IsNullOrEmpty(mvt.RefVirement))
+                                                    {
+                                                        AjouterLigneInfo(table, "Réf. virement :", mvt.RefVirement);
+                                                        AjouterLigneInfo(table, "Num Compte :", mvt.NumBanqueBenef ?? "N/A");
+                                                    }
+                                                    else if (!string.IsNullOrEmpty(mvt.RefChèque))
+                                                    {
+                                                        AjouterLigneInfo(table, "Réf. chèque :", mvt.RefChèque);
+                                                    }
+                                                    else
+                                                    {
+                                                        AjouterLigneInfo(table, "Référence :", "Espèces");
+                                                    }
+                                                });
+                                            });
                                         });
-
-                                        AjouterLigneInfo(table, "Date encaissement :", mouvement.Date.ToString("dd/MM/yyyy"));
-
-                                        table.Cell().PaddingVertical(2).Text("Montant encaissé :").FontSize(8).SemiBold();
-                                        table.Cell().PaddingVertical(2).Text($"{mouvement.Montant:N0} GNF")
-                                            .FontSize(8).SemiBold().FontColor(Color.FromHex(VertSucces));
-                                    });
-
-                                    encRow.ConstantItem(20);
-
-                                    encRow.RelativeItem().Table(table =>
-                                    {
-                                        table.ColumnsDefinition(columns =>
-                                        {
-                                            columns.ConstantColumn(110);
-                                            columns.RelativeColumn();
-                                        });
-
-                                        table.Cell().PaddingVertical(2).Text("Mode encaissement :").FontSize(8).SemiBold();
-                                        table.Cell().PaddingVertical(2).Text(modePaiement)
-                                            .FontSize(8).SemiBold().FontColor(Color.FromHex(BleuPrimaire));
-
-                                        if (!string.IsNullOrEmpty(mouvement.RefVirement))
-                                            AjouterLigneInfo(table, "Réf. virement :", mouvement.RefVirement);
-                                        else if (!string.IsNullOrEmpty(mouvement.RefChèque))
-                                            AjouterLigneInfo(table, "Réf. chèque :", mouvement.RefChèque);
-                                    });
-                                });
+                                }
                             }
-
-                            // ═══════════════════════════════════════════════════════════
-                            // ESPACE FLEXIBLE
-                            // ═══════════════════════════════════════════════════════════
-                            //col.Item().Extend();
 
                             // ═══════════════════════════════════════════════════════════
                             // SIGNATURE
                             // ═══════════════════════════════════════════════════════════
-                            col.Item().PaddingTop(30).AlignRight().PaddingRight(10).Column(sigCol =>
+                            if (ordre.Etat == OrdreRecette.EtatOdre.Validé)
                             {
-                                sigCol.Item().Text(text =>
+                                col.Item().PaddingTop(30).AlignRight().PaddingRight(10).Column(sigCol =>
                                 {
-                                    text.Span(nomCommune).FontSize(9);
-                                    text.Span(" Le .......... / .......... / ..........").FontSize(8).FontColor(Color.FromHex(GrisTexte));
+                                    sigCol.Item().Text(text =>
+                                    {
+                                        text.Span(nomCommune).FontSize(9);
+                                        text.Span(" Le .......... / .......... / ..........").FontSize(8).FontColor(Color.FromHex(GrisTexte));
+                                    });
+
+                                    sigCol.Item().PaddingTop(20).Text("L'Ordonateur :")
+                                        .FontSize(10).SemiBold();
+
+                                    sigCol.Item().PaddingTop(28).Text("M./Mme : ................................................................")
+                                        .FontSize(10).SemiBold();
                                 });
-
-                                sigCol.Item().PaddingTop(20).Text("L'Ordonateur :")
-                                    .FontSize(10).SemiBold();
-
-                                sigCol.Item().PaddingTop(28).Text("M./Mme : ................................................................")
-                                    .FontSize(10).SemiBold();
-                            });
+                            }
+                            else
+                            {
+                                col.Item().PaddingTop(15);
+                            }
 
                             col.Item().PaddingTop(8);
                         });
@@ -355,9 +382,9 @@ namespace Collectivite.Services
         /// <summary>
         /// Version synchrone
         /// </summary>
-        public static byte[] Exporter(OrdreRecette ordre, Commune commune, Mouvement? mouvement = null)
+        public static byte[] Exporter(OrdreRecette ordre, Commune commune, Mouvement? mouvement = null, List<Mouvement>? tousLesMouvements = null)
         {
-            return Task.Run(() => ExporterAsync(ordre, commune, mouvement)).GetAwaiter().GetResult();
+            return Task.Run(() => ExporterAsync(ordre, commune, mouvement, tousLesMouvements)).GetAwaiter().GetResult();
         }
     }
 }

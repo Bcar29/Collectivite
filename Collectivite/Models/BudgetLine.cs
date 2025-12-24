@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using System.Windows;
 
 namespace Collectivite.Models
 {
@@ -73,14 +74,19 @@ namespace Collectivite.Models
 
         #region Propriétés calculées (NotMapped)
 
-        /// <summary>
-        /// Calcule le montant définitif : MontantPrevu + RemaniementPlus - RemaniementMoins
-        /// </summary>
+        // Dans le modèle BudgetLine, ajoutez un champ backing
+        private decimal? _montantDefinitifOverride;
+
         [NotMapped]
         public decimal MontantDefinitif
         {
             get
             {
+                // Si on a une valeur override (pour les totaux), on l'utilise
+                if (_montantDefinitifOverride.HasValue)
+                    return _montantDefinitifOverride.Value;
+
+                // Sinon, calcul normal avec remaniements
                 if (Remaniements == null || !Remaniements.Any())
                     return MontantPrevu;
 
@@ -96,7 +102,8 @@ namespace Collectivite.Models
             }
             set
             {
-                // Setter vide pour permettre l'affectation si nécessaire
+                // Permet d'affecter manuellement (pour les totaux)
+                _montantDefinitifOverride = value;
             }
         }
 

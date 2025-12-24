@@ -3,11 +3,14 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
       Language="fr-FR"
+      xmlns:converters="clr-namespace:Collectivite.Utils"
       Background="#F5F5F5"
       Title="Détails du Mandat">
 
     <Page.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <converters:StringToVisibilityConverters x:Key="StringToVis"/>
+        <converters:InverseStringToVisibilityConverter x:Key="InverseStringToVis"/>
     </Page.Resources>
 
     <Grid>
@@ -55,7 +58,6 @@
                                  FontWeight="SemiBold"
                                  Margin="15,0,0,0"
                                  VerticalAlignment="Center"/>
-
                     </StackPanel>
 
                     <!-- Boutons d'action -->
@@ -197,12 +199,12 @@
                                Foreground="#1E293B"
                                HorizontalAlignment="Center"
                                Margin="0,10,0,0">
-
                              <Run Text="{Binding Mandat.Engagement.Exercice.Libelle, FallbackValue='2025'}"/>
                             </TextBlock>
                         </StackPanel>
 
                         <Separator Margin="0,0,0,20"/>
+
                         <!-- Informations générales -->
                         <TextBlock Text="📋 Informations générales"
                                  FontSize="18"
@@ -347,74 +349,150 @@
                             </StackPanel>
                         </Border>
 
-                        <Separator Margin="0,10,0,20"/>
 
-                        <!-- Informations de paiement (visible seulement si Mouvement existe) -->
                         <StackPanel Visibility="{Binding HasMouvement, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="💳 Informations de paiement"
-                                     FontSize="18"
-                                     FontWeight="SemiBold"
-                                     Foreground="#1976D2"
-                                     Margin="0,0,0,15"/>
+                            <Separator Margin="0,10,0,20"/>
 
-                            <Grid Margin="0,0,0,20">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="200"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="10"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="10"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="10"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="10"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
+                            <TextBlock Text="💳 Historique des paiements"
+                 FontSize="18"
+                 FontWeight="SemiBold"
+                 Foreground="#1976D2"
+                 Margin="0,0,0,15"/>
 
-                                <!-- Date de paiement -->
-                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Date de paiement :" FontWeight="SemiBold"/>
-                                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Mouvement.Date, StringFormat='dd/MM/yyyy'}"/>
+                            <!-- Liste de tous les mouvements -->
+                            <ItemsControl ItemsSource="{Binding TousLesMouvements}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="#F5F5F5" 
+                            CornerRadius="8" 
+                            Padding="15"
+                            Margin="0,0,0,15">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="20"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
 
-                                <!-- Montant payé -->
-                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Montant payé :" FontWeight="SemiBold"/>
-                                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Mouvement.Montant, StringFormat={}{0:N0} GNF}" FontWeight="SemiBold" Foreground="#4CAF50"/>
+                                                <!-- Colonne gauche -->
+                                                <StackPanel Grid.Column="0">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="80"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition Height="Auto"/>
+                                                            <RowDefinition Height="10"/>
+                                                            <RowDefinition Height="Auto"/>
+                                                        </Grid.RowDefinitions>
 
-                                <!-- Mode de paiement -->
-                                <TextBlock Grid.Row="4" Grid.Column="0" Text="Mode de paiement :" FontWeight="SemiBold"/>
-                                <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="{Binding ModePaiementIcon}" 
-                                                           Width="20" 
-                                                           Height="20"
-                                                           Foreground="#1976D2"
-                                                           Margin="0,0,8,0"
-                                                           VerticalAlignment="Center"/>
-                                    <TextBlock Text="{Binding ModePaiement}" FontWeight="SemiBold" Foreground="#1976D2"/>
-                                </StackPanel>
+                                                        <!-- Date -->
+                                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Date :" FontSize="12" FontWeight="SemiBold"/>
+                                                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Date, StringFormat='dd/MM/yyyy'}" FontSize="12"/>
 
-                                <!-- Référence Virement (si virement) -->
-                                <TextBlock Grid.Row="6" Grid.Column="0" 
-                                         Text="Référence virement :" 
-                                         FontWeight="SemiBold"
-                                         Visibility="{Binding EstVirement, Converter={StaticResource BoolToVis}}"/>
-                                <TextBlock Grid.Row="6" Grid.Column="1" 
-                                         Text="{Binding Mouvement.RefVirement}"
-                                         Visibility="{Binding EstVirement, Converter={StaticResource BoolToVis}}"/>
+                                                        <!-- Montant -->
+                                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Montant :" FontSize="12" FontWeight="SemiBold"/>
+                                                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Montant, StringFormat={}{0:N0} GNF}" FontSize="12" FontWeight="SemiBold" Foreground="#4CAF50"/>
+                                                    </Grid>
+                                                </StackPanel>
 
-                                <!-- Référence Chèque (si chèque) -->
-                                <TextBlock Grid.Row="8" Grid.Column="0" 
-                                         Text="Référence chèque :" 
-                                         FontWeight="SemiBold"
-                                         Visibility="{Binding EstCheque, Converter={StaticResource BoolToVis}}"/>
-                                <TextBlock Grid.Row="8" Grid.Column="1" 
-                                         Text="{Binding Mouvement.RefChèque}"
-                                         Visibility="{Binding EstCheque, Converter={StaticResource BoolToVis}}"/>
-                            </Grid>
+                                                <!-- Colonne droite -->
+                                                <StackPanel Grid.Column="2">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="110"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition Height="Auto"/>
+                                                            <RowDefinition Height="10"/>
+                                                            <RowDefinition Height="Auto"/>
+                                                            <RowDefinition Height="10"/>
+                                                            <RowDefinition Height="Auto"/>
+                                                        </Grid.RowDefinitions>
 
+                                                        <!-- Mode de paiement -->
+                                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Mode :" FontSize="12" FontWeight="SemiBold"/>
+                                                        <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal">
+                                                            <materialDesign:PackIcon Width="18" Height="18" Foreground="#1976D2" Margin="0,0,6,0" VerticalAlignment="Center">
+                                                                <materialDesign:PackIcon.Style>
+                                                                    <Style TargetType="materialDesign:PackIcon">
+                                                                        <Setter Property="Kind" Value="Cash"/>
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding RefVirement, Converter={StaticResource StringToVis}}" Value="Visible">
+                                                                                <Setter Property="Kind" Value="BankTransfer"/>
+                                                                            </DataTrigger>
+                                                                            <DataTrigger Binding="{Binding RefChèque, Converter={StaticResource StringToVis}}" Value="Visible">
+                                                                                <Setter Property="Kind" Value="CheckDecagram"/>
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </materialDesign:PackIcon.Style>
+                                                            </materialDesign:PackIcon>
+                                                            <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="#1976D2">
+                                                                <TextBlock.Style>
+                                                                    <Style TargetType="TextBlock">
+                                                                        <Setter Property="Text" Value="Espèces"/>
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding RefVirement, Converter={StaticResource StringToVis}}" Value="Visible">
+                                                                                <Setter Property="Text" Value="Virement bancaire"/>
+                                                                            </DataTrigger>
+                                                                            <DataTrigger Binding="{Binding RefChèque, Converter={StaticResource StringToVis}}" Value="Visible">
+                                                                                <Setter Property="Text" Value="Chèque"/>
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </TextBlock.Style>
+                                                            </TextBlock>
+                                                        </StackPanel>
+
+                                                        <!-- SI VIREMENT -->
+                                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Réf. virement :" FontSize="12" FontWeight="SemiBold"
+                                             Visibility="{Binding RefVirement, Converter={StaticResource StringToVis}}"/>
+                                                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding RefVirement}" FontSize="12"
+                                             Visibility="{Binding RefVirement, Converter={StaticResource StringToVis}}"/>
+
+                                                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Num Compte :" FontSize="12" FontWeight="SemiBold"
+                                             Visibility="{Binding RefVirement, Converter={StaticResource StringToVis}}"/>
+                                                        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding NumBanqueBenef, FallbackValue='N/A'}" FontSize="12"
+                                             Visibility="{Binding RefVirement, Converter={StaticResource StringToVis}}"/>
+
+                                                        <!-- SI CHÈQUE -->
+                                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Réf. chèque :" FontSize="12" FontWeight="SemiBold"
+                                             Visibility="{Binding RefChèque, Converter={StaticResource StringToVis}}"/>
+                                                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding RefChèque}" FontSize="12"
+                                             Visibility="{Binding RefChèque, Converter={StaticResource StringToVis}}"/>
+
+                                                        <!-- SI ESPÈCES (aucune référence) -->
+                                                        <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal">
+                                                            <StackPanel.Style>
+                                                                <Style TargetType="StackPanel">
+                                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                                    <Style.Triggers>
+                                                                        <MultiDataTrigger>
+                                                                            <MultiDataTrigger.Conditions>
+                                                                                <Condition Binding="{Binding RefVirement, Converter={StaticResource StringToVis}}" Value="Collapsed"/>
+                                                                                <Condition Binding="{Binding RefChèque, Converter={StaticResource StringToVis}}" Value="Collapsed"/>
+                                                                            </MultiDataTrigger.Conditions>
+                                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                                        </MultiDataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </StackPanel.Style>
+                                                            <TextBlock Text="Référence : " FontSize="12" FontWeight="SemiBold"/>
+                                                            <TextBlock Text="Espèces" FontSize="12"/>
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <Separator Margin="0,10,0,20"/>
                         </StackPanel>
-
                         <!-- Section Signatures (uniquement si mandat validé) -->
                         <StackPanel Visibility="{Binding IsMandatValide, Converter={StaticResource BoolToVis}}">
                             <Separator Margin="0,30,0,20"/>
@@ -426,12 +504,12 @@
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
 
-                                <!-- Le s/g -->
+                                <!-- Le S/G -->
                                 <StackPanel Grid.Column="0" HorizontalAlignment="Left">
                                     <TextBlock FontSize="12" 
                                          Foreground="#666"
                                          Margin="0,0,0,8">
-                                    <Run Text="{Binding Engagement.Commune.Nom}"/>
+                                    <Run Text="{Binding Mandat.Engagement.Commune.Nom}"/>
                                     <Run Text=" Le "/>
                                     <Run Text=".............."/>
                                     <Run Text=" / "/>
@@ -445,7 +523,6 @@
                                          FontWeight="SemiBold"
                                          Margin="0,30,0,0">
                                         <Run Text="Vu le S/G :  "/>
-                                        <Run Text=""/>
                                     </TextBlock>
                                     <TextBlock 
                                      FontSize="13"
@@ -455,12 +532,13 @@
                                     <Run Text="......................................................"/>
                                     </TextBlock>
                                 </StackPanel>
+
                                 <!-- Le Maire -->
                                 <StackPanel Grid.Column="2" HorizontalAlignment="Right">
                                     <TextBlock FontSize="12" 
                                          Foreground="#666"
                                          Margin="0,0,0,8">
-                                    <Run Text="{Binding Engagement.Commune.Nom}"/>
+                                    <Run Text="{Binding Mandat.Engagement.Commune.Nom}"/>
                                     <Run Text=" Le "/>
                                     <Run Text=".............."/>
                                     <Run Text=" / "/>
@@ -474,7 +552,6 @@
                                          FontWeight="SemiBold"
                                          Margin="0,30,0,0">
                                         <Run Text="L'Ordonateur :  "/>
-                                        <Run Text=""/>
                                     </TextBlock>
                                     <TextBlock 
                                      FontSize="13"

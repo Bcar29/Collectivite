@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Collectivite.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251218164801_initial")]
+    [Migration("20251223093139_initial")]
     partial class initial
     {
         /// <inheritdoc />
@@ -1155,8 +1155,8 @@ namespace Collectivite.Migrations
                     b.Property<int>("IdBudgetLine")
                         .HasColumnType("int");
 
-                    b.Property<double>("Montant")
-                        .HasColumnType("double");
+                    b.Property<decimal>("Montant")
+                        .HasColumnType("decimal(65,30)");
 
                     b.Property<string>("Motif")
                         .IsRequired()

@@ -178,11 +178,10 @@ namespace Collectivite.ViewModels
                     Communes.Add(commune);
                 }
 
-                System.Diagnostics.Debug.WriteLine($"Communes chargées : {Communes.Count}");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement des communes : {ex.Message}",
+                MessageBox.Show($"Erreur lors du chargement des communes dans viewmodèle: {ex.Message}",
                     "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally

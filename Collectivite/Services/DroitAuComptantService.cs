@@ -1,6 +1,7 @@
 ﻿
 using Collectivite.Models;
 using Collectivite.Services;
+using Collectivite.Utils;
 using Collectivite.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -226,7 +227,7 @@ namespace Collectivite.Services
                         NumeroOrdre = numeroOrdre,
                         DateOrdre = dto.DateOrdre.ToDateTime(TimeOnly.MaxValue),
                         MontantOrdre = dto.Montant,
-                        MontantOrdreLettre = ConvertirEnLettres(dto.Montant),
+                        MontantOrdreLettre = Convertir.ConvertirNombreEnLettres((long)dto.Montant),
                         Motifs = dto.Motifs,
                         Comptable = dto.Comptable,
                         BudgetLineId = dto.BudgetLineId,

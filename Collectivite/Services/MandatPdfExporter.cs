@@ -39,7 +39,7 @@ namespace Collectivite.Services
         private static readonly string GrisFiligrane = "#F0F0F0";
 
         /// <summary>
-        /// Exporte le mandat en PDF sur une seule page A4
+        /// Exporte le mandat en PDF
         /// </summary>
         public static async Task<byte[]> ExporterAsync(Mandat mandat, Commune commune, Mouvement? mouvement = null, List<Mouvement>? tousLesMouvements = null)
         {
@@ -222,7 +222,7 @@ namespace Collectivite.Services
                             col.Item().PaddingTop(8).LineHorizontal(0.5f).LineColor(Color.FromHex(GrisBordure));
 
                             // ═══════════════════════════════════════════════════════════
-                            // DÉCOMPOSITION DES MONTANTS (3 colonnes)
+                            // DÉCOMPOSITION DES MONTANTS
                             // ═══════════════════════════════════════════════════════════
                             col.Item().PaddingTop(10).Text("💰 Décomposition des montants")
                                 .FontSize(10).SemiBold().FontColor(Color.FromHex(BleuPrimaire));
@@ -285,57 +285,74 @@ namespace Collectivite.Services
                                 });
 
                             // ═══════════════════════════════════════════════════════════
-                            // INFORMATIONS DE PAIEMENT (si mouvement existe)
+                            // HISTORIQUE DES PAIEMENTS (TOUS les mouvements)
                             // ═══════════════════════════════════════════════════════════
-                            if (mouvement != null || (tousLesMouvements != null && tousLesMouvements.Any()))
+                            if (tousLesMouvements != null && tousLesMouvements.Any())
                             {
                                 col.Item().PaddingTop(8).LineHorizontal(0.5f).LineColor(Color.FromHex(GrisBordure));
 
-                                col.Item().PaddingTop(10).Text("💳 Informations de paiement")
+                                col.Item().PaddingTop(10).Text("💳 Historique des paiements")
                                     .FontSize(10).SemiBold().FontColor(Color.FromHex(BleuPrimaire));
 
-                                var mvt = mouvement ?? tousLesMouvements?.FirstOrDefault();
-                                if (mvt != null)
+                                // Boucle sur TOUS les mouvements
+                                foreach (var mvt in tousLesMouvements)
                                 {
-                                    string modePaiement = GetModePaiement(mvt);
-
-                                    col.Item().PaddingTop(5).Row(paiementRow =>
-                                    {
-                                        paiementRow.RelativeItem().Table(table =>
+                                    col.Item().PaddingTop(6).Background(Color.FromHex(GrisClair))
+                                        .Padding(8).Column(mvtCol =>
                                         {
-                                            table.ColumnsDefinition(columns =>
+                                            mvtCol.Item().Row(mvtRow =>
                                             {
-                                                columns.ConstantColumn(100);
-                                                columns.RelativeColumn();
+                                                // Colonne gauche
+                                                mvtRow.RelativeItem().Table(table =>
+                                                {
+                                                    table.ColumnsDefinition(columns =>
+                                                    {
+                                                        columns.ConstantColumn(80);
+                                                        columns.RelativeColumn();
+                                                    });
+
+                                                    AjouterLigneInfo(table, "Date :", mvt.Date.ToString("dd/MM/yyyy"));
+
+                                                    table.Cell().PaddingVertical(2).Text("Montant :").FontSize(8).SemiBold();
+                                                    table.Cell().PaddingVertical(2).Text($"{mvt.Montant:N0} GNF")
+                                                        .FontSize(8).SemiBold().FontColor(Color.FromHex(VertSucces));
+                                                });
+
+                                                mvtRow.ConstantItem(15);
+
+                                                // Colonne droite
+                                                mvtRow.RelativeItem().Table(table =>
+                                                {
+                                                    table.ColumnsDefinition(columns =>
+                                                    {
+                                                        columns.ConstantColumn(80);
+                                                        columns.RelativeColumn();
+                                                    });
+
+                                                    string modePaiement = GetModePaiement(mvt);
+                                                    table.Cell().PaddingVertical(2).Text("Mode :").FontSize(8).SemiBold();
+                                                    table.Cell().PaddingVertical(2).Text(modePaiement)
+                                                        .FontSize(8).SemiBold().FontColor(Color.FromHex(BleuPrimaire));
+
+                                                    // Afficher la référence selon le mode
+                                                    if (!string.IsNullOrEmpty(mvt.RefVirement))
+                                                    {
+                                                        AjouterLigneInfo(table, "Réf. virement :", mvt.RefVirement);
+                                                        AjouterLigneInfo(table, "Num Compte :", mvt.NumBanqueBenef);
+                                                    }
+                                                    else if (!string.IsNullOrEmpty(mvt.RefChèque))
+                                                    {
+                                                        AjouterLigneInfo(table, "Réf. chèque :", mvt.RefChèque);
+                                                    }
+                                                    else
+                                                    {
+                                                        AjouterLigneInfo(table, "Référence :", "Espèces");
+                                                    }
+
+                                                    
+                                                });
                                             });
-
-                                            AjouterLigneInfo(table, "Date paiement :", mvt.Date.ToString("dd/MM/yyyy"));
-
-                                            table.Cell().PaddingVertical(2).Text("Montant payé :").FontSize(8).SemiBold();
-                                            table.Cell().PaddingVertical(2).Text($"{mvt.Montant:N0} GNF")
-                                                .FontSize(8).SemiBold().FontColor(Color.FromHex(VertSucces));
                                         });
-
-                                        paiementRow.ConstantItem(15);
-
-                                        paiementRow.RelativeItem().Table(table =>
-                                        {
-                                            table.ColumnsDefinition(columns =>
-                                            {
-                                                columns.ConstantColumn(100);
-                                                columns.RelativeColumn();
-                                            });
-
-                                            table.Cell().PaddingVertical(2).Text("Mode paiement :").FontSize(8).SemiBold();
-                                            table.Cell().PaddingVertical(2).Text(modePaiement)
-                                                .FontSize(8).SemiBold().FontColor(Color.FromHex(BleuPrimaire));
-
-                                            if (!string.IsNullOrEmpty(mvt.RefVirement))
-                                                AjouterLigneInfo(table, "Réf. virement :", mvt.RefVirement);
-                                            else if (!string.IsNullOrEmpty(mvt.RefChèque))
-                                                AjouterLigneInfo(table, "Réf. chèque :", mvt.RefChèque);
-                                        });
-                                    });
                                 }
                             }
 

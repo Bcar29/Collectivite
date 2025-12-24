@@ -242,7 +242,7 @@ namespace Collectivite.Services
             using var context = CreateContext();
             var exerciceService = ExerciceService.Instance;
 
-            if (exerciceService.CurrentExercice == null)
+            if (exerciceService.CurrentExercice == null || exerciceService.CurrentExercice.EstCloture == true)
             {
                 return new List<BudgetLine>();
             }
@@ -496,6 +496,10 @@ namespace Collectivite.Services
                 .ToListAsync();
         }
 
+        // ═══════════════════════════════════════════════════════════
+        // MÉTHODES DE SERVICE ULTRA-OPTIMISÉES
+        // ═══════════════════════════════════════════════════════════
+
         private decimal SumBudgetLines(
             List<BudgetLine> lines,
             NatureType nature,
@@ -521,13 +525,12 @@ namespace Collectivite.Services
                 )
                 .Sum(selector) * 0.6m;
         }
-        
-        //Recette fonctionnement
+
+        // ─────────────────────────────────────────────────────────
+        // RECETTE FONCTIONNEMENT (3 propriétés seulement)
+        // ─────────────────────────────────────────────────────────
         public decimal RecetteFonctionnementPrevu(List<BudgetLine> lines)
             => SumBudgetLines(lines, NatureType.Recette, SectionType.Fonctionnement, bl => bl.MontantPrevu);
-
-        public decimal RecetteFonctionnementDefinitif(List<BudgetLine> lines)
-            => SumBudgetLines(lines, NatureType.Recette, SectionType.Fonctionnement, bl => bl.MontantDefinitif);
 
         public decimal RecetteFonctionnementRealise(List<BudgetLine> lines)
             => SumBudgetLines(lines, NatureType.Recette, SectionType.Fonctionnement, bl => bl.MontantRealise);
@@ -535,19 +538,11 @@ namespace Collectivite.Services
         public decimal RecetteFonctionnementEntreSortie(List<BudgetLine> lines)
             => SumBudgetLines(lines, NatureType.Recette, SectionType.Fonctionnement, bl => bl.MontantEntreSortie);
 
-        public decimal RecetteFonctionnementResteRealiser(List<BudgetLine> lines)
-            => SumBudgetLines(lines, NatureType.Recette, SectionType.Fonctionnement, bl => bl.ResteRealise);
-
-        public decimal RecetteFonctionnementResteEntreSortie(List<BudgetLine> lines)
-            => SumBudgetLines(lines, NatureType.Recette, SectionType.Fonctionnement, bl => bl.ResteEntreSortie);
-
-
-        //depense fonctionnement 
+        // ─────────────────────────────────────────────────────────
+        // DÉPENSE FONCTIONNEMENT (3 propriétés seulement)
+        // ─────────────────────────────────────────────────────────
         public decimal DepenseFonctionnementPrevu(List<BudgetLine> lines)
             => SumBudgetLines(lines, NatureType.Depense, SectionType.Fonctionnement, bl => bl.MontantPrevu);
-
-        public decimal DepenseFonctionnementDefinitif(List<BudgetLine> lines)
-            => SumBudgetLines(lines, NatureType.Depense, SectionType.Fonctionnement, bl => bl.MontantDefinitif);
 
         public decimal DepenseFonctionnementRealise(List<BudgetLine> lines)
             => SumBudgetLines(lines, NatureType.Depense, SectionType.Fonctionnement, bl => bl.MontantRealise);
@@ -555,17 +550,11 @@ namespace Collectivite.Services
         public decimal DepenseFonctionnementEntreSortie(List<BudgetLine> lines)
             => SumBudgetLines(lines, NatureType.Depense, SectionType.Fonctionnement, bl => bl.MontantEntreSortie);
 
-        public decimal DepenseFonctionnementResteRealiser(List<BudgetLine> lines)
-            => SumBudgetLines(lines, NatureType.Depense, SectionType.Fonctionnement, bl => bl.ResteRealise);
-
-        public decimal DepenseFonctionnementResteEntreSortie(List<BudgetLine> lines)
-            => SumBudgetLines(lines, NatureType.Depense, SectionType.Fonctionnement, bl => bl.ResteEntreSortie);
-        
+        // ─────────────────────────────────────────────────────────
+        // DÉPENSE RÉEL FONCTIONNEMENT (3 propriétés)
+        // ─────────────────────────────────────────────────────────
         public decimal TotalDepenseReelFonctionnementPrevu(List<BudgetLine> lines)
             => DepenseFonctionnementPrevu(lines) - PrelevementFonctionnement(lines, bl => bl.MontantPrevu);
-
-        public decimal TotalDepenseReelFonctionnementDefinitif(List<BudgetLine> lines)
-            => DepenseFonctionnementDefinitif(lines) - PrelevementFonctionnement(lines, bl => bl.MontantDefinitif);
 
         public decimal TotalDepenseReelFonctionnementRealise(List<BudgetLine> lines)
             => DepenseFonctionnementRealise(lines) - PrelevementFonctionnement(lines, bl => bl.MontantRealise);
@@ -573,18 +562,11 @@ namespace Collectivite.Services
         public decimal TotalDepenseReelFonctionnementEntreSortie(List<BudgetLine> lines)
             => DepenseFonctionnementEntreSortie(lines) - PrelevementFonctionnement(lines, bl => bl.MontantEntreSortie);
 
-        public decimal TotalDepenseReelFonctionnementResteRealiser(List<BudgetLine> lines)
-            => DepenseFonctionnementResteRealiser(lines) - PrelevementFonctionnement(lines, bl => bl.ResteRealise);
-
-        public decimal TotalDepenseReelFonctionnementResteEntreSortie(List<BudgetLine> lines)
-            => DepenseFonctionnementResteEntreSortie(lines) - PrelevementFonctionnement(lines, bl => bl.ResteEntreSortie);
-
-        //Recett investissement 
+        // ─────────────────────────────────────────────────────────
+        // RECETTE INVESTISSEMENT (3 propriétés)
+        // ─────────────────────────────────────────────────────────
         public decimal RecetteInvestissementPrevu(List<BudgetLine> lines)
             => SumBudgetLines(lines, NatureType.Recette, SectionType.Investissement, bl => bl.MontantPrevu);
-
-        public decimal RecetteInvestissementDefinitif(List<BudgetLine> lines)
-            => SumBudgetLines(lines, NatureType.Recette, SectionType.Investissement, bl => bl.MontantDefinitif);
 
         public decimal RecetteInvestissementRealise(List<BudgetLine> lines)
             => SumBudgetLines(lines, NatureType.Recette, SectionType.Investissement, bl => bl.MontantRealise);
@@ -592,17 +574,11 @@ namespace Collectivite.Services
         public decimal RecetteInvestissementEntreSortie(List<BudgetLine> lines)
             => SumBudgetLines(lines, NatureType.Recette, SectionType.Investissement, bl => bl.MontantEntreSortie);
 
-        public decimal RecetteInvestissementResteRealiser(List<BudgetLine> lines)
-            => SumBudgetLines(lines, NatureType.Recette, SectionType.Investissement, bl => bl.ResteRealise);
-
-        public decimal RecetteInvestissementResteEntreSortie(List<BudgetLine> lines)
-            => SumBudgetLines(lines, NatureType.Recette, SectionType.Investissement, bl => bl.ResteEntreSortie);
-
+        // ─────────────────────────────────────────────────────────
+        // RECETTE RÉEL INVESTISSEMENT (3 propriétés)
+        // ─────────────────────────────────────────────────────────
         public decimal TotalRecetteReelInvestissementPrevu(List<BudgetLine> lines)
             => RecetteInvestissementPrevu(lines) - PrelevementFonctionnement(lines, bl => bl.MontantPrevu);
-
-        public decimal TotalRecetteReelInvestissementDefinitif(List<BudgetLine> lines)
-            => RecetteInvestissementDefinitif(lines) - PrelevementFonctionnement(lines, bl => bl.MontantDefinitif);
 
         public decimal TotalRecetteReelInvestissementRealise(List<BudgetLine> lines)
             => RecetteInvestissementRealise(lines) - PrelevementFonctionnement(lines, bl => bl.MontantRealise);
@@ -610,18 +586,11 @@ namespace Collectivite.Services
         public decimal TotalRecetteReelInvestissementEntreSortie(List<BudgetLine> lines)
             => RecetteInvestissementEntreSortie(lines) - PrelevementFonctionnement(lines, bl => bl.MontantEntreSortie);
 
-        public decimal TotalRecetteReelInvestissementResteRealiser(List<BudgetLine> lines)
-            => RecetteInvestissementResteRealiser(lines) - PrelevementFonctionnement(lines, bl => bl.ResteRealise);
-
-        public decimal TotalRecetteReelInvestissementResteEntreSortie(List<BudgetLine> lines)
-            => RecetteInvestissementResteEntreSortie(lines) - PrelevementFonctionnement(lines, bl => bl.ResteEntreSortie);
-
-        //depense investissement 
+        // ─────────────────────────────────────────────────────────
+        // DÉPENSE INVESTISSEMENT (3 propriétés)
+        // ─────────────────────────────────────────────────────────
         public decimal DepenseInvestissementPrevu(List<BudgetLine> lines)
             => SumBudgetLines(lines, NatureType.Depense, SectionType.Investissement, bl => bl.MontantPrevu);
-
-        public decimal DepenseInvestissementDefinitif(List<BudgetLine> lines)
-            => SumBudgetLines(lines, NatureType.Depense, SectionType.Investissement, bl => bl.MontantDefinitif);
 
         public decimal DepenseInvestissementRealise(List<BudgetLine> lines)
             => SumBudgetLines(lines, NatureType.Depense, SectionType.Investissement, bl => bl.MontantRealise);
@@ -629,18 +598,11 @@ namespace Collectivite.Services
         public decimal DepenseInvestissementEntreSortie(List<BudgetLine> lines)
             => SumBudgetLines(lines, NatureType.Depense, SectionType.Investissement, bl => bl.MontantEntreSortie);
 
-        public decimal DepenseInvestissementResteRealiser(List<BudgetLine> lines)
-            => SumBudgetLines(lines, NatureType.Depense, SectionType.Investissement, bl => bl.ResteRealise);
-
-        public decimal DepenseInvestissementResteEntreSortie(List<BudgetLine> lines)
-            => SumBudgetLines(lines, NatureType.Depense, SectionType.Investissement, bl => bl.ResteEntreSortie);
-
-        //Generale des recette relles
+        // ─────────────────────────────────────────────────────────
+        // TOTAUX GÉNÉRAUX RECETTES RÉELS (3 propriétés)
+        // ─────────────────────────────────────────────────────────
         public decimal TotalGeneralRecetteReelPrevu(List<BudgetLine> lines)
             => RecetteFonctionnementPrevu(lines) + TotalRecetteReelInvestissementPrevu(lines);
-
-        public decimal TotalGeneralRecetteReelDefinitif(List<BudgetLine> lines)
-            => RecetteFonctionnementDefinitif(lines) + TotalRecetteReelInvestissementDefinitif(lines);
 
         public decimal TotalGeneralRecetteReelRealise(List<BudgetLine> lines)
             => RecetteFonctionnementRealise(lines) + TotalRecetteReelInvestissementRealise(lines);
@@ -648,18 +610,11 @@ namespace Collectivite.Services
         public decimal TotalGeneralRecetteReelEntreSortie(List<BudgetLine> lines)
             => RecetteFonctionnementEntreSortie(lines) + TotalRecetteReelInvestissementEntreSortie(lines);
 
-        public decimal TotalGeneralRecetteReelResteRealiser(List<BudgetLine> lines)
-            => RecetteFonctionnementResteRealiser(lines) + TotalRecetteReelInvestissementResteRealiser(lines);
-
-        public decimal TotalGeneralRecetteReelResteEntreSortie(List<BudgetLine> lines)
-            => RecetteFonctionnementResteEntreSortie(lines) + TotalRecetteReelInvestissementResteEntreSortie(lines);
-
-        //Général des depense reels
+        // ─────────────────────────────────────────────────────────
+        // TOTAUX GÉNÉRAUX DÉPENSES RÉELS (3 propriétés)
+        // ─────────────────────────────────────────────────────────
         public decimal TotalGeneralDepenseReelPrevu(List<BudgetLine> lines)
             => TotalDepenseReelFonctionnementPrevu(lines) + DepenseInvestissementPrevu(lines);
-
-        public decimal TotalGeneralDepenseReelDefinitif(List<BudgetLine> lines)
-            => TotalDepenseReelFonctionnementDefinitif(lines) + DepenseInvestissementDefinitif(lines);
 
         public decimal TotalGeneralDepenseReelRealise(List<BudgetLine> lines)
             => TotalDepenseReelFonctionnementRealise(lines) + DepenseInvestissementRealise(lines);
@@ -667,11 +622,53 @@ namespace Collectivite.Services
         public decimal TotalGeneralDepenseReelEntreSortie(List<BudgetLine> lines)
             => TotalDepenseReelFonctionnementEntreSortie(lines) + DepenseInvestissementEntreSortie(lines);
 
-        public decimal TotalGeneralDepenseReelResteRealiser(List<BudgetLine> lines)
-            => TotalDepenseReelFonctionnementResteRealiser(lines) + DepenseInvestissementResteRealiser(lines);
+        // ─────────────────────────────────────────────────────────
+        // RECETTE FONCTIONNEMENT - DEFINITIF
+        // ─────────────────────────────────────────────────────────
+        public decimal RecetteFonctionnementDefinitif(List<BudgetLine> lines)
+            => SumBudgetLines(lines, NatureType.Recette, SectionType.Fonctionnement, bl => bl.MontantDefinitif);
 
-        public decimal TotalGeneralDepenseReelResteEntreSortie(List<BudgetLine> lines)
-            => TotalDepenseReelFonctionnementResteEntreSortie(lines) + DepenseInvestissementResteEntreSortie(lines);
+        // ─────────────────────────────────────────────────────────
+        // DÉPENSE FONCTIONNEMENT - DEFINITIF
+        // ─────────────────────────────────────────────────────────
+        public decimal DepenseFonctionnementDefinitif(List<BudgetLine> lines)
+            => SumBudgetLines(lines, NatureType.Depense, SectionType.Fonctionnement, bl => bl.MontantDefinitif);
+
+        // ─────────────────────────────────────────────────────────
+        // DÉPENSE RÉEL FONCTIONNEMENT - DEFINITIF
+        // ─────────────────────────────────────────────────────────
+        public decimal TotalDepenseReelFonctionnementDefinitif(List<BudgetLine> lines)
+            => DepenseFonctionnementDefinitif(lines) - PrelevementFonctionnement(lines, bl => bl.MontantDefinitif);
+
+        // ─────────────────────────────────────────────────────────
+        // RECETTE INVESTISSEMENT - DEFINITIF
+        // ─────────────────────────────────────────────────────────
+        public decimal RecetteInvestissementDefinitif(List<BudgetLine> lines)
+            => SumBudgetLines(lines, NatureType.Recette, SectionType.Investissement, bl => bl.MontantDefinitif);
+
+        // ─────────────────────────────────────────────────────────
+        // RECETTE RÉEL INVESTISSEMENT - DEFINITIF
+        // ─────────────────────────────────────────────────────────
+        public decimal TotalRecetteReelInvestissementDefinitif(List<BudgetLine> lines)
+            => RecetteInvestissementDefinitif(lines) - PrelevementFonctionnement(lines, bl => bl.MontantDefinitif);
+
+        // ─────────────────────────────────────────────────────────
+        // DÉPENSE INVESTISSEMENT - DEFINITIF
+        // ─────────────────────────────────────────────────────────
+        public decimal DepenseInvestissementDefinitif(List<BudgetLine> lines)
+            => SumBudgetLines(lines, NatureType.Depense, SectionType.Investissement, bl => bl.MontantDefinitif);
+
+        // ─────────────────────────────────────────────────────────
+        // TOTAUX GÉNÉRAUX RECETTES RÉELS - DEFINITIF
+        // ─────────────────────────────────────────────────────────
+        public decimal TotalGeneralRecetteReelDefinitif(List<BudgetLine> lines)
+            => RecetteFonctionnementDefinitif(lines) + TotalRecetteReelInvestissementDefinitif(lines);
+
+        // ─────────────────────────────────────────────────────────
+        // TOTAUX GÉNÉRAUX DÉPENSES RÉELS - DEFINITIF
+        // ─────────────────────────────────────────────────────────
+        public decimal TotalGeneralDepenseReelDefinitif(List<BudgetLine> lines)
+            => TotalDepenseReelFonctionnementDefinitif(lines) + DepenseInvestissementDefinitif(lines);
 
     }
 

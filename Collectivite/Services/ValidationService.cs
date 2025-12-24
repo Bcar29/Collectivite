@@ -242,6 +242,7 @@ namespace Collectivite.Services
 
                 var ordreRecette = await context.OrdreRecettes
                     .Include(o => o.BudgetLine)
+                        .ThenInclude(b => b.Nommenclature)
                     .FirstOrDefaultAsync(o => o.Id == idOrdreRecette);
 
                 if (ordreRecette == null)
@@ -264,7 +265,33 @@ namespace Collectivite.Services
                         ordreRecette.BudgetLine.NommenclatureId,
                         ordreRecette.BudgetLine.BudgetPrimitifId
                     );
+                    //ajouter 60% du montant de l'ordre comme realiser sur le prelevement en recette et en depense
+                    if (ordreRecette.BudgetLine.Nommenclature.Nature == NatureType.Recette && ordreRecette.BudgetLine.Nommenclature.Section == SectionType.Fonctionnement)
+                    {
+                        var n662 = await context.BudgetLines
+                            .FirstOrDefaultAsync(n => n.Nommenclature.Article == "662");
 
+                        var n110 = await context.BudgetLines
+                            .FirstOrDefaultAsync(n => n.Nommenclature.Article == "110");
+                        if (n110 != null)
+                        {
+                            n110.MontantRealise += ordreRecette.MontantOrdre * 0.6m;
+                            await OrdreRecetteService.RecalculateRealisation(
+                                context,
+                                n110.NommenclatureId,
+                                n110.BudgetPrimitifId
+                            );
+                        }
+                        if (n662 != null)
+                        {
+                            n662.MontantRealise += ordreRecette.MontantOrdre * 0.6m;
+                            await OrdreRecetteService.RecalculateRealisation(
+                                context,
+                                n662.NommenclatureId,
+                                n662.BudgetPrimitifId
+                            );
+                        }
+                    }
                     await context.SaveChangesAsync(); // 🔥 indispensable
                 }
 

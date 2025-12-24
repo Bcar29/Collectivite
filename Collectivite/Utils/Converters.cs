@@ -5,9 +5,36 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
+using System.Collections;
+using System.Linq;
 
 namespace Collectivite.Utils
 {
+    public class StringToVisibilityConverters : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return !string.IsNullOrEmpty(value as string) ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class InverseStringToVisibilityConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return string.IsNullOrEmpty(value as string) ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
     /// <summary>
     /// Converter pour le badge de couleur selon le mode de règlement
     /// </summary>
@@ -556,5 +583,31 @@ namespace Collectivite.Utils
             throw new NotImplementedException();
         }
     }
+    /// <summary>
+    /// Convertisseur pour afficher les boutons d'action uniquement sur les lignes sans enfants et qui ne sont pas des totaux
+    /// </summary>
+    public class ShowActionsConverter : IMultiValueConverter
+    {
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (values.Length != 2) return Visibility.Collapsed;
 
+            // Premier binding : la collection Enfants de la nomenclature
+            var enfants = values[0] as IEnumerable;
+            bool hasChildren = enfants != null && enfants.Cast<object>().Any();
+
+            // Deuxième binding : IsTotalRow
+            bool isTotalRow = values[1] is bool b && b;
+
+            // Afficher les boutons SI :
+            // - N'a PAS d'enfants (c'est une feuille)
+            // - ET ce n'est PAS une ligne de totaux
+            return !hasChildren && !isTotalRow ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }

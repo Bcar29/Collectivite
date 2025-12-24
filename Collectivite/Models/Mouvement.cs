@@ -21,7 +21,7 @@ namespace Collectivite.Models
         public string? NumBanqueBenef {  get; set; }
         public string? RefChèque { get; set; }
         public int idCompteComptable { get; set; }
-        public CompteComptable CompteComptable { get; set; } 
+        public CompteComptable CompteComptable { get; set; } = null!;
         public int? idOrdreRecette { get; set; }
         [ForeignKey(nameof(idOrdreRecette))]
         public OrdreRecette? OrdreRecette { get; set; }
