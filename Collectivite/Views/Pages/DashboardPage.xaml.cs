@@ -303,18 +303,22 @@ namespace Collectivite.Views.Pages
 
         /// <summary>
         /// Formate le montant pour l'axe vertical (format court)
+        /// Les valeurs sont déjà en millions
         /// </summary>
         private string FormatMontantAxe(double value)
         {
-            if (value >= 1_000_000_000)
-                return $"{value / 1_000_000_000:N1}Md";
-            if (value >= 1_000_000)
-                return $"{value / 1_000_000:N1}M";
-            if (value >= 1_000)
-                return $"{value / 1_000:N0}K";
             if (value == 0)
                 return "0";
-            return $"{value:N0}";
+
+            // Les valeurs sont déjà en millions
+            if (value >= 1000)
+            {
+                // >= 1000 millions = milliards
+                return $"{value / 1000}Md";
+            }
+
+            // Afficher en millions sans arrondissement
+            return $"{value}M";
         }
 
         /// <summary>
@@ -578,17 +582,23 @@ namespace Collectivite.Views.Pages
         }
 
         /// <summary>
-        /// Formate le montant pour l'affichage
+        /// Formate le montant pour l'affichage dans les tooltips
+        /// Les valeurs sont déjà en millions
         /// </summary>
         private string FormatMontant(double value)
         {
-            if (value >= 1_000_000_000)
-                return $"{value / 1_000_000_000:N2} Md GNF";
-            if (value >= 1_000_000)
-                return $"{value / 1_000_000:N2} M GNF";
-            if (value >= 1_000)
-                return $"{value / 1_000:N0} K GNF";
-            return $"{value:N0} GNF";
+            if (value == 0)
+                return "0 GNF";
+
+            // Les valeurs sont déjà en millions
+            if (value >= 1000)
+            {
+                // >= 1000 millions = milliards
+                return $"{value / 1000} Md GNF";
+            }
+
+            // Afficher en millions sans arrondissement
+            return $"{value} M GNF";
         }
 
         #endregion
