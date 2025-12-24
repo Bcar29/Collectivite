@@ -81,6 +81,8 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
                         <!-- Section 1 : Informations générales -->
@@ -93,12 +95,12 @@
 
                         <!-- Numéro de Mandat (readonly/automatique) -->
                         <TextBox Grid.Row="1" Grid.Column="0"
-                             materialDesign:HintAssist.Hint="N° Mandat (automatique)"
-                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                             Text="{Binding Mandat.NumeroMandat}"
-                             IsReadOnly="True"
-                             Background="#F0F0F0"
-                             Margin="0,0,0,15"/>
+                                 materialDesign:HintAssist.Hint="N° Mandat (automatique)"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 Text="{Binding Mandat.NumeroMandat}"
+                                 IsReadOnly="True"
+                                 Background="#F0F0F0"
+                                 Margin="0,0,0,15"/>
 
                         <!-- Bordereau -->
                         <TextBox Grid.Row="1" Grid.Column="2"
@@ -128,13 +130,12 @@
                                     SelectedDate="{Binding Mandat.DateEmission}"
                                     Margin="0,0,0,15"/>
 
-                        <!-- Engagement -->
+                        <!-- Engagement - Utilise SelectedEngagement -->
                         <ComboBox Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3"
-                                  materialDesign:HintAssist.Hint="Engagement *"
+                                  materialDesign:HintAssist.Hint="Engagement * (sélectionner pour charger le montant)"
                                   Style="{StaticResource MaterialDesignOutlinedComboBox}"
                                   ItemsSource="{Binding Engagements}"
-                                  SelectedValue="{Binding Mandat.EngagementId}"
-                                  SelectedValuePath="Id"
+                                  SelectedItem="{Binding SelectedEngagement, Mode=TwoWay}"
                                   Margin="0,0,0,15">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
@@ -154,101 +155,212 @@
                             </ComboBox.ItemTemplate>
                         </ComboBox>
 
+                        <!-- Info engagement sélectionné -->
+                        <Border Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3"
+                                Background="#E3F2FD" 
+                                CornerRadius="8" 
+                                Padding="15"
+                                Margin="0,0,0,15"
+                                Visibility="{Binding SelectedEngagement, Converter={StaticResource BoolToVis}}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <materialDesign:PackIcon Grid.Column="0" 
+                                                         Kind="CheckCircle" 
+                                                         Width="24" 
+                                                         Height="24"
+                                                         Foreground="#1976D2"
+                                                         VerticalAlignment="Center"
+                                                         Margin="0,0,10,0"/>
+
+                                <TextBlock Grid.Column="1" VerticalAlignment="Center" Foreground="#1976D2">
+                                    <Run Text="Engagement sélectionné - Imputation : "/>
+                                    <Run Text="{Binding NomenclatureCode, Mode=OneWay}" FontWeight="Bold"/>
+                                </TextBlock>
+
+                                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                                    <TextBlock Text="Montant : " VerticalAlignment="Center" Foreground="#1976D2"/>
+                                    <TextBlock Text="{Binding MontantBrutFormate, Mode=OneWay}" 
+                                               FontWeight="Bold" 
+                                               FontSize="14"
+                                               Foreground="#1976D2"
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
                         <!-- Objet -->
-                        <TextBox Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3"
+                        <TextBox Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="3"
                                  materialDesign:HintAssist.Hint="Objet du mandat *"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                  Text="{Binding Mandat.Objet, UpdateSourceTrigger=PropertyChanged}"
                                  Margin="0,0,0,15"/>
 
                         <!-- Section 2 : Montants -->
-                        <TextBlock Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="3"
+                        <TextBlock Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="3"
                                  Text="💰 Montants"
                                  FontSize="16"
                                  FontWeight="SemiBold"
                                  Foreground="#1976D2"
                                  Margin="0,15,0,15"/>
 
-                        <!-- Montant brut -->
-                        <TextBox Grid.Row="6" Grid.Column="0"
-                                 materialDesign:HintAssist.Hint="Montant brut (GNF) *"
-                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                 Text="{Binding Mandat.MontantBrut, UpdateSourceTrigger=PropertyChanged, StringFormat=N0}"
-                                 Margin="0,0,0,15">
-                            <TextBox.InputBindings>
-                                <KeyBinding Key="Return" Command="{Binding CalculerMontantNetCommand}"/>
-                            </TextBox.InputBindings>
-                        </TextBox>
+                        <!-- Montant brut (LECTURE SEULE - provient de l'engagement) -->
+                        <Border Grid.Row="7" Grid.Column="0"
+                                Background="#F5F5F5"
+                                BorderBrush="#BDBDBD"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Padding="15"
+                                Margin="0,0,0,15">
+                            <StackPanel>
+                                <TextBlock Text="Montant Brut (depuis l'engagement)"
+                                           FontSize="11"
+                                           Foreground="#757575"
+                                           Margin="0,0,0,5"/>
+                                <TextBlock Text="{Binding Mandat.MontantBrut, StringFormat={}{0:N0} GNF}"
+                                           FontSize="18"
+                                           FontWeight="Bold"
+                                           Foreground="#424242"/>
+                                <TextBlock Text="⚠️ Ce montant provient de l'engagement sélectionné"
+                                           FontSize="10"
+                                           Foreground="#9E9E9E"
+                                           Margin="0,5,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Pourcentage précomptes -->
+                        <Border Grid.Row="7" Grid.Column="2"
+                                Background="#FFF8E1"
+                                BorderBrush="#FFB300"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Padding="15"
+                                Margin="0,0,0,15">
+                            <StackPanel>
+                                <TextBlock Text="Total Précomptes"
+                                           FontSize="11"
+                                           Foreground="#757575"
+                                           Margin="0,0,0,5"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding TotalPrecomptes, StringFormat={}{0:N0} GNF, Mode=OneWay}"
+                                               FontSize="18"
+                                               FontWeight="Bold"
+                                               Foreground="#F57C00"/>
+                                    <TextBlock Text="{Binding PourcentagePrecomptes, StringFormat=' ({0}%)', Mode=OneWay}"
+                                               FontSize="14"
+                                               Foreground="#F57C00"
+                                               VerticalAlignment="Bottom"
+                                               Margin="5,0,0,2"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
 
                         <!-- RTS -->
-                        <TextBox Grid.Row="6" Grid.Column="2"
+                        <TextBox Grid.Row="8" Grid.Column="0"
                                  materialDesign:HintAssist.Hint="RTS (Retenue à la Source)"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                  Text="{Binding Mandat.Rts, UpdateSourceTrigger=PropertyChanged, StringFormat=N0}"
                                  Margin="0,0,0,15">
                             <TextBox.InputBindings>
                                 <KeyBinding Key="Return" Command="{Binding CalculerMontantNetCommand}"/>
+                                <KeyBinding Key="Tab" Command="{Binding CalculerMontantNetCommand}"/>
                             </TextBox.InputBindings>
                         </TextBox>
 
                         <!-- Autres précomptes -->
-                        <TextBox Grid.Row="7" Grid.Column="0"
+                        <TextBox Grid.Row="8" Grid.Column="2"
                                  materialDesign:HintAssist.Hint="Autres précomptes"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                  Text="{Binding Mandat.AutresPrecomptes, UpdateSourceTrigger=PropertyChanged, StringFormat=N0}"
                                  Margin="0,0,0,15">
                             <TextBox.InputBindings>
                                 <KeyBinding Key="Return" Command="{Binding CalculerMontantNetCommand}"/>
+                                <KeyBinding Key="Tab" Command="{Binding CalculerMontantNetCommand}"/>
                             </TextBox.InputBindings>
                         </TextBox>
 
+                        <!-- Message d'erreur précomptes -->
+                        <Border Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="3"
+                                Background="#FFEBEE"
+                                BorderBrush="#F44336"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Padding="15"
+                                Margin="0,0,0,15"
+                                Visibility="{Binding HasErreurPrecomptes, Converter={StaticResource BoolToVis}}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="AlertCircle" 
+                                                         Width="24" 
+                                                         Height="24"
+                                                         Foreground="#F44336"
+                                                         VerticalAlignment="Center"
+                                                         Margin="0,0,10,0"/>
+                                <TextBlock Text="{Binding ErreurPrecomptes, Mode=OneWay}"
+                                           Foreground="#C62828"
+                                           FontWeight="SemiBold"
+                                           VerticalAlignment="Center"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+
                         <!-- Bouton Calculer -->
-                        <Button Grid.Row="7" Grid.Column="2"
+                        <Button Grid.Row="10" Grid.Column="0"
                                 Style="{StaticResource MaterialDesignOutlinedButton}"
                                 Command="{Binding CalculerMontantNetCommand}"
-                                Height="56"
+                                Height="50"
                                 Margin="0,0,0,15">
                             <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Calculator" Margin="0,0,5,0"/>
+                                <materialDesign:PackIcon Kind="Calculator" Margin="0,0,8,0"/>
                                 <TextBlock Text="Calculer le montant net"/>
                             </StackPanel>
                         </Button>
 
                         <!-- Montant net (lecture seule, calculé) -->
-                        <Border Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="1"
+                        <Border Grid.Row="10" Grid.Column="2"
                                 Background="#E8F5E9"
                                 BorderBrush="#4CAF50"
                                 BorderThickness="2"
                                 CornerRadius="4"
                                 Padding="15"
                                 Margin="0,0,0,15">
-                            <DockPanel>
-                                <materialDesign:PackIcon Kind="CashMultiple" 
-                                                       Width="24" 
-                                                       Height="24"
-                                                       Foreground="#388E3C"
-                                                       DockPanel.Dock="Left"
-                                                       VerticalAlignment="Center"
-                                                       Margin="0,0,10,0"/>
-                                <StackPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <materialDesign:PackIcon Grid.Column="0"
+                                                         Kind="CashMultiple" 
+                                                         Width="28" 
+                                                         Height="28"
+                                                         Foreground="#388E3C"
+                                                         VerticalAlignment="Center"
+                                                         Margin="0,0,10,0"/>
+                                <StackPanel Grid.Column="1">
                                     <TextBlock Text="Montant Net à Payer"
-                                             FontSize="12"
-                                             Foreground="#388E3C"
-                                             FontWeight="SemiBold"/>
+                                               FontSize="11"
+                                               Foreground="#388E3C"
+                                               FontWeight="SemiBold"/>
                                     <TextBlock Text="{Binding Mandat.MontantNet, StringFormat={}{0:N0} GNF}"
-                                             FontSize="24"
-                                             FontWeight="Bold"
-                                             Foreground="#2E7D32"
-                                             Margin="0,5,0,0"/>
+                                               FontSize="22"
+                                               FontWeight="Bold"
+                                               Foreground="#2E7D32"/>
                                 </StackPanel>
-                            </DockPanel>
+                            </Grid>
                         </Border>
 
-                        <Button Grid.Row="8" Grid.Column="2" Grid.ColumnSpan="1"
-                            Style="{StaticResource MaterialDesignRaisedButton}"
-                            Command="{Binding ConvertMontantToLettresCommand}"
-                            Height="56"
-                            Padding="20,0">
+                        <!-- Bouton convertir en lettres -->
+                        <Button Grid.Row="11" Grid.Column="0"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                Command="{Binding ConvertMontantToLettresCommand}"
+                                Height="50"
+                                Margin="0,0,0,15"
+                                Background="#7B1FA2"
+                                BorderBrush="#7B1FA2">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="TextToSpeech" Margin="0,0,8,0"/>
                                 <TextBlock Text="Convertir en lettres"/>
@@ -256,18 +368,18 @@
                         </Button>
 
                         <!-- Montant en lettres -->
-                        <TextBox Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="3"
+                        <TextBox Grid.Row="11" Grid.Column="2"
                                  materialDesign:HintAssist.Hint="Montant en lettres *"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                  Text="{Binding Mandat.MontantLettre, UpdateSourceTrigger=PropertyChanged}"
                                  AcceptsReturn="True"
                                  TextWrapping="Wrap"
-                                 MinHeight="80"
+                                 MinHeight="50"
                                  VerticalScrollBarVisibility="Auto"
                                  Margin="0,0,0,15"/>
 
                         <!-- Date de paiement (si mode édition) -->
-                        <DatePicker Grid.Row="11" Grid.Column="0"
+                        <DatePicker Grid.Row="12" Grid.Column="0"
                                     materialDesign:HintAssist.Hint="Date de paiement (optionnel)"
                                     Style="{StaticResource MaterialDesignOutlinedDatePicker}"
                                     SelectedDate="{Binding Mandat.DatePaiement}"
@@ -285,12 +397,14 @@
                             Content="Annuler"
                             Command="{Binding CancelCommand}"
                             Width="120"
-                            Height="40"
+                            Height="45"
                             Margin="0,0,15,0"/>
                     <Button Style="{StaticResource MaterialDesignRaisedButton}"
                             Command="{Binding SaveCommand}"
-                            Width="150"
-                            Height="40">
+                            Width="180"
+                            Height="45"
+                            Background="#4CAF50"
+                            BorderBrush="#4CAF50">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="ContentSave" Margin="0,0,8,0"/>
                             <TextBlock Text="Enregistrer"/>

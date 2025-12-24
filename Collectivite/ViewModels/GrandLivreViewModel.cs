@@ -8,6 +8,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Input;
 
 namespace Collectivite.ViewModels
 {
@@ -64,6 +65,66 @@ namespace Collectivite.ViewModels
         [ObservableProperty]
         private string _titrePeriode = "Grand Livre";
 
+        // ═══════════════════════════════════════════════════════════
+        // 🆕 MODE D'AFFICHAGE (Cartes / DataGrid) - SYNTAXE CLASSIQUE
+        // ═══════════════════════════════════════════════════════════
+
+        private ModeAffichageGrandLivre _modeAffichage = ModeAffichageGrandLivre.Cartes;
+
+        /// <summary>
+        /// Mode d'affichage actuel (Cartes ou DataGrid)
+        /// </summary>
+        public ModeAffichageGrandLivre ModeAffichage
+        {
+            get => _modeAffichage;
+            set
+            {
+                if (SetProperty(ref _modeAffichage, value))
+                {
+                    // Notifier les propriétés dérivées
+                    OnPropertyChanged(nameof(EstModeCartes));
+                    OnPropertyChanged(nameof(EstModeDataGrid));
+                    OnPropertyChanged(nameof(LibelleBoutonMode));
+                    OnPropertyChanged(nameof(IconeBoutonMode));
+
+                    // Mettre à jour la collection DataGrid si on passe en mode DataGrid
+                    if (value == ModeAffichageGrandLivre.DataGrid)
+                    {
+                        MettreAJourLignesDataGrid();
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Indique si le mode Cartes est actif
+        /// </summary>
+        public bool EstModeCartes => ModeAffichage == ModeAffichageGrandLivre.Cartes;
+
+        /// <summary>
+        /// Indique si le mode DataGrid est actif
+        /// </summary>
+        public bool EstModeDataGrid => ModeAffichage == ModeAffichageGrandLivre.DataGrid;
+
+        /// <summary>
+        /// Libellé du bouton de changement de mode
+        /// </summary>
+        public string LibelleBoutonMode => EstModeCartes ? "Vue Tableau" : "Vue Cartes";
+
+        /// <summary>
+        /// Icône du bouton de changement de mode
+        /// </summary>
+        public string IconeBoutonMode => EstModeCartes ? "TableLarge" : "Cards";
+
+        // 🆕 Collection aplatie pour le DataGrid (tous les mouvements) - SYNTAXE CLASSIQUE
+        private ObservableCollection<GrandLivreLigneDTO> _lignesDataGrid = new();
+
+        public ObservableCollection<GrandLivreLigneDTO> LignesDataGrid
+        {
+            get => _lignesDataGrid;
+            set => SetProperty(ref _lignesDataGrid, value);
+        }
+
         // Liste des mois
         public List<MoisItem> Mois { get; } = new()
         {
@@ -89,7 +150,6 @@ namespace Collectivite.ViewModels
             _grandLivreService = grandLivreService;
 
             // ✅ S'abonner à l'événement de changement d'exercice
-            // ✅ AJOUTER CETTE LIGNE
             ExerciceService.Instance.ExerciceChanged += OnExerciceChanged;
         }
 
@@ -98,7 +158,6 @@ namespace Collectivite.ViewModels
         // ═══════════════════════════════════════
         private async void OnExerciceChanged(object? sender, EventArgs e)
         {
-            // Recharger les données automatiquement quand l'exercice change
             await ChargerGrandLivreAsync();
         }
 
@@ -108,6 +167,57 @@ namespace Collectivite.ViewModels
         public void Cleanup()
         {
             ExerciceService.Instance.ExerciceChanged -= OnExerciceChanged;
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // 🆕 COMMANDE POUR BASCULER LE MODE D'AFFICHAGE
+        // ═══════════════════════════════════════════════════════════
+        [RelayCommand]
+        public void BasculerModeAffichage()
+        {
+            ModeAffichage = ModeAffichage == ModeAffichageGrandLivre.Cartes
+                ? ModeAffichageGrandLivre.DataGrid
+                : ModeAffichageGrandLivre.Cartes;
+        }
+
+        /// <summary>
+        /// Convertit les comptes en lignes plates pour le DataGrid
+        /// </summary>
+        private void MettreAJourLignesDataGrid()
+        {
+            LignesDataGrid.Clear();
+
+            foreach (var compte in Comptes)
+            {
+                // Ajouter chaque mouvement comme une ligne
+                foreach (var mvt in compte.Mouvements)
+                {
+                    LignesDataGrid.Add(new GrandLivreLigneDTO
+                    {
+                        NumeroCompte = compte.NumeroCompte,
+                        IntituleCompte = compte.IntituleCompte,
+                        DateMouvement = mvt.DateEcriture,
+                        Libelle = mvt.Libelle,
+                        MontantDebit = mvt.MontantDebit,
+                        MontantCredit = mvt.MontantCredit,
+                        
+                    });
+                }
+
+                // Ajouter une ligne de total pour chaque compte
+                if (compte.Mouvements.Count != 0)
+                {
+                    LignesDataGrid.Add(new GrandLivreLigneDTO
+                    {
+                        NumeroCompte = compte.NumeroCompte,
+                        IntituleCompte = $"TOTAL {compte.NumeroCompte}",
+                        MontantDebit = compte.TotalDebit,
+                        MontantCredit = compte.TotalCredit,
+                        EstLigneTotal = true,
+                        SoldeFormate = compte.SoldeFormate
+                    });
+                }
+            }
         }
 
         /// <summary>
@@ -177,6 +287,12 @@ namespace Collectivite.ViewModels
 
                 // Mettre à jour le titre
                 MettreAJourTitre();
+
+                // 🆕 Mettre à jour les lignes DataGrid si on est en mode DataGrid
+                if (ModeAffichage == ModeAffichageGrandLivre.DataGrid)
+                {
+                    MettreAJourLignesDataGrid();
+                }
             }
             catch (Exception ex)
             {
@@ -293,10 +409,44 @@ namespace Collectivite.ViewModels
         /// Imprime le Grand Livre
         /// </summary>
         [RelayCommand]
-        public void Imprimer()
+        public async Task ImprimerAsync()
         {
-            MessageBox.Show("La fonctionnalité d'impression sera bientôt disponible.",
-                "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+            try
+            {
+                IsLoading = true;
+
+                var filtre = ConstruireFiltre();
+                var bytes = await _grandLivreService.ExportPdfAsync(filtre);
+
+                // Créer un fichier temporaire
+                string tempFileName = $"GrandLivre_{DateTime.Now:yyyyMMdd}_{Guid.NewGuid():N}.pdf";
+                string tempPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), tempFileName);
+
+                // Sauvegarder le PDF temporaire
+                await System.IO.File.WriteAllBytesAsync(tempPath, bytes);
+
+                // Ouvrir le PDF avec l'application par défaut
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = tempPath,
+                    UseShellExecute = true
+                });
+
+                MessageBox.Show(
+                    "Le document s'ouvre dans votre lecteur PDF.\n\n" +
+                    "Utilisez Ctrl+P ou le menu Fichier → Imprimer pour lancer l'impression.",
+                    "Impression",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur d'impression : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
         }
 
         /// <summary>
@@ -318,6 +468,7 @@ namespace Collectivite.ViewModels
                 await ChargerGrandLivreAsync();
             });
         }
+
         private GrandLivreFiltreDTO ConstruireFiltre()
         {
             return new GrandLivreFiltreDTO
@@ -402,6 +553,15 @@ namespace Collectivite.ViewModels
 
     #region Classes helpers
 
+    /// <summary>
+    /// Énumération des modes d'affichage du Grand Livre
+    /// </summary>
+    public enum ModeAffichageGrandLivre
+    {
+        Cartes,
+        DataGrid
+    }
+
     public class MoisItem
     {
         public int? Numero { get; set; }
@@ -412,6 +572,28 @@ namespace Collectivite.ViewModels
     {
         public string? NumeroCompte { get; set; }
         public string Libelle { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// DTO pour une ligne du DataGrid (mouvement aplati avec infos compte)
+    /// </summary>
+    public class GrandLivreLigneDTO
+    {
+        public string NumeroCompte { get; set; } = string.Empty;
+        public string IntituleCompte { get; set; } = string.Empty;
+        public DateOnly? DateMouvement { get; set; }
+        public string? Libelle { get; set; }
+        public decimal MontantDebit { get; set; }
+        public decimal MontantCredit { get; set; }
+        public string? NumeroOrdreRecette { get; set; }
+        public string? NumeroMandat { get; set; }
+        public bool EstLigneTotal { get; set; } = false;
+        public string? SoldeFormate { get; set; }
+
+        // Propriétés calculées pour l'affichage
+        public string DebitFormate => MontantDebit > 0 ? $"{MontantDebit:N0}" : "";
+        public string CreditFormate => MontantCredit > 0 ? $"{MontantCredit:N0}" : "";
+        public string DateFormatee => DateMouvement?.ToString("dd/MM/yyyy") ?? "";
     }
 
     #endregion

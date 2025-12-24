@@ -13,12 +13,13 @@
         <utils:VariationToBrushConverter x:Key="VariationToBrushConverter"/>
         <utils:VariationToLabelConverter x:Key="VariationToLabelConverter"/>
         <utils:CollectionHasItemsToVisibilityConverter x:Key="CollectionHasItemsToVisibilityConverter"/>
-
-        <!-- 🆕 Convertisseur pour les couleurs de fond -->
         <utils:BackgroundColorConverter x:Key="BackgroundColorConverter"/>
-        <!-- 🆕 Ajouter ce converter si pas déjà présent -->
         <utils:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
         <utils:BooleanAndToVisibilityConverter x:Key="BooleanAndToVisibilityConverter"/>
+
+        <!-- 🆕 Converter pour afficher les actions uniquement sur les feuilles (pas parent, pas totaux) -->
+        <utils:ShowActionsConverter x:Key="ShowActionsConverter"/>
+
         <!-- Enum TypeRemaniement -->
         <ObjectDataProvider x:Key="TypeRemaniementValues" 
                             MethodName="GetValues" 
@@ -122,15 +123,14 @@
                                   GridLinesVisibility="Horizontal"
                                   materialDesign:DataGridAssist.CellPadding="13 8 8 8">
 
-                            <!-- 🆕 Style des lignes avec couleur de fond -->
                             <DataGrid.RowStyle>
                                 <Style TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
                                     <Setter Property="Background" Value="{Binding BackgroundColor, Converter={StaticResource BackgroundColorConverter}}"/>
                                     <Setter Property="Visibility" Value="{Binding IsVisible, Converter={StaticResource BoolToVis}}"/>
-                                    <!-- Style spécial pour la ligne de totaux -->
+
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsTotalRow}" Value="True">
-                                            <Setter Property="Background" Value="LightBlue"/>
+                                            <Setter Property="Background" Value="{Binding TotalRowBackground, Converter={StaticResource BackgroundColorConverter}}"/>
                                             <Setter Property="FontWeight" Value="Bold"/>
                                             <Setter Property="FontSize" Value="14"/>
                                             <Setter Property="BorderThickness" Value="0,2,0,0"/>
@@ -141,7 +141,6 @@
                             </DataGrid.RowStyle>
 
                             <DataGrid.Columns>
-                                <!-- 🆕 Colonne avec expander et chapitre -->
                                 <DataGridTemplateColumn Header="Chapitre" Width="120">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
@@ -150,8 +149,13 @@
                                                       Background="Transparent" BorderThickness="0"
                                                       Command="{Binding DataContext.ToggleExpandCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                       CommandParameter="{Binding}"
-                                                      Visibility="{Binding HasChildren, Converter={StaticResource BoolToVis}}"
                                                       Style="{StaticResource MaterialDesignFlatButton}">
+                                                    <Button.Visibility>
+                                                        <MultiBinding Converter="{StaticResource BooleanAndToVisibilityConverter}">
+                                                            <Binding Path="HasChildren"/>
+                                                            <Binding Path="IsTotalRow" Converter="{StaticResource InverseBooleanConverter}"/>
+                                                        </MultiBinding>
+                                                    </Button.Visibility>
                                                     <materialDesign:PackIcon Kind="{Binding ExpanderIcon}" Width="16" Height="16"/>
                                                 </Button>
                                                 <TextBlock Text="{Binding BudgetLine.Nommenclature.Chapitre}" 
@@ -185,14 +189,18 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <DataGridTextColumn Header="Montant définitif" Binding="{Binding BudgetLine.MontantActu, StringFormat={}{0:N0} GNF}" Width="150"/>
+                                <DataGridTextColumn Header="Montant définitif" Binding="{Binding BudgetLine.MontantDefinitif, StringFormat={}{0:N0} GNF}" Width="150"/>
 
                                 <DataGridTemplateColumn Header="Actions" Width="140">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <StackPanel Orientation="Horizontal"
-                                                        HorizontalAlignment="Center"
-                                                        Visibility="{Binding BudgetLine.Nommenclature.Enfants, Converter={StaticResource CollectionHasItemsToVisibilityConverter}}">
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                <StackPanel.Visibility>
+                                                    <MultiBinding Converter="{StaticResource ShowActionsConverter}">
+                                                        <Binding Path="BudgetLine.Nommenclature.Enfants"/>
+                                                        <Binding Path="IsTotalRow"/>
+                                                    </MultiBinding>
+                                                </StackPanel.Visibility>
 
                                                 <Button ToolTip="Ajouter un remaniement"
                                                         Command="{Binding DataContext.OpenAddDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
@@ -262,10 +270,10 @@
                                 <Style TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
                                     <Setter Property="Background" Value="{Binding BackgroundColor, Converter={StaticResource BackgroundColorConverter}}"/>
                                     <Setter Property="Visibility" Value="{Binding IsVisible, Converter={StaticResource BoolToVis}}"/>
-                                    <!-- Style spécial pour la ligne de totaux -->
+
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsTotalRow}" Value="True">
-                                            <Setter Property="Background" Value="LightBlue"/>
+                                            <Setter Property="Background" Value="{Binding TotalRowBackground, Converter={StaticResource BackgroundColorConverter}}"/>
                                             <Setter Property="FontWeight" Value="Bold"/>
                                             <Setter Property="FontSize" Value="14"/>
                                             <Setter Property="BorderThickness" Value="0,2,0,0"/>
@@ -284,8 +292,13 @@
                                                       Background="Transparent" BorderThickness="0"
                                                       Command="{Binding DataContext.ToggleExpandCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                       CommandParameter="{Binding}"
-                                                      Visibility="{Binding HasChildren, Converter={StaticResource BoolToVis}}"
                                                       Style="{StaticResource MaterialDesignFlatButton}">
+                                                    <Button.Visibility>
+                                                        <MultiBinding Converter="{StaticResource BooleanAndToVisibilityConverter}">
+                                                            <Binding Path="HasChildren"/>
+                                                            <Binding Path="IsTotalRow" Converter="{StaticResource InverseBooleanConverter}"/>
+                                                        </MultiBinding>
+                                                    </Button.Visibility>
                                                     <materialDesign:PackIcon Kind="{Binding ExpanderIcon}" Width="16" Height="16"/>
                                                 </Button>
                                                 <TextBlock Text="{Binding BudgetLine.Nommenclature.Chapitre}" 
@@ -319,7 +332,7 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <DataGridTextColumn Header="Montant définitif" Binding="{Binding BudgetLine.MontantActu, StringFormat={}{0:N0} GNF}" Width="150"/>
+                                <DataGridTextColumn Header="Montant définitif" Binding="{Binding BudgetLine.MontantDefinitif, StringFormat={}{0:N0} GNF}" Width="150"/>
 
                                 <DataGridTemplateColumn Header="Actions" Width="140">
                                     <DataGridTemplateColumn.CellTemplate>
@@ -342,6 +355,7 @@
                                                     </Button.Style>
                                                     <materialDesign:PackIcon Kind="PlusCircle" Foreground="#4CAF50"/>
                                                 </Button>
+
                                                 <Button Style="{StaticResource MaterialDesignIconButton}"
                                                         ToolTip="Voir détail"
                                                         Command="{Binding DataContext.OpenDetailsCommand, RelativeSource={RelativeSource AncestorType=Page}}"
@@ -392,10 +406,10 @@
                                 <Style TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
                                     <Setter Property="Background" Value="{Binding BackgroundColor, Converter={StaticResource BackgroundColorConverter}}"/>
                                     <Setter Property="Visibility" Value="{Binding IsVisible, Converter={StaticResource BoolToVis}}"/>
-                                    <!-- Style spécial pour la ligne de totaux -->
+
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsTotalRow}" Value="True">
-                                            <Setter Property="Background" Value="LightBlue"/>
+                                            <Setter Property="Background" Value="{Binding TotalRowBackground, Converter={StaticResource BackgroundColorConverter}}"/>
                                             <Setter Property="FontWeight" Value="Bold"/>
                                             <Setter Property="FontSize" Value="14"/>
                                             <Setter Property="BorderThickness" Value="0,2,0,0"/>
@@ -414,8 +428,13 @@
                                                       Background="Transparent" BorderThickness="0"
                                                       Command="{Binding DataContext.ToggleExpandCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                       CommandParameter="{Binding}"
-                                                      Visibility="{Binding HasChildren, Converter={StaticResource BoolToVis}}"
                                                       Style="{StaticResource MaterialDesignFlatButton}">
+                                                    <Button.Visibility>
+                                                        <MultiBinding Converter="{StaticResource BooleanAndToVisibilityConverter}">
+                                                            <Binding Path="HasChildren"/>
+                                                            <Binding Path="IsTotalRow" Converter="{StaticResource InverseBooleanConverter}"/>
+                                                        </MultiBinding>
+                                                    </Button.Visibility>
                                                     <materialDesign:PackIcon Kind="{Binding ExpanderIcon}" Width="16" Height="16"/>
                                                 </Button>
                                                 <TextBlock Text="{Binding BudgetLine.Nommenclature.Chapitre}" 
@@ -449,15 +468,28 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <DataGridTextColumn Header="Montant définitif" Binding="{Binding BudgetLine.MontantActu, StringFormat={}{0:N0} GNF}" Width="150"/>
+                                <DataGridTextColumn Header="Montant définitif" Binding="{Binding BudgetLine.MontantDefinitif, StringFormat={}{0:N0} GNF}" Width="150"/>
 
                                 <DataGridTemplateColumn Header="Actions" Width="140">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
+<<<<<<< HEAD
                                             <StackPanel Orientation="Horizontal"
                                                         HorizontalAlignment="Center"
                                                         Visibility="{Binding BudgetLine.Nommenclature.Enfants, Converter={StaticResource CollectionHasItemsToVisibilityConverter}}">
                                                 <Button ToolTip="Ajouter un remaniement"
+=======
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                <StackPanel.Visibility>
+                                                    <MultiBinding Converter="{StaticResource ShowActionsConverter}">
+                                                        <Binding Path="BudgetLine.Nommenclature.Enfants"/>
+                                                        <Binding Path="IsTotalRow"/>
+                                                    </MultiBinding>
+                                                </StackPanel.Visibility>
+
+                                                <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                        ToolTip="Ajouter un remaniement"
+>>>>>>> 24992f15a260990de2d747176389f776e4063485
                                                         Command="{Binding DataContext.OpenAddDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                                         CommandParameter="{Binding BudgetLine}"
                                                         Margin="4,0">
@@ -472,6 +504,7 @@
                                                     </Button.Style>
                                                     <materialDesign:PackIcon Kind="PlusCircle" Foreground="#4CAF50"/>
                                                 </Button>
+
                                                 <Button Style="{StaticResource MaterialDesignIconButton}"
                                                         ToolTip="Voir détail"
                                                         Command="{Binding DataContext.OpenDetailsCommand, RelativeSource={RelativeSource AncestorType=Page}}"
@@ -522,10 +555,10 @@
                                 <Style TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
                                     <Setter Property="Background" Value="{Binding BackgroundColor, Converter={StaticResource BackgroundColorConverter}}"/>
                                     <Setter Property="Visibility" Value="{Binding IsVisible, Converter={StaticResource BoolToVis}}"/>
-                                    <!-- Style spécial pour la ligne de totaux -->
+
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsTotalRow}" Value="True">
-                                            <Setter Property="Background" Value="LightBlue"/>
+                                            <Setter Property="Background" Value="{Binding TotalRowBackground, Converter={StaticResource BackgroundColorConverter}}"/>
                                             <Setter Property="FontWeight" Value="Bold"/>
                                             <Setter Property="FontSize" Value="14"/>
                                             <Setter Property="BorderThickness" Value="0,2,0,0"/>
@@ -544,8 +577,13 @@
                                                       Background="Transparent" BorderThickness="0"
                                                       Command="{Binding DataContext.ToggleExpandCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                       CommandParameter="{Binding}"
-                                                      Visibility="{Binding HasChildren, Converter={StaticResource BoolToVis}}"
                                                       Style="{StaticResource MaterialDesignFlatButton}">
+                                                    <Button.Visibility>
+                                                        <MultiBinding Converter="{StaticResource BooleanAndToVisibilityConverter}">
+                                                            <Binding Path="HasChildren"/>
+                                                            <Binding Path="IsTotalRow" Converter="{StaticResource InverseBooleanConverter}"/>
+                                                        </MultiBinding>
+                                                    </Button.Visibility>
                                                     <materialDesign:PackIcon Kind="{Binding ExpanderIcon}" Width="16" Height="16"/>
                                                 </Button>
                                                 <TextBlock Text="{Binding BudgetLine.Nommenclature.Chapitre}" 
@@ -579,15 +617,28 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <DataGridTextColumn Header="Montant définitif" Binding="{Binding BudgetLine.MontantActu, StringFormat={}{0:N0} GNF}" Width="150"/>
+                                <DataGridTextColumn Header="Montant définitif" Binding="{Binding BudgetLine.MontantDefinitif, StringFormat={}{0:N0} GNF}" Width="150"/>
 
                                 <DataGridTemplateColumn Header="Actions" Width="140">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
+<<<<<<< HEAD
                                             <StackPanel Orientation="Horizontal"
                                                         HorizontalAlignment="Center"
                                                         Visibility="{Binding BudgetLine.Nommenclature.Enfants, Converter={StaticResource CollectionHasItemsToVisibilityConverter}}">
                                                 <Button ToolTip="Ajouter un remaniement"
+=======
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                <StackPanel.Visibility>
+                                                    <MultiBinding Converter="{StaticResource ShowActionsConverter}">
+                                                        <Binding Path="BudgetLine.Nommenclature.Enfants"/>
+                                                        <Binding Path="IsTotalRow"/>
+                                                    </MultiBinding>
+                                                </StackPanel.Visibility>
+
+                                                <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                        ToolTip="Ajouter un remaniement"
+>>>>>>> 24992f15a260990de2d747176389f776e4063485
                                                         Command="{Binding DataContext.OpenAddDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                                         CommandParameter="{Binding BudgetLine}"
                                                         Margin="4,0">
@@ -602,6 +653,7 @@
                                                     </Button.Style>
                                                     <materialDesign:PackIcon Kind="PlusCircle" Foreground="#4CAF50"/>
                                                 </Button>
+
                                                 <Button Style="{StaticResource MaterialDesignIconButton}"
                                                         ToolTip="Voir détail"
                                                         Command="{Binding DataContext.OpenDetailsCommand, RelativeSource={RelativeSource AncestorType=Page}}"

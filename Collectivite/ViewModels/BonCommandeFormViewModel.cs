@@ -15,6 +15,7 @@ namespace Collectivite.ViewModels
         private BonCommande _bonCommande;
         private bool _isEditMode;
         private int? _bonCommandeId;
+        private ExpressionBesoin? _selectedExpressionBesoin;
         private readonly ExerciceService _exerciceService;
         private readonly AuditService _auditService;
         private readonly AuthService _authService;
@@ -30,7 +31,7 @@ namespace Collectivite.ViewModels
             _bonCommande = new BonCommande
             {
                 DateCreation = DateTime.Now,
-                Numero = "", // Sera généré automatiquement
+                Numero = "",
             };
 
             // Commandes
@@ -70,9 +71,60 @@ namespace Collectivite.ViewModels
             set => SetProperty(ref _isEditMode, value);
         }
 
+        /// <summary>
+        /// Expression de Besoin sélectionnée - Charge automatiquement les détails
+        /// </summary>
+        public ExpressionBesoin? SelectedExpressionBesoin
+        {
+            get => _selectedExpressionBesoin;
+            set
+            {
+                if (SetProperty(ref _selectedExpressionBesoin, value))
+                {
+                    // Mettre à jour l'ID dans le BonCommande
+                    if (value != null)
+                    {
+                        BonCommande.ExpressionBesoinId = value.Id;
+
+                        // Charger automatiquement les détails de l'expression de besoin
+                        // seulement si on n'est pas en mode édition ou si c'est une nouvelle sélection
+                        if (!IsEditMode || Details.Count == 0)
+                        {
+                            LoadDetailsFromExpressionBesoin(value);
+                        }
+                        else
+                        {
+                            // En mode édition, demander confirmation avant de remplacer
+                            var result = MessageBox.Show(
+                                "Voulez-vous remplacer les détails actuels par ceux de l'expression de besoin sélectionnée ?",
+                                "Confirmation",
+                                MessageBoxButton.YesNo,
+                                MessageBoxImage.Question);
+
+                            if (result == MessageBoxResult.Yes)
+                            {
+                                LoadDetailsFromExpressionBesoin(value);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        BonCommande.ExpressionBesoinId = 0;
+                    }
+
+                    OnPropertyChanged(nameof(BonCommande));
+                }
+            }
+        }
+
         public string PageTitle => IsEditMode ? "Modifier le bon de commande" : "Nouveau bon de commande";
 
         public double MontantTotal => Details.Sum(d => d.Total);
+
+        /// <summary>
+        /// Nombre de lignes de détails
+        /// </summary>
+        public int NombreLignes => Details.Count;
 
         #endregion
 
@@ -95,7 +147,7 @@ namespace Collectivite.ViewModels
 
             try
             {
-                // Charger les expressions de besoin
+                // Charger les expressions de besoin avec leurs détails
                 var expressionBesoinService = new ExpressionBesoinService();
                 var expressionBesoins = await expressionBesoinService.GetAllExpressionBesoinsAsync();
 
@@ -131,6 +183,10 @@ namespace Collectivite.ViewModels
                             ExpressionBesoinId = bonCommande.ExpressionBesoinId
                         };
 
+                        // Sélectionner l'expression de besoin sans déclencher le rechargement des détails
+                        _selectedExpressionBesoin = ExpressionBesoins.FirstOrDefault(eb => eb.Id == bonCommande.ExpressionBesoinId);
+                        OnPropertyChanged(nameof(SelectedExpressionBesoin));
+
                         // Charger les engagements sélectionnés
                         EngagementsSelectionnes.Clear();
                         if (bonCommande.Engagements != null)
@@ -138,7 +194,6 @@ namespace Collectivite.ViewModels
                             foreach (var engagement in bonCommande.Engagements)
                             {
                                 EngagementsSelectionnes.Add(engagement);
-                                // Ajouter aussi aux disponibles pour pouvoir les désélectionner
                                 if (!EngagementsDisponibles.Any(e => e.Id == engagement.Id))
                                 {
                                     EngagementsDisponibles.Add(engagement);
@@ -146,7 +201,7 @@ namespace Collectivite.ViewModels
                             }
                         }
 
-                        // Charger les détails
+                        // Charger les détails existants du bon de commande
                         Details.Clear();
                         if (bonCommande.Details != null)
                         {
@@ -161,6 +216,9 @@ namespace Collectivite.ViewModels
                                 });
                             }
                         }
+
+                        OnPropertyChanged(nameof(MontantTotal));
+                        OnPropertyChanged(nameof(NombreLignes));
                     }
                 }
                 else
@@ -183,12 +241,99 @@ namespace Collectivite.ViewModels
             }
         }
 
+        /// <summary>
+        /// Charge les détails depuis une Expression de Besoin sélectionnée
+        /// </summary>
+        private void LoadDetailsFromExpressionBesoin(ExpressionBesoin expressionBesoin)
+        {
+            if (expressionBesoin?.Details == null || !expressionBesoin.Details.Any())
+            {
+                // Si l'expression de besoin n'a pas de détails chargés, les récupérer
+                LoadDetailsFromExpressionBesoinAsync(expressionBesoin.Id);
+                return;
+            }
+
+            // Vider les détails actuels
+            Details.Clear();
+
+            // Créer les détails du bon de commande à partir de l'expression de besoin
+            foreach (var detailEB in expressionBesoin.Details)
+            {
+                var detailBC = new DetailBonCommande
+                {
+                    Designation = detailEB.Designation,
+                    Quantite = detailEB.Quantite,
+                    PrixUnitaire = 0 // Le prix unitaire sera saisi par l'utilisateur
+                };
+
+                Details.Add(detailBC);
+            }
+
+            // Notifier les changements
+            OnPropertyChanged(nameof(MontantTotal));
+            OnPropertyChanged(nameof(NombreLignes));
+
+            // Message d'information
+            if (Details.Count > 0)
+            {
+                System.Diagnostics.Debug.WriteLine($"✅ {Details.Count} ligne(s) chargée(s) depuis l'expression de besoin {expressionBesoin.Numero}");
+            }
+        }
+
+        /// <summary>
+        /// Charge les détails de manière asynchrone si nécessaire
+        /// </summary>
+        private async void LoadDetailsFromExpressionBesoinAsync(int expressionBesoinId)
+        {
+            try
+            {
+                IsLoading = true;
+
+                var expressionBesoinService = new ExpressionBesoinService();
+                var expressionBesoin = await expressionBesoinService.GetExpressionBesoinByIdAsync(expressionBesoinId);
+
+                if (expressionBesoin?.Details != null && expressionBesoin.Details.Any())
+                {
+                    // Vider les détails actuels
+                    Details.Clear();
+
+                    // Créer les détails du bon de commande
+                    foreach (var detailEB in expressionBesoin.Details)
+                    {
+                        var detailBC = new DetailBonCommande
+                        {
+                            Designation = detailEB.Designation,
+                            Quantite = detailEB.Quantite,
+                            PrixUnitaire = 0
+                        };
+
+                        Details.Add(detailBC);
+                    }
+
+                    OnPropertyChanged(nameof(MontantTotal));
+                    OnPropertyChanged(nameof(NombreLignes));
+
+                    System.Diagnostics.Debug.WriteLine($"✅ {Details.Count} ligne(s) chargée(s) depuis l'expression de besoin");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors du chargement des détails : {ex.Message}",
+                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
         private bool CanSave()
         {
             return BonCommande != null &&
                    !string.IsNullOrWhiteSpace(BonCommande.Numero) &&
                    BonCommande.ExpressionBesoinId > 0 &&
-                   Details.Count > 0;
+                   Details.Count > 0 &&
+                   Details.All(d => !string.IsNullOrWhiteSpace(d.Designation) && d.Quantite > 0);
         }
 
         private async System.Threading.Tasks.Task SaveAsync()
@@ -197,6 +342,15 @@ namespace Collectivite.ViewModels
 
             try
             {
+                // Validation supplémentaire
+                if (Details.Any(d => d.PrixUnitaire <= 0))
+                {
+                    MessageBox.Show("Veuillez saisir un prix unitaire pour chaque ligne.",
+                        "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    IsLoading = false;
+                    return;
+                }
+
                 var bonCommandeService = new BonCommandeService();
                 var detailsList = Details.ToList();
                 var engagementIds = EngagementsSelectionnes.Select(e => e.Id).ToList();
@@ -264,6 +418,7 @@ namespace Collectivite.ViewModels
 
             Details.Add(newDetail);
             OnPropertyChanged(nameof(MontantTotal));
+            OnPropertyChanged(nameof(NombreLignes));
         }
 
         private void RemoveDetail(DetailBonCommande? detail)
@@ -272,6 +427,7 @@ namespace Collectivite.ViewModels
             {
                 Details.Remove(detail);
                 OnPropertyChanged(nameof(MontantTotal));
+                OnPropertyChanged(nameof(NombreLignes));
             }
         }
 

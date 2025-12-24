@@ -17,6 +17,8 @@ namespace Collectivite.ViewModels
         private int? _mandatId;
         private Mandat _mandat;
         private BudgetLine? _selectedBudgetLine;
+        private Engagement? _selectedEngagement;
+        private string? _erreurPrecomptes;
 
         public MandatFormViewModel(int? mandatId = null)
         {
@@ -31,7 +33,7 @@ namespace Collectivite.ViewModels
                 Rts = 0,
                 AutresPrecomptes = 0,
                 MontantNet = 0,
-                NumeroMandat = "" // Sera généré automatiquement
+                NumeroMandat = ""
             };
 
             // Commandes
@@ -40,6 +42,7 @@ namespace Collectivite.ViewModels
             SaveCommand = new RelayCommand(async _ => await SaveAsync(), _ => CanSave());
             CancelCommand = new RelayCommand(_ => Cancel());
             ConvertMontantToLettresCommand = new RelayCommand(_ => ConvertMontantToLettres());
+            ValiderPrecomptesCommand = new RelayCommand(_ => ValiderPrecomptes());
 
             // Charger les données
             LoadDataCommand.Execute(null);
@@ -64,14 +67,52 @@ namespace Collectivite.ViewModels
         public Mandat Mandat
         {
             get => _mandat;
+            set => SetProperty(ref _mandat, value);
+        }
+
+        /// <summary>
+        /// Engagement sélectionné - Charge automatiquement le montant brut
+        /// </summary>
+        public Engagement? SelectedEngagement
+        {
+            get => _selectedEngagement;
             set
             {
-                if (SetProperty(ref _mandat, value))
+                if (SetProperty(ref _selectedEngagement, value))
                 {
-                    // Déclencher le chargement du BudgetLine quand l'EngagementId change
-                    if (_mandat != null && _mandat.EngagementId > 0)
+                    if (value != null)
                     {
-                        _ = OnEngagementChanged();
+                        // Mettre à jour l'ID de l'engagement dans le mandat
+                        Mandat.EngagementId = value.Id;
+
+                        // Charger automatiquement le montant brut depuis l'engagement
+                        Mandat.MontantBrut = value.MontantEngagement;
+
+                        // Réinitialiser les précomptes si c'est une nouvelle sélection
+                        if (!IsEditMode)
+                        {
+                            Mandat.Rts = 0;
+                            Mandat.AutresPrecomptes = 0;
+                        }
+
+                        // Calculer le montant net
+                        CalculerMontantNet();
+
+                        // Charger le BudgetLine
+                        _ = LoadBudgetLineAsync(value.Id);
+
+                        // Notifier les changements
+                        OnPropertyChanged(nameof(Mandat));
+                        OnPropertyChanged(nameof(MontantBrutFormate));
+                    }
+                    else
+                    {
+                        Mandat.EngagementId = 0;
+                        Mandat.MontantBrut = 0;
+                        SelectedBudgetLine = null;
+                        CalculerMontantNet();
+                        OnPropertyChanged(nameof(Mandat));
+                        OnPropertyChanged(nameof(MontantBrutFormate));
                     }
                 }
             }
@@ -90,6 +131,25 @@ namespace Collectivite.ViewModels
             }
         }
 
+        /// <summary>
+        /// Message d'erreur pour les précomptes
+        /// </summary>
+        public string? ErreurPrecomptes
+        {
+            get => _erreurPrecomptes;
+            set => SetProperty(ref _erreurPrecomptes, value);
+        }
+
+        /// <summary>
+        /// Indique si les précomptes sont valides
+        /// </summary>
+        public bool PrecomptesValides => string.IsNullOrEmpty(ErreurPrecomptes);
+
+        /// <summary>
+        /// Indique si les précomptes dépassent le montant brut
+        /// </summary>
+        public bool HasErreurPrecomptes => !string.IsNullOrEmpty(ErreurPrecomptes);
+
         public string PageTitle => IsEditMode ? "Modifier le mandat" : "Nouveau mandat";
 
         // Liste des mois
@@ -98,6 +158,23 @@ namespace Collectivite.ViewModels
         // Propriétés calculées pour affichage
         public decimal MontantDisponible => SelectedBudgetLine?.MontantDefinitif ?? 0;
         public string NomenclatureCode => SelectedBudgetLine?.Nommenclature?.CodeNomenclature ?? "";
+
+        /// <summary>
+        /// Montant brut formaté pour affichage (lecture seule)
+        /// </summary>
+        public string MontantBrutFormate => $"{Mandat.MontantBrut:N0} GNF";
+
+        /// <summary>
+        /// Total des précomptes (RTS + Autres)
+        /// </summary>
+        public decimal TotalPrecomptes => Mandat.Rts + Mandat.AutresPrecomptes;
+
+        /// <summary>
+        /// Pourcentage des précomptes par rapport au montant brut
+        /// </summary>
+        public decimal PourcentagePrecomptes => Mandat.MontantBrut > 0
+            ? Math.Round((TotalPrecomptes / Mandat.MontantBrut) * 100, 2)
+            : 0;
 
         #endregion
 
@@ -108,6 +185,7 @@ namespace Collectivite.ViewModels
         public ICommand SaveCommand { get; }
         public ICommand CancelCommand { get; }
         public ICommand ConvertMontantToLettresCommand { get; }
+        public ICommand ValiderPrecomptesCommand { get; }
 
         #endregion
 
@@ -154,8 +232,21 @@ namespace Collectivite.ViewModels
                             DatePaiement = existingMandat.DatePaiement
                         };
 
-                        // Charger le BudgetLine pour l'engagement
-                        await OnEngagementChanged();
+                        // Sélectionner l'engagement correspondant sans déclencher le rechargement du montant
+                        _selectedEngagement = Engagements.FirstOrDefault(e => e.Id == existingMandat.EngagementId);
+
+                        // Si l'engagement n'est pas dans la liste (car déjà utilisé), le recharger
+                        if (_selectedEngagement == null && existingMandat.Engagement != null)
+                        {
+                            _selectedEngagement = existingMandat.Engagement;
+                            Engagements.Add(_selectedEngagement);
+                        }
+
+                        OnPropertyChanged(nameof(SelectedEngagement));
+                        OnPropertyChanged(nameof(MontantBrutFormate));
+
+                        // Charger le BudgetLine
+                        await LoadBudgetLineAsync(existingMandat.EngagementId);
                     }
                     else
                     {
@@ -185,29 +276,102 @@ namespace Collectivite.ViewModels
         }
 
         /// <summary>
-        /// Méthode pour charger le BudgetLine quand l'engagement change
+        /// Charge le BudgetLine pour l'engagement sélectionné
         /// </summary>
-        private async Task OnEngagementChanged()
+        private async Task LoadBudgetLineAsync(int engagementId)
         {
-            var mandatService = new MandatService();
+            if (engagementId <= 0) return;
 
-            if (Mandat.EngagementId > 0)
+            try
             {
-                var budgetLine = await mandatService.GetBudgetLineByEngagementIdAsync(Mandat.EngagementId);
+                var mandatService = new MandatService();
+                var budgetLine = await mandatService.GetBudgetLineByEngagementIdAsync(engagementId);
                 SelectedBudgetLine = budgetLine;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Erreur chargement BudgetLine: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Valide que les précomptes ne dépassent pas le montant brut
+        /// </summary>
+        private void ValiderPrecomptes()
+        {
+            decimal totalPrecomptes = Mandat.Rts + Mandat.AutresPrecomptes;
+
+            if (totalPrecomptes > Mandat.MontantBrut)
+            {
+                ErreurPrecomptes = $"⚠️ Le total des précomptes ({totalPrecomptes:N0} GNF) ne peut pas dépasser le montant brut ({Mandat.MontantBrut:N0} GNF)";
+
+                // Réajuster les valeurs si nécessaire
+                // On diminue proportionnellement
+                if (Mandat.MontantBrut > 0)
+                {
+                    decimal ratio = Mandat.MontantBrut / totalPrecomptes;
+                    Mandat.Rts = Math.Floor(Mandat.Rts * ratio);
+                    Mandat.AutresPrecomptes = Math.Floor(Mandat.AutresPrecomptes * ratio);
+                    OnPropertyChanged(nameof(Mandat));
+                }
+            }
+            else if (totalPrecomptes < 0)
+            {
+                ErreurPrecomptes = "⚠️ Les précomptes ne peuvent pas être négatifs";
+
+                // Réinitialiser les valeurs négatives
+                if (Mandat.Rts < 0) Mandat.Rts = 0;
+                if (Mandat.AutresPrecomptes < 0) Mandat.AutresPrecomptes = 0;
+                OnPropertyChanged(nameof(Mandat));
             }
             else
             {
-                SelectedBudgetLine = null;
+                ErreurPrecomptes = null;
             }
+
+            OnPropertyChanged(nameof(TotalPrecomptes));
+            OnPropertyChanged(nameof(PourcentagePrecomptes));
+            OnPropertyChanged(nameof(PrecomptesValides));
+            OnPropertyChanged(nameof(HasErreurPrecomptes));
+
+            // Recalculer le montant net
+            CalculerMontantNet();
         }
 
+        /// <summary>
+        /// Calcule le montant net après déduction des précomptes
+        /// </summary>
         private void CalculerMontantNet()
         {
-            Mandat.MontantNet = Mandat.MontantBrut - Mandat.Rts - Mandat.AutresPrecomptes;
+            // Valider d'abord les précomptes
+            decimal totalPrecomptes = Mandat.Rts + Mandat.AutresPrecomptes;
+
+            if (totalPrecomptes > Mandat.MontantBrut)
+            {
+                ErreurPrecomptes = $"⚠️ Total précomptes ({totalPrecomptes:N0} GNF) > Montant brut ({Mandat.MontantBrut:N0} GNF)";
+                Mandat.MontantNet = 0;
+            }
+            else if (Mandat.Rts < 0 || Mandat.AutresPrecomptes < 0)
+            {
+                ErreurPrecomptes = "⚠️ Les précomptes ne peuvent pas être négatifs";
+                Mandat.MontantNet = Mandat.MontantBrut;
+            }
+            else
+            {
+                ErreurPrecomptes = null;
+                Mandat.MontantNet = Mandat.MontantBrut - Mandat.Rts - Mandat.AutresPrecomptes;
+            }
+
             OnPropertyChanged(nameof(Mandat));
+            OnPropertyChanged(nameof(TotalPrecomptes));
+            OnPropertyChanged(nameof(PourcentagePrecomptes));
+            OnPropertyChanged(nameof(PrecomptesValides));
+            OnPropertyChanged(nameof(HasErreurPrecomptes));
         }
 
+        /// <summary>
+        /// Vérifie si le formulaire peut être sauvegardé
+        /// </summary>
         private bool CanSave()
         {
             return !string.IsNullOrWhiteSpace(Mandat.NumeroMandat) &&
@@ -215,11 +379,27 @@ namespace Collectivite.ViewModels
                    Mandat.MontantBrut > 0 &&
                    Mandat.MontantNet > 0 &&
                    !string.IsNullOrWhiteSpace(Mandat.MontantLettre) &&
-                   !string.IsNullOrWhiteSpace(Mandat.Objet);
+                   !string.IsNullOrWhiteSpace(Mandat.Objet) &&
+                   PrecomptesValides;
         }
 
         private async Task SaveAsync()
         {
+            // Validation finale des précomptes avant sauvegarde
+            if (!PrecomptesValides)
+            {
+                MessageBox.Show(ErreurPrecomptes ?? "Les précomptes sont invalides.",
+                    "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (Mandat.MontantNet <= 0)
+            {
+                MessageBox.Show("Le montant net doit être supérieur à zéro.",
+                    "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             IsLoading = true;
 
             try
@@ -247,8 +427,7 @@ namespace Collectivite.ViewModels
                     // Si Mandat est créé avec succès, générer l'écriture comptable
                     if (success && mandat != null)
                     {
-                        // Récupérer la ligne budgétaire de l'engagement correspondant avec sa nomenclature
-                        var currentEngagement = Engagements
+                        var currentEngagement = SelectedEngagement ?? Engagements
                             .FirstOrDefault(e => e.Id == Mandat.EngagementId);
 
                         if (currentEngagement != null)
@@ -257,22 +436,19 @@ namespace Collectivite.ViewModels
 
                             if (budgetLine?.Nommenclature != null)
                             {
-                                // APPELER LA FONCTION UTILITAIRE
                                 var (ecritureSuccess, ecritureMessage, ecriture) =
                                     await EcritureComptableHelper.GenererEcritureComptableAsync(
-                                        budgetLine,  // La ligne budgétaire complète
-                                        null,        // Pas d'ordre de recette (null car on traite un mandat)
-                                        mandat       // Le mandat créé
+                                        budgetLine,
+                                        null,
+                                        mandat
                                     );
 
-                                // Ajouter le résultat au message principal
                                 if (ecritureSuccess)
                                 {
                                     message += "\n\n" + ecritureMessage;
                                 }
                                 else
                                 {
-                                    // Le mandat est créé mais pas l'écriture
                                     message += "\n\n⚠️ " + ecritureMessage;
                                 }
                             }
@@ -304,7 +480,6 @@ namespace Collectivite.ViewModels
         private void Cancel()
         {
             NavigationService.Instance.NavigateTo(new Views.Pages.MandatListPage());
-
         }
 
         private void ConvertMontantToLettres()
@@ -313,6 +488,11 @@ namespace Collectivite.ViewModels
             {
                 Mandat.MontantLettre = Convertir.ConvertirNombreEnLettres((long)Mandat.MontantNet);
                 OnPropertyChanged(nameof(Mandat));
+            }
+            else
+            {
+                MessageBox.Show("Le montant net doit être supérieur à zéro pour être converti en lettres.",
+                    "Information", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
 

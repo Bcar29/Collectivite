@@ -218,7 +218,7 @@ namespace Collectivite.ViewModels
                         await _auditService.LogAsync(
                             "Modification d'exercice",
                             $"{DialogExercice.Libelle} modifié par {username} le {DateTime.Now:dd/MM/yyyy HH:mm}",
-                            "alfa");
+                            username);
                     }
                     else
                     {
@@ -244,7 +244,7 @@ namespace Collectivite.ViewModels
                         await _auditService.LogAsync(
                             "Exercice créé",
                             $"{DialogExercice.Libelle} créé par {username} le {DateTime.Now:dd/MM/yyyy HH:mm}",
-                            "alfa");
+                            username);
                     }
                     else
                     {
@@ -300,7 +300,7 @@ namespace Collectivite.ViewModels
                 await _auditService.LogAsync(
                     "Exercice supprimé",
                     $"{exercice.Libelle} supprimé par {username}",
-                    "alfa");
+                    username);
 
                 await LoadDataAsync();
             }
@@ -344,7 +344,7 @@ namespace Collectivite.ViewModels
                 await _auditService.LogAsync(
                     "Exercice clôturé",
                     $"{exercice.Libelle} clôturé par {username}",
-                    "alfa");
+                    username);
 
                 await LoadDataAsync();
             }

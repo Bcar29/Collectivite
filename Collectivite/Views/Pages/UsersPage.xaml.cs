@@ -1,4 +1,5 @@
 using Collectivite.ViewModels;
+using System.Windows;
 using System.Windows.Controls;
 
 namespace Collectivite.Views.Pages
@@ -32,6 +33,15 @@ namespace Collectivite.Views.Pages
                 }
             }
         }
+        private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
+        {
+            if (sender is PasswordBox pb)
+            {
+                ViewModel.DialogUser.Password = pb.Password;
+            }
+        }
+
+
     }
 }
 

@@ -60,7 +60,7 @@
                                VerticalAlignment="Center"/>
                 </StackPanel>
 
-                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
                     <Button Style="{StaticResource MaterialDesignRaisedButton}"
                             Command="{Binding OpenAddDialogCommand}"
                             Height="36"
@@ -82,7 +82,7 @@
                 </StackPanel>
             </DockPanel>
 
-            <!-- Bandeau d'information -->
+            <!-- Bandeau d'information avec statistiques -->
             <Border Grid.Row="1" 
                     Background="#E3F2FD" 
                     CornerRadius="8"
@@ -104,85 +104,251 @@
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                        <!-- Nombre d'éléments affichés -->
+                        <Border Background="#BBDEFB" 
+                                CornerRadius="12" 
+                                Padding="10,4" 
+                                Margin="0,0,15,0"
+                                VerticalAlignment="Center">
+                            <TextBlock VerticalAlignment="Center">
+                                <Run Text="{Binding NombreRecensements, Mode=OneWay}" FontWeight="Bold" Foreground="#1565C0"/>
+                                <Run Text=" / " Foreground="#64B5F6"/>
+                                <Run Text="{Binding NombreTotalRecensements, Mode=OneWay}" Foreground="#1976D2"/>
+                                <Run Text=" éléments" Foreground="#1976D2"/>
+                            </TextBlock>
+                        </Border>
+
+                        <!-- Total -->
                         <TextBlock Text="Total recensé :"
                                    FontSize="13"
                                    FontWeight="SemiBold"
                                    Foreground="#424242"
                                    VerticalAlignment="Center"
                                    Margin="0,0,10,0"/>
-                        <TextBlock Text="{Binding TotalRecense, StringFormat={}{0:N0} GNF}"
-                                   FontSize="16"
-                                   FontWeight="Bold"
-                                   Foreground="#1976D2"
-                                   VerticalAlignment="Center"/>
+                        <Border Background="#C8E6C9" CornerRadius="4" Padding="10,4">
+                            <TextBlock Text="{Binding TotalRecense, StringFormat={}{0:N0} GNF}"
+                                       FontSize="16"
+                                       FontWeight="Bold"
+                                       Foreground="#2E7D32"
+                                       VerticalAlignment="Center"/>
+                        </Border>
                     </StackPanel>
                 </DockPanel>
             </Border>
 
-            <!-- Panneau de configuration des colonnes -->
-            <materialDesign:Card Grid.Row="2" Padding="12" Margin="0,0,0,15">
-                <Expander Header="⚙️ Affichage des colonnes" 
-                         materialDesign:ExpanderAssist.HorizontalHeaderPadding="0"
-                         IsExpanded="False">
-                    <Grid Margin="0,10,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
+            <!-- ═══════════════════════════════════════════════════════════ -->
+            <!-- 🆕 PANNEAU DE FILTRAGE AVANCÉ -->
+            <!-- ═══════════════════════════════════════════════════════════ -->
+            <materialDesign:Card Grid.Row="2" Padding="15" Margin="0,0,0,15">
+                <Expander IsExpanded="{Binding IsFilterPanelExpanded}" 
+                         materialDesign:ExpanderAssist.HorizontalHeaderPadding="0">
+                    <Expander.Header>
+                        <DockPanel>
+                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+                                <materialDesign:PackIcon Kind="FilterVariant" 
+                                                        Width="20" 
+                                                        Height="20"
+                                                        Foreground="#1976D2"
+                                                        VerticalAlignment="Center"
+                                                        Margin="0,0,8,0"/>
+                                <TextBlock Text="Filtres de recherche" 
+                                          FontSize="14"
+                                          FontWeight="SemiBold"
+                                          Foreground="#424242"
+                                          VerticalAlignment="Center"/>
+                            </StackPanel>
 
-                        <!-- Colonne 1 -->
-                        <StackPanel Grid.Column="0">
-                            <CheckBox Content="Exercice" 
-                                     IsChecked="{Binding ShowExercice}"
-                                     Margin="0,0,0,8"
-                                     Style="{StaticResource MaterialDesignCheckBox}"/>
+                            <!-- Indicateur de filtres actifs -->
+                            <Border DockPanel.Dock="Right" 
+                                   Background="#FFF3E0" 
+                                   CornerRadius="10"
+                                   Padding="8,3"
+                                   Margin="10,0,0,0"
+                                   Visibility="{Binding HasActiveFilters, Converter={StaticResource BoolToVis}}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Filter" 
+                                                           Width="14" 
+                                                           Height="14"
+                                                           Foreground="#F57C00"
+                                                           VerticalAlignment="Center"
+                                                           Margin="0,0,5,0"/>
+                                    <TextBlock Text="Filtres actifs" 
+                                              FontSize="11"
+                                              FontWeight="SemiBold"
+                                              Foreground="#E65100"
+                                              VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                        </DockPanel>
+                    </Expander.Header>
 
-                            <CheckBox Content="Commune" 
-                                     IsChecked="{Binding ShowCommune}"
-                                     Margin="0,0,0,8"
-                                     Style="{StaticResource MaterialDesignCheckBox}"/>
+                    <Grid Margin="0,15,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
 
-                            <CheckBox Content="Chapitre" 
-                                     IsChecked="{Binding ShowChapitre}"
-                                     Margin="0,0,0,8"
-                                     Style="{StaticResource MaterialDesignCheckBox}"/>
-                        </StackPanel>
+                        <!-- Ligne 1 : Recherche textuelle + Exercice + Commune -->
+                        <Grid Grid.Row="0" Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2*"/>
+                                <ColumnDefinition Width="15"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="15"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
 
-                        <!-- Colonne 2 -->
-                        <StackPanel Grid.Column="1">
-                            <CheckBox Content="Article" 
-                                     IsChecked="{Binding ShowArticle}"
-                                     Margin="0,0,0,8"
-                                     Style="{StaticResource MaterialDesignCheckBox}"/>
+                            <!-- Recherche textuelle -->
+                            <TextBox Grid.Column="0"
+                                    materialDesign:HintAssist.Hint="🔍 Rechercher (intitulé, code, tiers, commune...)"
+                                    materialDesign:TextFieldAssist.HasClearButton="True"
+                                    Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                    Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Delay=300}"
+                                    VerticalAlignment="Center"/>
 
-                            <CheckBox Content="Paragraphe" 
-                                     IsChecked="{Binding ShowParagraphe}"
-                                     Margin="0,0,0,8"
-                                     Style="{StaticResource MaterialDesignCheckBox}"/>
+                            <!-- Exercice -->
+                            <ComboBox Grid.Column="2"
+                                     materialDesign:HintAssist.Hint="Exercice"
+                                     materialDesign:ComboBoxAssist.ShowSelectedItem="True"
+                                     Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                     ItemsSource="{Binding Exercices}"
+                                     SelectedItem="{Binding SelectedFilterExercice}"
+                                     DisplayMemberPath="Libelle"
+                                     VerticalAlignment="Center">
+                                <ComboBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <VirtualizingStackPanel />
+                                    </ItemsPanelTemplate>
+                                </ComboBox.ItemsPanel>
+                            </ComboBox>
 
-                            <CheckBox Content="Sous-paragraphe" 
-                                     IsChecked="{Binding ShowSousParagraphe}"
-                                     Margin="0,0,0,8"
-                                     Style="{StaticResource MaterialDesignCheckBox}"/>
-                        </StackPanel>
+                            <!-- Commune -->
+                            <ComboBox Grid.Column="4"
+                                     materialDesign:HintAssist.Hint="Commune"
+                                     materialDesign:ComboBoxAssist.ShowSelectedItem="True"
+                                     Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                     ItemsSource="{Binding Communes}"
+                                     SelectedItem="{Binding SelectedFilterCommune}"
+                                     DisplayMemberPath="Nom"
+                                     VerticalAlignment="Center">
+                                <ComboBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <VirtualizingStackPanel />
+                                    </ItemsPanelTemplate>
+                                </ComboBox.ItemsPanel>
+                            </ComboBox>
+                        </Grid>
 
-                        <!-- Colonne 3 -->
-                        <StackPanel Grid.Column="2">
-                            <CheckBox Content="Intitulé" 
-                                     IsChecked="{Binding ShowIntitule}"
-                                     Margin="0,0,0,8"
-                                     Style="{StaticResource MaterialDesignCheckBox}"/>
+                        <!-- Ligne 2 : Tiers + Ligne budgétaire + Montants -->
+                        <Grid Grid.Row="1" Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="15"/>
+                                <ColumnDefinition Width="1.5*"/>
+                                <ColumnDefinition Width="15"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="15"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
 
-                            <CheckBox Content="Tiers" 
-                                     IsChecked="{Binding ShowTiers}"
-                                     Margin="0,0,0,8"
-                                     Style="{StaticResource MaterialDesignCheckBox}"/>
+                            <!-- Tiers -->
+                            <ComboBox Grid.Column="0"
+                                     materialDesign:HintAssist.Hint="Tiers"
+                                     materialDesign:ComboBoxAssist.ShowSelectedItem="True"
+                                     Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                     ItemsSource="{Binding TiersList}"
+                                     SelectedItem="{Binding SelectedFilterTiers}"
+                                     DisplayMemberPath="Nom"
+                                     VerticalAlignment="Center">
+                                <ComboBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <VirtualizingStackPanel />
+                                    </ItemsPanelTemplate>
+                                </ComboBox.ItemsPanel>
+                            </ComboBox>
 
-                            <CheckBox Content="Montant Recensé" 
-                                     IsChecked="{Binding ShowMontant}"
-                                     Margin="0,0,0,8"
-                                     Style="{StaticResource MaterialDesignCheckBox}"/>
+                            <!-- Ligne budgétaire -->
+                            <ComboBox Grid.Column="2"
+                                     materialDesign:HintAssist.Hint="Ligne budgétaire"
+                                     materialDesign:ComboBoxAssist.ShowSelectedItem="True"
+                                     Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                     ItemsSource="{Binding LignesBudgetaires}"
+                                     SelectedItem="{Binding SelectedFilterBudgetLine}"
+                                     VerticalAlignment="Center">
+                                <ComboBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <VirtualizingStackPanel />
+                                    </ItemsPanelTemplate>
+                                </ComboBox.ItemsPanel>
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Border Background="#E3F2FD" CornerRadius="3" Padding="4,1" Margin="0,0,5,0">
+                                                <TextBlock Text="{Binding Nommenclature.CodeNomenclature}" 
+                                                          FontSize="10" 
+                                                          FontWeight="Bold"
+                                                          Foreground="#1976D2"/>
+                                            </Border>
+                                            <TextBlock Text="{Binding Nommenclature.Intitule}" 
+                                                      FontSize="12"
+                                                      MaxWidth="250"
+                                                      TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+
+                            <!-- Montant Min -->
+                            <TextBox Grid.Column="4"
+                                    materialDesign:HintAssist.Hint="Montant min (GNF)"
+                                    materialDesign:TextFieldAssist.HasClearButton="True"
+                                    Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                    Text="{Binding MontantMin, UpdateSourceTrigger=PropertyChanged, StringFormat=N0, TargetNullValue=''}"
+                                    VerticalAlignment="Center"/>
+
+                            <!-- Montant Max -->
+                            <TextBox Grid.Column="6"
+                                    materialDesign:HintAssist.Hint="Montant max (GNF)"
+                                    materialDesign:TextFieldAssist.HasClearButton="True"
+                                    Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                    Text="{Binding MontantMax, UpdateSourceTrigger=PropertyChanged, StringFormat=N0, TargetNullValue=''}"
+                                    VerticalAlignment="Center"/>
+                        </Grid>
+
+                        <!-- Ligne 3 : Boutons d'action -->
+                        <StackPanel Grid.Row="2" 
+                                   Orientation="Horizontal" 
+                                   HorizontalAlignment="Right"
+                                   Margin="0,5,0,0">
+
+                            <!-- Bouton Réinitialiser -->
+                            <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                                   Command="{Binding ClearFilterCommand}"
+                                   Height="32"
+                                   Margin="0,0,10,0"
+                                   Foreground="#F57C00"
+                                   BorderBrush="#F57C00"
+                                   Visibility="{Binding HasActiveFilters, Converter={StaticResource BoolToVis}}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="FilterRemove" 
+                                                           Width="16" 
+                                                           Height="16"
+                                                           Margin="0,0,5,0"/>
+                                    <TextBlock Text="Réinitialiser les filtres" FontSize="12"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Indicateur résultats -->
+                            <Border Background="#E8F5E9" 
+                                   CornerRadius="4" 
+                                   Padding="12,6"
+                                   VerticalAlignment="Center">
+                                <TextBlock FontSize="12" Foreground="#2E7D32">
+                                    <Run Text="{Binding NombreRecensements, Mode=OneWay}" FontWeight="Bold"/>
+                                    <Run Text=" résultat(s) trouvé(s)"/>
+                                </TextBlock>
+                            </Border>
                         </StackPanel>
                     </Grid>
                 </Expander>
@@ -202,82 +368,21 @@
                         <!-- Exercice -->
                         <DataGridTextColumn Header="Exercice" 
                                           Binding="{Binding Exercice.Libelle}" 
-                                          Width="110"
-                                          Visibility="{Binding DataContext.ShowExercice, Source={StaticResource ProxyElement}, Converter={StaticResource BoolToVis}}"/>
+                                          Width="100"/>
 
                         <!-- Commune -->
                         <DataGridTextColumn Header="Commune" 
                                           Binding="{Binding Commune.Nom}" 
-                                          Width="130"
-                                          Visibility="{Binding DataContext.ShowCommune, Source={StaticResource ProxyElement}, Converter={StaticResource BoolToVis}}"/>
+                                          Width="120"/>
 
-                        <!-- Chapitre -->
-                        <DataGridTemplateColumn Header="Chapitre" 
-                                              Width="90"
-                                              Visibility="{Binding DataContext.ShowChapitre, Source={StaticResource ProxyElement}, Converter={StaticResource BoolToVis}}">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <Border Background="#E3F2FD" 
-                                           CornerRadius="3"
-                                           Padding="5,2">
-                                        <TextBlock Text="{Binding BudgetLine.Nommenclature.Chapitre}" 
-                                                  FontWeight="Bold"
-                                                  FontSize="10"
-                                                  Foreground="#1976D2"
-                                                  HorizontalAlignment="Center"/>
-                                    </Border>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-
-                        <!-- Article -->
-                        <DataGridTemplateColumn Header="Article" 
-                                              Width="90"
-                                              Visibility="{Binding DataContext.ShowArticle, Source={StaticResource ProxyElement}, Converter={StaticResource BoolToVis}}">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <Border Background="#E8F5E9" 
-                                           CornerRadius="3"
-                                           Padding="5,2">
-                                        <TextBlock Text="{Binding BudgetLine.Nommenclature.Article}" 
-                                                  FontWeight="SemiBold"
-                                                  FontSize="10"
-                                                  Foreground="#388E3C"
-                                                  HorizontalAlignment="Center"/>
-                                    </Border>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-
-                        <!-- Paragraphe -->
-                        <DataGridTemplateColumn Header="Paragraphe" 
-                                              Width="100"
-                                              Visibility="{Binding DataContext.ShowParagraphe, Source={StaticResource ProxyElement}, Converter={StaticResource BoolToVis}}">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <Border Background="#FFF3E0" 
-                                           CornerRadius="3"
-                                           Padding="5,2">
-                                        <TextBlock Text="{Binding BudgetLine.Nommenclature.Paragraphe}" 
-                                                  FontWeight="SemiBold"
-                                                  FontSize="10"
-                                                  Foreground="#F57C00"
-                                                  HorizontalAlignment="Center"/>
-                                    </Border>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-
-                        <!-- Sous-paragraphe -->
-                        <DataGridTemplateColumn Header="Sous-paragraphe" 
-                                              Width="120"
-                                              Visibility="{Binding DataContext.ShowSousParagraphe, Source={StaticResource ProxyElement}, Converter={StaticResource BoolToVis}}">
+                        <!-- Code Nomenclature -->
+                        <DataGridTemplateColumn Header="Code" Width="120">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <Border Background="#F3E5F5" 
                                            CornerRadius="3"
                                            Padding="5,2">
-                                        <TextBlock Text="{Binding BudgetLine.Nommenclature.SousParagraphe}" 
+                                        <TextBlock Text="{Binding BudgetLine.Nommenclature.CodeNomenclature}" 
                                                   FontWeight="SemiBold"
                                                   FontSize="10"
                                                   Foreground="#7B1FA2"
@@ -291,8 +396,7 @@
                         <DataGridTextColumn Header="Intitulé" 
                                           Binding="{Binding BudgetLine.Nommenclature.Intitule}" 
                                           Width="*" 
-                                          MinWidth="200"
-                                          Visibility="{Binding DataContext.ShowIntitule, Source={StaticResource ProxyElement}, Converter={StaticResource BoolToVis}}"/>
+                                          MinWidth="200"/>
 
                         <!-- Tiers -->
                         <DataGridTextColumn Header="Tiers" 
@@ -301,9 +405,7 @@
                                           Visibility="{Binding DataContext.ShowTiers, Source={StaticResource ProxyElement}, Converter={StaticResource BoolToVis}}"/>
 
                         <!-- Montant recensé -->
-                        <DataGridTemplateColumn Header="Montant Recensé" 
-                                              Width="140"
-                                              Visibility="{Binding DataContext.ShowMontant, Source={StaticResource ProxyElement}, Converter={StaticResource BoolToVis}}">
+                        <DataGridTemplateColumn Header="Montant Recensé" Width="140">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <Border Background="#E8F5E9" 
@@ -318,7 +420,7 @@
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
-                        <!-- Actions (toujours visible) -->
+                        <!-- Actions -->
                         <DataGridTemplateColumn Header="Actions" Width="100">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>

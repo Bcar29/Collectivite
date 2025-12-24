@@ -8,6 +8,16 @@
 
     <Page.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+        <!-- Converter pour afficher le message quand la liste est vide -->
+        <Style x:Key="EmptyMessageStyle" TargetType="Border">
+            <Setter Property="Visibility" Value="Collapsed"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Details.Count}" Value="0">
+                    <Setter Property="Visibility" Value="Visible"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
     </Page.Resources>
 
     <Grid>
@@ -56,9 +66,10 @@
                 <!-- Section 1 : Informations du Bon de Commande -->
                 <materialDesign:Card Grid.Row="1" Padding="20" Margin="0,0,0,20">
                     <StackPanel>
-                        <TextBlock Text="Informations du Bon de Commande"
+                        <TextBlock Text="📋 Informations du Bon de Commande"
                                    FontSize="18"
                                    FontWeight="SemiBold"
+                                   Foreground="#1976D2"
                                    Margin="0,0,0,20"/>
 
                         <Grid>
@@ -88,16 +99,49 @@
                                         SelectedDate="{Binding BonCommande.DateCreation}"
                                         Margin="0,0,0,15"/>
 
-                            <!-- Expression de Besoin -->
+                            <!-- Expression de Besoin - Utilise SelectedExpressionBesoin -->
                             <ComboBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
-                                      materialDesign:HintAssist.Hint="Expression de Besoin *"
+                                      materialDesign:HintAssist.Hint="Expression de Besoin * (sélectionner pour charger les lignes)"
                                       Style="{StaticResource MaterialDesignOutlinedComboBox}"
                                       ItemsSource="{Binding ExpressionBesoins}"
-                                      SelectedValue="{Binding BonCommande.ExpressionBesoinId}"
-                                      SelectedValuePath="Id"
-                                      DisplayMemberPath="Numero"
-                                      Margin="0,0,0,15"/>
+                                      SelectedItem="{Binding SelectedExpressionBesoin, Mode=TwoWay}"
+                                      Margin="0,0,0,15">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding Numero}" FontWeight="SemiBold"/>
+                                            <TextBlock Text=" - " Foreground="#666"/>
+                                            <TextBlock Text="{Binding DateCreation, StringFormat='dd/MM/yyyy'}" Foreground="#666"/>
+                                            <TextBlock Text=" (" Foreground="#999"/>
+                                            <TextBlock Text="{Binding Details.Count}" Foreground="#1976D2" FontWeight="SemiBold"/>
+                                            <TextBlock Text=" lignes)" Foreground="#999"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
                         </Grid>
+
+                        <!-- Info sur l'expression de besoin sélectionnée -->
+                        <Border Background="#E3F2FD" 
+                                CornerRadius="8" 
+                                Padding="15"
+                                Visibility="{Binding SelectedExpressionBesoin, Converter={StaticResource BoolToVis}}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Information" 
+                                                         Width="20" 
+                                                         Height="20"
+                                                         Foreground="#1976D2"
+                                                         VerticalAlignment="Center"
+                                                         Margin="0,0,10,0"/>
+                                <TextBlock VerticalAlignment="Center" Foreground="#1976D2">
+                                    <Run Text="Expression de besoin sélectionnée : "/>
+                                    <Run Text="{Binding SelectedExpressionBesoin.Numero, Mode=OneWay, FallbackValue='-'}" FontWeight="Bold"/>
+                                    <Run Text=" | "/>
+                                    <Run Text="{Binding NombreLignes, Mode=OneWay}" FontWeight="Bold"/>
+                                    <Run Text=" ligne(s) chargée(s)"/>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </materialDesign:Card>
 
@@ -106,10 +150,23 @@
                     <StackPanel>
                         <!-- Titre section -->
                         <DockPanel Margin="0,0,0,20">
-                            <TextBlock Text="Détails du Bon de Commande"
-                                       FontSize="18"
-                                       FontWeight="SemiBold"
-                                       DockPanel.Dock="Left"/>
+                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+                                <TextBlock Text="📦 Détails du Bon de Commande"
+                                           FontSize="18"
+                                           FontWeight="SemiBold"
+                                           Foreground="#1976D2"/>
+                                <Border Background="#E8F5E9" 
+                                        CornerRadius="12" 
+                                        Padding="8,4" 
+                                        Margin="15,0,0,0"
+                                        VerticalAlignment="Center">
+                                    <TextBlock Foreground="#4CAF50" FontWeight="SemiBold">
+                                        <Run Text="{Binding NombreLignes, Mode=OneWay}"/>
+                                        <Run Text=" ligne(s)"/>
+                                    </TextBlock>
+                                </Border>
+                            </StackPanel>
+
                             <Button Style="{StaticResource MaterialDesignRaisedButton}"
                                     Command="{Binding AddDetailCommand}"
                                     Height="36"
@@ -124,14 +181,64 @@
                             </Button>
                         </DockPanel>
 
+                        <!-- Message si aucune expression de besoin sélectionnée -->
+                        <Border Background="#FFF8E1" 
+                                CornerRadius="8"
+                                Padding="15"
+                                Margin="0,0,0,15"
+                                Visibility="{Binding SelectedExpressionBesoin, Converter={StaticResource BoolToVis}, ConverterParameter=Inverse}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="AlertCircleOutline" 
+                                                       Width="24" 
+                                                       Height="24"
+                                                       Foreground="#FF8F00"
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,10,0"/>
+                                <TextBlock Text="Sélectionnez une expression de besoin pour charger automatiquement les lignes."
+                                           VerticalAlignment="Center"
+                                           Foreground="#666"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- En-tête du tableau -->
+                        <Border Background="#1976D2" 
+                                CornerRadius="8,8,0,0"
+                                Padding="15,10"
+                                Margin="0,0,0,0">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="2*"/>
+                                    <ColumnDefinition Width="15"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="15"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="15"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="15"/>
+                                    <ColumnDefinition Width="40"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0" Text="Désignation" 
+                                           Foreground="White" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Column="2" Text="Quantité" 
+                                           Foreground="White" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                                <TextBlock Grid.Column="4" Text="Prix Unitaire (GNF)" 
+                                           Foreground="White" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                                <TextBlock Grid.Column="6" Text="Total" 
+                                           Foreground="White" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                                <TextBlock Grid.Column="8" Text="" 
+                                           Foreground="White"/>
+                            </Grid>
+                        </Border>
+
                         <!-- Liste des détails -->
                         <ItemsControl ItemsSource="{Binding Details}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Background="#F5F5F5" 
-                                            CornerRadius="8"
-                                            Padding="15"
-                                            Margin="0,0,0,15">
+                                    <Border Background="#FAFAFA" 
+                                            BorderBrush="#E0E0E0"
+                                            BorderThickness="1,0,1,1"
+                                            Padding="15,10">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="2*"/>
@@ -142,20 +249,23 @@
                                                 <ColumnDefinition Width="15"/>
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="15"/>
-                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="40"/>
                                             </Grid.ColumnDefinitions>
 
                                             <!-- Désignation -->
                                             <TextBox Grid.Column="0"
                                                      materialDesign:HintAssist.Hint="Désignation *"
                                                      Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                                     Text="{Binding Designation, UpdateSourceTrigger=PropertyChanged}"/>
+                                                     Text="{Binding Designation, UpdateSourceTrigger=PropertyChanged}"
+                                                     Padding="10,8"/>
 
                                             <!-- Quantité -->
                                             <TextBox Grid.Column="2"
-                                                     materialDesign:HintAssist.Hint="Quantité *"
+                                                     materialDesign:HintAssist.Hint="Qté *"
                                                      Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                                     Text="{Binding Quantite, UpdateSourceTrigger=PropertyChanged}">
+                                                     Text="{Binding Quantite, UpdateSourceTrigger=PropertyChanged}"
+                                                     HorizontalContentAlignment="Center"
+                                                     Padding="10,8">
                                                 <TextBox.InputBindings>
                                                     <KeyBinding Key="Return" 
                                                                 Command="{Binding DataContext.RecalculerDetailCommand, RelativeSource={RelativeSource AncestorType=Page}}"
@@ -165,9 +275,11 @@
 
                                             <!-- Prix unitaire -->
                                             <TextBox Grid.Column="4"
-                                                     materialDesign:HintAssist.Hint="Prix unitaire (GNF) *"
+                                                     materialDesign:HintAssist.Hint="Prix Unit. *"
                                                      Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                                     Text="{Binding PrixUnitaire, UpdateSourceTrigger=PropertyChanged, StringFormat=N0}">
+                                                     Text="{Binding PrixUnitaire, UpdateSourceTrigger=PropertyChanged, StringFormat=N0}"
+                                                     HorizontalContentAlignment="Right"
+                                                     Padding="10,8">
                                                 <TextBox.InputBindings>
                                                     <KeyBinding Key="Return" 
                                                                 Command="{Binding DataContext.RecalculerDetailCommand, RelativeSource={RelativeSource AncestorType=Page}}"
@@ -179,18 +291,14 @@
                                             <Border Grid.Column="6"
                                                     Background="#E3F2FD"
                                                     CornerRadius="4"
-                                                    Padding="10">
-                                                <StackPanel>
-                                                    <TextBlock Text="Total"
-                                                               FontSize="10"
-                                                               Foreground="#666"
-                                                               HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="{Binding Total, StringFormat={}{0:N0} GNF}"
-                                                               FontWeight="Bold"
-                                                               FontSize="14"
-                                                               Foreground="#1976D2"
-                                                               HorizontalAlignment="Center"/>
-                                                </StackPanel>
+                                                    Padding="10,8"
+                                                    VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Total, StringFormat={}{0:N0} GNF}"
+                                                           FontWeight="Bold"
+                                                           FontSize="13"
+                                                           Foreground="#1976D2"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center"/>
                                             </Border>
 
                                             <!-- Supprimer -->
@@ -198,7 +306,8 @@
                                                     Style="{StaticResource MaterialDesignIconButton}"
                                                     Command="{Binding DataContext.RemoveDetailCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                                     CommandParameter="{Binding}"
-                                                    ToolTip="Supprimer cette ligne">
+                                                    ToolTip="Supprimer cette ligne"
+                                                    VerticalAlignment="Center">
                                                 <materialDesign:PackIcon Kind="Delete" Foreground="#F44336"/>
                                             </Button>
                                         </Grid>
@@ -209,17 +318,19 @@
 
                         <!-- Message si aucun détail -->
                         <Border Background="#FFF3E0" 
-                                CornerRadius="8"
-                                Padding="15"
-                                Visibility="{Binding Details.Count, Converter={StaticResource BoolToVis}}">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Information" 
+                                CornerRadius="0,0,8,8"
+                                Padding="20"
+                                BorderBrush="#E0E0E0"
+                                BorderThickness="1,0,1,1"
+                                Style="{StaticResource EmptyMessageStyle}">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <materialDesign:PackIcon Kind="InformationOutline" 
                                                        Width="24" 
                                                        Height="24"
                                                        Foreground="#FF9800"
                                                        VerticalAlignment="Center"
                                                        Margin="0,0,10,0"/>
-                                <TextBlock Text="Aucun détail ajouté. Cliquez sur 'Ajouter une ligne' pour commencer."
+                                <TextBlock Text="Aucune ligne. Sélectionnez une expression de besoin ou cliquez sur 'Ajouter une ligne'."
                                            VerticalAlignment="Center"
                                            Foreground="#666"/>
                             </StackPanel>
@@ -228,19 +339,36 @@
                         <!-- Montant total -->
                         <Border Background="#E8F5E9" 
                                 CornerRadius="8"
-                                Padding="15"
-                                Margin="0,20,0,0">
-                            <DockPanel>
-                                <TextBlock Text="MONTANT TOTAL :"
-                                           FontWeight="SemiBold"
-                                           FontSize="16"
-                                           DockPanel.Dock="Left"/>
-                                <TextBlock Text="{Binding MontantTotal, StringFormat={}{0:N0} GNF}"
+                                Padding="20"
+                                Margin="0,20,0,0"
+                                BorderBrush="#4CAF50"
+                                BorderThickness="2">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="CashCheck" 
+                                                             Width="28" 
+                                                             Height="28"
+                                                             Foreground="#4CAF50"
+                                                             Margin="0,0,10,0"/>
+                                    <TextBlock Text="MONTANT TOTAL :"
+                                               FontWeight="SemiBold"
+                                               FontSize="16"
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
+
+                                <TextBlock Grid.Column="2"
+                                           Text="{Binding MontantTotal, StringFormat={}{0:N0} GNF}"
                                            FontWeight="Bold"
-                                           FontSize="20"
+                                           FontSize="24"
                                            Foreground="#4CAF50"
-                                           HorizontalAlignment="Right"/>
-                            </DockPanel>
+                                           VerticalAlignment="Center"/>
+                            </Grid>
                         </Border>
                     </StackPanel>
                 </materialDesign:Card>
@@ -249,18 +377,27 @@
                 <StackPanel Grid.Row="3" 
                             Orientation="Horizontal" 
                             HorizontalAlignment="Right"
-                            Margin="0,10,0,0">
-                    <Button Style="{StaticResource MaterialDesignFlatButton}"
+                            Margin="0,10,0,20">
+                    <Button Style="{StaticResource MaterialDesignOutlinedButton}"
                             Content="Annuler"
                             Command="{Binding CancelCommand}"
-                            Margin="0,0,10,0"
+                            Margin="0,0,15,0"
                             Width="120"
-                            Height="40"/>
+                            Height="45"/>
                     <Button Style="{StaticResource MaterialDesignRaisedButton}"
-                            Content="Enregistrer"
                             Command="{Binding SaveCommand}"
-                            Width="150"
-                            Height="40"/>
+                            Width="180"
+                            Height="45"
+                            Background="#4CAF50"
+                            BorderBrush="#4CAF50">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ContentSave" 
+                                                     Width="20" 
+                                                     Height="20"
+                                                     Margin="0,0,8,0"/>
+                            <TextBlock Text="Enregistrer" FontSize="14"/>
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
             </Grid>
         </ScrollViewer>

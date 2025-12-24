@@ -135,9 +135,12 @@
                                                  Height="24"
                                                  Foreground="#512DA8"
                                                  Margin="0,0,10,0"/>
-                        <TextBlock Text="{Binding IsEditMode, Converter={StaticResource BoolToTextConverter}, ConverterParameter='Modifier l''utilisateur;Nouvel utilisateur'}"
-                                   FontSize="20"
-                                   FontWeight="SemiBold"/>
+                        <TextBlock
+                            Text="{Binding IsEditMode,
+                                   Converter={StaticResource BoolToTextConverter},
+                                   ConverterParameter=&quot;Modifier l'utilisateur;Nouvel utilisateur&quot;}"
+                            FontSize="20"
+                            FontWeight="SemiBold"/>
                     </StackPanel>
 
                     <TextBox materialDesign:HintAssist.Hint="Nom d'utilisateur *"
@@ -155,10 +158,12 @@
                              Text="{Binding DialogUser.Tel, UpdateSourceTrigger=PropertyChanged}"
                              Margin="0,0,0,15"/>
 
-                    <TextBox materialDesign:HintAssist.Hint="Mot de passe *"
-                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                             Text="{Binding DialogUser.Password, UpdateSourceTrigger=PropertyChanged}"
-                             Margin="0,0,0,15"/>
+                    <PasswordBox
+                            materialDesign:HintAssist.Hint="Mot de passe *"
+                            Style="{StaticResource MaterialDesignOutlinedPasswordBox}"
+                            PasswordChanged="PasswordBox_PasswordChanged"
+                            Margin="0,0,0,15"/>
+
 
                     <ComboBox materialDesign:HintAssist.Hint="Commune *"
                               Style="{StaticResource MaterialDesignOutlinedComboBox}"

@@ -257,8 +257,8 @@ namespace Collectivite.ViewModels
             {
                 IsLoading = true;
 
-                // Générer le PDF
-                var pdfBytes = await OrdreRecettePdfExporter.ExporterAsync(OrdreRecette, Commune, Mouvement);
+                // Générer le PDF avec TOUS les mouvements
+                var pdfBytes = await OrdreRecettePdfExporter.ExporterAsync(OrdreRecette, Commune, Mouvement, TousLesMouvements);
 
                 // Ouvrir la boîte de dialogue de sauvegarde
                 var saveDialog = new SaveFileDialog
@@ -270,10 +270,8 @@ namespace Collectivite.ViewModels
 
                 if (saveDialog.ShowDialog() == true)
                 {
-                    // Sauvegarder le fichier
                     await File.WriteAllBytesAsync(saveDialog.FileName, pdfBytes);
 
-                    // Demander si l'utilisateur veut ouvrir le fichier
                     var result = MessageBox.Show(
                         "Le fichier PDF a été créé avec succès.\n\nVoulez-vous l'ouvrir maintenant ?",
                         "Export réussi",
@@ -282,7 +280,6 @@ namespace Collectivite.ViewModels
 
                     if (result == MessageBoxResult.Yes)
                     {
-                        // Ouvrir le fichier avec l'application par défaut
                         Process.Start(new ProcessStartInfo
                         {
                             FileName = saveDialog.FileName,
@@ -303,7 +300,7 @@ namespace Collectivite.ViewModels
         }
 
         /// <summary>
-        /// Imprime l'ordre de recette (génère un PDF temporaire et l'envoie à l'imprimante)
+        /// Imprime l'ordre de recette
         /// </summary>
         private async System.Threading.Tasks.Task PrintAsync()
         {
@@ -318,15 +315,12 @@ namespace Collectivite.ViewModels
             {
                 IsLoading = true;
 
-                // Générer le PDF
-                var pdfBytes = await OrdreRecettePdfExporter.ExporterAsync(OrdreRecette, Commune, Mouvement);
+                // Générer le PDF avec TOUS les mouvements
+                var pdfBytes = await OrdreRecettePdfExporter.ExporterAsync(OrdreRecette, Commune, Mouvement, TousLesMouvements);
 
-                // Créer un fichier temporaire
                 string tempFile = Path.Combine(Path.GetTempPath(), $"OrdreRecette_{OrdreRecette.NumeroOrdre}_{Guid.NewGuid()}.pdf");
                 await File.WriteAllBytesAsync(tempFile, pdfBytes);
 
-                // Ouvrir le fichier PDF avec l'application par défaut pour impression
-                // L'utilisateur pourra utiliser Ctrl+P ou le menu Imprimer
                 var result = MessageBox.Show(
                     "Le document va s'ouvrir dans votre lecteur PDF.\n\nUtilisez Ctrl+P ou le menu Fichier > Imprimer pour lancer l'impression.",
                     "Impression",
@@ -352,7 +346,6 @@ namespace Collectivite.ViewModels
                 IsLoading = false;
             }
         }
-
         private void NavigateBack()
         {
             NavigationService.Instance.GoBack();

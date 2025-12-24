@@ -35,7 +35,7 @@ namespace Collectivite.ViewModels
         private byte[]? _fichierValidation;
         private string? _fileNameValidation;
         private bool _isDisposed;
-
+        private Commune _commune;
         // 🆕 Pour la vue d'ensemble
         private int _selectedVueEnsembleTabIndex;
         private readonly List<BudgetLine> _allVueEnsembleLines = new();
@@ -72,7 +72,7 @@ namespace Collectivite.ViewModels
             // 🆕 Commandes Vue d'Ensemble
             LoadVueEnsembleCommand = new RelayCommand(async _ => await LoadVueEnsembleAsync());
             ExportPdfCommand = new RelayCommand(async _ => await ExportToPdfAsync());
-            PrintCommand = new RelayCommand(_ => Print());
+            PrintCommand = new RelayCommand(async _ => await PrintAsync());
 
             // Charger les données au démarrage
             LoadBudgetPrimitifCommand.Execute(null);
@@ -427,11 +427,23 @@ namespace Collectivite.ViewModels
             OnPropertyChanged(nameof(TotalDepenses));
             OnPropertyChanged(nameof(Solde));
         }
+        // Charger la commune
+        public Commune Commune
+        {
+            get => _commune;
+            set => SetProperty(ref _commune, value);
+        }
+
 
         private async Task ExportToPdfAsync()
         {
             try
             {
+                // Charger les infos de la commune avec relations
+                var communeService = new CommuneService();
+                var commune = await communeService.GetCommuneByIdWithRelationsAsync(
+                    Properties.Settings.Default.CommuneId
+                );
                 var saveFileDialog = new SaveFileDialog
                 {
                     Filter = "Fichiers PDF|*.pdf",
@@ -440,7 +452,8 @@ namespace Collectivite.ViewModels
 
                 if (saveFileDialog.ShowDialog() == true)
                 {
-                    await Task.Run(() => GeneratePdf(saveFileDialog.FileName));
+                    Commune = commune;
+                    await Task.Run(() => GeneratePdf(saveFileDialog.FileName,Commune));
 
                     MessageBox.Show(
                         "Export PDF réalisé avec succès !",
@@ -463,12 +476,21 @@ namespace Collectivite.ViewModels
             }
         }
 
-        private void GeneratePdf(string filePath)
+        private void GeneratePdf(string filePath, Commune _commune)
         {
             Document document = new Document(PageSize.A4.Rotate(), 25, 25, 30, 30);
             PdfWriter writer = PdfWriter.GetInstance(document, new FileStream(filePath, FileMode.Create));
 
             document.Open();
+
+            // ✅  l'en-tête  !
+            PdfHeaderHelper.AjouterEnTeteOfficiel(
+                document,
+                _commune,
+                titre: "SYNTHESE",
+                sousTitre: "GESTION BUGETAIRE SYNTHESE",
+                exercice: _exerciceService.CurrentExercice?.Libelle
+            );
 
             // Police
             var titleFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 18);
@@ -631,6 +653,10 @@ namespace Collectivite.ViewModels
             note.SpacingBefore = 10;
             document.Add(note);
 
+            var exerciceCourant = ExerciceService.Instance.CurrentExercice;
+            // ✅ Pied de page en une ligne
+            PdfHeaderHelper.AjouterPiedDePage(document, $"Édité le : {DateTime.Now:dd/MM/yyyy à HH:mm}", "Synthèse", exerciceCourant.Libelle);
+
             document.Close();
             writer.Close();
         }
@@ -646,14 +672,68 @@ namespace Collectivite.ViewModels
             table.AddCell(cell);
         }
 
-        private void Print()
+        /// <summary>
+        /// Imprime la vue d'ensemble du budget primitif (génère un PDF temporaire et l'ouvre pour impression)
+        /// </summary>
+        private async Task PrintAsync()
         {
-            MessageBox.Show(
-                "Fonctionnalité d'impression en cours de développement.\n" +
-                "Veuillez utiliser l'export PDF puis imprimer le fichier généré.",
-                "Information",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            if (_exerciceService.CurrentExercice == null)
+            {
+                MessageBox.Show("Aucun exercice n'est sélectionné.",
+                    "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            if (!_allVueEnsembleLines.Any())
+            {
+                MessageBox.Show("Aucune donnée à imprimer.",
+                    "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            try
+            {
+                IsLoading = true;
+
+                // Charger la commune si nécessaire
+                if (Commune == null)
+                {
+                    var communeService = new CommuneService();
+                    Commune = await communeService.GetCommuneByIdWithRelationsAsync(
+                        Properties.Settings.Default.CommuneId
+                    );
+                }
+
+                // Créer un fichier temporaire
+                string tempFileName = $"VueEnsemble_{_exerciceService.CurrentExercice?.Libelle}_{Guid.NewGuid():N}.pdf";
+                string tempPath = Path.Combine(Path.GetTempPath(), tempFileName);
+
+                // Générer le PDF (utilise Task.Run pour éviter le deadlock WPF)
+                await Task.Run(() => GeneratePdf(tempPath, Commune));
+
+                // Ouvrir le PDF avec l'application par défaut
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = tempPath,
+                    UseShellExecute = true
+                });
+
+                MessageBox.Show(
+                    "Le document s'ouvre dans votre lecteur PDF.\n\n" +
+                    "Utilisez Ctrl+P ou le menu Fichier → Imprimer pour lancer l'impression.",
+                    "Impression",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'impression : {ex.Message}",
+                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
         }
 
         // Reste des méthodes inchangées...

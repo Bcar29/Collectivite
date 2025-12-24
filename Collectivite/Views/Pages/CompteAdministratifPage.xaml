@@ -163,7 +163,7 @@
                             <DataGridTextColumn Header="Paragraphe" Binding="{Binding BudgetLine.Nommenclature.Paragraphe}" Width="100"/>
                             <DataGridTextColumn Header="Sous-Paragraphe" Binding="{Binding BudgetLine.Nommenclature.SousParagraphe}" Width="150"/>
                             <DataGridTextColumn Header="Intitulé" Binding="{Binding BudgetLine.Nommenclature.Intitule}" Width="*"/>
-                            <DataGridTextColumn Header="Montant Définitif" Binding="{Binding BudgetLine.MontantDefinitif, StringFormat={}{0:N2} GNF}" Width="150"/>
+                            <DataGridTextColumn Header="Montant Prévu" Binding="{Binding BudgetLine.MontantDefinitif, StringFormat={}{0:N2} GNF}" Width="150"/>
                             <DataGridTextColumn Header="Montant Réalisé" Binding="{Binding BudgetLine.MontantRealise, StringFormat={}{0:N2} GNF}" Width="150"/>
                             <DataGridTextColumn Header="Taux Réalisation" Binding="{Binding BudgetLine.TauxRealisation, StringFormat={}{0:N2} %}" Width="120"/>
                             <DataGridTextColumn Header="Reste Réalisé" Binding="{Binding BudgetLine.ResteRealise, StringFormat={}{0:N2} GNF}" Width="150"/>

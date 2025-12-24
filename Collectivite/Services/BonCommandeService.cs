@@ -28,7 +28,7 @@ namespace Collectivite.Services
             var exerciceService = ExerciceService.Instance;
             if (exerciceService.CurrentExercice != null)
             {
-                prefix = $"EB-{exerciceService.CurrentExercice.GetAnnee()}-";
+                prefix = $"BC-{exerciceService.CurrentExercice.GetAnnee()}-";
             }
             // Récupérer tous les bons de commande de l'année en cours
             var bonCommandesThisYear = await context.BonCommandes

@@ -192,7 +192,10 @@ namespace Collectivite.ViewModels
 
                 if (mandat != null)
                 {
-                    Commune = commune;
+                    if (commune != null)
+                    {
+                        Commune = commune;
+                    }
                     Mandat = mandat;
 
                     // Charger TOUS les mouvements associés à ce mandat

@@ -143,18 +143,6 @@
                                     </StackPanel>
                                 </Button>
 
-                                <Button Style="{StaticResource MenuButtonStyle}"
-                                          Click="ExerciceButton_Click">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="CalendarRange" 
-                                           VerticalAlignment="Center"
-                                           Width="22"
-                                           Height="22"
-                                           Margin="0,0,15,0"/>
-                                        <TextBlock Text="Exercice" FontSize="12" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Button>
-
                                 <Button Click="NommenclatureButton_Click" Style="{StaticResource MenuButtonStyle}">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="BookmarkMultiple" 
@@ -174,6 +162,17 @@
                                             Height="22"
                                             Margin="0,0,15,0"/>
                                         <TextBlock Text="Plan comptables" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource MenuButtonStyle}"
+                                    Click="ExerciceButton_Click">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="CalendarRange" 
+                                           VerticalAlignment="Center"
+                                           Width="22"
+                                           Height="22"
+                                           Margin="0,0,15,0"/>
+                                        <TextBlock Text="Exercice" FontSize="12" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
 

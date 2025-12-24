@@ -3,97 +3,103 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
       Background="#F5F5F5"
-      Title="Gestion des Contrat">
+      Title="Gestion des Contrats">
 
     <Page.Resources>
-        <!-- Converters -->
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <Style x:Key="StatCardStyle" TargetType="Border">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="15"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect BlurRadius="5" ShadowDepth="1" Opacity="0.1"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Page.Resources>
 
-
     <Grid>
-
-        <!-- ═══════════════════════════════════════════════════════════
-      OVERLAY DE CHARGEMENT
-      ═══════════════════════════════════════════════════════════ -->
-        <Grid Background="#80000000" 
-       Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"
-       Panel.ZIndex="999">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="16*"/>
-                <ColumnDefinition Width="9*"/>
-            </Grid.ColumnDefinitions>
-            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Left" Margin="351,0,0,0">
-                <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}"
-                    Value="0"
-                    IsIndeterminate="True"
-                    Width="60"
-                    Height="60"/>
-                <TextBlock Text="Chargement..." 
-                  Foreground="White"
-                  FontSize="16"
-                  Margin="0,20,0,0"
-                  HorizontalAlignment="Center"/>
+        <Grid Background="#80000000" Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}" Panel.ZIndex="999">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}" Value="0" IsIndeterminate="True" Width="60" Height="60"/>
+                <TextBlock Text="Chargement..." Foreground="White" FontSize="16" Margin="0,20,0,0" HorizontalAlignment="Center"/>
             </StackPanel>
         </Grid>
 
-        <!-- ═══════════════════════════════════════════════════════════
-     CONTENU PRINCIPAL
-     ═══════════════════════════════════════════════════════════ -->
-        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20">
-            <StackPanel>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-                <!-- ───────────────────────────────────────────────────
-             HEADER AVEC BOUTON D'AJOUT
-             ─────────────────────────────────────────────────── -->
-                <Grid Margin="0,0,0,20">
-                    <!-- Titre -->
+            <Border Grid.Row="0" Background="White" Padding="20,15" BorderBrush="#E0E0E0" BorderThickness="0,0,0,1">
+                <Grid>
                     <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="City" 
-                                       Width="32" 
-                                       Height="32"
-                                       Foreground="#1976D2"
-                                       VerticalAlignment="Center"/>
-                        <TextBlock Text="Gestion des Contrats" 
-                         FontSize="24"
-                         FontWeight="SemiBold"
-                         Margin="15,0,0,0"
-                         VerticalAlignment="Center"/>
+                        <materialDesign:PackIcon Kind="FileDocumentMultiple" Width="32" Height="32" Foreground="#1976D2" VerticalAlignment="Center"/>
+                        <StackPanel Margin="15,0,0,0">
+                            <TextBlock Text="Gestion des Contrats" FontSize="24" FontWeight="SemiBold"/>
+                            <TextBlock Text="Gérez vos contrats et suivez leurs échéances" FontSize="12" Foreground="#666"/>
+                        </StackPanel>
                     </StackPanel>
-
-                    <!-- Bouton Ajouter -->
-                    <Button Style="{StaticResource MaterialDesignRaisedButton}"
-                    Height="40"
-                    Command="{Binding OppenAddContratCommand}"
-                    HorizontalAlignment="Right"
-                    Visibility="{Binding DataContext.CanCreateContrat, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
+                    <Button Style="{StaticResource MaterialDesignRaisedButton}" Height="40" Command="{Binding OppenAddContratCommand}" HorizontalAlignment="Right" Visibility="{Binding CanCreateContrat, Converter={StaticResource BoolToVis}}">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="Plus" 
-                                           VerticalAlignment="Center"
-                                           Margin="0,0,8,0"/>
-                            <TextBlock Text="Nouveau Contrat" 
-                             VerticalAlignment="Center"/>
+                            <materialDesign:PackIcon Kind="Plus" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="Nouveau Contrat" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
                 </Grid>
+            </Border>
 
-                <!-- ───────────────────────────────────────────────────
-             DATAGRID DES CONTRATS
-             ─────────────────────────────────────────────────── -->
-                <materialDesign:Card Padding="0" 
-                           UniformCornerRadius="8">
-                    <DataGrid
-                        
-                      ItemsSource="{Binding Contrats}"
-                      SelectedItem="{Binding SelectedContrat}"
-                      AutoGenerateColumns="False"
-                      CanUserAddRows="False"
-                      CanUserDeleteRows="False"
-                      IsReadOnly="True"
-                      SelectionMode="Single"
-                      materialDesign:DataGridAssist.CellPadding="13 8 8 8"
-                      materialDesign:DataGridAssist.ColumnHeaderPadding="8">
-                        <DataGrid.Columns>
+            <Border Grid.Row="1" Background="#E3F2FD" Padding="20,15">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Style="{StaticResource StatCardStyle}" Margin="0,0,10,0">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="FileDocument" Width="24" Height="24" Foreground="#1976D2"/>
+                                <TextBlock Text="Total" FontSize="12" Foreground="#666" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding NombreTotalContrats, Mode=OneWay}" FontSize="28" FontWeight="Bold" Foreground="#1976D2" Margin="0,5,0,0"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="1" Style="{StaticResource StatCardStyle}" Margin="5,0">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="CheckCircle" Width="24" Height="24" Foreground="#4CAF50"/>
+                                <TextBlock Text="En cours" FontSize="12" Foreground="#666" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding NombreContratsEnCours, Mode=OneWay}" FontSize="28" FontWeight="Bold" Foreground="#4CAF50" Margin="0,5,0,0"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="2" Style="{StaticResource StatCardStyle}" Margin="5,0">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="ClockAlert" Width="24" Height="24" Foreground="#FF9800"/>
+                                <TextBlock Text="Expire bientôt" FontSize="12" Foreground="#666" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding NombreContratsExpirantBientot, Mode=OneWay}" FontSize="28" FontWeight="Bold" Foreground="#FF9800" Margin="0,5,0,0"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="3" Style="{StaticResource StatCardStyle}" Margin="10,0,0,0">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="AlertCircle" Width="24" Height="24" Foreground="#F44336"/>
+                                <TextBlock Text="Expirés" FontSize="12" Foreground="#666" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding NombreContratsExpires, Mode=OneWay}" FontSize="28" FontWeight="Bold" Foreground="#F44336" Margin="0,5,0,0"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
 
                             <!-- Numero contrat -->
                             <DataGridTextColumn Header="Numéro Contrat" 
@@ -339,11 +345,155 @@
                                 <Binding RelativeSource="{RelativeSource Self}"/>
                             </Button.CommandParameter>
                         </Button>
-                    </StackPanel>
+                    </Grid>
+                    <Expander Grid.Row="1" Header="Filtres avancés" Margin="0,10,0,0" Background="Transparent">
+                        <Grid Margin="0,15,0,0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="15"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="15"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="30"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="15"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <DatePicker Grid.Row="0" Grid.Column="0" materialDesign:HintAssist.Hint="Signature du" Style="{StaticResource MaterialDesignOutlinedDatePicker}" SelectedDate="{Binding DateSignatureDebut}"/>
+                            <DatePicker Grid.Row="0" Grid.Column="2" materialDesign:HintAssist.Hint="Signature au" Style="{StaticResource MaterialDesignOutlinedDatePicker}" SelectedDate="{Binding DateSignatureFin}"/>
+                            <DatePicker Grid.Row="0" Grid.Column="4" materialDesign:HintAssist.Hint="Échéance du" Style="{StaticResource MaterialDesignOutlinedDatePicker}" SelectedDate="{Binding DateEcheanceDebut}"/>
+                            <DatePicker Grid.Row="0" Grid.Column="6" materialDesign:HintAssist.Hint="Échéance au" Style="{StaticResource MaterialDesignOutlinedDatePicker}" SelectedDate="{Binding DateEcheanceFin}"/>
+                            <TextBox Grid.Row="2" Grid.Column="0" materialDesign:HintAssist.Hint="Montant min (GNF)" Style="{StaticResource MaterialDesignOutlinedTextBox}" Text="{Binding MontantMin, UpdateSourceTrigger=PropertyChanged, StringFormat=N0}"/>
+                            <TextBox Grid.Row="2" Grid.Column="2" materialDesign:HintAssist.Hint="Montant max (GNF)" Style="{StaticResource MaterialDesignOutlinedTextBox}" Text="{Binding MontantMax, UpdateSourceTrigger=PropertyChanged, StringFormat=N0}"/>
+                        </Grid>
+                    </Expander>
+                </Grid>
+            </Border>
 
-                </StackPanel>
+            <materialDesign:Card Grid.Row="3" Padding="0" Margin="20,15,20,10" UniformCornerRadius="8">
+                <DataGrid ItemsSource="{Binding Contrats}" SelectedItem="{Binding SelectedContrat}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="True" SelectionMode="Single" AlternatingRowBackground="#FAFAFA" materialDesign:DataGridAssist.CellPadding="13 8 8 8" materialDesign:DataGridAssist.ColumnHeaderPadding="8">
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Header="N° Contrat" Width="120">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding NumeroContrat}" FontWeight="SemiBold" Foreground="#1976D2"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="Exercice" Binding="{Binding Exercice.Libelle}" Width="100"/>
+                        <DataGridTextColumn Header="Tiers" Binding="{Binding Tiers.Nom}" Width="180"/>
+                        <DataGridTextColumn Header="Objet" Binding="{Binding Objet}" Width="*" MinWidth="150"/>
+                        <DataGridTemplateColumn Header="Signature" Width="100">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding DateSignature, StringFormat='dd/MM/yyyy'}" Foreground="#666"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTemplateColumn Header="Échéance" Width="100">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding DateEcheance, StringFormat='dd/MM/yyyy'}"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTemplateColumn Header="Montant" Width="140">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="#E8F5E9" CornerRadius="4" Padding="8,4">
+                                        <TextBlock Text="{Binding MontantContrat, StringFormat={}{0:N0} GNF}" FontWeight="SemiBold" Foreground="#388E3C" HorizontalAlignment="Right"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTemplateColumn Header="Actions" Width="100">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <Button Style="{StaticResource MaterialDesignIconButton}" ToolTip="Modifier" Command="{Binding DataContext.OppenEditContratCommand, RelativeSource={RelativeSource AncestorType=Page}}" CommandParameter="{Binding}" Margin="2,0" Visibility="{Binding DataContext.CanEditContrat, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
+                                            <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2"/>
+                                        </Button>
+                                        <Button Style="{StaticResource MaterialDesignIconButton}" ToolTip="Supprimer" Command="{Binding DataContext.DeleteContratCommand, RelativeSource={RelativeSource AncestorType=Page}}" CommandParameter="{Binding}" Margin="2,0" Visibility="{Binding DataContext.CanDeleteContrat, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
+                                            <materialDesign:PackIcon Kind="Delete" Foreground="#F44336"/>
+                                        </Button>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </materialDesign:Card>
+
+            <Border Grid.Row="4" Background="White" Padding="20,10" BorderBrush="#E0E0E0" BorderThickness="0,1,0,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <materialDesign:PackIcon Kind="Information" Width="18" Height="18" Foreground="#666" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBlock VerticalAlignment="Center" Foreground="#666">
+                            <Run Text="{Binding NombreContratsFiltres, Mode=OneWay}"/>
+                            <Run Text=" contrat(s) affiché(s) sur "/>
+                            <Run Text="{Binding NombreTotalContrats, Mode=OneWay}"/>
+                        </TextBlock>
+                        <Border Background="#FFF3E0" CornerRadius="12" Padding="10,4" Margin="15,0,0,0" Visibility="{Binding FiltresActifs, Converter={StaticResource BoolToVis}}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Filter" Width="14" Height="14" Foreground="#FF9800" VerticalAlignment="Center"/>
+                                <TextBlock Text="Filtres actifs" FontSize="11" Foreground="#FF9800" Margin="5,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="Montant total : " Foreground="#666" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding MontantTotalFiltres, StringFormat={}{0:N0} GNF, Mode=OneWay}" FontWeight="Bold" FontSize="14" Foreground="#388E3C" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <materialDesign:DialogHost IsOpen="{Binding IsDialogOpen}" CloseOnClickAway="False" Panel.ZIndex="1000">
+            <materialDesign:DialogHost.DialogContent>
+                <Border Background="White" CornerRadius="8" Padding="25" Width="550">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+                            <materialDesign:PackIcon Kind="FileDocumentEdit" Width="28" Height="28" Foreground="#1976D2" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                            <TextBlock Text="{Binding DialogTitle}" FontSize="22" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <ComboBox materialDesign:HintAssist.Hint="Exercice *" Style="{StaticResource MaterialDesignOutlinedComboBox}" ItemsSource="{Binding Exercices}" SelectedValue="{Binding DialogContrat.ExerciceId, UpdateSourceTrigger=PropertyChanged}" SelectedValuePath="Id" DisplayMemberPath="Libelle" Margin="0,0,0,15"/>
+                        <TextBox materialDesign:HintAssist.Hint="Numéro du contrat *" Style="{StaticResource MaterialDesignOutlinedTextBox}" Text="{Binding DialogContrat.NumeroContrat, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,15" MaxLength="50"/>
+                        <Grid Margin="0,0,0,15">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="15"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <DatePicker Grid.Column="0" materialDesign:HintAssist.Hint="Date signature *" Style="{StaticResource MaterialDesignOutlinedDatePicker}" SelectedDate="{Binding DialogContratDateSignature, Mode=TwoWay}"/>
+                            <DatePicker Grid.Column="2" materialDesign:HintAssist.Hint="Date d'échéance *" Style="{StaticResource MaterialDesignOutlinedDatePicker}" SelectedDate="{Binding DialogContratDateEcheance, Mode=TwoWay}"/>
+                        </Grid>
+                        <ComboBox materialDesign:HintAssist.Hint="Tiers *" Style="{StaticResource MaterialDesignOutlinedComboBox}" ItemsSource="{Binding TiersList}" SelectedValue="{Binding DialogContrat.TiersId}" SelectedValuePath="Id" DisplayMemberPath="Nom" Margin="0,0,0,15"/>
+                        <TextBox materialDesign:HintAssist.Hint="Objet du contrat *" Style="{StaticResource MaterialDesignOutlinedTextBox}" Text="{Binding DialogContrat.Objet, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,15" MaxLength="500" TextWrapping="Wrap" MinHeight="80" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"/>
+                        <TextBox materialDesign:HintAssist.Hint="Montant du contrat (GNF) *" Style="{StaticResource MaterialDesignOutlinedTextBox}" Text="{Binding DialogContrat.MontantContrat, UpdateSourceTrigger=PropertyChanged, StringFormat=N0}" Margin="0,0,0,15">
+                            <TextBox.InputBindings>
+                                <KeyBinding Key="Enter" Command="{Binding SaveContratCommand}"/>
+                            </TextBox.InputBindings>
+                        </TextBox>
+                        <TextBlock Text="* Champs obligatoires" FontSize="11" Foreground="#999" FontStyle="Italic" Margin="0,0,0,20"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Style="{StaticResource MaterialDesignOutlinedButton}" Content="Annuler" Command="{Binding CancelContratCommand}" Margin="0,0,15,0" Width="110" Height="40"/>
+                            <Button Style="{StaticResource MaterialDesignRaisedButton}" Command="{Binding SaveContratCommand}" Width="140" Height="40" Background="#4CAF50" BorderBrush="#4CAF50">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="ContentSave" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Enregistrer"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
             </materialDesign:DialogHost.DialogContent>
         </materialDesign:DialogHost>
-
     </Grid>
 </Page>
