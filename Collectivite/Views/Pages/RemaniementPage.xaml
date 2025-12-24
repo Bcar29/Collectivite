@@ -615,12 +615,6 @@
                                 <DataGridTemplateColumn Header="Actions" Width="140">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-<<<<<<< HEAD
-                                            <StackPanel Orientation="Horizontal"
-                                                        HorizontalAlignment="Center"
-                                                        Visibility="{Binding BudgetLine.Nommenclature.Enfants, Converter={StaticResource CollectionHasItemsToVisibilityConverter}}">
-                                                <Button ToolTip="Ajouter un remaniement"
-=======
                                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                                 <StackPanel.Visibility>
                                                     <MultiBinding Converter="{StaticResource ShowActionsConverter}">
@@ -631,7 +625,6 @@
 
                                                 <Button Style="{StaticResource MaterialDesignIconButton}"
                                                         ToolTip="Ajouter un remaniement"
->>>>>>> 24992f15a260990de2d747176389f776e4063485
                                                         Command="{Binding DataContext.OpenAddDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                                         CommandParameter="{Binding BudgetLine}"
                                                         Margin="4,0">
