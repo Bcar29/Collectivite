@@ -85,7 +85,7 @@ namespace Collectivite.Models
         public StatutMandat Status { get; set; } = StatutMandat.Non_Payé;
         public EtatMandat Etat { get; set; } = EtatMandat.Non_Validé;
         public ICollection<EcritureComptable>? EcritureComptables { get; set; } = new List<EcritureComptable>();
-
+        public ICollection<Mouvement>? Mouvements { get; set; } = new List<Mouvement>();
         // Methode qui recupere le status du mandat
 
         public string MandatStatut  

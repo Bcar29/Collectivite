@@ -922,7 +922,9 @@ namespace Collectivite.Migrations
                     idCompteComptable = table.Column<int>(type: "int", nullable: false),
                     idOrdreRecette = table.Column<int>(type: "int", nullable: true),
                     idMandat = table.Column<int>(type: "int", nullable: true),
-                    idExercice = table.Column<int>(type: "int", nullable: true)
+                    idExercice = table.Column<int>(type: "int", nullable: true),
+                    MandatId = table.Column<int>(type: "int", nullable: true),
+                    OrdreRecetteId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -939,11 +941,21 @@ namespace Collectivite.Migrations
                         principalTable: "Exercices",
                         principalColumn: "Id");
                     table.ForeignKey(
+                        name: "FK_mouvement_Mandats_MandatId",
+                        column: x => x.MandatId,
+                        principalTable: "Mandats",
+                        principalColumn: "Id");
+                    table.ForeignKey(
                         name: "FK_mouvement_Mandats_idMandat",
                         column: x => x.idMandat,
                         principalTable: "Mandats",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_mouvement_OrdreRecettes_OrdreRecetteId",
+                        column: x => x.OrdreRecetteId,
+                        principalTable: "OrdreRecettes",
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_mouvement_OrdreRecettes_idOrdreRecette",
                         column: x => x.idOrdreRecette,
@@ -1214,6 +1226,16 @@ namespace Collectivite.Migrations
                 name: "IX_mouvement_idOrdreRecette",
                 table: "mouvement",
                 column: "idOrdreRecette");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_mouvement_MandatId",
+                table: "mouvement",
+                column: "MandatId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_mouvement_OrdreRecetteId",
+                table: "mouvement",
+                column: "OrdreRecetteId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Nommenclatures_ParentId",

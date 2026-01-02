@@ -69,6 +69,7 @@ namespace Collectivite.Models
         public EtatOdre Etat { get; set; } = EtatOdre.Non_Validé;
 
         public ICollection<EcritureComptable>? EcritureComptables { get; set; } = new List<EcritureComptable>();
+        public ICollection<Mouvement>? Mouvements { get; set; } = new List<Mouvement>();
 
         public override string ToString()
         {
