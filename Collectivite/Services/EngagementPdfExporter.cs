@@ -151,18 +151,18 @@ namespace Collectivite.Services
                                     .FontSize(18).Bold().FontColor(Color.FromHex(GrisArdoise));
 
                                 // Badge d'état
-                                titleRow.AutoItem().PaddingLeft(15).Element(badge =>
-                                {
-                                    string etatTexte = engagement.Etat.ToString().Replace("_", " ");
-                                    string badgeColor = GetEtatColor(engagement.Etat);
+                                //titleRow.AutoItem().PaddingLeft(15).Element(badge =>
+                                //{
+                                //    string etatTexte = engagement.Etat.ToString().Replace("_", " ");
+                                //    string badgeColor = GetEtatColor(engagement.Etat);
 
-                                    badge.Background(Color.FromHex(badgeColor))
-                                        .Padding(4,0)
-                                        .Text(etatTexte)
-                                        .FontSize(8)
-                                        .Bold()
-                                        .FontColor(Colors.White);
-                                });
+                                //    badge.Background(Color.FromHex(badgeColor))
+                                //        .Padding(4,0)
+                                //        .Text(etatTexte)
+                                //        .FontSize(8)
+                                //        .Bold()
+                                //        .FontColor(Colors.White);
+                                //});
                             });
 
                             col.Item().PaddingVertical(5).AlignCenter().Element(e =>
@@ -306,13 +306,13 @@ namespace Collectivite.Services
                                     sigCol.Item().Text(text =>
                                     {
                                         text.Span(nomCommune).FontSize(9);
-                                        text.Span(" Le .......... / .......... / ..........").FontSize(8).FontColor(Color.FromHex(GrisTexte));
+                                        text.Span(" Le ...................... / ....................... /20................").FontSize(8).FontColor(Color.FromHex(GrisTexte));
                                     });
 
                                     sigCol.Item().PaddingTop(18).Text("L'Ordonateur :")
                                         .FontSize(9).SemiBold();
 
-                                    sigCol.Item().PaddingTop(25).Text("M./Mme : ................................................................")
+                                    sigCol.Item().PaddingTop(25).Text("M./Mme : .....................................................................................................")
                                         .FontSize(9).SemiBold();
                                 });
                             }

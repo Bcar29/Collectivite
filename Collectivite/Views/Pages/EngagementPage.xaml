@@ -71,7 +71,7 @@
                                      VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
-
+                    <!--
                     <Button Style="{StaticResource MaterialDesignOutlinedButton}"
                             Height="40"
                             Command="{Binding ShowStatistiquesCommand}"
@@ -84,7 +84,7 @@
                                      VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
-
+                    -->
                     <Button Style="{StaticResource MaterialDesignOutlinedButton}"
                             Height="40"
                             Command="{Binding LoadDataCommand}">

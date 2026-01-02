@@ -80,6 +80,8 @@ namespace Collectivite.Models
         public int IdCommune { get; set; }
 
         public Commune Commune { get; set; } = null!;
+        [ForeignKey("Exercice")]
+        public int? ExerciceId { get; set; }
         public Exercice? Exercice { get; set; }
     }
 }

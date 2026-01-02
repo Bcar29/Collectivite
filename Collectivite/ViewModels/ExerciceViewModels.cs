@@ -12,8 +12,6 @@ namespace Collectivite.ViewModels
     public class ExerciceViewModel : ViewModelBase
     {
         private readonly ExerciceService _exerciceService;
-        private readonly AuditService _auditService;
-        private readonly AuthService _authService;   
         private bool _isLoading;
         private Exercice? _selectedExercice;
         private bool _isDialogOpen;
@@ -21,13 +19,9 @@ namespace Collectivite.ViewModels
         private bool _isEditMode;
 
         public ExerciceViewModel(
-            ExerciceService exerciceService,
-            AuditService auditService,
-            AuthService authService)   // ✅ Injection correcte
+            ExerciceService exerciceService) 
         {
             _exerciceService = exerciceService;
-            _auditService = auditService;
-            _authService = authService; // ✅ On garde l’instance globale
 
             _dialogExercice = new Exercice
             {
@@ -213,12 +207,6 @@ namespace Collectivite.ViewModels
                         await LoadDataAsync();
                         GlobalEvents.NotifyExercicesListChanged();
 
-                        var username = _authService.CurrentUser?.Username ?? "Utilisateur inconnu";
-
-                        await _auditService.LogAsync(
-                            "Modification d'exercice",
-                            $"{DialogExercice.Libelle} modifié par {username} le {DateTime.Now:dd/MM/yyyy HH:mm}",
-                            username);
                     }
                     else
                     {
@@ -239,12 +227,6 @@ namespace Collectivite.ViewModels
                         await LoadDataAsync();
                         GlobalEvents.NotifyExercicesListChanged();
 
-                        var username = _authService.CurrentUser?.Username ?? "Utilisateur inconnu";
-
-                        await _auditService.LogAsync(
-                            "Exercice créé",
-                            $"{DialogExercice.Libelle} créé par {username} le {DateTime.Now:dd/MM/yyyy HH:mm}",
-                            username);
                     }
                     else
                     {
@@ -295,13 +277,6 @@ namespace Collectivite.ViewModels
             {
                 GlobalEvents.NotifyExercicesListChanged();
 
-                var username = _authService.CurrentUser?.Username ?? "Utilisateur inconnu";
-
-                await _auditService.LogAsync(
-                    "Exercice supprimé",
-                    $"{exercice.Libelle} supprimé par {username}",
-                    username);
-
                 await LoadDataAsync();
             }
 
@@ -339,12 +314,6 @@ namespace Collectivite.ViewModels
 
             if (success)
             {
-                var username = _authService.CurrentUser?.Username ?? "Utilisateur inconnu";
-
-                await _auditService.LogAsync(
-                    "Exercice clôturé",
-                    $"{exercice.Libelle} clôturé par {username}",
-                    username);
 
                 await LoadDataAsync();
             }

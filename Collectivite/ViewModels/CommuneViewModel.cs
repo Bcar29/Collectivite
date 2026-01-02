@@ -13,6 +13,7 @@ namespace Collectivite.ViewModels
     public class CommuneViewModel : ViewModelBase
     {
         private readonly CommuneService _communeService;
+        private readonly CommunePdfService _communePdfService;
         private bool _isLoading;
         private Commune? _selectedCommune;
         private bool _isDialogOpen;
@@ -26,6 +27,7 @@ namespace Collectivite.ViewModels
         public CommuneViewModel(CommuneService commune)
         {
             _communeService = commune;
+            _communePdfService = new CommunePdfService();
             _dialogCommune = new Commune
             {
                 Nom = "",
@@ -52,6 +54,10 @@ namespace Collectivite.ViewModels
 
             // ✅ NOUVELLE COMMANDE : Ouvrir les détails
             OpenDetailCommuneCommand = new RelayCommand<Commune>(commune => OpenDetailCommune(commune));
+
+            // ✅ NOUVELLES COMMANDES : Export PDF
+            ExportPdfCommand = new RelayCommand<Commune>(async commune => await ExportCommuneToPdfAsync(commune));
+            ExportPdfWithPrintCommand = new RelayCommand<Commune>(async commune => await ExportAndPrintCommuneAsync(commune));
 
             //charger les données au démarrage
             LoadCommuneCommand.Execute(null);
@@ -149,6 +155,10 @@ namespace Collectivite.ViewModels
 
         // ✅ NOUVELLE COMMANDE
         public ICommand OpenDetailCommuneCommand { get; }
+
+        // ✅ NOUVELLES COMMANDES : Export PDF
+        public ICommand ExportPdfCommand { get; }
+        public ICommand ExportPdfWithPrintCommand { get; }
         #endregion
 
         #region Methods
@@ -288,6 +298,101 @@ namespace Collectivite.ViewModels
             {
                 MessageBox.Show($"Erreur lors de l'ouverture des détails : {ex.Message}",
                     "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        // ══════════════════════════════════════════════════════════
+        // ✅ NOUVELLES MÉTHODES : EXPORT PDF
+        // ══════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Exporte une commune en PDF (enregistrement uniquement)
+        /// </summary>
+        private async System.Threading.Tasks.Task ExportCommuneToPdfAsync(Commune? commune)
+        {
+            if (commune == null) return;
+
+            IsLoading = true;
+            try
+            {
+                // Charger les détails de la commune
+                var context = new AppDbContext();
+                var detailCommuneService = new DetailCommuneService(context);
+                var detailCommune = await detailCommuneService.GetDetailCommuneByIdAsync(commune.Id);
+
+                // Générer le PDF
+                string pdfPath = _communePdfService.GenerateRapportCommune(commune, detailCommune);
+
+                MessageBox.Show(
+                    $"Le rapport PDF a été généré avec succès !\n\nEmplacement : {pdfPath}",
+                    "Export PDF réussi",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+
+                // Demander si l'utilisateur veut ouvrir le fichier
+                var result = MessageBox.Show(
+                    "Voulez-vous ouvrir le fichier PDF maintenant ?",
+                    "Ouvrir le PDF",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    _communePdfService.OpenPdf(pdfPath);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Erreur lors de l'export PDF : {ex.Message}",
+                    "Erreur",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        /// <summary>
+        /// Exporte une commune en PDF et ouvre directement pour impression
+        /// </summary>
+        private async System.Threading.Tasks.Task ExportAndPrintCommuneAsync(Commune? commune)
+        {
+            if (commune == null) return;
+
+            IsLoading = true;
+            try
+            {
+                // Charger les détails de la commune
+                var context = new AppDbContext();
+                var detailCommuneService = new DetailCommuneService(context);
+                var detailCommune = await detailCommuneService.GetDetailCommuneByIdAsync(commune.Id);
+
+                // Générer le PDF
+                string pdfPath = _communePdfService.GenerateRapportCommune(commune, detailCommune);
+
+                // Ouvrir automatiquement le PDF pour impression
+                _communePdfService.OpenPdf(pdfPath);
+
+                MessageBox.Show(
+                    "Le rapport PDF a été généré et ouvert pour impression.",
+                    "Export et impression",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Erreur lors de l'export PDF : {ex.Message}",
+                    "Erreur",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsLoading = false;
             }
         }
 

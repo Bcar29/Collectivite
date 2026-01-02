@@ -250,6 +250,10 @@ namespace Collectivite.Services
                     _context.EcritureComptables.Add(ecriture);
                     await _context.SaveChangesAsync();
 
+                    await AuditService.Instance.LogAsync(
+                    $"Paiement Mandat {mandat.NumeroMandat}",
+                    $"mandat payé | ID: {mandat.Id} | Numero : {mandat.NumeroMandat} | Montant: {mandat.MontantNet:N0}",
+                    SessionManager.CurrentUser?.Username ?? "Utilisateur Inconnu");
                     // 6. Commit
                     await transaction.CommitAsync();
 
@@ -461,6 +465,11 @@ namespace Collectivite.Services
                     _context.EcritureComptables.Add(ecriture);
 
                     await _context.SaveChangesAsync();
+
+                    await AuditService.Instance.LogAsync(
+                    $"Encaissement Ordre Recette {ordreRecette.NumeroOrdre}",
+                    $"mandat payé | ID: {ordreRecette.Id} | Numero : {ordreRecette.NumeroOrdre} | Montant: {ordreRecette.MontantOrdre:N0}",
+                    SessionManager.CurrentUser?.Username ?? "Utilisateur Inconnu");
                     await transaction.CommitAsync();
 
                     result = (

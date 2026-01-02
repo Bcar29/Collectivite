@@ -1,4 +1,5 @@
 ﻿using Collectivite.Models;
+using Collectivite.Services;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -10,10 +11,12 @@ namespace Collectivite.Services
     public class ExpressionBesoinService
     {
         private readonly AppDbContext _context;
+        private readonly AuditService _auditService;
 
         public ExpressionBesoinService()
         {
             _context = new AppDbContext();
+            _auditService = new AuditService();
         }
 
         // Récupérer toutes les expressions de besoin
@@ -22,9 +25,8 @@ namespace Collectivite.Services
             var exerciceService = ExerciceService.Instance;
 
             if (exerciceService.CurrentExercice == null)
-            {
                 return new List<ExpressionBesoin>();
-            }
+
             return await _context.ExpressionBesoins
                 .Where(e => e.ExerciceId == exerciceService.CurrentExercice.Id)
                 .Include(e => e.Exercice)
@@ -44,94 +46,54 @@ namespace Collectivite.Services
                 .FirstOrDefaultAsync(e => e.Id == id);
         }
 
-        //récupérer les nomenclatures de type dépense (feuilles uniquement)
+        // Récupérer les nomenclatures de type dépense (feuilles uniquement)
         public async Task<List<Nommenclature>> GetNommenclaturesAsync()
         {
             return await _context.Nommenclatures
-                .Where(n => n.Nature == NatureType.Depense && (n.Enfants == null || !n.Enfants.Any()))
+                .Where(n => n.Nature == NatureType.Depense &&
+                            (n.Enfants == null || !n.Enfants.Any()))
                 .ToListAsync();
         }
 
-        // Dans ExpressionBesoinService.cs
         public async Task<string> GenerateNextNumeroAsync()
         {
-            var currentYear = DateTime.Now.Year;
-            var prefix = $"EB-{currentYear}-";
             var exerciceService = ExerciceService.Instance;
-            if (exerciceService.CurrentExercice != null)
-            {
-                 prefix = $"EB-{exerciceService.CurrentExercice.GetAnnee()}-";
-            }
+            var year = exerciceService.CurrentExercice?.GetAnnee() ?? DateTime.Now.Year;
+            var prefix = $"EB-{year}-";
 
-            // Récupérer toutes les expressions de l'année en cours
-            var expressionsThisYear = await _context.ExpressionBesoins
-                .Where(eb => eb.Numero.StartsWith(prefix))
-                .OrderByDescending(eb => eb.Numero)
+            var expressions = await _context.ExpressionBesoins
+                .Where(e => e.Numero.StartsWith(prefix))
+                .OrderByDescending(e => e.Numero)
                 .ToListAsync();
 
-            if (!expressionsThisYear.Any())
-            {
+            if (!expressions.Any())
                 return $"{prefix}0001";
-            }
 
-            // Extraire le dernier numéro et incrémenter
-            var lastNumero = expressionsThisYear.First().Numero;
-            var lastSequence = lastNumero.Substring(lastNumero.LastIndexOf('-') + 1);
+            var lastNumero = expressions.First().Numero;
+            var lastSequence = lastNumero.Split('-').Last();
 
-            if (int.TryParse(lastSequence, out int sequence))
-            {
-                var nextSequence = sequence + 1;
-                return $"{prefix}{nextSequence:D4}";
-            }
-
-            return $"{prefix}0001";
+            return int.TryParse(lastSequence, out int seq)
+                ? $"{prefix}{(seq + 1):D4}"
+                : $"{prefix}0001";
         }
-        // Créer une nouvelle expression de besoin
-        public async Task<(bool success, string message, ExpressionBesoin? expressionBesoin)> CreateExpressionBesoinAsync(
-            ExpressionBesoin expressionBesoin,
-            List<DetailExpressionBesoin> details)
+
+        // ═════════════════════════════════════════════
+        // CREATE
+        // ═════════════════════════════════════════════
+        public async Task<(bool success, string message, ExpressionBesoin? expressionBesoin)>
+            CreateExpressionBesoinAsync(ExpressionBesoin expressionBesoin, List<DetailExpressionBesoin> details)
         {
             try
             {
-                // Vérifier que le numéro n'existe pas déjà
-                var exists = await _context.ExpressionBesoins
-                    .AnyAsync(e => e.Numero == expressionBesoin.Numero);
+                if (await _context.ExpressionBesoins.AnyAsync(e => e.Numero == expressionBesoin.Numero))
+                    return (false, "Ce numéro existe déjà.", null);
 
-                if (exists)
-                {
-                    return (false, "Ce numéro d'expression de besoin existe déjà.", null);
-                }
-
-                // Vérifier qu'il y a au moins un détail
                 if (details == null || details.Count == 0)
-                {
                     return (false, "Veuillez ajouter au moins un détail.", null);
-                }
 
-                // Valider les détails
-                foreach (var detail in details)
-                {
-                    if (string.IsNullOrWhiteSpace(detail.Designation))
-                    {
-                        return (false, "Toutes les lignes doivent avoir une désignation.", null);
-                    }
-
-                    if (detail.Quantite <= 0)
-                    {
-                        return (false, "La quantité doit être supérieure à 0.", null);
-                    }
-
-                    if (detail.NommenclatureId <= 0)
-                    {
-                        return (false, "Veuillez sélectionner une nomenclature pour chaque ligne.", null);
-                    }
-                }
-
-                // Créer l'expression de besoin
                 _context.ExpressionBesoins.Add(expressionBesoin);
                 await _context.SaveChangesAsync();
 
-                // Ajouter les détails
                 foreach (var detail in details)
                 {
                     detail.ExpressionBesoinId = expressionBesoin.Id;
@@ -139,6 +101,13 @@ namespace Collectivite.Services
                 }
 
                 await _context.SaveChangesAsync();
+
+                // 🔍 AUDIT
+                await _auditService.LogAsync(
+                    "Création Expression de Besoin",
+                    $"Création EB N° {expressionBesoin.Numero}",
+                    SessionManager.CurrentUser?.Username ?? "SYSTEM"
+                );
 
                 return (true, "Expression de besoin créée avec succès.", expressionBesoin);
             }
@@ -148,10 +117,11 @@ namespace Collectivite.Services
             }
         }
 
-        // Mettre à jour une expression de besoin
-        public async Task<(bool success, string message, ExpressionBesoin? expression)> UpdateExpressionBesoinAsync(
-            ExpressionBesoin expressionBesoin,
-            List<DetailExpressionBesoin> details)
+        // ═════════════════════════════════════════════
+        // UPDATE
+        // ═════════════════════════════════════════════
+        public async Task<(bool success, string message, ExpressionBesoin? expression)>
+            UpdateExpressionBesoinAsync(ExpressionBesoin expressionBesoin, List<DetailExpressionBesoin> details)
         {
             try
             {
@@ -160,53 +130,14 @@ namespace Collectivite.Services
                     .FirstOrDefaultAsync(e => e.Id == expressionBesoin.Id);
 
                 if (existing == null)
-                {
                     return (false, "Expression de besoin introuvable.", null);
-                }
 
-                // Vérifier que le numéro n'est pas utilisé par une autre expression
-                var duplicateNumero = await _context.ExpressionBesoins
-                    .AnyAsync(e => e.Numero == expressionBesoin.Numero && e.Id != expressionBesoin.Id);
-
-                if (duplicateNumero)
-                {
-                    return (false, "Ce numéro est déjà utilisé par une autre expression de besoin.", null);
-                }
-
-                // Vérifier qu'il y a au moins un détail
-                if (details == null || details.Count == 0)
-                {
-                    return (false, "Veuillez ajouter au moins un détail.", null);
-                }
-
-                // Valider les détails
-                foreach (var detail in details)
-                {
-                    if (string.IsNullOrWhiteSpace(detail.Designation))
-                    {
-                        return (false, "Toutes les lignes doivent avoir une désignation.", null);
-                    }
-
-                    if (detail.Quantite <= 0)
-                    {
-                        return (false, "La quantité doit être supérieure à 0.", null);
-                    }
-
-                    if (detail.NommenclatureId <= 0)
-                    {
-                        return (false, "Veuillez sélectionner une nomenclature pour chaque ligne.", null);
-                    }
-                }
-
-                // Mettre à jour l'expression de besoin
                 existing.Numero = expressionBesoin.Numero;
                 existing.DateCreation = expressionBesoin.DateCreation;
                 existing.ExerciceId = expressionBesoin.ExerciceId;
 
-                // Supprimer les anciens détails
                 _context.DetailExpressionBesoins.RemoveRange(existing.Details);
 
-                // Ajouter les nouveaux détails
                 foreach (var detail in details)
                 {
                     detail.ExpressionBesoinId = existing.Id;
@@ -214,6 +145,13 @@ namespace Collectivite.Services
                 }
 
                 await _context.SaveChangesAsync();
+
+                // 🔍 AUDIT
+                await _auditService.LogAsync(
+                    "Modification Expression de Besoin",
+                    $"Modification EB N° {existing.Numero}",
+                    SessionManager.CurrentUser?.Username ?? "SYSTEM"
+                );
 
                 return (true, "Expression de besoin modifiée avec succès.", existing);
             }
@@ -223,27 +161,31 @@ namespace Collectivite.Services
             }
         }
 
-        // Supprimer une expression de besoin
+        // ═════════════════════════════════════════════
+        // DELETE
+        // ═════════════════════════════════════════════
         public async Task<(bool success, string message)> DeleteExpressionBesoinAsync(int id)
         {
             try
             {
-                var expressionBesoin = await _context.ExpressionBesoins
+                var expression = await _context.ExpressionBesoins
                     .Include(e => e.Details)
                     .FirstOrDefaultAsync(e => e.Id == id);
 
-                if (expressionBesoin == null)
-                {
+                if (expression == null)
                     return (false, "Expression de besoin introuvable.");
-                }
 
-                // Supprimer les détails
-                _context.DetailExpressionBesoins.RemoveRange(expressionBesoin.Details);
-
-                // Supprimer l'expression de besoin
-                _context.ExpressionBesoins.Remove(expressionBesoin);
+                _context.DetailExpressionBesoins.RemoveRange(expression.Details);
+                _context.ExpressionBesoins.Remove(expression);
 
                 await _context.SaveChangesAsync();
+
+                // 🔍 AUDIT
+                await _auditService.LogAsync(
+                    "Suppression Expression de Besoin",
+                    $"Suppression EB N° {expression.Numero}",
+                    SessionManager.CurrentUser?.Username ?? "SYSTEM"
+                );
 
                 return (true, "Expression de besoin supprimée avec succès.");
             }

@@ -113,7 +113,7 @@ namespace Collectivite
                 return;
             }
             _viewModel.UpdatePageTitle("CONFIGURATION - EXERCICE");
-             NavigationService.Instance.NavigateTo(new Views.Pages.ExercicePage(_authService));
+             NavigationService.Instance.NavigateTo(new Views.Pages.ExercicePage());
             _viewModel.IsMenuOpen = false;
         }
 

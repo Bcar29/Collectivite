@@ -192,8 +192,9 @@
                                             ItemsSource="{Binding Communes}"
                                             SelectedValue="{Binding DialogDetailCommune.IdCommune}"
                                             SelectedValuePath="Id"
+                                              IsReadOnly="True"
                                             IsEnabled="{Binding IsEditMode, Converter={StaticResource InverseBooleanConverter}}"
-                                            DisplayMemberPath="NomComplet"/>
+                                            DisplayMemberPath="Nom"/>
                                 </materialDesign:Card>
 
                                 <!-- ══════════════════════════════════════════════════════════════

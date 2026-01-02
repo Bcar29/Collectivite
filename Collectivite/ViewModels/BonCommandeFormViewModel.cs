@@ -17,16 +17,14 @@ namespace Collectivite.ViewModels
         private int? _bonCommandeId;
         private ExpressionBesoin? _selectedExpressionBesoin;
         private readonly ExerciceService _exerciceService;
-        private readonly AuditService _auditService;
         private readonly AuthService _authService;
 
-        public BonCommandeFormViewModel(AuthService authService, AuditService auditService, int? bonCommandeId = null)
+        public BonCommandeFormViewModel(AuthService authService,  int? bonCommandeId = null)
         {
             _bonCommandeId = bonCommandeId;
             _isEditMode = bonCommandeId.HasValue;
             _exerciceService = ExerciceService.Instance;
             _authService = authService;
-            _auditService = auditService;
 
             _bonCommande = new BonCommande
             {

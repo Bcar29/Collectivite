@@ -10,7 +10,7 @@ namespace Collectivite.Views.Pages
         {
             InitializeComponent();
             var auditService = new AuditService();
-            DataContext = new BonCommandeFormViewModel(authService, auditService, bonCommandeId);
+            DataContext = new BonCommandeFormViewModel(authService,  bonCommandeId);
         }
     }
 }

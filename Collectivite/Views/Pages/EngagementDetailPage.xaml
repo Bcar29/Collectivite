@@ -414,24 +414,23 @@
                             <Grid Margin="0,0,0,0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="60"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
 
                                
 
                                 <!-- Le Maire -->
-                                <StackPanel Grid.Column="2" HorizontalAlignment="Right">
+                                <StackPanel Grid.Column="2" HorizontalAlignment="Left">
                                     <TextBlock FontSize="12" 
                                          Foreground="#666"
                                          Margin="0,0,0,8">
                                     <Run Text="{Binding Engagement.Commune.Nom}"/>
                                     <Run Text=" Le "/>
-                                    <Run Text=".............."/>
+                                    <Run Text="......................"/>
                                     <Run Text=" / "/>
-                                    <Run Text=".............."/>
+                                    <Run Text="......................"/>
                                     <Run Text=" / "/>
-                                    <Run Text=".............."/>
+                                    <Run Text="20 ............."/>
                                     </TextBlock>
 
                                     <TextBlock 
@@ -446,7 +445,7 @@
                                          FontWeight="SemiBold"
                                          Margin="0,40,0,0">
                                         <Run Text="M./Mme :  "/>
-                                        <Run Text="......................................................"/>
+                                        <Run Text="................................................................................... ..................................."/>
                                     </TextBlock>
                                 </StackPanel>
                             </Grid>
