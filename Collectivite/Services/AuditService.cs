@@ -1,51 +1,54 @@
 ﻿using Collectivite.Models;
-using DocumentFormat.OpenXml.InkML;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using System.Windows;
 
 namespace Collectivite.Services
 {
     public class AuditService
     {
+        private static AuditService? _instance;
+        public static AuditService Instance => _instance ??= new AuditService();
+
+        public AuditService() { }
+
         private AppDbContext CreateContext()
         {
             return new AppDbContext();
         }
 
-        // recuperer tous les logs
+        /// <summary>
+        /// Récupère tous les logs d’audit
+        /// </summary>
         public async Task<List<AuditLog>> GetAllLogsAsync()
         {
             using var context = CreateContext();
+
             return await context.AuditLogs
                 .OrderByDescending(a => a.PerformedAt)
+                .AsNoTracking()
                 .ToListAsync();
         }
 
-        public async Task LogAsync(string title, string description, string user)
+        /// <summary>
+        /// Ajoute un log d’audit
+        /// </summary>
+        public async Task LogAsync(string title, string description, string username)
         {
-            try
+            using var context = CreateContext();
+
+            var log = new AuditLog
             {
-                using var context = CreateContext();
-                var log = new AuditLog
-                {
-                    ActionTitle = title,
-                    Description = description,
-                    PerformedBy = user,
-                    PerformedAt = DateTime.Now
-                };
+                ActionTitle = title,
+                Description = description,
+                PerformedBy = username,
+                PerformedAt = DateTime.Now
+            };
 
-                context.AuditLogs.Add(log);
-                await context.SaveChangesAsync();
-            }
-            catch (Exception ex) {
-                MessageBox.Show($"{ex.Message}"); 
-            }
+            context.AuditLogs.Add(log);
+            await context.SaveChangesAsync();
         }
-
     }
 }

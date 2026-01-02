@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Threading.Tasks;
 
 namespace Collectivite.Services
@@ -197,7 +198,7 @@ namespace Collectivite.Services
                     .ThenInclude(bl => bl.Nommenclature)
                 .Include(e => e.Tiers)
                 .Where(e => e.Objet.ToLower().Contains(searchTerm) ||
-                           e.BudgetLine.Nommenclature.Intitule.ToLower().Contains(searchTerm))
+                           e.BudgetLine.Nommenclature.Intitule!.ToLower().Contains(searchTerm))
                 .AsNoTracking()
                 .OrderByDescending(e => e.DateEngagement)
                 .ToListAsync();
@@ -279,6 +280,10 @@ namespace Collectivite.Services
                 context.Engagements.Add(newEngagement);
                 await context.SaveChangesAsync();
 
+                await AuditService.Instance.LogAsync(
+                    "Nouveau Engagement effectué",
+                    $"engagement créé | ID: {newEngagement.Id}  | Montant: {newEngagement.MontantEngagement:N0}",
+                    SessionManager.CurrentUser?.Username ?? "Utilisateur Inconnu");
                 // Recharger avec les relations
                 var savedEngagement = await GetEngagementByIdAsync(newEngagement.Id);
 
@@ -346,6 +351,11 @@ namespace Collectivite.Services
                 existingEngagement.BonCommandeId = engagement.BonCommandeId;
 
                 await context.SaveChangesAsync();
+                await AuditService.Instance.LogAsync(
+                    "Engagement modifié",
+                    $"Engagement modifié | ID: {existingEngagement.Id}  | Montant: {existingEngagement.MontantEngagement:N0}",
+                    SessionManager.CurrentUser?.Username ?? "Utilisateur Inconnu");
+
 
                 return (true, "✅ Engagement modifié avec succès.");
             }
@@ -392,6 +402,10 @@ namespace Collectivite.Services
                 context.Engagements.Remove(engagement);
                 await context.SaveChangesAsync();
 
+                await AuditService.Instance.LogAsync(
+                    "Suppression Engagement",
+                    $"engagement supprimé | ID: {engagement.Id}  | Montant: {engagement.MontantEngagement:N0}",
+                    SessionManager.CurrentUser?.Username ?? "Utilisateur Inconnu");
                 return (true, "✅ Engagement supprimé avec succès.");
             }
             catch (Exception ex)
@@ -407,37 +421,37 @@ namespace Collectivite.Services
         /// <summary>
         /// Obtient les statistiques des engagements
         /// </summary>
-        public async Task<EngagementStatistiques> GetStatistiquesAsync(int? exerciceId = null)
-        {
-            using var context = CreateContext();
+        //public async Task<EngagementStatistiques> GetStatistiquesAsync(int? exerciceId = null)
+        //{
+        //    using var context = CreateContext();
 
-            var query = context.Engagements.AsQueryable();
+        //    var query = context.Engagements.AsQueryable();
 
-            if (exerciceId.HasValue)
-            {
-                query = query.Where(e => e.ExerciceId == exerciceId.Value);
-            }
+        //    if (exerciceId.HasValue)
+        //    {
+        //        query = query.Where(e => e.ExerciceId == exerciceId.Value);
+        //    }
 
-            var totalEngagements = await query.CountAsync();
-            var montantTotal = await query.SumAsync(e => e.MontantEngagement);
-            var montantMoyen = totalEngagements > 0 ? montantTotal / totalEngagements : 0;
+        //    var totalEngagements = await query.CountAsync();
+        //    var montantTotal = await query.SumAsync(e => e.MontantEngagement);
+        //    var montantMoyen = totalEngagements > 0 ? montantTotal / totalEngagements : 0;
 
-            var parTiers = await query
-                .Where(e => e.Tiers != null)
-                .GroupBy(e => e.Tiers!.Nom)
-                .Select(g => new { Tiers = g.Key, Montant = g.Sum(e => e.MontantEngagement) })
-                .OrderByDescending(x => x.Montant)
-                .Take(10)
-                .ToListAsync();
+        //    var parTiers = await query
+        //        .Where(e => e.Tiers != null)
+        //        .GroupBy(e => e.Tiers!.Nom)
+        //        .Select(g => new { Tiers = g.Key, Montant = g.Sum(e => e.MontantEngagement) })
+        //        .OrderByDescending(x => x.Montant)
+        //        .Take(10)
+        //        .ToListAsync();
 
-            return new EngagementStatistiques
-            {
-                TotalEngagements = totalEngagements,
-                MontantTotal = montantTotal,
-                MontantMoyen = montantMoyen,
-                Top10Tiers = parTiers.ToDictionary(x => x.Tiers, x => x.Montant)
-            };
-        }
+        //    return new EngagementStatistiques
+        //    {
+        //        TotalEngagements = totalEngagements,
+        //        MontantTotal = montantTotal,
+        //        MontantMoyen = montantMoyen,
+        //        Top10Tiers = parTiers.ToDictionary(x => x.Tiers, x => x.Montant)
+        //    };
+        //}
 
         #endregion
     }

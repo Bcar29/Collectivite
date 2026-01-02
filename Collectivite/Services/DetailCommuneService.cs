@@ -41,6 +41,28 @@ namespace Collectivite.Services
                 .ToListAsync();
         }
 
+        public async Task<DetailCommune?> GetDetailCommuneByIdAsync(int communeId)
+        {
+            try
+            {
+                using var context = new AppDbContext();
+                var exerciceService = ExerciceService.Instance;
+
+                var detailCommune = await context.DetailCommunes
+                    .Include(dc => dc.Commune)
+                    .Include(dc => dc.Exercice)
+                    .FirstOrDefaultAsync(dc => dc.IdCommune == communeId);
+                    //.FirstOrDefaultAsync(dc => dc.IdCommune == communeId && dc.Exercice.Id == exerciceService.CurrentExercice.Id);
+
+                return detailCommune;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Erreur lors de la récupération des détails de la commune : {ex.Message}");
+                return null;
+            }
+        }
+
         // ══════════════════════════════════════════════════════════
         // RÉCUPÉRER UN DÉTAIL PAR ID
         // ══════════════════════════════════════════════════════════

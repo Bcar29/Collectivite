@@ -92,29 +92,29 @@
                             <!-- Nom de la commune -->
                             <DataGridTextColumn Header="Nom de la Commune" 
                                               Binding="{Binding Nom}"
-                                              Width="250"
+                                              Width="200"
                                               FontWeight="Medium"/>
-                            
+
                             <!-- Type de la commune -->
                             <DataGridTextColumn Header="Type Commune" 
                                               Binding="{Binding TypCommune}"
-                                              Width="250"
+                                              Width="120"
                                               FontWeight="Medium"/>
 
                             <!-- Région de la commune -->
                             <DataGridTextColumn Header="Région Administrative" 
                                               Binding="{Binding Region}"
-                                              Width="250"
+                                              Width="180"
                                               FontWeight="Medium"/>
-                            
+
                             <!-- Préfecture de la commune -->
                             <DataGridTextColumn Header="Préfecture" 
                                               Binding="{Binding Prefecture}"
-                                              Width="250"
+                                              Width="150"
                                               FontWeight="Medium"/>
 
                             <!-- Distance Chef-Lieu Province -->
-                            <DataGridTemplateColumn Header="Dist. Chef-Lieu Province" Width="180">
+                            <DataGridTemplateColumn Header="Dist. Chef-Lieu Prov." Width="150">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal">
@@ -136,31 +136,8 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <!-- Distance Chef-Lieu Région -->
-                            <DataGridTemplateColumn Header="Dist. Chef-Lieu Région" Width="180">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Horizontal">
-                                            <materialDesign:PackIcon Kind="MapMarkerDistance" 
-                                                                   Width="16" 
-                                                                   Height="16"
-                                                                   Foreground="#388E3C"
-                                                                   VerticalAlignment="Center"
-                                                                   Margin="0,0,8,0"/>
-                                            <TextBlock VerticalAlignment="Center">
-                                                <TextBlock.Text>
-                                                    <MultiBinding StringFormat="{}{0:N2} km">
-                                                        <Binding Path="DistanceChefLieuRegion"/>
-                                                    </MultiBinding>
-                                                </TextBlock.Text>
-                                            </TextBlock>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-
                             <!-- Distance Capitale -->
-                            <DataGridTemplateColumn Header="Dist. Capitale" Width="150">
+                            <DataGridTemplateColumn Header="Dist. Capitale" Width="120">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal">
@@ -183,7 +160,7 @@
                             </DataGridTemplateColumn>
 
                             <!-- Date de création -->
-                            <DataGridTemplateColumn Header="Date de Création" Width="160">
+                            <DataGridTemplateColumn Header="Date Création" Width="120">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal">
@@ -201,7 +178,7 @@
                             </DataGridTemplateColumn>
 
                             <!-- Actions -->
-                            <DataGridTemplateColumn Header="Actions" Width="190">
+                            <DataGridTemplateColumn Header="Actions" Width="280">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal" 
@@ -231,7 +208,7 @@
                                                                        Foreground="#F44336"/>
                                             </Button>
 
-                                            <!-- ✅ Bouton Détail (NOUVEAU) -->
+                                            <!-- Bouton Détail -->
                                             <Button Style="{StaticResource MaterialDesignIconButton}"
                                               ToolTip="Voir les détails"
                                               Command="{Binding DataContext.OpenDetailCommuneCommand, 
@@ -240,6 +217,28 @@
                                               Margin="4,0">
                                                 <materialDesign:PackIcon Kind="InformationOutline" 
                                            Foreground="#009688"/>
+                                            </Button>
+
+                                            <!-- ✅ NOUVEAU : Bouton Export PDF -->
+                                            <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                  ToolTip="Exporter en PDF"
+                                                  Command="{Binding DataContext.ExportPdfCommand, 
+                                                          RelativeSource={RelativeSource AncestorType=Page}}"
+                                                  CommandParameter="{Binding}"
+                                                  Margin="4,0">
+                                                <materialDesign:PackIcon Kind="FilePdfBox" 
+                                                                       Foreground="#D32F2F"/>
+                                            </Button>
+
+                                            <!-- ✅ NOUVEAU : Bouton Imprimer -->
+                                            <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                  ToolTip="Exporter et Imprimer"
+                                                  Command="{Binding DataContext.ExportPdfWithPrintCommand, 
+                                                          RelativeSource={RelativeSource AncestorType=Page}}"
+                                                  CommandParameter="{Binding}"
+                                                  Margin="4,0">
+                                                <materialDesign:PackIcon Kind="Printer" 
+                                                                       Foreground="#FF6F00"/>
                                             </Button>
 
                                         </StackPanel>

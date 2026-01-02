@@ -62,7 +62,10 @@ namespace Collectivite.Services
 
             // Valider l'engagement
             engagement.Etat = Engagement.EtatEngagement.Validé;
-
+            await AuditService.Instance.LogAsync(
+                    $"Engagement validé {engagement.Id}",
+                    $"Engagement validé | ID: {engagement.Id} | Montant: {engagement.MontantEngagement:N0}",
+                    SessionManager.CurrentUser?.Username ?? "Utilisateur Inconnu");
             await context.SaveChangesAsync();
 
             return (true, $"Engagement validé avec succès.");
@@ -89,6 +92,10 @@ namespace Collectivite.Services
             context.Engagements.Remove(engagement);
             await context.SaveChangesAsync();
 
+            await AuditService.Instance.LogAsync(
+                    $"Engagement rejeté: {motif}",
+                    $"Engagement rejeté | ID: {engagement.Id} | Montant: {engagement.MontantEngagement:N0}",
+                    SessionManager.CurrentUser?.Username ?? "Utilisateur Inconnu");
             return (true, $"Engagement rejeté et supprimé.");
         }
 
@@ -163,6 +170,10 @@ namespace Collectivite.Services
                     );
 
                     await context.SaveChangesAsync(); // 🔥 indispensable
+                    await AuditService.Instance.LogAsync(
+                    $"Mandat Validé : {mandat.NumeroMandat}",
+                    $"Validation du mandat | ID: {mandat.Id} | ID: {mandat.NumeroMandat}  | Montant: {mandat.MontantNet:N0}",
+                    SessionManager.CurrentUser?.Username ?? "Utilisateur Inconnu");
                 }
 
                 return (true, "Mandat validé avec succès.");
@@ -197,6 +208,10 @@ namespace Collectivite.Services
             context.Mandats.Remove(mandat);
             await context.SaveChangesAsync();
 
+            await AuditService.Instance.LogAsync(
+                    $"Mandat Rejeté : {motif}",
+                    $"rejet du mandat | ID: {mandat.Id} | ID: {mandat.NumeroMandat}  | Montant: {mandat.MontantNet:N0}",
+                    SessionManager.CurrentUser?.Username ?? "Utilisateur Inconnu");
             return (true, $"Mandat rejeté et supprimé.");
         }
 
@@ -293,6 +308,10 @@ namespace Collectivite.Services
                         }
                     }
                     await context.SaveChangesAsync(); // 🔥 indispensable
+                    await AuditService.Instance.LogAsync(
+                        $"Ordre recette  Validé : {ordreRecette.NumeroOrdre}",
+                        $"Validation de Ordre Recette | ID: {ordreRecette.Id} | ID: {ordreRecette.NumeroOrdre}  | Montant: {ordreRecette.MontantOrdre:N0}",
+                        SessionManager.CurrentUser?.Username ?? "Utilisateur Inconnu");
                 }
 
                 return (true, "Ordre de recette validé avec succès.");
@@ -327,6 +346,10 @@ namespace Collectivite.Services
             context.OrdreRecettes.Remove(ordreRecette);
             await context.SaveChangesAsync();
 
+            await AuditService.Instance.LogAsync(
+                    $"Ordre recette  Rejeté : {ordreRecette.NumeroOrdre}",
+                    $"rejet de Ordre Recette | ID: {ordreRecette.Id} | ID: {ordreRecette.NumeroOrdre}  | Montant: {ordreRecette.MontantOrdre:N0}",
+                    SessionManager.CurrentUser?.Username ?? "Utilisateur Inconnu");
             return (true, $"Ordre de recette rejeté et supprimé.");
         }
 

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Collectivite.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251224172834_initCreate")]
-    partial class initCreate
+    [Migration("20260102150216_ajoutModulePDL")]
+    partial class ajoutModulePDL
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,6 +24,126 @@ namespace Collectivite.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
+
+            modelBuilder.Entity("ActeurPDLActivitePDL", b =>
+                {
+                    b.Property<int>("ActeursId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ActivitesId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ActeursId", "ActivitesId");
+
+                    b.HasIndex("ActivitesId");
+
+                    b.ToTable("ActiviteActeurs", (string)null);
+                });
+
+            modelBuilder.Entity("ActivitePDLBeneficiairePDL", b =>
+                {
+                    b.Property<int>("ActivitesId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("BeneficiairesId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ActivitesId", "BeneficiairesId");
+
+                    b.HasIndex("BeneficiairesId");
+
+                    b.ToTable("ActiviteBeneficiaires", (string)null);
+                });
+
+            modelBuilder.Entity("ActivitePDLStructureExecutionPDL", b =>
+                {
+                    b.Property<int>("ActivitesId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StructureExecutionsId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ActivitesId", "StructureExecutionsId");
+
+                    b.HasIndex("StructureExecutionsId");
+
+                    b.ToTable("ActiviteStructureExecutions", (string)null);
+                });
+
+            modelBuilder.Entity("Collectivite.Models.ActeurPDL", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Nom")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ActeursPDL");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.ActivitePDL", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CompetenceCollectiviteId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("DateDebut")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("DateFin")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("FinancementExterne")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("FinancementInterne")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("ODDId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PDLId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Resultat")
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("SecteurPDLId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompetenceCollectiviteId");
+
+                    b.HasIndex("ODDId");
+
+                    b.HasIndex("PDLId");
+
+                    b.HasIndex("SecteurPDLId");
+
+                    b.ToTable("ActivitesPDL");
+                });
 
             modelBuilder.Entity("Collectivite.Models.AuditLog", b =>
                 {
@@ -51,6 +171,27 @@ namespace Collectivite.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("AuditLogs");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.BeneficiairePDL", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Nom")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("BeneficiairesPDL");
                 });
 
             modelBuilder.Entity("Collectivite.Models.BonCommande", b =>
@@ -197,6 +338,28 @@ namespace Collectivite.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Communes");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.CompetenceCollectivite", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Numero")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("CompetencesCollectivite");
                 });
 
             modelBuilder.Entity("Collectivite.Models.CompteBancaire", b =>
@@ -358,6 +521,9 @@ namespace Collectivite.Migrations
                     b.Property<int>("EffectifTotalPersonnel")
                         .HasColumnType("int");
 
+                    b.Property<int?>("ExerciceId")
+                        .HasColumnType("int");
+
                     b.Property<int>("IdCommune")
                         .HasColumnType("int");
 
@@ -473,6 +639,9 @@ namespace Collectivite.Migrations
                         .HasColumnType("double");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ExerciceId")
+                        .IsUnique();
 
                     b.HasIndex("IdCommune");
 
@@ -742,18 +911,17 @@ namespace Collectivite.Migrations
                     b.Property<bool>("EstCloture")
                         .HasColumnType("tinyint(1)");
 
-                    b.Property<int?>("IdDetailCommune")
-                        .HasColumnType("int");
-
                     b.Property<string>("Libelle")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
 
+                    b.Property<int?>("PDLId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("IdDetailCommune")
-                        .IsUnique();
+                    b.HasIndex("PDLId");
 
                     b.ToTable("Exercices");
                 });
@@ -1013,6 +1181,28 @@ namespace Collectivite.Migrations
                     b.ToTable("Nommenclatures");
                 });
 
+            modelBuilder.Entity("Collectivite.Models.ODD", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Numero")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ODDs");
+                });
+
             modelBuilder.Entity("Collectivite.Models.OrdreRecette", b =>
                 {
                     b.Property<int>("Id")
@@ -1075,6 +1265,34 @@ namespace Collectivite.Migrations
                     b.ToTable("OrdreRecettes");
                 });
 
+            modelBuilder.Entity("Collectivite.Models.PDL", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("DateDebut")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("DateFin")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("FicName")
+                        .HasColumnType("longtext");
+
+                    b.Property<byte[]>("FickierJoin")
+                        .HasColumnType("longblob");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PDL");
+                });
+
             modelBuilder.Entity("Collectivite.Models.Permission", b =>
                 {
                     b.Property<int>("Id")
@@ -1103,6 +1321,26 @@ namespace Collectivite.Migrations
                         .IsUnique();
 
                     b.ToTable("Permissions");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.ProgrammePDL", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Libelle")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ProgrammesPDL");
                 });
 
             modelBuilder.Entity("Collectivite.Models.Recensement", b =>
@@ -1225,6 +1463,53 @@ namespace Collectivite.Migrations
                     b.ToTable("RolePermissions");
                 });
 
+            modelBuilder.Entity("Collectivite.Models.SecteurPDL", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Libelle")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<int>("ProgrammePDLId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProgrammePDLId");
+
+                    b.ToTable("SecteursPDL");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.StructureExecutionPDL", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Nom")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("StructureExecutionsPDL");
+                });
+
             modelBuilder.Entity("Collectivite.Models.Tiers", b =>
                 {
                     b.Property<int>("Id")
@@ -1341,6 +1626,86 @@ namespace Collectivite.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("ActeurPDLActivitePDL", b =>
+                {
+                    b.HasOne("Collectivite.Models.ActeurPDL", null)
+                        .WithMany()
+                        .HasForeignKey("ActeursId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Collectivite.Models.ActivitePDL", null)
+                        .WithMany()
+                        .HasForeignKey("ActivitesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ActivitePDLBeneficiairePDL", b =>
+                {
+                    b.HasOne("Collectivite.Models.ActivitePDL", null)
+                        .WithMany()
+                        .HasForeignKey("ActivitesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Collectivite.Models.BeneficiairePDL", null)
+                        .WithMany()
+                        .HasForeignKey("BeneficiairesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ActivitePDLStructureExecutionPDL", b =>
+                {
+                    b.HasOne("Collectivite.Models.ActivitePDL", null)
+                        .WithMany()
+                        .HasForeignKey("ActivitesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Collectivite.Models.StructureExecutionPDL", null)
+                        .WithMany()
+                        .HasForeignKey("StructureExecutionsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Collectivite.Models.ActivitePDL", b =>
+                {
+                    b.HasOne("Collectivite.Models.CompetenceCollectivite", "CompetenceCollectivite")
+                        .WithMany("Activites")
+                        .HasForeignKey("CompetenceCollectiviteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Collectivite.Models.ODD", "ODD")
+                        .WithMany("Activites")
+                        .HasForeignKey("ODDId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Collectivite.Models.PDL", "PDL")
+                        .WithMany("Activites")
+                        .HasForeignKey("PDLId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Collectivite.Models.SecteurPDL", "SecteurPDL")
+                        .WithMany("Activites")
+                        .HasForeignKey("SecteurPDLId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CompetenceCollectivite");
+
+                    b.Navigation("ODD");
+
+                    b.Navigation("PDL");
+
+                    b.Navigation("SecteurPDL");
+                });
+
             modelBuilder.Entity("Collectivite.Models.BonCommande", b =>
                 {
                     b.HasOne("Collectivite.Models.ExpressionBesoin", "ExpressionBesoin")
@@ -1435,6 +1800,11 @@ namespace Collectivite.Migrations
 
             modelBuilder.Entity("Collectivite.Models.DetailCommune", b =>
                 {
+                    b.HasOne("Collectivite.Models.Exercice", "Exercice")
+                        .WithOne("DetailCommune")
+                        .HasForeignKey("Collectivite.Models.DetailCommune", "ExerciceId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Collectivite.Models.Commune", "Commune")
                         .WithMany("DetailCommunes")
                         .HasForeignKey("IdCommune")
@@ -1442,6 +1812,8 @@ namespace Collectivite.Migrations
                         .IsRequired();
 
                     b.Navigation("Commune");
+
+                    b.Navigation("Exercice");
                 });
 
             modelBuilder.Entity("Collectivite.Models.DetailExpressionBesoin", b =>
@@ -1586,12 +1958,12 @@ namespace Collectivite.Migrations
 
             modelBuilder.Entity("Collectivite.Models.Exercice", b =>
                 {
-                    b.HasOne("Collectivite.Models.DetailCommune", "DetailCommune")
-                        .WithOne("Exercice")
-                        .HasForeignKey("Collectivite.Models.Exercice", "IdDetailCommune")
-                        .OnDelete(DeleteBehavior.Restrict);
+                    b.HasOne("Collectivite.Models.PDL", "PDL")
+                        .WithMany("Exercices")
+                        .HasForeignKey("PDLId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("DetailCommune");
+                    b.Navigation("PDL");
                 });
 
             modelBuilder.Entity("Collectivite.Models.ExpressionBesoin", b =>
@@ -1782,6 +2154,17 @@ namespace Collectivite.Migrations
                     b.Navigation("Role");
                 });
 
+            modelBuilder.Entity("Collectivite.Models.SecteurPDL", b =>
+                {
+                    b.HasOne("Collectivite.Models.ProgrammePDL", "ProgrammePDL")
+                        .WithMany("SecteursPDL")
+                        .HasForeignKey("ProgrammePDLId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ProgrammePDL");
+                });
+
             modelBuilder.Entity("Collectivite.Models.User", b =>
                 {
                     b.HasOne("Collectivite.Models.Commune", "Commune")
@@ -1832,6 +2215,11 @@ namespace Collectivite.Migrations
                     b.Navigation("Users");
                 });
 
+            modelBuilder.Entity("Collectivite.Models.CompetenceCollectivite", b =>
+                {
+                    b.Navigation("Activites");
+                });
+
             modelBuilder.Entity("Collectivite.Models.CompteComptable", b =>
                 {
                     b.Navigation("SousComptes");
@@ -1844,11 +2232,6 @@ namespace Collectivite.Migrations
                     b.Navigation("Factures");
                 });
 
-            modelBuilder.Entity("Collectivite.Models.DetailCommune", b =>
-                {
-                    b.Navigation("Exercice");
-                });
-
             modelBuilder.Entity("Collectivite.Models.Engagement", b =>
                 {
                     b.Navigation("Mandat");
@@ -1859,6 +2242,8 @@ namespace Collectivite.Migrations
                     b.Navigation("BudgetPrimitif");
 
                     b.Navigation("Contrats");
+
+                    b.Navigation("DetailCommune");
 
                     b.Navigation("Engagements");
 
@@ -1887,9 +2272,21 @@ namespace Collectivite.Migrations
                     b.Navigation("Enfants");
                 });
 
+            modelBuilder.Entity("Collectivite.Models.ODD", b =>
+                {
+                    b.Navigation("Activites");
+                });
+
             modelBuilder.Entity("Collectivite.Models.OrdreRecette", b =>
                 {
                     b.Navigation("EcritureComptables");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.PDL", b =>
+                {
+                    b.Navigation("Activites");
+
+                    b.Navigation("Exercices");
                 });
 
             modelBuilder.Entity("Collectivite.Models.Permission", b =>
@@ -1897,11 +2294,21 @@ namespace Collectivite.Migrations
                     b.Navigation("RolePermissions");
                 });
 
+            modelBuilder.Entity("Collectivite.Models.ProgrammePDL", b =>
+                {
+                    b.Navigation("SecteursPDL");
+                });
+
             modelBuilder.Entity("Collectivite.Models.Role", b =>
                 {
                     b.Navigation("RolePermissions");
 
                     b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("Collectivite.Models.SecteurPDL", b =>
+                {
+                    b.Navigation("Activites");
                 });
 
             modelBuilder.Entity("Collectivite.Models.Tiers", b =>

@@ -188,7 +188,7 @@
                     Margin="10"
                     Style="{StaticResource SectionCardStyle}">
                     <StackPanel>
-                        <TextBlock Text="Répartition par Nature et Section"
+                        <TextBlock Text="Evolution des Ordonnancements "
                        FontSize="18"
                        FontWeight="SemiBold"
                        Margin="0,0,0,20"/>
@@ -218,7 +218,7 @@
                     Margin="10"
                     Style="{StaticResource SectionCardStyle}">
                     <StackPanel>
-                        <TextBlock Text="Exécution Mensuelle"
+                        <TextBlock Text="Encaissements et Paiements"
                        FontSize="18"
                        FontWeight="SemiBold"
                        Margin="0,0,0,20"/>

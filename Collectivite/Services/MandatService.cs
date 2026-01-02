@@ -26,8 +26,9 @@ namespace Collectivite.Services
         {
             using var context = CreateContext();
 
-            var currentYear = DateTime.Now.Year;
-            var prefix = $"M-{currentYear}-";
+            var exerciceService = ExerciceService.Instance;
+            var year = exerciceService.CurrentExercice?.GetAnnee() ?? DateTime.Now.Year;
+            var prefix = $"EB-{year}-";
 
             // Récupérer tous les mandats de l'année en cours
             var mandatsThisYear = await context.Mandats
@@ -340,6 +341,10 @@ namespace Collectivite.Services
                 context.Mandats.Add(newMandat);
                 await context.SaveChangesAsync();
 
+                await AuditService.Instance.LogAsync(
+                    "Nouveau Mandat",
+                    $"mandat créé | ID: {mandat.Id} | Numero : {mandat.NumeroMandat} | Montant: {mandat.MontantNet:N0}",
+                    SessionManager.CurrentUser?.Username ?? "SYSTEM");
                 // -------------------------------
                 // 7️⃣ RECHARGER LE MANDAT COMPLET
                 // -------------------------------
@@ -405,7 +410,10 @@ namespace Collectivite.Services
                 existingMandat.Etat = mandat.Etat;
 
                 await context.SaveChangesAsync();
-
+                await AuditService.Instance.LogAsync(
+                    "Modification Mandat",
+                    $"mandat modifié | ID: {existingMandat.Id} | Numero : {existingMandat.NumeroMandat} | Montant: {existingMandat.MontantNet:N0}",
+                    SessionManager.CurrentUser?.Username ?? "SYSTEM");
                 return (true, "✅ Mandat modifié avec succès.");
             }
             catch (Exception ex)
@@ -446,7 +454,10 @@ namespace Collectivite.Services
 
                 context.Mandats.Remove(mandat);
                 await context.SaveChangesAsync();
-
+                await AuditService.Instance.LogAsync(
+                    "Suppression Mandat",
+                    $"mandat supprimé | ID: {mandat.Id} | Numero : {mandat.NumeroMandat} | Montant: {mandat.MontantNet:N0}",
+                    SessionManager.CurrentUser?.Username ?? "SYSTEM");
                 return (true, "✅ Mandat supprimé avec succès.");
             }
             catch (Exception ex)

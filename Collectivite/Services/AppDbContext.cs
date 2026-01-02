@@ -37,6 +37,17 @@ namespace Collectivite.Services
         public DbSet<ExpressionBesoin> ExpressionBesoins { get; set; }
         public DbSet<DetailExpressionBesoin> DetailExpressionBesoins { get; set; }
 
+
+        public DbSet<ProgrammePDL> ProgrammesPDL { get; set; }
+        public DbSet<SecteurPDL> SecteursPDL { get; set; }
+        public DbSet<ActivitePDL> ActivitesPDL { get; set; }
+        public DbSet<CompetenceCollectivite> CompetencesCollectivite { get; set; }
+        public DbSet<BeneficiairePDL> BeneficiairesPDL { get; set; }
+        public DbSet<ActeurPDL> ActeursPDL { get; set; }
+        public DbSet<StructureExecutionPDL> StructureExecutionsPDL { get; set; }
+        public DbSet<ODD> ODDs { get; set; }
+
+
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<Permission> Permissions { get; set; }
@@ -151,11 +162,11 @@ namespace Collectivite.Services
             modelBuilder.Entity<Exercice>()
                 .HasOne(e => e.DetailCommune)
                 .WithOne(d => d.Exercice)
-                .HasForeignKey<Exercice>(e => e.IdDetailCommune)
+                .HasForeignKey<DetailCommune>(d => d.ExerciceId) 
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<Exercice>()
-                .HasIndex(e => e.IdDetailCommune)
+            modelBuilder.Entity<DetailCommune>()
+                .HasIndex(d => d.ExerciceId)
                 .IsUnique();
 
 
@@ -478,6 +489,77 @@ namespace Collectivite.Services
             // Ignorer les propriétés calculées
             modelBuilder.Entity<DetailBonCommande>()
                 .Ignore(d => d.Total);
+
+
+            //  ActivitePDL ↔ PDL
+            modelBuilder.Entity<ActivitePDL>()
+                .HasOne(a => a.PDL)
+                .WithMany(p => p.Activites)
+                .HasForeignKey(a => a.PDLId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            //  Exercice ↔ PDL
+            modelBuilder.Entity<Exercice>()
+                .HasOne(e => e.PDL)
+                .WithMany(p => p.Exercices)
+                .HasForeignKey(e => e.PDLId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // ════════════════════════════════════════════════════════
+            // Relations Many-to-One (N ↔ 1)
+            // ════════════════════════════════════════════════════════
+
+            // ActivitePDL ↔ SecteurPDL
+            modelBuilder.Entity<ActivitePDL>()
+                .HasOne(a => a.SecteurPDL)
+                .WithMany(s => s.Activites)
+                .HasForeignKey(a => a.SecteurPDLId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ActivitePDL ↔ CompetenceCollectivite
+            modelBuilder.Entity<ActivitePDL>()
+                .HasOne(a => a.CompetenceCollectivite)
+                .WithMany(c => c.Activites)
+                .HasForeignKey(a => a.CompetenceCollectiviteId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ActivitePDL ↔ ODD
+            modelBuilder.Entity<ActivitePDL>()
+                .HasOne(a => a.ODD)
+                .WithMany(o => o.Activites)
+                .HasForeignKey(a => a.ODDId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // SecteurPDL ↔ ProgrammePDL
+            modelBuilder.Entity<SecteurPDL>()
+                .HasOne(s => s.ProgrammePDL)
+                .WithMany(p => p.SecteursPDL)
+                .HasForeignKey(s => s.ProgrammePDLId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ════════════════════════════════════════════════════════
+            // Relations Many-to-Many (N ↔ N) - APPROCHE AUTOMATIQUE
+            // EF Core crée automatiquement les tables de liaison
+            // ════════════════════════════════════════════════════════
+
+            // ActivitePDL ↔ BeneficiairePDL
+            modelBuilder.Entity<ActivitePDL>()
+                .HasMany(a => a.Beneficiaires)
+                .WithMany(b => b.Activites)
+                .UsingEntity(j => j.ToTable("ActiviteBeneficiaires"));
+
+            // ActivitePDL ↔ ActeurPDL
+            modelBuilder.Entity<ActivitePDL>()
+                .HasMany(a => a.Acteurs)
+                .WithMany(ac => ac.Activites)
+                .UsingEntity(j => j.ToTable("ActiviteActeurs"));
+
+            // ActivitePDL ↔ StructureExecutionPDL
+            modelBuilder.Entity<ActivitePDL>()
+                .HasMany(a => a.StructureExecutions)
+                .WithMany(s => s.Activites)
+                .UsingEntity(j => j.ToTable("ActiviteStructureExecutions"));
+
         }
 
     }

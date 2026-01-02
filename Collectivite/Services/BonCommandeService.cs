@@ -14,82 +14,61 @@ namespace Collectivite.Services
             return new AppDbContext();
         }
 
+
         #region Génération de numéro
 
-        /// <summary>
-        /// Génère le prochain numéro de bon de commande (format: BC-YYYY-0001)
-        /// </summary>
         public async Task<string> GenerateNextNumeroAsync()
         {
             using var context = CreateContext();
 
-            var currentYear = DateTime.Now.Year;
-            var prefix = $"BC-{currentYear}-";
             var exerciceService = ExerciceService.Instance;
-            if (exerciceService.CurrentExercice != null)
-            {
-                prefix = $"BC-{exerciceService.CurrentExercice.GetAnnee()}-";
-            }
-            // Récupérer tous les bons de commande de l'année en cours
-            var bonCommandesThisYear = await context.BonCommandes
+            var annee = exerciceService.CurrentExercice?.GetAnnee() ?? DateTime.Now.Year;
+            var prefix = $"BC-{annee}-";
+
+            var lastBc = await context.BonCommandes
                 .Where(bc => bc.Numero.StartsWith(prefix))
                 .OrderByDescending(bc => bc.Numero)
-                .ToListAsync();
+                .FirstOrDefaultAsync();
 
-            if (!bonCommandesThisYear.Any())
-            {
+            if (lastBc == null)
                 return $"{prefix}0001";
-            }
 
-            // Extraire le dernier numéro et incrémenter
-            var lastNumero = bonCommandesThisYear.First().Numero;
-            var lastSequence = lastNumero.Substring(lastNumero.LastIndexOf('-') + 1);
+            var lastSequence = lastBc.Numero.Split('-').Last();
 
-            if (int.TryParse(lastSequence, out int sequence))
-            {
-                var nextSequence = sequence + 1;
-                return $"{prefix}{nextSequence:D4}";
-            }
-
-            return $"{prefix}0001";
+            return int.TryParse(lastSequence, out int seq)
+                ? $"{prefix}{(seq + 1):D4}"
+                : $"{prefix}0001";
         }
 
         #endregion
 
-        #region Récupération
+        #region READ
 
-        /// <summary>
-        /// Récupère tous les bons de commande avec leurs relations
-        /// </summary>
         public async Task<List<BonCommande>> GetAllBonCommandesAsync()
         {
             if (!SessionManager.HasPermission("BonCommande.View"))
                 throw new UnauthorizedAccessException("Permission BonCommande.View requise.");
 
-            var exerciceService = ExerciceService.Instance;
-
-            if (exerciceService.CurrentExercice == null)
-            {
+            var exercice = ExerciceService.Instance.CurrentExercice;
+            if (exercice == null)
                 return new List<BonCommande>();
-            }
 
             using var context = CreateContext();
 
-            return await context.BonCommandes
-                .Where(bc => bc.ExpressionBesoin.ExerciceId == exerciceService.CurrentExercice.Id)
+            var list = await context.BonCommandes
+                .Where(bc => bc.ExpressionBesoin.ExerciceId == exercice.Id)
                 .Include(bc => bc.ExpressionBesoin)
-                    .ThenInclude(eb => eb.Exercice)
                 .Include(bc => bc.Engagements)
-                    .ThenInclude(e => e.Tiers)
                 .Include(bc => bc.Details)
                 .AsNoTracking()
                 .OrderByDescending(bc => bc.DateCreation)
                 .ToListAsync();
+
+
+
+            return list;
         }
 
-        /// <summary>
-        /// Récupère un bon de commande par son ID
-        /// </summary>
         public async Task<BonCommande?> GetBonCommandeByIdAsync(int id)
         {
             if (!SessionManager.HasPermission("BonCommande.View"))
@@ -97,49 +76,34 @@ namespace Collectivite.Services
 
             using var context = CreateContext();
 
-            return await context.BonCommandes
-                .Include(bc => bc.ExpressionBesoin)
-                    .ThenInclude(eb => eb.Exercice)
-                .Include(bc => bc.Engagements)
-                    .ThenInclude(e => e.Tiers)
-                .Include(bc => bc.Engagements)
-                    .ThenInclude(e => e.BudgetLine)
-                        .ThenInclude(bl => bl.Nommenclature)
-                .Include(bc => bc.Details)
+            var bc = await context.BonCommandes
+                .Include(b => b.ExpressionBesoin)
+                    .ThenInclude(e => e.Exercice)
+                .Include(b => b.Engagements)
+                .Include(b => b.Details)
                 .AsNoTracking()
-                .FirstOrDefaultAsync(bc => bc.Id == id);
-        }
+                .FirstOrDefaultAsync(b => b.Id == id);
 
-        /// <summary>
-        /// Récupère les bons de commande par expression de besoin
-        /// </summary>
-        public async Task<List<BonCommande>> GetBonCommandesByExpressionBesoinAsync(int expressionBesoinId)
-        {
-            if (!SessionManager.HasPermission("BonCommande.View"))
-                throw new UnauthorizedAccessException("Permission BonCommande.View requise.");
+            if (bc != null)
+            {
+                await AuditService.Instance.LogAsync(
+                    "Consultation Bon de Commande",
+                    $"BC consulté | ID: {bc.Id} | Numéro: {bc.Numero}",
+                   SessionManager.CurrentUser?.Username ?? "SYSTEM");
+            }
 
-            using var context = CreateContext();
-
-            return await context.BonCommandes
-                .Include(bc => bc.Details)
-                .Include(bc => bc.Engagements)
-                .Where(bc => bc.ExpressionBesoinId == expressionBesoinId)
-                .AsNoTracking()
-                .OrderByDescending(bc => bc.DateCreation)
-                .ToListAsync();
+            return bc;
         }
 
         #endregion
 
-        #region Création
+        #region CREATE
 
-        /// <summary>
-        /// Crée un nouveau bon de commande avec ses détails et engagements
-        /// </summary>
-        public async Task<(bool Success, string Message, BonCommande? BonCommande)> CreateBonCommandeAsync(
-            BonCommande bonCommande,
-            List<DetailBonCommande> details,
-            List<int> engagementIds)
+        public async Task<(bool Success, string Message, BonCommande? BonCommande)>
+            CreateBonCommandeAsync(
+                BonCommande bonCommande,
+                List<DetailBonCommande> details,
+                List<int> engagementIds)
         {
             using var context = CreateContext();
 
@@ -148,73 +112,53 @@ namespace Collectivite.Services
 
             try
             {
-                // Validation
-                if (bonCommande.ExpressionBesoinId <= 0)
-                    return (false, "L'expression de besoin est obligatoire.", null);
+                if (bonCommande.ExpressionBesoinId <= 0 || details == null || !details.Any())
+                    return (false, "Données invalides.", null);
 
-                if (details == null || !details.Any())
-                    return (false, "Au moins un détail est obligatoire.", null);
-
-                // Vérifier que l'expression de besoin existe
-                var expressionBesoin = await context.ExpressionBesoins
-                    .FirstOrDefaultAsync(eb => eb.Id == bonCommande.ExpressionBesoinId);
-
-                if (expressionBesoin == null)
-                    return (false, "Expression de besoin introuvable.", null);
-
-                // Générer le numéro automatiquement
                 var numero = await GenerateNextNumeroAsync();
 
-                // Créer le bon de commande
-                var newBonCommande = new BonCommande
+                var newBc = new BonCommande
                 {
                     Numero = numero,
-                    DateCreation = bonCommande.DateCreation,
+                    DateCreation = DateTime.Now,
                     ExpressionBesoinId = bonCommande.ExpressionBesoinId
                 };
 
-                context.BonCommandes.Add(newBonCommande);
+                context.BonCommandes.Add(newBc);
                 await context.SaveChangesAsync();
 
-                // Ajouter les détails
-                foreach (var detail in details)
+                foreach (var d in details)
                 {
-                    var newDetail = new DetailBonCommande
+                    context.DetailsBonCommandes.Add(new DetailBonCommande
                     {
-                        BonCommandeId = newBonCommande.Id,
-                        Designation = detail.Designation.Trim(),
-                        Quantite = detail.Quantite,
-                        PrixUnitaire = detail.PrixUnitaire
-                    };
-
-                    context.DetailsBonCommandes.Add(newDetail);
+                        BonCommandeId = newBc.Id,
+                        Designation = d.Designation.Trim(),
+                        Quantite = d.Quantite,
+                        PrixUnitaire = d.PrixUnitaire
+                    });
                 }
 
                 await context.SaveChangesAsync();
 
-                // Recharger avec les relations
-                var savedBonCommande = await GetBonCommandeByIdAsync(newBonCommande.Id);
+                var montant = details.Sum(d => d.Quantite * d.PrixUnitaire);
 
-                return (true, $"✅ Bon de commande {numero} créé avec succès.", savedBonCommande);
-            }
-            catch (DbUpdateException dbEx)
-            {
-                var innerMessage = dbEx.InnerException?.Message ?? dbEx.Message;
-                return (false, $"Erreur de base de données : {innerMessage}", null);
+                await AuditService.Instance.LogAsync(
+                    "Création Bon de Commande",
+                    $"BC créé | ID: {newBc.Id} | Numéro: {numero} | Montant: {montant:N0}",
+                    SessionManager.CurrentUser?.Username ?? "Utilisateur Inconnu");
+
+                return (true, $"✅ Bon de commande {numero} créé.", newBc);
             }
             catch (Exception ex)
             {
-                return (false, $"Erreur : {ex.Message}", null);
+                return (false, ex.Message, null);
             }
         }
 
         #endregion
 
-        #region Modification
+        #region UPDATE
 
-        /// <summary>
-        /// Met à jour un bon de commande, ses détails et engagements
-        /// </summary>
         public async Task<(bool Success, string Message)> UpdateBonCommandeAsync(
             BonCommande bonCommande,
             List<DetailBonCommande> details,
@@ -227,83 +171,49 @@ namespace Collectivite.Services
 
             try
             {
-                var existingBon = await context.BonCommandes
-                    .Include(bc => bc.Details)
-                    .Include(bc => bc.Engagements)
-                    .FirstOrDefaultAsync(bc => bc.Id == bonCommande.Id);
+                var bc = await context.BonCommandes
+                    .Include(b => b.Details)
+                    .Include(b => b.Engagements)
+                    .FirstOrDefaultAsync(b => b.Id == bonCommande.Id);
 
-                if (existingBon == null)
-                    return (false, "Bon de commande introuvable.");
+                if (bc == null)
+                    return (false, "Bon introuvable.");
 
-                // Validation
-                if (details == null || !details.Any())
-                    return (false, "Au moins un détail est obligatoire.");
+                bc.DateCreation = bonCommande.DateCreation;
+                bc.ExpressionBesoinId = bonCommande.ExpressionBesoinId;
 
-                if (engagementIds == null || !engagementIds.Any())
-                    return (false, "Au moins un engagement est obligatoire.");
+                context.DetailsBonCommandes.RemoveRange(bc.Details);
 
-                // Vérifier que tous les engagements existent
-                var engagements = await context.Engagements
-                    .Where(e => engagementIds.Contains(e.Id))
-                    .ToListAsync();
-
-                if (engagements.Count != engagementIds.Count)
-                    return (false, "Un ou plusieurs engagements sont introuvables.");
-
-                // Mettre à jour le bon de commande
-                existingBon.DateCreation = bonCommande.DateCreation;
-                existingBon.ExpressionBesoinId = bonCommande.ExpressionBesoinId;
-
-                // Délier les anciens engagements
-                var oldEngagements = await context.Engagements
-                    .Where(e => e.BonCommandeId == existingBon.Id)
-                    .ToListAsync();
-
-                foreach (var oldEngagement in oldEngagements)
+                foreach (var d in details)
                 {
-                    oldEngagement.BonCommandeId = null;
-                }
-
-                // Lier les nouveaux engagements
-                foreach (var engagement in engagements)
-                {
-                    engagement.BonCommandeId = existingBon.Id;
-                }
-
-                // Supprimer les anciens détails
-                context.DetailsBonCommandes.RemoveRange(existingBon.Details);
-
-                // Ajouter les nouveaux détails
-                foreach (var detail in details)
-                {
-                    var newDetail = new DetailBonCommande
+                    context.DetailsBonCommandes.Add(new DetailBonCommande
                     {
-                        BonCommandeId = existingBon.Id,
-                        Designation = detail.Designation.Trim(),
-                        Quantite = detail.Quantite,
-                        PrixUnitaire = detail.PrixUnitaire
-                    };
-
-                    context.DetailsBonCommandes.Add(newDetail);
+                        BonCommandeId = bc.Id,
+                        Designation = d.Designation,
+                        Quantite = d.Quantite,
+                        PrixUnitaire = d.PrixUnitaire
+                    });
                 }
 
                 await context.SaveChangesAsync();
 
-                return (true, "✅ Bon de commande modifié avec succès.");
+                await AuditService.Instance.LogAsync(
+                    "Modification Bon de Commande",
+                    $"BC modifié | ID: {bc.Id} | Numéro: {bc.Numero}",
+                    SessionManager.CurrentUser?.Username ?? "Utilisateur Inconnu");
+
+                return (true, "✅ Bon de commande modifié.");
             }
             catch (Exception ex)
             {
-                return (false, $"Erreur : {ex.Message}");
+                return (false, ex.Message);
             }
         }
 
         #endregion
 
-        #region Suppression
+        #region DELETE
 
-        /// <summary>
-        /// Supprime un bon de commande et ses détails
-        /// </summary>
         public async Task<(bool Success, string Message)> DeleteBonCommandeAsync(int id)
         {
             using var context = CreateContext();
@@ -313,38 +223,33 @@ namespace Collectivite.Services
 
             try
             {
-                var bonCommande = await context.BonCommandes
-                    .Include(bc => bc.Details)
-                    .Include(bc => bc.Engagements)
-                    .FirstOrDefaultAsync(bc => bc.Id == id);
+                var bc = await context.BonCommandes
+                    .Include(b => b.Details)
+                    .Include(b => b.Engagements)
+                    .FirstOrDefaultAsync(b => b.Id == id);
 
-                if (bonCommande == null)
-                    return (false, "Bon de commande introuvable.");
+                if (bc == null)
+                    return (false, "Bon introuvable.");
 
-                // Délier les engagements
-                foreach (var engagement in bonCommande.Engagements)
-                {
-                    engagement.BonCommandeId = null;
-                }
-
-                // Supprimer les détails
-                context.DetailsBonCommandes.RemoveRange(bonCommande.Details);
-
-                // Supprimer le bon de commande
-                context.BonCommandes.Remove(bonCommande);
+                context.DetailsBonCommandes.RemoveRange(bc.Details);
+                context.BonCommandes.Remove(bc);
 
                 await context.SaveChangesAsync();
 
-                return (true, "✅ Bon de commande supprimé avec succès.");
+                await AuditService.Instance.LogAsync(
+                    "Suppression Bon de Commande",
+                    $"BC supprimé | ID: {bc.Id} | Numéro: {bc.Numero}",
+                    SessionManager.CurrentUser?.Username ?? "Utilisateur Inconnu");
+
+                return (true, "✅ Bon de commande supprimé.");
             }
             catch (Exception ex)
             {
-                return (false, $"Erreur : {ex.Message}");
+                return (false, ex.Message);
             }
         }
 
         #endregion
-
         #region Statistiques
 
         /// <summary>

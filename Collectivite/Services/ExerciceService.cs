@@ -1,14 +1,9 @@
 ﻿using Collectivite.Models;
-using Collectivite.ViewModels;
-using MaterialDesignThemes.Wpf;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.NetworkInformation;
-using System.Text;
 using System.Threading.Tasks;
-using System.Windows;
 
 namespace Collectivite.Services
 {
@@ -17,18 +12,16 @@ namespace Collectivite.Services
         private static ExerciceService? _instance;
         private Exercice? _currentExercice;
 
-
-        // Singleton
         public static ExerciceService Instance => _instance ??= new ExerciceService();
 
-        // Exercice courant
+        private readonly AuditService _auditService = new AuditService();
+
         public Exercice? CurrentExercice
         {
             get => _currentExercice;
             set => _currentExercice = value;
         }
 
-        // Événement pour notifier le changement d'exercice
         public event EventHandler<Exercice>? ExerciceChanged;
 
         private AppDbContext CreateContext()
@@ -36,27 +29,28 @@ namespace Collectivite.Services
             return new AppDbContext();
         }
 
-        // Initialiser l'exercice actif au démarrage
+        private string GetUsername()
+            => SessionManager.CurrentUser?.Username ?? "SYSTEM";
+
+        #region Initialisation / Sélection
+
         public async Task InitializeCurrentExerciceAsync()
         {
             var exercices = await GetAllExerciceAsync();
-            _currentExercice = exercices.FirstOrDefault(e => !e.EstCloture);
-
-            // Si aucun exercice ouvert, prendre le plus récent
-            if (_currentExercice == null)
-            {
-                _currentExercice = exercices.LastOrDefault();
-            }
+            _currentExercice = exercices.FirstOrDefault(e => !e.EstCloture)
+                               ?? exercices.LastOrDefault();
         }
 
-        // Changer l'exercice courant
         public void SetCurrentExercice(Exercice exercice)
         {
             _currentExercice = exercice;
             ExerciceChanged?.Invoke(this, exercice);
         }
 
-        // Recuperer tous les exercices
+        #endregion
+
+        #region READ (sans audit)
+
         public async Task<List<Exercice>> GetAllExerciceAsync()
         {
             using var context = CreateContext();
@@ -65,7 +59,6 @@ namespace Collectivite.Services
                 .ToListAsync();
         }
 
-        // Récupérer les exercices non clôturés
         public async Task<List<Exercice>> GetOpenExercicesAsync()
         {
             using var context = CreateContext();
@@ -75,7 +68,6 @@ namespace Collectivite.Services
                 .ToListAsync();
         }
 
-        // Récupérer l'exercice actif (non clôturé le plus récent)
         public async Task<Exercice?> GetActiveExerciceAsync()
         {
             using var context = CreateContext();
@@ -85,196 +77,186 @@ namespace Collectivite.Services
                 .FirstOrDefaultAsync();
         }
 
-        // Recupler tous les exercices de la commune
-        //public async Task<List<Exercice>> GetExercicesByCommuneIdAsync(int communeId)
-        //{
-        //    return await _context.Exercices
-        //        .Include(e => e.Commune)
-        //        .Where(e => e.IdCommune == communeId)
-        //        .OrderByDescending(e => e.DateDebut)
-        //        .ToListAsync();
-        //}
-
-        // Récupérer un exercice par son ID
         public async Task<Exercice?> GetExerciceByIdAsync(int exerciceId)
         {
             using var context = CreateContext();
-            return await context.Exercices
-                .FirstOrDefaultAsync(e => e.Id == exerciceId);
+            return await context.Exercices.FirstOrDefaultAsync(e => e.Id == exerciceId);
         }
 
-        // recuperer le dernier details commune qui n'est pas lie à un exercice
         public async Task<DetailCommune?> LastDetailCommune()
         {
             using var context = CreateContext();
             return await context.DetailCommunes
-                .Where(e => e.Exercice == null)
-                .OrderByDescending(e => e.Id)
+                .Where(d => d.Exercice == null)
+                .OrderByDescending(d => d.Id)
                 .FirstOrDefaultAsync();
         }
 
-        // Ajouter un nouvel exercice
-        public async Task<(bool Success, string Message, Exercice? Exercice)> CreateAsync(Exercice exercice)
+        #endregion
+
+        #region CREATE (AUDIT)
+
+        public async Task<(bool Success, string Message, Exercice? Exercice)>
+            CreateAsync(Exercice exercice)
         {
             try
             {
-                // Validation : Vérifier qu'il n'existe pas déjà un exercice pour cette année
                 using var context = CreateContext();
-                var existe = await context.Exercices
-                    .AnyAsync(e => e.Libelle == exercice.Libelle);
-
-                if (existe)
-                {
-                    return (false, $"{exercice.Libelle} existe déjà .", null);
-                }
 
                 if (string.IsNullOrWhiteSpace(exercice.Libelle))
-                {
-                    return (false, "le libelle de l'exercice est obligatoire.", null);
-                }
+                    return (false, "Le libellé est obligatoire.", null);
 
-                // Validation : Vérifier qu'il n'existe pas déjà un exercice non clôturé pour cette commune
-                //var notClosedExercice = await context.Exercices
-                //    .AnyAsync(e => e.EstCloture == false);
-                //if (notClosedExercice)
-                //{
-                //    return (false, "Il existe déjà un exercice non clôturé pour cette commune.", null);
-                //}
+                if (await context.Exercices.AnyAsync(e => e.Libelle == exercice.Libelle))
+                    return (false, $"{exercice.Libelle} existe déjà.", null);
 
-                // Validation : Date de fin après date de début
                 if (exercice.DateFin <= exercice.DateDebut)
-                {
                     return (false, "La date de fin doit être après la date de début.", null);
-                }
 
                 context.Exercices.Add(exercice);
                 await context.SaveChangesAsync();
 
-                // ═══════════════════════════════════════════════════════════
-                // CRÉATION AUTOMATIQUE DU BUDGET PRIMITIF ASSOCIÉ
-                // ═══════════════════════════════════════════════════════════
+                // Création automatique du budget primitif
                 var budgetPrimitif = new BudgetPrimitif
                 {
                     ExerciceId = exercice.Id,
                     MontantTotal = 0,
                     MontantDepense = 0,
                     MontantRecette = 0,
-                    DateApprobation = null,
-                    DateValidation = null,
-                    FichierValidation = null,
-                    FileName = null,
                     Status = BudgetPrimitif.Statusbudget.DRAFT
                 };
 
                 context.BudgetsPrimitifs.Add(budgetPrimitif);
                 await context.SaveChangesAsync();
 
-                
+                // 🔍 AUDIT
+                await _auditService.LogAsync(
+                    "Création Exercice",
+                    $"Création de l'exercice '{exercice.Libelle}' ({exercice.DateDebut:yyyy} - {exercice.DateFin:yyyy})",
+                    SessionManager.CurrentUser?.Username ?? "Utilisateur Inconnu");
 
                 return (true, "Exercice créé avec succès.", exercice);
             }
             catch (Exception ex)
             {
-                return (false, $"Erreur lors de la création : {ex.Message}", null);
+                return (false, $"Erreur création exercice : {ex.Message}", null);
             }
         }
 
-        //Mettre à jour un exercice
+        #endregion
+
+        #region UPDATE (AUDIT)
+
         public async Task<(bool Success, string Message)> UpdateAsync(Exercice exercice)
         {
             try
             {
-                // verifier q'un autre exercice n'existe pas avec le meme libelle
                 using var context = CreateContext();
-                var existe = await context.Exercices
+
+                var duplicate = await context.Exercices
                     .AnyAsync(e => e.Libelle == exercice.Libelle && e.Id != exercice.Id);
-                if (existe)
-                {
+
+                if (duplicate)
                     return (false, $"{exercice.Libelle} existe déjà.");
-                }
 
-                var existingExercice = await context.Exercices.FindAsync(exercice.Id);
-                if (existingExercice == null)
-                {
+                var existing = await context.Exercices.FindAsync(exercice.Id);
+                if (existing == null)
                     return (false, "Exercice non trouvé.");
-                }
 
-                // Validation : Date de fin après date de début
                 if (exercice.DateFin <= exercice.DateDebut)
-                {
                     return (false, "La date de fin doit être après la date de début.");
-                }
 
-                existingExercice.Libelle = exercice.Libelle;
-                existingExercice.DateDebut = exercice.DateDebut;
-                existingExercice.DateFin = exercice.DateFin;
-                existingExercice.EstCloture = exercice.EstCloture;
+                existing.Libelle = exercice.Libelle;
+                existing.DateDebut = exercice.DateDebut;
+                existing.DateFin = exercice.DateFin;
+                existing.EstCloture = exercice.EstCloture;
 
                 await context.SaveChangesAsync();
+
+                // 🔍 AUDIT
+                await _auditService.LogAsync(
+                    "Modification Exercice",
+                    $"Modification de l'exercice '{existing.Libelle}'",
+                    SessionManager.CurrentUser?.Username ?? "Utilisateur Inconnu");
+
                 return (true, "Exercice mis à jour avec succès.");
             }
             catch (Exception ex)
             {
-                return (false, $"Erreur lors de la mise à jour : {ex.Message}");
+                return (false, $"Erreur mise à jour : {ex.Message}");
             }
         }
 
-        // Supprimer un exercice
+        #endregion
+
+        #region DELETE (AUDIT)
+
         public async Task<(bool Success, string Message)> DeleteAsync(int exerciceId)
         {
             try
             {
                 using var context = CreateContext();
+
                 var exercice = await context.Exercices.FindAsync(exerciceId);
                 if (exercice == null)
-                {
                     return (false, "Exercice non trouvé.");
-                }
 
-                // Vérifier les dépendances (par exemple, BudgetsPrimitifs liés)
                 var hasDependencies = await context.BudgetsPrimitifs
-                    .AnyAsync(bp => bp.ExerciceId == exerciceId);
+                    .AnyAsync(b => b.ExerciceId == exerciceId);
+
                 if (hasDependencies)
-                {
-                    return (false, "Impossible de supprimer l'exercice car il a des dépendances.");
-                }
+                    return (false, "Impossible de supprimer : dépendances existantes.");
 
                 context.Exercices.Remove(exercice);
                 await context.SaveChangesAsync();
+
+                // 🔍 AUDIT
+                await _auditService.LogAsync(
+                    "Suppression Exercice",
+                    $"Suppression de l'exercice '{exercice.Libelle}'",
+                    SessionManager.CurrentUser?.Username ?? "Utilisateur Inconnu");
+
                 return (true, "Exercice supprimé avec succès.");
             }
             catch (Exception ex)
             {
-                return (false, $"Erreur lors de la suppression : {ex.Message}");
+                return (false, $"Erreur suppression : {ex.Message}");
             }
         }
+
+        #endregion
+
+        #region CLÔTURE (AUDIT)
 
         public async Task<(bool Success, string Message)> CloturerAsync(int id)
         {
             try
             {
                 using var context = CreateContext();
-                var exercice = await context.Exercices.FindAsync(id);
 
+                var exercice = await context.Exercices.FindAsync(id);
                 if (exercice == null)
-                {
                     return (false, "Exercice introuvable.");
-                }
 
                 if (exercice.EstCloture)
-                {
-                    return (false, "Cet exercice est déjà clôturé.");
-                }
+                    return (false, "Exercice déjà clôturé.");
 
                 exercice.EstCloture = true;
                 await context.SaveChangesAsync();
 
-                return (true, $"L'exercice '{exercice.Libelle}' a été clôturé avec succès.");
+                // 🔍 AUDIT
+                await _auditService.LogAsync(
+                    "Clôture Exercice",
+                    $"Clôture de l'exercice '{exercice.Libelle}'",
+                    SessionManager.CurrentUser?.Username ?? "Utilisateur Inconnu");
+
+                return (true, $"Exercice '{exercice.Libelle}' clôturé avec succès.");
             }
             catch (Exception ex)
             {
-                return (false, $"Erreur lors de la clôture : {ex.Message}");
+                return (false, $"Erreur clôture : {ex.Message}");
             }
         }
+
+        #endregion
     }
 }

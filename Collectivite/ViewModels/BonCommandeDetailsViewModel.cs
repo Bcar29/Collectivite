@@ -42,7 +42,7 @@ namespace Collectivite.ViewModels
         #region Properties
 
         public ObservableCollection<DetailBonCommande> Details { get; } = new();
-        public ObservableCollection<Engagement> Engagements { get; } = new();
+        //public ObservableCollection<Engagement> Engagements { get; } = new();
 
         public Commune Commune
         {
@@ -94,7 +94,7 @@ namespace Collectivite.ViewModels
 
                 if (bonCommande != null)
                 {
-                    Commune = commune;
+                    Commune = commune?? new Commune();
                     BonCommande = bonCommande;
 
                     // Charger les détails
@@ -108,14 +108,14 @@ namespace Collectivite.ViewModels
                     }
 
                     // Charger les engagements
-                    Engagements.Clear();
-                    if (bonCommande.Engagements != null)
-                    {
-                        foreach (var engagement in bonCommande.Engagements)
-                        {
-                            Engagements.Add(engagement);
-                        }
-                    }
+                    //Engagements.Clear();
+                    //if (bonCommande.Engagements != null)
+                    //{
+                    //    foreach (var engagement in bonCommande.Engagements)
+                    //    {
+                    //        Engagements.Add(engagement);
+                    //    }
+                    //}
 
                     OnPropertyChanged(nameof(MontantTotal));
                 }

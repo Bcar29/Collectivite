@@ -344,8 +344,9 @@ namespace Collectivite.Services
         {
             using var context = CreateContext();
 
-            var currentYear = DateTime.Now.Year;
-            var prefix = $"OR-{currentYear}-";
+            var exerciceService = ExerciceService.Instance;
+            var year = exerciceService.CurrentExercice?.GetAnnee() ?? DateTime.Now.Year;
+            var prefix = $"EB-{year}-";
 
             var ordresThisYear = await context.OrdreRecettes
                 .Where(o => o.NumeroOrdre.StartsWith(prefix))

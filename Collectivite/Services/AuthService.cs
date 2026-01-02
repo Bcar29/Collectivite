@@ -10,13 +10,21 @@ namespace Collectivite.Services
     public class AuthService
     {
         private readonly IPasswordHasher _passwordHasher;
+
+        // ✅ DOIT être static
+        private static AuthService? _instance;
+
         private User? _currentUser;
-        private readonly HashSet<string> _currentPermissions = new(StringComparer.OrdinalIgnoreCase);
+        private readonly HashSet<string> _currentPermissions =
+            new(StringComparer.OrdinalIgnoreCase);
 
         public AuthService()
         {
             _passwordHasher = new PasswordHasher();
         }
+
+        public static AuthService Instance
+            => _instance ??= new AuthService();
 
         private AppDbContext CreateContext()
         {
@@ -24,14 +32,19 @@ namespace Collectivite.Services
         }
 
         public User? CurrentUser => _currentUser;
+
         public IReadOnlyCollection<string> CurrentPermissions => _currentPermissions;
+
         public string? CurrentRoleName => _currentUser?.Role?.Name;
 
-        public async Task<(bool Success, string Message, User? User)> AuthenticateAsync(string username, string password)
+        public async Task<(bool Success, string Message, User? User)> AuthenticateAsync(
+            string username,
+            string password)
         {
             try
             {
                 using var context = CreateContext();
+
                 var user = await context.Users
                     .Include(u => u.Commune)
                     .Include(u => u.Role)
@@ -40,24 +53,19 @@ namespace Collectivite.Services
                     .FirstOrDefaultAsync(u => u.Username == username);
 
                 if (user == null)
-                {
                     return (false, "Nom d'utilisateur ou mot de passe incorrect.", null);
-                }
 
-                // ✅ VÉRIFICATION du mot de passe avec BCrypt
                 if (!_passwordHasher.VerifyPassword(password, user.PasswordHash))
-                {
                     return (false, "Nom d'utilisateur ou mot de passe incorrect.", null);
-                }
 
                 _currentUser = user;
                 HydratePermissions(user);
 
-                return (true, "Connexion réussie!", user);
+                return (true, "Connexion réussie !", user);
             }
             catch (Exception ex)
             {
-                return (false, $"Erreur de connexion: {ex.Message}", null);
+                return (false, $"Erreur de connexion : {ex.Message}", null);
             }
         }
 
@@ -72,7 +80,7 @@ namespace Collectivite.Services
             if (string.IsNullOrWhiteSpace(permissionCode))
                 return false;
 
-            return _currentPermissions.Contains(permissionCode, StringComparer.OrdinalIgnoreCase);
+            return _currentPermissions.Contains(permissionCode);
         }
 
         private void HydratePermissions(User user)
@@ -82,12 +90,13 @@ namespace Collectivite.Services
             if (user.Role?.RolePermissions == null)
                 return;
 
-            foreach (var permission in user.Role.RolePermissions
+            foreach (var code in user.Role.RolePermissions
                          .Select(rp => rp.Permission?.Code)
-                         .Where(code => !string.IsNullOrWhiteSpace(code)))
+                         .Where(c => !string.IsNullOrWhiteSpace(c)))
             {
-                _currentPermissions.Add(permission!);
+                _currentPermissions.Add(code!);
             }
         }
     }
+
 }

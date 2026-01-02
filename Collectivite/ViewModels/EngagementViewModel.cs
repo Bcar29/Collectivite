@@ -32,7 +32,7 @@ namespace Collectivite.ViewModels
             LoadDataCommand = new RelayCommand(async _ => await LoadDataAsync());
             SearchCommand = new RelayCommand(async _ => await SearchAsync());
             DeleteCommand = new RelayCommand<Engagement>(async engagement => await DeleteAsync(engagement));
-            ShowStatistiquesCommand = new RelayCommand(async _ => await ShowStatistiquesAsync());
+            //ShowStatistiquesCommand = new RelayCommand(async _ => await ShowStatistiquesAsync());
 
             // Charger les données
             LoadDataCommand.Execute(null);
@@ -90,7 +90,7 @@ namespace Collectivite.ViewModels
         public ICommand LoadDataCommand { get; }
         public ICommand SearchCommand { get; }
         public ICommand DeleteCommand { get; }
-        public ICommand ShowStatistiquesCommand { get; }
+        //public ICommand ShowStatistiquesCommand { get; }
 
         #endregion
 
@@ -227,33 +227,33 @@ namespace Collectivite.ViewModels
             }
         }
 
-        private async System.Threading.Tasks.Task ShowStatistiquesAsync()
-        {
-            try
-            {
-                var service = new EngagementService();
-                var stats = await service.GetStatistiquesAsync(SelectedExerciceId);
+        //private async System.Threading.Tasks.Task ShowStatistiquesAsync()
+        //{
+        //    try
+        //    {
+        //        var service = new EngagementService();
+        //        var stats = await service.GetStatistiquesAsync(SelectedExerciceId);
 
-                var message = $"📊 STATISTIQUES DES ENGAGEMENTS\n\n" +
-                             $"Total d'engagements : {stats.TotalEngagements}\n" +
-                             $"Montant total : {stats.MontantTotal:N0} GNF\n" +
-                             $"Montant moyen : {stats.MontantMoyen:N0} GNF\n\n" +
-                             $"Top 10 des tiers :\n";
+        //        var message = $"📊 STATISTIQUES DES ENGAGEMENTS\n\n" +
+        //                     $"Total d'engagements : {stats.TotalEngagements}\n" +
+        //                     $"Montant total : {stats.MontantTotal:N0} GNF\n" +
+        //                     $"Montant moyen : {stats.MontantMoyen:N0} GNF\n\n" +
+        //                     $"Top 10 des tiers :\n";
 
-                foreach (var item in stats.Top10Tiers)
-                {
-                    message += $"• {item.Key} : {item.Value:N0} GNF\n";
-                }
+        //        foreach (var item in stats.Top10Tiers)
+        //        {
+        //            message += $"• {item.Key} : {item.Value:N0} GNF\n";
+        //        }
 
-                MessageBox.Show(message, "Statistiques",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
+        //        MessageBox.Show(message, "Statistiques",
+        //            MessageBoxButton.OK, MessageBoxImage.Information);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
+        //            MessageBoxButton.OK, MessageBoxImage.Error);
+        //    }
+        //}
 
         /// <summary>
         /// Nettoyer les ressources et se désabonner des événements

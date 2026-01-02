@@ -1,10 +1,11 @@
 ﻿using Collectivite.Models;
+using Collectivite.Utils;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Threading.Tasks;
-using Collectivite.Utils;
 
 namespace Collectivite.Services
 {
@@ -238,6 +239,10 @@ namespace Collectivite.Services
                 context.Recensements.Add(newRecensement);
                 await context.SaveChangesAsync();
 
+                await AuditService.Instance.LogAsync(
+                    "Nouveau Recensement",
+                    $"Recensement créé | ID: {newRecensement.Id} | Montant: {newRecensement.MontantRecense:N0}",
+                    SessionManager.CurrentUser?.Username ?? "Utilisateur Inconnu");
                 // Recharger avec les relations
                 var savedRecensement = await GetRecensementByIdAsync(newRecensement.Id);
 
@@ -299,6 +304,10 @@ namespace Collectivite.Services
 
                 await context.SaveChangesAsync();
 
+                await AuditService.Instance.LogAsync(
+                    "Modification Recensement",
+                    $"Recensement Modifié | ID: {existingRecensement.Id} | Montant: {existingRecensement.MontantRecense:N0}",
+                    SessionManager.CurrentUser?.Username ?? "Utilisateur Inconnu");
                 return (true, "✅ Recensement modifié avec succès.");
             }
             catch (Exception ex)
@@ -338,6 +347,10 @@ namespace Collectivite.Services
                 context.Recensements.Remove(recensement);
                 await context.SaveChangesAsync();
 
+                await AuditService.Instance.LogAsync(
+                    "Suppression Recensement",
+                    $"Recensement Supprimé | ID: {recensement.Id} | Montant: {recensement.MontantRecense:N0}",
+                    SessionManager.CurrentUser?.Username ?? "Utilisateur Inconnu");
                 return (true, "✅ Recensement supprimé avec succès.");
             }
             catch (Exception ex)

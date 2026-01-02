@@ -10,7 +10,6 @@
         TextOptions.TextRenderingMode="Auto"
         Background="{DynamicResource MaterialDesignPaper}"
         FontFamily="{DynamicResource MaterialDesignFont}"
-        Title="Gestion Budgétaire et Comptable"
         Height="800" 
         Width="1400"
         Unloaded="Window_Unloaded"
