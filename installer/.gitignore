@@ -1,0 +1,8 @@
+# Fichiers de publication
+publish/
+Output/
+
+# Fichiers temporaires
+*.tmp
+*.log
+
