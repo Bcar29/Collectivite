@@ -170,7 +170,7 @@
                               ItemsSource="{Binding Communes}"
                               SelectedValue="{Binding DialogUser.CommuneId, Mode=TwoWay}"
                               SelectedValuePath="Id"
-                              DisplayMemberPath="NomComplet"
+                              DisplayMemberPath="Nom"
                               Margin="0,0,0,15"/>
 
                     <ComboBox materialDesign:HintAssist.Hint="Rôle *"
