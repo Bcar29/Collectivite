@@ -640,6 +640,14 @@ namespace Collectivite
             _viewModel.IsMenuOpen = false;
         }
 
+        // Navigation vers la page de Validation Engagement Mandat OrdreRecette
+        private void DebiteurCrediteur_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.UpdatePageTitle("COMPTABILITE - GESTION DES DETTES & CREANCES ");
+            MainContentFrame.Navigate(new Views.Pages.DebiteurCrediteurPage());
+            _viewModel.IsMenuOpen = false;
+        }
+
         
 
         // Méthode temporaire pour afficher un placeholder

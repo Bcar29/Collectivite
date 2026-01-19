@@ -6,11 +6,17 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <AssemblyInformationalVersion>1.0.0</AssemblyInformationalVersion>
+    <ApplicationIcon>app_icon_256.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <None Remove="appsettings.json" />
-    <None Remove="commune.png" />
+    <None Remove="app_icon_256.png" />
+    <None Remove="app_icon_256.ico" />
   </ItemGroup>
 
   <ItemGroup>
@@ -41,7 +47,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="commune.png">
+    <Resource Include="app_icon_256.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
   </ItemGroup>

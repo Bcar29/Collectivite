@@ -1096,11 +1096,17 @@ namespace Collectivite.Migrations
                     b.Property<string>("FileName")
                         .HasColumnType("longtext");
 
+                    b.Property<int?>("MandatId")
+                        .HasColumnType("int");
+
                     b.Property<decimal>("Montant")
                         .HasColumnType("decimal(65,30)");
 
                     b.Property<string>("NumBanqueBenef")
                         .HasColumnType("longtext");
+
+                    b.Property<int?>("OrdreRecetteId")
+                        .HasColumnType("int");
 
                     b.Property<string>("RefChèque")
                         .HasColumnType("longtext");
@@ -1121,6 +1127,10 @@ namespace Collectivite.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("id");
+
+                    b.HasIndex("MandatId");
+
+                    b.HasIndex("OrdreRecetteId");
 
                     b.HasIndex("idCompteComptable");
 
@@ -2013,6 +2023,14 @@ namespace Collectivite.Migrations
 
             modelBuilder.Entity("Collectivite.Models.Mouvement", b =>
                 {
+                    b.HasOne("Collectivite.Models.Mandat", null)
+                        .WithMany("Mouvements")
+                        .HasForeignKey("MandatId");
+
+                    b.HasOne("Collectivite.Models.OrdreRecette", null)
+                        .WithMany("Mouvements")
+                        .HasForeignKey("OrdreRecetteId");
+
                     b.HasOne("Collectivite.Models.CompteComptable", "CompteComptable")
                         .WithMany()
                         .HasForeignKey("idCompteComptable")
@@ -2262,6 +2280,8 @@ namespace Collectivite.Migrations
             modelBuilder.Entity("Collectivite.Models.Mandat", b =>
                 {
                     b.Navigation("EcritureComptables");
+
+                    b.Navigation("Mouvements");
                 });
 
             modelBuilder.Entity("Collectivite.Models.Nommenclature", b =>
@@ -2277,6 +2297,8 @@ namespace Collectivite.Migrations
             modelBuilder.Entity("Collectivite.Models.OrdreRecette", b =>
                 {
                     b.Navigation("EcritureComptables");
+
+                    b.Navigation("Mouvements");
                 });
 
             modelBuilder.Entity("Collectivite.Models.PDL", b =>
