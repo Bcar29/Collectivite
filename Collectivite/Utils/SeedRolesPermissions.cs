@@ -12,7 +12,7 @@ namespace Collectivite.Utils
         /// Permissions de base (existantes) + permissions CRUD dérivées des modèles.
         /// 
         /// ⚠️ Ces permissions servent uniquement de "catalogue" initial.
-        /// Le Maire reste libre d'en utiliser certaines ou non via l'interface.
+        /// Le rôle Admin a toutes les permissions, les autres rôles peuvent être configurés via l'interface.
         /// </summary>
         private static readonly Permission[] DefaultPermissions =
         {
@@ -214,7 +214,8 @@ namespace Collectivite.Utils
 
         private static readonly Dictionary<string, string[]> RolePermissions = new()
         {
-            { "Maire", new[] { "Budget.Approve", "Budget.Validate", "Remaniement.Manage" } },
+            { "Maire", new[] { "Budget.Approve", "Budget.Validate" } },
+            { "Admin", Array.Empty<string>() }, // Le rôle Admin recevra toutes les permissions dans la section dédiée
             //{ "Secrétaire Général", new[] { "Courrier.Register", "Remaniement.Manage" } },
             //{ "Receveur", new[] { "Finance.Manage", "Remaniement.Manage" } }
         };
@@ -298,34 +299,50 @@ namespace Collectivite.Utils
             }
 
             // ════════════════════════════════════════════════════════════
-            // 3. MAIRE = SUPER-ADMIN : lui attribuer TOUTES les permissions existantes
+            // 3. ADMIN = SUPER-ADMIN : lui attribuer TOUTES les permissions existantes
             // sans retirer celles déjà présentes (ajout uniquement des manquantes).
             // ════════════════════════════════════════════════════════════
-            var maire = db.Roles
+            var admin = db.Roles
                 .Include(r => r.RolePermissions)
-                .FirstOrDefault(r => r.Name == "Maire");
+                .FirstOrDefault(r => r.Name == "Admin");
 
-            if (maire != null)
+            if (admin == null)
             {
-                var allPermissionIds = db.Permissions.Select(p => p.Id).ToList();
-                var existingIds = maire.RolePermissions
-                    .Select(rp => rp.PermissionId)
-                    .ToHashSet();
-
-                foreach (var pid in allPermissionIds)
+                // Créer le rôle Admin s'il n'existe pas
+                admin = new Role
                 {
-                    if (!existingIds.Contains(pid))
-                    {
-                        db.RolePermissions.Add(new RolePermission
-                        {
-                            RoleId = maire.Id,
-                            PermissionId = pid
-                        });
-                    }
-                }
-
+                    Name = "Admin",
+                    Description = "Rôle administrateur avec contrôle total de l'application",
+                    IsActive = true
+                };
+                db.Roles.Add(admin);
                 db.SaveChanges();
+
+                // Recharger pour avoir les RolePermissions
+                admin = db.Roles
+                    .Include(r => r.RolePermissions)
+                    .First(r => r.Name == "Admin");
             }
+
+            // Attribuer toutes les permissions au rôle Admin
+            var allPermissionIds = db.Permissions.Select(p => p.Id).ToList();
+            var existingIds = admin.RolePermissions
+                .Select(rp => rp.PermissionId)
+                .ToHashSet();
+
+            foreach (var pid in allPermissionIds)
+            {
+                if (!existingIds.Contains(pid))
+                {
+                    db.RolePermissions.Add(new RolePermission
+                    {
+                        RoleId = admin.Id,
+                        PermissionId = pid
+                    });
+                }
+            }
+
+            db.SaveChanges();
 
             // ═══════════════════════════════════════════════════════════
             // 4. CRÉATION DE L'UTILISATEUR SUPER-ADMIN
@@ -334,7 +351,7 @@ namespace Collectivite.Utils
         }
 
         /// <summary>
-        /// Crée un utilisateur super-admin par défaut avec le rôle "Maire".
+        /// Crée un utilisateur super-admin par défaut avec le rôle "Admin".
         /// Cet utilisateur n'est créé qu'une seule fois (vérification par username).
         /// </summary>
         private static void SeedSuperAdmin(AppDbContext db)
@@ -349,12 +366,12 @@ namespace Collectivite.Utils
                 return; // L'admin existe déjà, on ne fait rien
             }
 
-            // Récupérer le rôle Maire
-            var maireRole = db.Roles.FirstOrDefault(r => r.Name == "Maire");
-            if (maireRole == null)
+            // Récupérer le rôle Admin
+            var adminRole = db.Roles.FirstOrDefault(r => r.Name == "Admin");
+            if (adminRole == null)
             {
-                System.Console.WriteLine("⚠️  ATTENTION : Le rôle 'Maire' n'existe pas. Impossible de créer le super-admin.");
-                return; // Pas de rôle Maire, impossible de créer l'admin
+                System.Console.WriteLine("⚠️  ATTENTION : Le rôle 'Admin' n'existe pas. Impossible de créer le super-admin.");
+                return; // Pas de rôle Admin, impossible de créer l'admin
             }
 
             // Récupérer la première commune (ou null si aucune)
@@ -371,7 +388,7 @@ namespace Collectivite.Utils
                 Email = SUPER_ADMIN_EMAIL,
                 Tel = "+224 000 00 00 00",
                 PasswordHash = passwordHash,
-                RoleId = maireRole.Id,
+                RoleId = adminRole.Id,
                 //CommuneId = premiereCommune?.Id ?? 0
             };
 
@@ -385,7 +402,7 @@ namespace Collectivite.Utils
             System.Console.WriteLine($"   Username: {SUPER_ADMIN_USERNAME}");
             System.Console.WriteLine($"   Password: {SUPER_ADMIN_PASSWORD}");
             System.Console.WriteLine($"   Email:    {SUPER_ADMIN_EMAIL}");
-            System.Console.WriteLine($"   Rôle:     Maire (tous les droits)");
+            System.Console.WriteLine($"   Rôle:     Admin (contrôle total de l'application)");
             System.Console.WriteLine("═══════════════════════════════════════════════════════");
             System.Console.WriteLine("⚠️  IMPORTANT: Changez ce mot de passe dès la première connexion !");
             System.Console.WriteLine("═══════════════════════════════════════════════════════");
