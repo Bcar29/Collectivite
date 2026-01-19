@@ -216,8 +216,15 @@
                       RowHeight="70">
 
                 <DataGrid.Columns>
+                    <!-- Date -->
+                    <DataGridTextColumn Header="N°" 
+                            Binding="{Binding Id}" 
+                            Width="110"
+                            FontWeight="Bold"
+                            HeaderStyle="{StaticResource DataGridHeaderStyle}"
+                            CellStyle="{StaticResource DataGridCellCenterStyle}"/>
                     <!-- Imputation Débit Crédit -->
-                    <DataGridTemplateColumn Header="Débit" Width="120" HeaderStyle="{StaticResource DataGridHeaderStyle}">
+                    <DataGridTemplateColumn Header=" Compte Débit" Width="120" HeaderStyle="{StaticResource DataGridHeaderStyle}">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel>
@@ -232,7 +239,7 @@
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
 
-                    <DataGridTemplateColumn Header="Crédit" Width="120" HeaderStyle="{StaticResource DataGridHeaderStyle}">
+                    <DataGridTemplateColumn Header="Compte Crédit" Width="120" HeaderStyle="{StaticResource DataGridHeaderStyle}">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel>
@@ -263,7 +270,7 @@
                     </DataGridTemplateColumn>
 
                     <!-- Montant Débit Crédit-->
-                    <DataGridTemplateColumn Header="Débit" Width="100" HeaderStyle="{StaticResource DataGridHeaderStyle}">
+                    <DataGridTemplateColumn Header="Montant Débit" Width="100" HeaderStyle="{StaticResource DataGridHeaderStyle}">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel>
@@ -278,7 +285,7 @@
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
 
-                    <DataGridTemplateColumn Header="Crédit" Width="100" HeaderStyle="{StaticResource DataGridHeaderStyle}">
+                    <DataGridTemplateColumn Header="Montant Crédit" Width="100" HeaderStyle="{StaticResource DataGridHeaderStyle}">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel>

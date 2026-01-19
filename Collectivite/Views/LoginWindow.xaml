@@ -156,7 +156,7 @@
                       Background="{DynamicResource PrimaryHueMidBrush}">
                     <Grid>
                         <!-- Image de la commune -->
-                        <Image Source="pack://application:,,,/commune.png"
+                        <Image Source="pack://application:,,,/app_icon_256.png"
                              Stretch="UniformToFill"
                              Opacity="0.9"/>
                         

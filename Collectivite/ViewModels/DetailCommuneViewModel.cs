@@ -20,6 +20,7 @@ namespace Collectivite.ViewModels
         private bool _isDialogOpen;
         private bool _isEditMode;
         private DetailCommune _dialogDetailCommune;
+        private Exercice? _selectedExercice;
 
         public DetailCommuneViewModel(
             DetailCommuneService detailCommuneService,
@@ -53,6 +54,7 @@ namespace Collectivite.ViewModels
 
         public ObservableCollection<DetailCommune> DetailCommunes { get; } = [];
         public ObservableCollection<Commune> Communes { get; } = [];
+        public ObservableCollection<Exercice> Exercices { get; } = [];
 
         public bool IsLoading
         {
@@ -86,6 +88,22 @@ namespace Collectivite.ViewModels
 
         public string DialogTitle => IsEditMode ? "Modifier les détails de la commune" : "Ajouter les détails de la commune";
 
+        /// <summary>
+        /// Exercice sélectionné dans le formulaire (ComboBox)
+        /// </summary>
+        public Exercice? SelectedExercice
+        {
+            get => _selectedExercice;
+            set
+            {
+                if (SetProperty(ref _selectedExercice, value) && value != null)
+                {
+                    DialogDetailCommune.ExerciceId = value.Id;
+                    OnPropertyChanged(nameof(DialogDetailCommune));
+                }
+            }
+        }
+
         #endregion
 
         #region Commands
@@ -109,6 +127,7 @@ namespace Collectivite.ViewModels
             try
             {
                 await LoadCommunesAsync();
+                await LoadExercicesAsync();
                 await LoadDetailCommuneAsync();
             }
             catch (Exception ex)
@@ -173,6 +192,32 @@ namespace Collectivite.ViewModels
             }
         }
 
+        private async System.Threading.Tasks.Task LoadExercicesAsync()
+        {
+            try
+            {
+                var exerciceService = ExerciceService.Instance;
+                var exercices = await exerciceService.GetAllExerciceAsync();
+
+                Exercices.Clear();
+                foreach (var ex in exercices)
+                {
+                    Exercices.Add(ex);
+                }
+
+                // Valeur par défaut : CurrentExercice s'il est défini
+                if (exerciceService.CurrentExercice != null)
+                {
+                    SelectedExercice = Exercices.FirstOrDefault(e => e.Id == exerciceService.CurrentExercice.Id);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors du chargement des exercices : {ex.Message}",
+                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         private void OpenAddDetailCommune()
         {
             IsEditMode = false;
@@ -180,6 +225,13 @@ namespace Collectivite.ViewModels
             {
                 IdCommune = _communeIdFilter ?? 0
             };
+
+            // Par défaut, on met l'exercice courant si disponible
+            var exerciceService = ExerciceService.Instance;
+            if (exerciceService.CurrentExercice != null)
+            {
+                SelectedExercice = Exercices.FirstOrDefault(e => e.Id == exerciceService.CurrentExercice.Id);
+            }
 
             IsDialogOpen = true;
         }
@@ -193,6 +245,7 @@ namespace Collectivite.ViewModels
             {
                 Id = detail.Id,
                 IdCommune = detail.IdCommune,
+                ExerciceId = detail.ExerciceId,
                 NombreConseillers = detail.NombreConseillers,
                 NombreDelegationSpeciale = detail.NombreDelegationSpeciale,
                 EffectifTotalPersonnel = detail.EffectifTotalPersonnel,
@@ -235,6 +288,13 @@ namespace Collectivite.ViewModels
                 NombreMarchesJournaliers = detail.NombreMarchesJournaliers,
                 NombreMarchesHebdomadaires = detail.NombreMarchesHebdomadaires
             };
+
+            // Positionner le ComboBox sur l'exercice du détail (si présent dans la liste)
+            if (detail.ExerciceId.HasValue)
+            {
+                SelectedExercice = Exercices.FirstOrDefault(e => e.Id == detail.ExerciceId.Value);
+            }
+
             IsDialogOpen = true;
         }
 
@@ -274,6 +334,27 @@ namespace Collectivite.ViewModels
 
             try
             {
+                // S'assurer que l'ExerciceId est bien défini depuis le ComboBox
+                if (SelectedExercice != null)
+                {
+                    DialogDetailCommune.ExerciceId = SelectedExercice.Id;
+                }
+                else if (DialogDetailCommune.ExerciceId == null)
+                {
+                    // Si aucun exercice n'est sélectionné, utiliser le CurrentExercice par défaut
+                    var exerciceService = ExerciceService.Instance;
+                    if (exerciceService.CurrentExercice != null)
+                    {
+                        DialogDetailCommune.ExerciceId = exerciceService.CurrentExercice.Id;
+                    }
+                    else
+                    {
+                        MessageBox.Show("Veuillez sélectionner un exercice.", "Erreur", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        IsLoading = false;
+                        return;
+                    }
+                }
+
                 // Calculs automatiques
                 DialogDetailCommune.PopulationTotale = DialogDetailCommune.PopulationHommes + DialogDetailCommune.PopulationFemmes;
 
