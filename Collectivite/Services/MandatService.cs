@@ -1,5 +1,6 @@
 ﻿using Collectivite.Models;
 using Collectivite.Utils;
+using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -28,7 +29,7 @@ namespace Collectivite.Services
 
             var exerciceService = ExerciceService.Instance;
             var year = exerciceService.CurrentExercice?.GetAnnee() ?? DateTime.Now.Year;
-            var prefix = $"EB-{year}-";
+            var prefix = $"M-{year}-";
 
             // Récupérer tous les mandats de l'année en cours
             var mandatsThisYear = await context.Mandats
@@ -274,6 +275,27 @@ namespace Collectivite.Services
 
                 if (string.IsNullOrWhiteSpace(mandat.Objet))
                     return (false, "L'objet du mandat est obligatoire.", null);
+                var exerciceService = ExerciceService.Instance;
+                if (exerciceService.CurrentExercice != null)
+                {
+                    // 3. Recettes Perçues 
+                    var RecettesPercues = await context.Mouvements
+                        .Where(m => m.OrdreRecette != null && m.OrdreRecette.ExerciceId == exerciceService.CurrentExercice.Id)
+                        .SumAsync(m => m.Montant);
+
+                    // 3. Depense payées
+                    var DepensesPayees = await context.Mouvements
+                         .Where(m => m.Mandat != null && m.Mandat.Engagement.ExerciceId == exerciceService.CurrentExercice.Id)
+                         .SumAsync(m => m.Montant);
+
+                    var SoldeDisponible = RecettesPercues - DepensesPayees;
+
+                    if (SoldeDisponible < mandat.MontantNet )
+                    {
+                        return (false, "Solde inferieur au montant du mandat ", null);
+                    }
+                }
+                
 
 
                 // -------------------------------

@@ -102,9 +102,9 @@
             </Border>
 
             <!-- ═══════════════════════════════════════════════════════════
-      DIALOG MODAL AJOUT/MODIFICATION
-      ═══════════════════════════════════════════════════════════ -->
-        <materialDesign:DialogHost IsOpen="{Binding IsDialogOpen}"
+              DIALOG MODAL AJOUT/MODIFICATION
+             ═══════════════════════════════════════════════════════════ -->
+            <materialDesign:DialogHost IsOpen="{Binding IsDialogOpen}"
                           CloseOnClickAway="False"
                           Panel.ZIndex="1000">
             <materialDesign:DialogHost.DialogContent>
@@ -153,7 +153,6 @@
                           Margin="0,0,0,15"/>
 
                     <!-- Sélection du tiers -->
-                    <!-- Tiers -->
                     <ComboBox Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3"
                           materialDesign:HintAssist.Hint="Tiers *"
                           Style="{StaticResource MaterialDesignOutlinedComboBox}"
@@ -171,7 +170,6 @@
                         MaxLength="200"/>
 
                     <!-- Montant du contrat  -->
-                    
                     <TextBox materialDesign:HintAssist.Hint="Montant du contrat (GNF) *"
                        Style="{StaticResource MaterialDesignOutlinedTextBox}"
                        Text="{Binding DialogContrat.MontantContrat, UpdateSourceTrigger=PropertyChanged, StringFormat=N0}"
@@ -291,7 +289,7 @@
                 </Grid>
             </Border>
         </Grid>
-
+        <!--
         <materialDesign:DialogHost IsOpen="{Binding IsDialogOpen}" CloseOnClickAway="False" Panel.ZIndex="1000">
             <materialDesign:DialogHost.DialogContent>
                 <Border Background="White" CornerRadius="8" Padding="25" Width="550">
@@ -332,5 +330,6 @@
                 </Border>
             </materialDesign:DialogHost.DialogContent>
         </materialDesign:DialogHost>
+        -->
     </Grid>
 </Page>
