@@ -19,6 +19,7 @@
         <utils:EmptyCollectionToVisibilityConverter x:Key="EmptyCollectionToVisConverter"/>
         <utils:NonEmptyCollectionToVisibilityConverter x:Key="NonEmptyCollectionToVisConverter"/>
         <utils:CountZeroToVisibilityConverter x:Key="CountZeroToVisConverter"/>
+        <utils:StringToVisibilityConverters x:Key="StringToVisConverter"/>
         <!-- Converters pour les modes de règlement (classes spécifiques) -->
         <utils:EspeceToBoolConverter x:Key="EspeceToBoolConverter"/>
         <utils:VirementToBoolConverter x:Key="VirementToBoolConverter"/>
@@ -43,6 +44,19 @@
             <Setter Property="CornerRadius" Value="12"/>
             <Setter Property="Padding" Value="10,4"/>
             <Setter Property="Margin" Value="0"/>
+        </Style>
+
+        <!-- Style pour les RadioButtons de mode de règlement avec couleur de fond pour le sélectionné -->
+        <Style x:Key="ModeReglementRadioButtonStyle" TargetType="RadioButton" BasedOn="{StaticResource MaterialDesignChoiceChipRadioButton}">
+            <Setter Property="Background" Value="#F1F5F9"/>
+            <Setter Property="Foreground" Value="#64748B"/>
+            <Style.Triggers>
+                <Trigger Property="IsChecked" Value="True">
+                    <Setter Property="Background" Value="#CBD5E1"/>
+                    <Setter Property="Foreground" Value="#1E293B"/>
+                    <Setter Property="FontWeight" Value="SemiBold"/>
+                </Trigger>
+            </Style.Triggers>
         </Style>
 
         <!-- Style pour les boutons d'action dans le DataGrid -->
@@ -171,22 +185,19 @@
                                     <!-- Espèces -->
                                     <RadioButton Content="Espèces" 
                                                  IsChecked="{Binding DialogModeReglement, Converter={StaticResource EspeceToBoolConverter}}"
-                                                 Style="{StaticResource MaterialDesignChoiceChipRadioButton}"
-                                                 Margin="0,0,8,0"
-                                                 Background="#F1F5F9"/>
+                                                 Style="{StaticResource ModeReglementRadioButtonStyle}"
+                                                 Margin="0,0,8,0"/>
 
                                     <!-- Virement -->
                                     <RadioButton Content="Virement" 
                                                  IsChecked="{Binding DialogModeReglement, Converter={StaticResource VirementToBoolConverter}}"
-                                                 Style="{StaticResource MaterialDesignChoiceChipRadioButton}"
-                                                 Margin="0,0,8,0"
-                                                 Background="#F1F5F9"/>
+                                                 Style="{StaticResource ModeReglementRadioButtonStyle}"
+                                                 Margin="0,0,8,0"/>
 
                                     <!-- Chèque -->
                                     <RadioButton Content="Chèque" 
                                                  IsChecked="{Binding DialogModeReglement, Converter={StaticResource ChequeToBoolConverter}}"
-                                                 Style="{StaticResource MaterialDesignChoiceChipRadioButton}"
-                                                 Background="#F1F5F9"/>
+                                                 Style="{StaticResource ModeReglementRadioButtonStyle}"/>
                                 </StackPanel>
                             </StackPanel>
 
@@ -218,6 +229,19 @@
                                     <TextBox Text="{Binding DialogRefCheque, UpdateSourceTrigger=PropertyChanged}"
                                              Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                              materialDesign:HintAssist.Hint="Référence du chèque *"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Message d'erreur de solde insuffisant -->
+                            <Border Background="#FEE2E2" CornerRadius="8" Padding="16" Margin="0,0,0,16"
+                                    BorderBrush="#FCA5A5" BorderThickness="1"
+                                    Visibility="{Binding MessageErreurSolde, Converter={StaticResource StringToVisConverter}}">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding MessageErreurSolde}" 
+                                               FontSize="12" 
+                                               Foreground="#991B1B"
+                                               TextWrapping="Wrap"
+                                               FontWeight="Medium"/>
                                 </StackPanel>
                             </Border>
 

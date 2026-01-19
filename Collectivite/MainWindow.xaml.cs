@@ -648,6 +648,78 @@ namespace Collectivite
             _viewModel.IsMenuOpen = false;
         }
 
+        // Navigation vers la page PDL
+        private void PDLPage_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.UpdatePageTitle("PDL - GESTION DES P-D-L ");
+            MainContentFrame.Navigate(new Views.Pages.PDLPage());
+            _viewModel.IsMenuOpen = false;
+        }
+
+        // Navigation vers la page PDL PROGRAMMES
+        private void PROGRAMMES_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.UpdatePageTitle("PDL - GESTION DES PROGRAMMES ");
+            MainContentFrame.Navigate(new Views.Pages.ProgrammePDLPage());
+            _viewModel.IsMenuOpen = false;
+        }
+
+        // Navigation vers la page PDL SECTEURS
+        private void SECTEUR_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.UpdatePageTitle("PDL - GESTION DES SECTEURS ");
+            MainContentFrame.Navigate(new Views.Pages.SecteurPDLPage());
+            _viewModel.IsMenuOpen = false;
+        }
+
+        // Navigation vers la page PDL ACTEURS
+        private void ACTEURS_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.UpdatePageTitle("PDL - GESTION DES ACTEURS ");
+            MainContentFrame.Navigate(new Views.Pages.ActeurPDLPage());
+            _viewModel.IsMenuOpen = false;
+        }
+
+        // Navigation vers la page PDL BENEFICIAIRES
+        private void BENEFICIAIRE_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.UpdatePageTitle("PDL - GESTION DES BENEFICIAIRES ");
+            MainContentFrame.Navigate(new Views.Pages.BeneficiairePDLPage());
+            _viewModel.IsMenuOpen = false;
+        }
+
+        // Navigation vers la page PDL STRUCTURES
+        private void STRUCTURES_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.UpdatePageTitle("PDL - GESTION DES STRUCTURES ");
+            MainContentFrame.Navigate(new Views.Pages.StructureExecutionPDLPage());
+            _viewModel.IsMenuOpen = false;
+        }
+
+        // Navigation vers la page PDL ODD
+        private void ODD_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.UpdatePageTitle("PDL - GESTION DES O-D-D ");
+            MainContentFrame.Navigate(new Views.Pages.ODDPage());
+            _viewModel.IsMenuOpen = false;
+        }
+
+        // Navigation vers la page PDL COMPETENCES
+        private void COMPETENCE_COLLECTIVITE_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.UpdatePageTitle("PDL - GESTION DES COMPETENCES ");
+            MainContentFrame.Navigate(new Views.Pages.CompetenceCollectivitePage());
+            _viewModel.IsMenuOpen = false;
+        }
+
+        // Navigation vers la page PDL ACTIVITES
+        private void ACTIVITE_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.UpdatePageTitle("PDL - GESTION DES ACTIVITES ");
+            MainContentFrame.Navigate(new Views.Pages.ActivitePDLPage());
+            _viewModel.IsMenuOpen = false;
+        }
+
         
 
         // Méthode temporaire pour afficher un placeholder

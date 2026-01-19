@@ -549,6 +549,47 @@ namespace Collectivite.Services
         }
 
         /// <summary>
+        /// Récupère le solde actuel d'un compte par son numéro (toutes les écritures)
+        /// Le solde est calculé comme : Total Débit - Total Crédit
+        /// Positif = Débiteur, Négatif = Créditeur
+        /// </summary>
+        /// <param name="numeroCompte">Le numéro du compte (ex: "55" pour Caisse, "53" pour Banque)</param>
+        /// <returns>Le solde du compte (positif = débiteur, négatif = créditeur)</returns>
+        public async Task<decimal> GetSoldeCompteParNumeroAsync(string numeroCompte)
+        {
+            // Trouver le compte principal qui commence par le numéro
+            var compte = await _context.CompteComptables
+                .Where(c => c.NumeroCompte.StartsWith(numeroCompte))
+                .OrderBy(c => c.NumeroCompte.Length)  // Prendre le compte principal d'abord
+                .ThenBy(c => c.NumeroCompte)
+                .FirstOrDefaultAsync();
+
+            if (compte == null)
+            {
+                throw new InvalidOperationException(
+                    $"Le compte de trésorerie {numeroCompte} n'existe pas dans le plan comptable.");
+            }
+
+            // Récupérer toutes les écritures comptables où ce compte est impliqué (toutes les écritures, pas seulement l'exercice en cours)
+            var ecritures = await _context.EcritureComptables
+                .Where(e => e.CompteDebitId == compte.Id || e.CompteCreditId == compte.Id)
+                .ToListAsync();
+
+            // Calculer le solde : Total Débit - Total Crédit
+            decimal totalDebit = ecritures
+                .Where(e => e.CompteDebitId == compte.Id)
+                .Sum(e => e.Montant);
+
+            decimal totalCredit = ecritures
+                .Where(e => e.CompteCreditId == compte.Id)
+                .Sum(e => e.Montant);
+
+            decimal solde = totalDebit - totalCredit;
+
+            return solde;
+        }
+
+        /// <summary>
         /// Détermine le mode de règlement à partir d'un mouvement
         /// </summary>
         private string DeterminerModeReglement(Mouvement mouvement)

@@ -479,7 +479,7 @@
 
                                 <Button Style="{StaticResource MenuButtonStyle}" Click="CompteGestion_Click">
                                     <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="Book" 
+                                        <materialDesign:PackIcon Kind="BookAccount" 
                                            VerticalAlignment="Center"
                                            Width="22"
                                            Height="22"
@@ -490,7 +490,7 @@
 
                                 <Button Style="{StaticResource MenuButtonStyle}" Click="LivreJournalButton_Click">
                                     <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="BookOpen" 
+                                        <materialDesign:PackIcon Kind="NotebookOutline" 
                                            VerticalAlignment="Center"
                                            Width="22"
                                            Height="22"
@@ -501,7 +501,7 @@
 
                                 <Button Style="{StaticResource MenuButtonStyle}" Click="GrandLivreButton_Click">
                                     <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="BookOpen" 
+                                        <materialDesign:PackIcon Kind="BookOpenVariant" 
                                             VerticalAlignment="Center"
                                             Width="22"
                                             Height="22"
@@ -538,7 +538,7 @@
 
                                         <Button x:Name="BtnBalanceMensuelle" Style="{StaticResource MenuButtonStyle}" Click="BalanceButton_Click">
                                             <StackPanel Orientation="Horizontal">
-                                                <materialDesign:PackIcon Kind="FileDocument" 
+                                                <materialDesign:PackIcon Kind="CalendarMonth" 
                                                    VerticalAlignment="Center"
                                                    Width="22"
                                                    Height="22"
@@ -549,7 +549,7 @@
 
                                         <Button  Style="{StaticResource MenuButtonStyle}" Click="BalanceAnnuelleButton_Click">
                                             <StackPanel Orientation="Horizontal">
-                                                <materialDesign:PackIcon Kind="FileDocument" 
+                                                <materialDesign:PackIcon Kind="CalendarRange" 
                                                     VerticalAlignment="Center"
                                                     Width="22"
                                                     Height="22"
@@ -564,7 +564,7 @@
 
                                 <Button Style="{StaticResource MenuButtonStyle}" Click="MouvementButton_Click">
                                     <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="BookOpen" 
+                                        <materialDesign:PackIcon Kind="FileDocumentCheck" 
                                             VerticalAlignment="Center"
                                             Width="22"
                                             Height="22"
@@ -576,7 +576,7 @@
 
                                 <Button Style="{StaticResource MenuButtonStyle}" Click="DroitsAuComptantButton_Click">
                                     <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="BookOpen" 
+                                        <materialDesign:PackIcon Kind="CashCheck" 
                                             VerticalAlignment="Center"
                                             Width="22"
                                             Height="22"
@@ -588,7 +588,7 @@
 
                                 <Button Style="{StaticResource MenuButtonStyle}" Click="DebiteurCrediteur_Click">
                                     <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="BookOpen" 
+                                        <materialDesign:PackIcon Kind="BankTransfer" 
                                             VerticalAlignment="Center"
                                             Width="22"
                                             Height="22"
@@ -603,7 +603,135 @@
                         </StackPanel>
                         <!-- Section Gestion Comptable Fin  -->
                         
-                        
+                        <!-- Section PDL-->
+                        <Expander Style="{StaticResource MaterialDesignExpander}" 
+                                   HorizontalAlignment="Left"
+                                   Width="250"
+                                   Margin="10,10,0,10">
+                            <Expander.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="ChartTimelineVariant" 
+                                        VerticalAlignment="Center"
+                                        Width="22"
+                                        Height="22"
+                                        Margin="0,0,10,0"
+                                        Foreground="Black"/>
+                                    <TextBlock Text="P-D-L" FontSize="13" FontWeight="Bold" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Expander.Header>
+
+                            <StackPanel Orientation="Vertical" Margin="30,0,0,0">
+                                <StackPanel.Resources>
+                                    <Style TargetType="Button" BasedOn="{StaticResource MenuButtonStyle}">
+                                        <Setter Property="Foreground" Value="#424242"/>
+                                    </Style>
+                                </StackPanel.Resources>
+
+                                <Button  Style="{StaticResource MenuButtonStyle}" Click="PDLPage_Click">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="CalendarMultiple" 
+                                            VerticalAlignment="Center"
+                                            Width="22"
+                                            Height="22"
+                                            Margin="0,0,15,0"/>
+                                        <TextBlock Text="PDL" FontSize="12" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <Button  Style="{StaticResource MenuButtonStyle}" Click="PROGRAMMES_Click">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="FileTree" 
+                                            VerticalAlignment="Center"
+                                            Width="22"
+                                            Height="22"
+                                            Margin="0,0,15,0"/>
+                                        <TextBlock Text="Programmes" FontSize="12" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <Button  Style="{StaticResource MenuButtonStyle}" Click="SECTEUR_Click">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="ViewGrid" 
+                                            VerticalAlignment="Center"
+                                            Width="22"
+                                            Height="22"
+                                            Margin="0,0,15,0"/>
+                                        <TextBlock Text="Secteurs" FontSize="12" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <Button  Style="{StaticResource MenuButtonStyle}" Click="BENEFICIAIRE_Click">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="AccountGroup" 
+                                            VerticalAlignment="Center"
+                                            Width="22"
+                                            Height="22"
+                                            Margin="0,0,15,0"/>
+                                        <TextBlock Text="Bénéficiaires" FontSize="12" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <Button  Style="{StaticResource MenuButtonStyle}" Click="ACTEURS_Click">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="AccountSupervisor" 
+                                            VerticalAlignment="Center"
+                                            Width="22"
+                                            Height="22"
+                                            Margin="0,0,15,0"/>
+                                        <TextBlock Text="Acteurs" FontSize="12" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <Button  Style="{StaticResource MenuButtonStyle}" Click="STRUCTURES_Click">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="OfficeBuilding" 
+                                            VerticalAlignment="Center"
+                                            Width="22"
+                                            Height="22"
+                                            Margin="0,0,15,0"/>
+                                        <TextBlock Text="Structures" FontSize="12" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <Button  Style="{StaticResource MenuButtonStyle}" Click="ODD_Click">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Target" 
+                                            VerticalAlignment="Center"
+                                            Width="22"
+                                            Height="22"
+                                            Margin="0,0,15,0"/>
+                                        <TextBlock Text="O-D-D" FontSize="12" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <Button  Style="{StaticResource MenuButtonStyle}" Click="COMPETENCE_COLLECTIVITE_Click">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="School" 
+                                            VerticalAlignment="Center"
+                                            Width="22"
+                                            Height="22"
+                                            Margin="0,0,15,0"/>
+                                        <TextBlock Text="Compétences" FontSize="12" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                
+                                <Button  Style="{StaticResource MenuButtonStyle}" Click="ACTIVITE_Click">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="CheckboxMarkedCircle" 
+                                            VerticalAlignment="Center"
+                                            Width="22"
+                                            Height="22"
+                                            Margin="0,0,15,0"/>
+                                        <TextBlock Text="Activités" FontSize="12" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+
+                      
+
+                            </StackPanel>
+                        </Expander>
+                        <!-- PDL fin-->
+
                         <!-- Section Administration -->
                         <StackPanel Visibility="{Binding Converter={StaticResource PermissionToVisibilityConverter}, ConverterParameter=Administration.Access}">
                             <TextBlock Text="Administration" Style="{StaticResource MenuHeaderStyle}" Margin="20,10,0,5"/>

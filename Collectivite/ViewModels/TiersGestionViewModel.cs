@@ -5,15 +5,19 @@ using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using Microsoft.Win32;
 
 namespace Collectivite.ViewModels
 {
     public partial class TiersGestionViewModel : ObservableObject
     {
         private readonly ITiersGestionService _tiersService;
+        private readonly TiersExportService _tiersExportService;
 
         #region Propriétés observables
 
@@ -131,6 +135,7 @@ namespace Collectivite.ViewModels
         public TiersGestionViewModel(ITiersGestionService tiersService)
         {
             _tiersService = tiersService;
+            _tiersExportService = new TiersExportService();
 
             // S'abonner au changement d'exercice
             ExerciceService.Instance.ExerciceChanged += OnExerciceChanged;
@@ -235,11 +240,23 @@ namespace Collectivite.ViewModels
             {
                 IsLoading = true;
 
-                // TODO: Implémenter l'export Excel
-                await Task.Delay(100);
+                var filtre = ConstruireFiltre();
+                var bytes = EstOngletDebiteurs
+                    ? await _tiersExportService.ExportDebiteursExcelAsync(Debiteurs.ToList(), filtre)
+                    : await _tiersExportService.ExportCreanciersExcelAsync(Creanciers.ToList(), filtre);
 
-                MessageBox.Show("La fonctionnalité d'export Excel sera bientôt disponible.",
-                    "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                var dialog = new SaveFileDialog
+                {
+                    FileName = $"{TitreOnglet}_{DateTime.Now:yyyyMMdd_HHmmss}",
+                    DefaultExt = ".xlsx",
+                    Filter = "Fichiers Excel|*.xlsx"
+                };
+
+                if (dialog.ShowDialog() == true)
+                {
+                    await File.WriteAllBytesAsync(dialog.FileName, bytes);
+                    MessageBox.Show("Export Excel réussi !", "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
             }
             catch (Exception ex)
             {
@@ -261,11 +278,23 @@ namespace Collectivite.ViewModels
             {
                 IsLoading = true;
 
-                // TODO: Implémenter l'export PDF
-                await Task.Delay(100);
+                var filtre = ConstruireFiltre();
+                var bytes = EstOngletDebiteurs
+                    ? await _tiersExportService.ExportDebiteursPdfAsync(Debiteurs.ToList(), filtre)
+                    : await _tiersExportService.ExportCreanciersPdfAsync(Creanciers.ToList(), filtre);
 
-                MessageBox.Show("La fonctionnalité d'export PDF sera bientôt disponible.",
-                    "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                var dialog = new SaveFileDialog
+                {
+                    FileName = $"{TitreOnglet}_{DateTime.Now:yyyyMMdd_HHmmss}",
+                    DefaultExt = ".pdf",
+                    Filter = "Fichiers PDF|*.pdf"
+                };
+
+                if (dialog.ShowDialog() == true)
+                {
+                    await File.WriteAllBytesAsync(dialog.FileName, bytes);
+                    MessageBox.Show("Export PDF réussi !", "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
             }
             catch (Exception ex)
             {
@@ -281,10 +310,95 @@ namespace Collectivite.ViewModels
         /// Imprime les données
         /// </summary>
         [RelayCommand]
-        public void Imprimer()
+        public async Task ImprimerAsync()
         {
-            MessageBox.Show("La fonctionnalité d'impression sera bientôt disponible.",
-                "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+            try
+            {
+                IsLoading = true;
+
+                var filtre = ConstruireFiltre();
+                var bytes = EstOngletDebiteurs
+                    ? await _tiersExportService.ExportDebiteursPdfAsync(Debiteurs.ToList(), filtre)
+                    : await _tiersExportService.ExportCreanciersPdfAsync(Creanciers.ToList(), filtre);
+
+                string tempFileName = $"{TitreOnglet}_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                string tempFilePath = Path.Combine(Path.GetTempPath(), tempFileName);
+
+                await File.WriteAllBytesAsync(tempFilePath, bytes);
+
+                var result = MessageBox.Show(
+                    "Le document PDF a été généré.\n\nVoulez-vous :\n• Cliquer OUI pour imprimer directement\n• Cliquer NON pour ouvrir l'aperçu avant impression",
+                    $"Impression - {TitreOnglet}",
+                    MessageBoxButton.YesNoCancel,
+                    MessageBoxImage.Question);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    ImprimerPdfDirectement(tempFilePath);
+                }
+                else if (result == MessageBoxResult.No)
+                {
+                    OuvrirPdfPourApercu(tempFilePath);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur d'impression : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        private void ImprimerPdfDirectement(string filePath)
+        {
+            try
+            {
+                var processInfo = new ProcessStartInfo
+                {
+                    FileName = filePath,
+                    Verb = "print",
+                    UseShellExecute = true,
+                    CreateNoWindow = true
+                };
+
+                using var process = Process.Start(processInfo);
+
+                MessageBox.Show(
+                    "Le document a été envoyé à l'imprimante.\n\nSi la boîte de dialogue d'impression s'ouvre, sélectionnez votre imprimante et cliquez sur Imprimer.",
+                    "Impression en cours",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"L'impression directe n'est pas disponible.\nLe document va s'ouvrir pour aperçu.\n\nDétail : {ex.Message}",
+                    "Information",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+
+                OuvrirPdfPourApercu(filePath);
+            }
+        }
+
+        private void OuvrirPdfPourApercu(string filePath)
+        {
+            try
+            {
+                var processInfo = new ProcessStartInfo
+                {
+                    FileName = filePath,
+                    UseShellExecute = true
+                };
+
+                Process.Start(processInfo);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Impossible d'ouvrir le PDF : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         /// <summary>

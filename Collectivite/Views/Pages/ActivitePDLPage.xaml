@@ -1,0 +1,1001 @@
+﻿<UserControl x:Class="Collectivite.Views.Pages.ActivitePDLPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:utils="clr-namespace:Collectivite.Utils"
+             mc:Ignorable="d" 
+             d:DesignHeight="900" d:DesignWidth="1400"
+             Loaded="UserControl_Loaded">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
+        <utils:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisConverter"/>
+        <utils:BeneficiairesToStringConverter x:Key="BeneficiairesToStringConverter"/>
+        <utils:BeneficiairesToTooltipConverter x:Key="BeneficiairesToTooltipConverter"/>
+        <utils:ActeursToStringConverter x:Key="ActeursToStringConverter"/>
+        <utils:ActeursToTooltipConverter x:Key="ActeursToTooltipConverter"/>
+        <utils:StructuresToStringConverter x:Key="StructuresToStringConverter"/>
+        <utils:StructuresToTooltipConverter x:Key="StructuresToTooltipConverter"/>
+        <utils:AnneePeriodeConverter x:Key="AnneePeriodeConverter"/>
+        <utils:AnneePeriodeVisibilityConverter x:Key="AnneePeriodeVisibilityConverter"/>
+        <utils:AnneePeriodeCellConverter x:Key="AnneePeriodeCellConverter"/>
+        <utils:PeriodeCompleteConverter x:Key="PeriodeCompleteConverter"/>
+
+        <!-- Style pour les en-têtes de colonnes Période -->
+        <Style x:Key="PeriodeHeaderStyle" TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="#E3F2FD"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Padding" Value="8,4"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Background="#F5F5F5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <!-- EN-TÊTE -->
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <Border Grid.Row="0" Background="White" Padding="20,15" 
+                BorderBrush="#E0E0E0" BorderThickness="0,0,0,1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Activités PDL" 
+                               FontSize="24" FontWeight="Bold" Foreground="#1976D2"/>
+                    <TextBlock FontSize="13" Foreground="#666666" Margin="0,4,0,0">
+                        <Run Text="Planification et suivi des activités du Programme de Développement Local"/>
+                        <Run Text=" • "/>
+                        <Run Text="{Binding TotalActivites, Mode=OneWay, StringFormat='{}{0} activité(s)'}" FontWeight="SemiBold"/>
+                    </TextBlock>
+                </StackPanel>
+
+                <Button Grid.Column="1" 
+                        Style="{StaticResource MaterialDesignRaisedButton}"
+                        Background="#4CAF50"
+                        Command="{Binding NouvelleActiviteCommand}"
+                        Visibility="{Binding IsEditing, Converter={StaticResource InverseBoolToVisConverter}}"
+                        Padding="16,8">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Plus" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBlock Text="Nouvelle Activité"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <!-- CONTENU PRINCIPAL -->
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <Grid Grid.Row="1" Margin="20">
+
+            <!-- ══════════════════════════════════════════════════════ -->
+            <!-- MODE LISTE -->
+            <!-- ══════════════════════════════════════════════════════ -->
+            <Grid Visibility="{Binding IsEditing, Converter={StaticResource InverseBoolToVisConverter}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Filtres -->
+                <Border Grid.Row="0" Background="White" CornerRadius="8" Padding="16" Margin="0,0,0,16">
+                    <StackPanel Orientation="Horizontal">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,24,0">
+                            <TextBlock Text="PDL :" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <ComboBox ItemsSource="{Binding PdlList}"
+                                      SelectedItem="{Binding FiltrePDL}"
+                                      Width="200"
+                                      Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                      materialDesign:HintAssist.Hint="Tous">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock>
+                                            <TextBlock.Text>
+                                                <MultiBinding StringFormat="{}{0:yyyy} - {1:yyyy}">
+                                                    <Binding Path="DateDebut"/>
+                                                    <Binding Path="DateFin"/>
+                                                </MultiBinding>
+                                            </TextBlock.Text>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Secteur :" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <ComboBox ItemsSource="{Binding Secteurs}"
+                                      SelectedItem="{Binding FiltreSecteur}"
+                                      DisplayMemberPath="Libelle"
+                                      Width="250"
+                                      Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                      materialDesign:HintAssist.Hint="Tous les secteurs"/>
+                        </StackPanel>
+
+                        <Button Style="{StaticResource MaterialDesignIconButton}"
+                                ToolTip="Réinitialiser les filtres"
+                                Command="{Binding ReinitialiserFiltresCommand}"
+                                Margin="16,0,0,0">
+                            <materialDesign:PackIcon Kind="FilterRemove"/>
+                        </Button>
+                    </StackPanel>
+                </Border>
+
+                <!-- Liste des activités -->
+                <materialDesign:Card Grid.Row="1">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="60"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        
+                        <!-- ScrollViewer pour synchroniser le scroll horizontal -->
+                        <materialDesign:Card Grid.Row="0" Padding="0" Margin="0,0,0,0">
+                            <ScrollViewer x:Name="HeaderScrollViewer" 
+                                          HorizontalScrollBarVisibility="Hidden"
+                                          VerticalScrollBarVisibility="Disabled"
+                                          ScrollChanged="HeaderScrollViewer_ScrollChanged">
+                                <!-- En-têtes personnalisés groupés -->
+                                <Grid x:Name="CustomHeadersGrid" Background="White" MinWidth="1720">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="50"/> <!-- N° -->
+                                <ColumnDefinition Width="120"/> <!-- Programme -->
+                                <ColumnDefinition Width="120"/> <!-- Secteur -->
+                                <ColumnDefinition Width="200"/> <!-- Activités -->
+                                <ColumnDefinition Width="150"/> <!-- Résultats -->
+                                <ColumnDefinition Width="150"/> <!-- Bénéficiaires -->
+                                <ColumnDefinition Width="150"/> <!-- Acteurs -->
+                                <ColumnDefinition Width="350"/> <!-- Périodes (5 x 70) -->
+                                <ColumnDefinition Width="300"/> <!-- Sources Financements (3 x 100) -->
+                                <ColumnDefinition Width="180"/> <!-- Structures d'Exécution -->
+                                <ColumnDefinition Width="70"/> <!-- ODD -->
+                                <ColumnDefinition Width="100"/> <!-- Compétences -->
+                            </Grid.ColumnDefinitions>
+                            
+                            <!-- En-têtes individuels -->
+                            <materialDesign:Card Grid.Column="0" Padding="8,4" Background="#F5F5F5" BorderBrush="#E0E0E0" BorderThickness="1">
+                                <TextBlock Text="N°" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold"/>
+                            </materialDesign:Card>
+                            <materialDesign:Card Grid.Column="1" Padding="8,4" Background="#F5F5F5" BorderBrush="#E0E0E0" BorderThickness="1,1,1,0">
+                                <TextBlock Text="Programme" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold"/>
+                            </materialDesign:Card>
+                            <materialDesign:Card Grid.Column="2" Padding="8,4" Background="#F5F5F5" BorderBrush="#E0E0E0" BorderThickness="1,1,1,0">
+                                <TextBlock Text="Secteur" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold"/>
+                            </materialDesign:Card>
+                            <materialDesign:Card Grid.Column="3" Padding="8,4" Background="#F5F5F5" BorderBrush="#E0E0E0" BorderThickness="1,1,1,0">
+                                <TextBlock Text="Activités" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold"/>
+                            </materialDesign:Card>
+                            <materialDesign:Card Grid.Column="4" Padding="8,4" Background="#F5F5F5" BorderBrush="#E0E0E0" BorderThickness="1,1,1,0">
+                                <TextBlock Text="Résultats" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold"/>
+                            </materialDesign:Card>
+                            <materialDesign:Card Grid.Column="5" Padding="8,4" Background="#F5F5F5" BorderBrush="#E0E0E0" BorderThickness="1,1,1,0">
+                                <TextBlock Text="Bénéficiaires" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold"/>
+                            </materialDesign:Card>
+                            <materialDesign:Card Grid.Column="6" Padding="8,4" Background="#F5F5F5" BorderBrush="#E0E0E0" BorderThickness="1,1,1,0">
+                                <TextBlock Text="Acteurs" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold"/>
+                            </materialDesign:Card>
+                            
+                            <!-- En-tête groupé Période -->
+                            <materialDesign:Card Grid.Column="7" 
+                                                 Padding="0" 
+                                                 Background="#F5F5F5"
+                                                 BorderBrush="#E0E0E0"
+                                                 BorderThickness="1,1,1,0">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*"/>
+                                        <RowDefinition Height="30"/>
+                                    </Grid.RowDefinitions>
+                                    <TextBlock Grid.Row="0"
+                                               Text="Période" 
+                                               HorizontalAlignment="Center" 
+                                               VerticalAlignment="Center" 
+                                               FontWeight="Bold"/>
+                                    <Grid Grid.Row="1">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="70"/>
+                                            <ColumnDefinition Width="70"/>
+                                            <ColumnDefinition Width="70"/>
+                                            <ColumnDefinition Width="70"/>
+                                            <ColumnDefinition Width="70"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Grid.Column="0" BorderBrush="#E0E0E0" BorderThickness="0,0,1,0" Background="#F5F5F5">
+                                            <TextBlock Text="" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <Border Grid.Column="1" BorderBrush="#E0E0E0" BorderThickness="0,0,1,0" Background="#F5F5F5">
+                                            <TextBlock Text="" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <Border Grid.Column="2" BorderBrush="#E0E0E0" BorderThickness="0,0,1,0" Background="#F5F5F5">
+                                            <TextBlock Text="" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <Border Grid.Column="3" BorderBrush="#E0E0E0" BorderThickness="0,0,1,0" Background="#F5F5F5">
+                                            <TextBlock Text="" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <Border Grid.Column="4" BorderBrush="#E0E0E0" BorderThickness="0,0,0,0" Background="#F5F5F5">
+                                            <TextBlock Text="" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                    </Grid>
+                                </Grid>
+                            </materialDesign:Card>
+                            
+                            <!-- En-tête groupé Sources Financements -->
+                            <materialDesign:Card Grid.Column="8" 
+                                                 Padding="0" 
+                                                 Background="#E3F2FD"
+                                                 BorderBrush="#BBDEFB"
+                                                 BorderThickness="1">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="30"/>
+                                        <RowDefinition Height="30"/>
+                                    </Grid.RowDefinitions>
+                                    <Border Grid.Row="0" BorderBrush="#BBDEFB" BorderThickness="0,0,0,1" Background="#E3F2FD">
+                                        <TextBlock Text="Sources Financements" 
+                                                   HorizontalAlignment="Center" 
+                                                   VerticalAlignment="Center" 
+                                                   FontWeight="Bold" 
+                                                   FontSize="12" 
+                                                   Foreground="#1976D2"
+                                                   TextAlignment="Center"
+                                                   TextWrapping="Wrap"/>
+                                    </Border>
+                                    <Grid Grid.Row="1">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="100"/>
+                                            <ColumnDefinition Width="100"/>
+                                            <ColumnDefinition Width="100"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Grid.Column="0" BorderBrush="#BBDEFB" BorderThickness="0,0,1,0" Background="#E3F2FD">
+                                            <TextBlock Text="Interne" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <Border Grid.Column="1" BorderBrush="#BBDEFB" BorderThickness="0,0,1,0" Background="#E3F2FD">
+                                            <TextBlock Text="Externe" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <Border Grid.Column="2" BorderBrush="#BBDEFB" BorderThickness="0,0,0,0" Background="#E3F2FD">
+                                            <TextBlock Text="Total" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                    </Grid>
+                                </Grid>
+                            </materialDesign:Card>
+                            
+                            <materialDesign:Card Grid.Column="9" Padding="8,4" Background="#F5F5F5" BorderBrush="#E0E0E0" BorderThickness="1,1,1,0">
+                                <TextBlock Text="Structures d'Exécution" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold"/>
+                            </materialDesign:Card>
+                            <materialDesign:Card Grid.Column="10" Padding="8,4" Background="#F5F5F5" BorderBrush="#E0E0E0" BorderThickness="1,1,1,0">
+                                <TextBlock Text="ODD" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold"/>
+                            </materialDesign:Card>
+                            <materialDesign:Card Grid.Column="11" Padding="8,4" Background="#F5F5F5" BorderBrush="#E0E0E0" BorderThickness="1,1,0,0">
+                                <TextBlock Text="Compétences" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold"/>
+                            </materialDesign:Card>
+                            </Grid>
+                            </ScrollViewer>
+                        </materialDesign:Card>
+                        
+                        <!-- ScrollViewer pour synchroniser le scroll horizontal -->
+                        <materialDesign:Card Grid.Row="1" Padding="0" Margin="0">
+                            <ScrollViewer x:Name="MainScrollViewer" 
+                                          HorizontalScrollBarVisibility="Auto"
+                                          VerticalScrollBarVisibility="Auto"
+                                          ScrollChanged="MainScrollViewer_ScrollChanged">
+                            <DataGrid x:Name="ActivitiesDataGrid"
+                                      ItemsSource="{Binding Activites}"
+                              SelectedItem="{Binding SelectedActivite}"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                                      CanUserReorderColumns="False"
+                              IsReadOnly="True"
+                              SelectionMode="Single"
+                                      materialDesign:DataGridAssist.CellPadding="8 6"
+                                      GridLinesVisibility="All"
+                                      HeadersVisibility="None"
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      VerticalScrollBarVisibility="Disabled"
+                                      LoadingRow="ActivitiesDataGrid_LoadingRow"
+                                      Loaded="ActivitiesDataGrid_Loaded"
+                                      MinWidth="1720"
+                                      Background="White">
+                                <DataGrid.RowStyle>
+                                    <Style TargetType="DataGridRow">
+                                        <Setter Property="MinHeight" Value="40"/>
+                                        <Setter Property="Height" Value="NaN"/>
+                                    </Style>
+                                </DataGrid.RowStyle>
+
+                        <DataGrid.Columns>
+                            <!-- N° -->
+                            <DataGridTemplateColumn Header="N°" Width="50" CanUserResize="False">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Path=Header}" 
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Programme -->
+                            <DataGridTemplateColumn Header="Programme" Width="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding SecteurPDL.ProgrammePDL.Libelle, Mode=OneWay}"
+                                                   TextWrapping="Wrap"
+                                                   VerticalAlignment="Center"
+                                                   Padding="4,2"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Secteur -->
+                            <DataGridTemplateColumn Header="Secteur" Width="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding SecteurPDL.Libelle, Mode=OneWay}"
+                                                   TextWrapping="Wrap"
+                                                   VerticalAlignment="Center"
+                                                   Padding="4,2"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Activités -->
+                            <DataGridTemplateColumn Header="Activités" Width="200">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Description}"
+                                                   TextWrapping="Wrap"
+                                                   VerticalAlignment="Center"
+                                                   Padding="4,2"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Résultats -->
+                            <DataGridTemplateColumn Header="Résultats" Width="150">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Resultat}"
+                                                   TextWrapping="Wrap"
+                                                   VerticalAlignment="Center"
+                                                   Padding="4,2"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Bénéficiaires -->
+                            <DataGridTemplateColumn Header="Bénéficiaires" Width="150">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Beneficiaires, Converter={StaticResource BeneficiairesToStringConverter}, Mode=OneWay}"
+                                                   TextWrapping="Wrap"
+                                                   VerticalAlignment="Center"
+                                                   Padding="4,2"
+                                                   ToolTip="{Binding Beneficiaires, Converter={StaticResource BeneficiairesToTooltipConverter}, Mode=OneWay}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Acteurs -->
+                            <DataGridTemplateColumn Header="Acteurs" Width="150">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Acteurs, Converter={StaticResource ActeursToStringConverter}, Mode=OneWay}"
+                                                   TextWrapping="Wrap"
+                                                   VerticalAlignment="Center"
+                                                   Padding="4,2"
+                                                   ToolTip="{Binding Acteurs, Converter={StaticResource ActeursToTooltipConverter}, Mode=OneWay}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Périodes - Colonnes dynamiques (5 ans) -->
+                            <!-- Année 1 -->
+                            <DataGridTemplateColumn Width="70">
+                                <DataGridTemplateColumn.Header>
+                                    <TextBlock Text="" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </DataGridTemplateColumn.Header>
+                                <DataGridTemplateColumn.HeaderStyle>
+                                    <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource PeriodeHeaderStyle}"/>
+                                </DataGridTemplateColumn.HeaderStyle>
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   TextAlignment="Center"
+                                                   TextWrapping="Wrap"
+                                                   Padding="4,2">
+                                            <TextBlock.Text>
+                                                <MultiBinding Converter="{StaticResource AnneePeriodeCellConverter}" ConverterParameter="0">
+                                                    <Binding Path="DateDebut"/>
+                                                    <Binding Path="DateFin"/>
+                                                </MultiBinding>
+                                            </TextBlock.Text>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Année 2 -->
+                            <DataGridTemplateColumn Width="70">
+                                <DataGridTemplateColumn.Header>
+                                    <TextBlock Text="" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </DataGridTemplateColumn.Header>
+                                <DataGridTemplateColumn.HeaderStyle>
+                                    <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource PeriodeHeaderStyle}"/>
+                                </DataGridTemplateColumn.HeaderStyle>
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   TextAlignment="Center"
+                                                   TextWrapping="Wrap"
+                                                   Padding="4,2">
+                                            <TextBlock.Text>
+                                                <MultiBinding Converter="{StaticResource AnneePeriodeCellConverter}" ConverterParameter="1">
+                                                    <Binding Path="DateDebut"/>
+                                                    <Binding Path="DateFin"/>
+                                                </MultiBinding>
+                                            </TextBlock.Text>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Année 3 -->
+                            <DataGridTemplateColumn Width="70">
+                                <DataGridTemplateColumn.Header>
+                                    <TextBlock Text="" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </DataGridTemplateColumn.Header>
+                                <DataGridTemplateColumn.HeaderStyle>
+                                    <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource PeriodeHeaderStyle}"/>
+                                </DataGridTemplateColumn.HeaderStyle>
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   TextAlignment="Center"
+                                                   TextWrapping="Wrap"
+                                                   Padding="4,2">
+                                            <TextBlock.Text>
+                                                <MultiBinding Converter="{StaticResource AnneePeriodeCellConverter}" ConverterParameter="2">
+                                                    <Binding Path="DateDebut"/>
+                                                    <Binding Path="DateFin"/>
+                                                </MultiBinding>
+                                            </TextBlock.Text>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Année 4 -->
+                            <DataGridTemplateColumn Width="70">
+                                <DataGridTemplateColumn.Header>
+                                    <TextBlock Text="" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </DataGridTemplateColumn.Header>
+                                <DataGridTemplateColumn.HeaderStyle>
+                                    <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource PeriodeHeaderStyle}"/>
+                                </DataGridTemplateColumn.HeaderStyle>
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   TextAlignment="Center"
+                                                   TextWrapping="Wrap"
+                                                   Padding="4,2">
+                                            <TextBlock.Text>
+                                                <MultiBinding Converter="{StaticResource AnneePeriodeCellConverter}" ConverterParameter="3">
+                                                    <Binding Path="DateDebut"/>
+                                                    <Binding Path="DateFin"/>
+                                                </MultiBinding>
+                                            </TextBlock.Text>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Année 5 -->
+                            <DataGridTemplateColumn Width="70">
+                                <DataGridTemplateColumn.Header>
+                                    <TextBlock Text="" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </DataGridTemplateColumn.Header>
+                                <DataGridTemplateColumn.HeaderStyle>
+                                    <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource PeriodeHeaderStyle}"/>
+                                </DataGridTemplateColumn.HeaderStyle>
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   TextAlignment="Center"
+                                                   TextWrapping="Wrap"
+                                                   Padding="4,2">
+                                            <TextBlock.Text>
+                                                <MultiBinding Converter="{StaticResource AnneePeriodeCellConverter}" ConverterParameter="4">
+                                                    <Binding Path="DateDebut"/>
+                                                    <Binding Path="DateFin"/>
+                                                </MultiBinding>
+                                            </TextBlock.Text>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Sources Financements - Interne -->
+                            <DataGridTemplateColumn Header="Interne" Width="100">
+                                <DataGridTemplateColumn.HeaderStyle>
+                                    <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource PeriodeHeaderStyle}"/>
+                                </DataGridTemplateColumn.HeaderStyle>
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding FinancementInterne, Mode=OneWay}"
+                                                   TextWrapping="Wrap"
+                                                   VerticalAlignment="Center"
+                                                   Padding="4,2"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Sources Financements - Externe -->
+                            <DataGridTemplateColumn Header="Externe" Width="100">
+                                <DataGridTemplateColumn.HeaderStyle>
+                                    <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource PeriodeHeaderStyle}"/>
+                                </DataGridTemplateColumn.HeaderStyle>
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding FinancementExterne, Mode=OneWay}"
+                                                   TextWrapping="Wrap"
+                                                   VerticalAlignment="Center"
+                                                   Padding="4,2"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Sources Financements - Total -->
+                            <DataGridTemplateColumn Header="Total" Width="100">
+                                <DataGridTemplateColumn.HeaderStyle>
+                                    <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource PeriodeHeaderStyle}"/>
+                                </DataGridTemplateColumn.HeaderStyle>
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock TextWrapping="Wrap" VerticalAlignment="Center" Padding="4,2">
+                                            <TextBlock.Text>
+                                                <MultiBinding StringFormat="{}{0} + {1}">
+                                                    <Binding Path="FinancementInterne" Mode="OneWay"/>
+                                                    <Binding Path="FinancementExterne" Mode="OneWay"/>
+                                                </MultiBinding>
+                                            </TextBlock.Text>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Structures d'Exécution -->
+                            <DataGridTemplateColumn Header="Structures d'Exécution" Width="180">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding StructureExecutions, Converter={StaticResource StructuresToStringConverter}, Mode=OneWay}"
+                                                   TextWrapping="Wrap"
+                                                   VerticalAlignment="Center"
+                                                   Padding="4,2"
+                                                   ToolTip="{Binding StructureExecutions, Converter={StaticResource StructuresToTooltipConverter}, Mode=OneWay}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- ODD -->
+                            <DataGridTemplateColumn Header="ODD" Width="70">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding ODD.Numero, Mode=OneWay}"
+                                                   TextWrapping="Wrap"
+                                                   VerticalAlignment="Center"
+                                                   Padding="4,2"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Compétences -->
+                            <DataGridTemplateColumn Header="Compétences" Width="100">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding CompetenceCollectivite.Numero, Mode=OneWay}"
+                                                   TextWrapping="Wrap"
+                                                   VerticalAlignment="Center"
+                                                   Padding="4,2"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                            </ScrollViewer>
+                        </materialDesign:Card>
+                    </Grid>
+                </materialDesign:Card>
+            </Grid>
+
+            <!-- ══════════════════════════════════════════════════════ -->
+            <!-- MODE ÉDITION -->
+            <!-- ══════════════════════════════════════════════════════ -->
+            <ScrollViewer Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisConverter}}"
+                          VerticalScrollBarVisibility="Auto">
+                <materialDesign:Card Padding="24">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Titre -->
+                        <TextBlock Grid.Row="0" Text="{Binding TitrePage}" 
+                                   FontSize="22" FontWeight="Bold" Foreground="#1976D2"
+                                   Margin="0,0,0,24"/>
+
+                        <!-- Section 1 : Informations générales -->
+                        <Border Grid.Row="1" BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" 
+                                Padding="0,0,0,20" Margin="0,0,0,20">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- PDL -->
+                                <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,12,16">
+                                    <TextBlock Text="PDL *" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                    <ComboBox ItemsSource="{Binding PdlList}"
+                                              SelectedItem="{Binding SelectedPDL}"
+                                              Style="{StaticResource MaterialDesignOutlinedComboBox}">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock>
+                                                    <TextBlock.Text>
+                                                        <MultiBinding StringFormat="{}{0:yyyy} - {1:yyyy}">
+                                                            <Binding Path="DateDebut"/>
+                                                            <Binding Path="DateFin"/>
+                                                        </MultiBinding>
+                                                    </TextBlock.Text>
+                                                </TextBlock>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                </StackPanel>
+
+                                <!-- Programme -->
+                                <StackPanel Grid.Row="0" Grid.Column="1" Margin="12,0,12,16">
+                                    <TextBlock Text="Programme *" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                    <ComboBox ItemsSource="{Binding Programmes}"
+                                              SelectedItem="{Binding SelectedProgramme}"
+                                              DisplayMemberPath="Libelle"
+                                              Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
+                                </StackPanel>
+
+                                <!-- Secteur -->
+                                <StackPanel Grid.Row="0" Grid.Column="2" Margin="12,0,0,16">
+                                    <TextBlock Text="Secteur *" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                    <ComboBox ItemsSource="{Binding SecteursFiltres}"
+                                              SelectedItem="{Binding SelectedSecteur}"
+                                              DisplayMemberPath="Libelle"
+                                              Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
+                                </StackPanel>
+
+                                <!-- Date début -->
+                                <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,12,16">
+                                    <TextBlock Text="Date de début *" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                    <DatePicker SelectedDate="{Binding DateDebut}"
+                                                Style="{StaticResource MaterialDesignOutlinedDatePicker}"/>
+                                </StackPanel>
+
+                                <!-- Date fin -->
+                                <StackPanel Grid.Row="1" Grid.Column="1" Margin="12,0,12,16">
+                                    <TextBlock Text="Date de fin *" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                    <DatePicker SelectedDate="{Binding DateFin}"
+                                                Style="{StaticResource MaterialDesignOutlinedDatePicker}"/>
+                                </StackPanel>
+
+                                <!-- ODD -->
+                                <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,12,16">
+                                    <TextBlock Text="ODD *" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                    <ComboBox ItemsSource="{Binding OddList}"
+                                              SelectedItem="{Binding SelectedODD}"
+                                              Style="{StaticResource MaterialDesignOutlinedComboBox}">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Numero, StringFormat='ODD {0}'}"/>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                </StackPanel>
+
+                                <!-- Compétence -->
+                                <StackPanel Grid.Row="2" Grid.Column="1" Margin="12,0,12,16">
+                                    <TextBlock Text="Compétence *" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                    <ComboBox ItemsSource="{Binding Competences}"
+                                              SelectedItem="{Binding SelectedCompetence}"
+                                              Style="{StaticResource MaterialDesignOutlinedComboBox}">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Numero}"/>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- Section 2 : Description et Financement -->
+                        <Border Grid.Row="2" BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" 
+                                Padding="0,0,0,20" Margin="0,0,0,20">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- Description -->
+                                <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,16">
+                                    <TextBlock Text="Description de l'activité *" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                    <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                             AcceptsReturn="True"
+                                             TextWrapping="Wrap"
+                                             MinHeight="80"
+                                             VerticalContentAlignment="Top"/>
+                                </StackPanel>
+
+                                <!-- Résultat attendu -->
+                                <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,16">
+                                    <TextBlock Text="Résultat attendu" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                    <TextBox Text="{Binding Resultat, UpdateSourceTrigger=PropertyChanged}"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                             AcceptsReturn="True"
+                                             TextWrapping="Wrap"
+                                             MinHeight="60"
+                                             VerticalContentAlignment="Top"/>
+                                </StackPanel>
+
+                                <!-- Financement interne -->
+                                <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,12,16">
+                                    <TextBlock Text="Financement interne" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                    <TextBox Text="{Binding FinancementInterne, UpdateSourceTrigger=PropertyChanged}"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                                </StackPanel>
+
+                                <!-- Financement externe -->
+                                <StackPanel Grid.Row="2" Grid.Column="1" Margin="12,0,0,16">
+                                    <TextBlock Text="Financement externe" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                    <TextBox Text="{Binding FinancementExterne, UpdateSourceTrigger=PropertyChanged}"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- Section 3 : Relations N-N -->
+                        <Grid Grid.Row="3" Margin="0,0,0,20">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Bénéficiaires -->
+                            <Border Grid.Column="0" BorderBrush="#E0E0E0" BorderThickness="1" 
+                                    CornerRadius="8" Padding="12" Margin="0,0,8,0">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Grid.Row="0" Text="Bénéficiaires" FontWeight="Bold" 
+                                               Foreground="#1976D2" Margin="0,0,0,8"/>
+
+                                    <!-- ComboBox pour ajouter -->
+                                    <Grid Grid.Row="1" Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <ComboBox x:Name="ComboBeneficiaire"
+                                                  ItemsSource="{Binding Beneficiaires}"
+                                                  DisplayMemberPath="Nom"
+                                                  Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                                  materialDesign:HintAssist.Hint="Sélectionner..."
+                                                  Margin="0,0,4,0"/>
+                                        <Button Grid.Column="1" 
+                                                Style="{StaticResource MaterialDesignIconButton}"
+                                                Command="{Binding AjouterBeneficiaireCommand}"
+                                                CommandParameter="{Binding SelectedItem, ElementName=ComboBeneficiaire}">
+                                            <materialDesign:PackIcon Kind="Plus" Foreground="#4CAF50"/>
+                                        </Button>
+                                    </Grid>
+
+                                    <!-- Liste des sélectionnés -->
+                                    <ListBox Grid.Row="2" ItemsSource="{Binding SelectedBeneficiaires}"
+                                             MinHeight="100" MaxHeight="150">
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Text="{Binding Nom}" VerticalAlignment="Center"/>
+                                                    <Button Grid.Column="1" 
+                                                            Style="{StaticResource MaterialDesignIconButton}"
+                                                            Width="24" Height="24"
+                                                            Command="{Binding DataContext.RetirerBeneficiaireCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                                            CommandParameter="{Binding}">
+                                                        <materialDesign:PackIcon Kind="Close" Width="14" Height="14" Foreground="#F44336"/>
+                                                    </Button>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                </Grid>
+                            </Border>
+
+                            <!-- Acteurs -->
+                            <Border Grid.Column="1" BorderBrush="#E0E0E0" BorderThickness="1" 
+                                    CornerRadius="8" Padding="12" Margin="8,0,8,0">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Grid.Row="0" Text="Acteurs" FontWeight="Bold" 
+                                               Foreground="#FF9800" Margin="0,0,0,8"/>
+
+                                    <Grid Grid.Row="1" Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <ComboBox x:Name="ComboActeur"
+                                                  ItemsSource="{Binding Acteurs}"
+                                                  DisplayMemberPath="Nom"
+                                                  Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                                  materialDesign:HintAssist.Hint="Sélectionner..."
+                                                  Margin="0,0,4,0"/>
+                                        <Button Grid.Column="1" 
+                                                Style="{StaticResource MaterialDesignIconButton}"
+                                                Command="{Binding AjouterActeurCommand}"
+                                                CommandParameter="{Binding SelectedItem, ElementName=ComboActeur}">
+                                            <materialDesign:PackIcon Kind="Plus" Foreground="#4CAF50"/>
+                                        </Button>
+                                    </Grid>
+
+                                    <ListBox Grid.Row="2" ItemsSource="{Binding SelectedActeurs}"
+                                             MinHeight="100" MaxHeight="150">
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Text="{Binding Nom}" VerticalAlignment="Center"/>
+                                                    <Button Grid.Column="1" 
+                                                            Style="{StaticResource MaterialDesignIconButton}"
+                                                            Width="24" Height="24"
+                                                            Command="{Binding DataContext.RetirerActeurCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                                            CommandParameter="{Binding}">
+                                                        <materialDesign:PackIcon Kind="Close" Width="14" Height="14" Foreground="#F44336"/>
+                                                    </Button>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                </Grid>
+                            </Border>
+
+                            <!-- Structures d'exécution -->
+                            <Border Grid.Column="2" BorderBrush="#E0E0E0" BorderThickness="1" 
+                                    CornerRadius="8" Padding="12" Margin="8,0,0,0">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Grid.Row="0" Text="Structures d'exécution" FontWeight="Bold" 
+                                               Foreground="#9C27B0" Margin="0,0,0,8"/>
+
+                                    <Grid Grid.Row="1" Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <ComboBox x:Name="ComboStructure"
+                                                  ItemsSource="{Binding Structures}"
+                                                  DisplayMemberPath="Nom"
+                                                  Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                                  materialDesign:HintAssist.Hint="Sélectionner..."
+                                                  Margin="0,0,4,0"/>
+                                        <Button Grid.Column="1" 
+                                                Style="{StaticResource MaterialDesignIconButton}"
+                                                Command="{Binding AjouterStructureCommand}"
+                                                CommandParameter="{Binding SelectedItem, ElementName=ComboStructure}">
+                                            <materialDesign:PackIcon Kind="Plus" Foreground="#4CAF50"/>
+                                        </Button>
+                                    </Grid>
+
+                                    <ListBox Grid.Row="2" ItemsSource="{Binding SelectedStructures}"
+                                             MinHeight="100" MaxHeight="150">
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Text="{Binding Nom}" VerticalAlignment="Center"/>
+                                                    <Button Grid.Column="1" 
+                                                            Style="{StaticResource MaterialDesignIconButton}"
+                                                            Width="24" Height="24"
+                                                            Command="{Binding DataContext.RetirerStructureCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                                            CommandParameter="{Binding}">
+                                                        <materialDesign:PackIcon Kind="Close" Width="14" Height="14" Foreground="#F44336"/>
+                                                    </Button>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                </Grid>
+                            </Border>
+                        </Grid>
+
+                        <!-- Boutons d'action -->
+                        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Content="Annuler"
+                                    Command="{Binding AnnulerCommand}"
+                                    Margin="0,0,12,0" Padding="32,10"/>
+                            <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                                    Background="#4CAF50"
+                                    Content="Enregistrer"
+                                    Command="{Binding EnregistrerCommand}"
+                                    Padding="32,10"/>
+                        </StackPanel>
+                    </Grid>
+                </materialDesign:Card>
+            </ScrollViewer>
+        </Grid>
+
+        <!-- OVERLAY DE CHARGEMENT -->
+        <Grid Grid.RowSpan="2" Background="#80FFFFFF"
+              Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisConverter}}">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}"
+                             IsIndeterminate="True" Width="50" Height="50"/>
+                <TextBlock Text="Chargement..." Margin="0,16,0,0" Foreground="#666666"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>
