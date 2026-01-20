@@ -1,0 +1,197 @@
+﻿<UserControl x:Class="Collectivite.Views.Pages.SecteurPDLPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:utils="clr-namespace:Collectivite.Utils"
+             mc:Ignorable="d" 
+             d:DesignHeight="700" d:DesignWidth="1200"
+             Loaded="UserControl_Loaded">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
+        <utils:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisConverter"/>
+    </UserControl.Resources>
+
+    <Grid Background="#F5F5F5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- EN-TÊTE -->
+        <Border Grid.Row="0" Background="White" Padding="20,15" 
+                BorderBrush="#E0E0E0" BorderThickness="0,0,0,1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Secteurs PDL" 
+                               FontSize="24" FontWeight="Bold" Foreground="#1976D2"/>
+                    <TextBlock Text="Gestion des secteurs par programme" 
+                               FontSize="13" Foreground="#666666" Margin="0,4,0,0"/>
+                </StackPanel>
+
+                <Button Grid.Column="1" 
+                        Style="{StaticResource MaterialDesignRaisedButton}"
+                        Background="#4CAF50"
+                        Command="{Binding NouveauSecteurCommand}"
+                        Visibility="{Binding IsEditing, Converter={StaticResource InverseBoolToVisConverter}}"
+                        Padding="16,8">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Plus" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBlock Text="Nouveau Secteur"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- CONTENU -->
+        <Grid Grid.Row="1" Margin="20">
+
+            <!-- MODE LISTE -->
+            <Grid Visibility="{Binding IsEditing, Converter={StaticResource InverseBoolToVisConverter}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Filtre par programme -->
+                <Border Grid.Row="0" Background="White" CornerRadius="8" Padding="16" Margin="0,0,0,16">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Filtrer par programme :" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                        <ComboBox ItemsSource="{Binding Programmes}"
+                                  SelectedItem="{Binding SelectedProgrammeFiltre}"
+                                  DisplayMemberPath="Libelle"
+                                  Width="300"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                  materialDesign:HintAssist.Hint="Tous les programmes"/>
+                        <Button Style="{StaticResource MaterialDesignIconButton}"
+                                ToolTip="Réinitialiser"
+                                Command="{Binding ReinitialiserFiltreCommand}"
+                                Margin="8,0,0,0">
+                            <materialDesign:PackIcon Kind="Refresh"/>
+                        </Button>
+                    </StackPanel>
+                </Border>
+
+                <!-- Liste des secteurs -->
+                <materialDesign:Card Grid.Row="1">
+                    <DataGrid ItemsSource="{Binding Secteurs}"
+                              SelectedItem="{Binding SelectedSecteur}"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              IsReadOnly="True"
+                              SelectionMode="Single"
+                              materialDesign:DataGridAssist.CellPadding="16 12">
+
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Programme" 
+                                                Binding="{Binding ProgrammePDL.Libelle}" 
+                                                Width="200"/>
+                            <DataGridTextColumn Header="Libellé" 
+                                                Binding="{Binding Libelle}" 
+                                                Width="*"/>
+                            <DataGridTextColumn Header="Description" 
+                                                Binding="{Binding Description}" 
+                                                Width="*"/>
+
+                            <DataGridTemplateColumn Header="Actions" Width="150">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                    ToolTip="Modifier"
+                                                    Command="{Binding DataContext.ModifierSecteurCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}">
+                                                <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2"/>
+                                            </Button>
+                                            <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                    ToolTip="Supprimer"
+                                                    Command="{Binding DataContext.SupprimerCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}">
+                                                <materialDesign:PackIcon Kind="Delete" Foreground="#F44336"/>
+                                            </Button>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </materialDesign:Card>
+            </Grid>
+
+            <!-- MODE ÉDITION -->
+            <materialDesign:Card Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisConverter}}"
+                                 Padding="24" MaxWidth="600" HorizontalAlignment="Center">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Text="{Binding TitrePage}" 
+                               FontSize="20" FontWeight="Bold" Foreground="#1976D2"
+                               Margin="0,0,0,24"/>
+
+                    <!-- Programme -->
+                    <StackPanel Grid.Row="1" Margin="0,0,0,16">
+                        <TextBlock Text="Programme *" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                        <ComboBox ItemsSource="{Binding Programmes}"
+                                  SelectedItem="{Binding SelectedProgramme}"
+                                  DisplayMemberPath="Libelle"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
+                    </StackPanel>
+
+                    <!-- Libellé -->
+                    <StackPanel Grid.Row="2" Margin="0,0,0,16">
+                        <TextBlock Text="Libellé *" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                        <TextBox Text="{Binding Libelle, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                    </StackPanel>
+
+                    <!-- Description -->
+                    <StackPanel Grid.Row="3" Margin="0,0,0,16">
+                        <TextBlock Text="Description" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                        <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 MinHeight="80"
+                                 VerticalContentAlignment="Top"/>
+                    </StackPanel>
+
+                    <!-- Boutons -->
+                    <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,24,0,0">
+                        <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Content="Annuler"
+                                Command="{Binding AnnulerCommand}"
+                                Margin="0,0,12,0" Padding="24,8"/>
+                        <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                                Background="#4CAF50"
+                                Content="Enregistrer"
+                                Command="{Binding EnregistrerCommand}"
+                                Padding="24,8"/>
+                    </StackPanel>
+                </Grid>
+            </materialDesign:Card>
+        </Grid>
+
+        <!-- LOADING -->
+        <Grid Grid.RowSpan="2" Background="#80FFFFFF"
+              Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisConverter}}">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}"
+                             IsIndeterminate="True" Width="50" Height="50"/>
+                <TextBlock Text="Chargement..." Margin="0,16,0,0"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>

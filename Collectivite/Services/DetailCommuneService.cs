@@ -51,8 +51,8 @@ namespace Collectivite.Services
                 var detailCommune = await context.DetailCommunes
                     .Include(dc => dc.Commune)
                     .Include(dc => dc.Exercice)
-                    .FirstOrDefaultAsync(dc => dc.IdCommune == communeId);
-                    //.FirstOrDefaultAsync(dc => dc.IdCommune == communeId && dc.Exercice.Id == exerciceService.CurrentExercice.Id);
+                    // .FirstOrDefaultAsync(dc => dc.IdCommune == communeId);
+                    .FirstOrDefaultAsync(dc => dc.IdCommune == communeId && dc.Exercice.Id == exerciceService.CurrentExercice.Id);
 
                 return detailCommune;
             }
@@ -90,13 +90,24 @@ namespace Collectivite.Services
                     return (false, "La commune spécifiée n'existe pas.", null);
                 }
 
-                // Validation : Vérifier qu'il n'existe pas déjà un détail pour cette commune
+                // Validation : Vérifier que l'exercice existe si un ExerciceId est fourni
+                if (detailCommune.ExerciceId.HasValue)
+                {
+                    var exerciceExiste = await _context.Exercices.AnyAsync(e => e.Id == detailCommune.ExerciceId.Value);
+                    if (!exerciceExiste)
+                    {
+                        return (false, "L'exercice spécifié n'existe pas.", null);
+                    }
+                }
+
+                // Validation : Vérifier qu'il n'existe pas déjà un détail pour cette commune ET cet exercice
                 var detailExiste = await _context.DetailCommunes
-                    .AnyAsync(d => d.IdCommune == detailCommune.IdCommune);
+                    .AnyAsync(d => d.IdCommune == detailCommune.IdCommune && 
+                                   d.ExerciceId == detailCommune.ExerciceId);
 
                 if (detailExiste)
                 {
-                    return (false, "Un détail existe déjà pour cette commune.", null);
+                    return (false, "Un détail existe déjà pour cette commune sur cet exercice.", null);
                 }
 
                 // Validation : Cohérence des données démographiques
@@ -191,6 +202,7 @@ namespace Collectivite.Services
                 // Copier les valeurs
                 _context.Entry(detailExistant).CurrentValues.SetValues(detailCommune);
                 detailExistant.IdCommune = detailCommune.IdCommune;
+                detailExistant.ExerciceId = detailCommune.ExerciceId;
 
                 await _context.SaveChangesAsync();
 

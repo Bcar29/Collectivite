@@ -98,6 +98,9 @@ namespace Collectivite.ViewModels
         [ObservableProperty]
         private string _messageSucces = string.Empty;
 
+        [ObservableProperty]
+        private string _messageErreurSolde = string.Empty;
+
         #endregion
 
         #region Propriétés formatées
@@ -249,10 +252,60 @@ namespace Collectivite.ViewModels
             {
                 IsLoading = true;
                 MessageErreur = string.Empty;
+                MessageErreurSolde = string.Empty;
 
                 // Valider les champs selon le mode
                 if (!ValiderChampsMouvement())
                 {
+                    IsLoading = false;
+                    return;
+                }
+
+                // ═══════════════════════════════════════
+                // VÉRIFICATION DU SOLDE DU COMPTE
+                // ═══════════════════════════════════════
+                try
+                {
+                    // Déterminer le numéro de compte selon le mode de règlement
+                    string numeroCompte = DialogModeReglement switch
+                    {
+                        ModeReglement.Espece => "55",      // Caisse
+                        ModeReglement.Virement => "53",    // Banque
+                        ModeReglement.Cheque => "53",      // Banque
+                        _ => "55"
+                    };
+
+                    // Récupérer le solde actuel du compte (toutes les écritures)
+                    decimal solde = await _mouvementService.GetSoldeCompteParNumeroAsync(numeroCompte);
+
+                    // Déterminer le nom du compte pour le message
+                    string nomCompte = DialogModeReglement switch
+                    {
+                        ModeReglement.Espece => "Caisse (55)",
+                        ModeReglement.Virement => "Banque (53)",
+                        ModeReglement.Cheque => "Banque (53)",
+                        _ => "Caisse (55)"
+                    };
+
+                    // Vérifier si le solde est suffisant
+                    if (solde < DialogMontant)
+                    {
+                        string messageErreur = $"❌ Paiement bloqué : Solde insuffisant\n\n" +
+                                              $"Le solde du compte {nomCompte} est de {solde:N0} GNF, " +
+                                              $"ce qui est inférieur au montant à payer ({DialogMontant:N0} GNF).\n\n" +
+                                              $"Veuillez vérifier votre trésorerie avant de procéder au paiement.";
+
+                        MessageErreurSolde = messageErreur;
+                        MessageBox.Show(messageErreur, "Solde insuffisant", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        IsLoading = false;
+                        return;
+                    }
+                }
+                catch (Exception exSolde)
+                {
+                    string messageErreur = $"Erreur lors de la vérification du solde : {exSolde.Message}";
+                    MessageErreurSolde = messageErreur;
+                    MessageBox.Show(messageErreur, "Erreur de vérification", MessageBoxButton.OK, MessageBoxImage.Error);
                     IsLoading = false;
                     return;
                 }
@@ -538,6 +591,84 @@ namespace Collectivite.ViewModels
         {
             OnPropertyChanged(nameof(IsVirementVisible));
             OnPropertyChanged(nameof(IsChequeVisible));
+            
+            // Vérifier le solde uniquement pour les paiements de mandats
+            if (IsDialogPaiement)
+            {
+                _ = VerifierSoldeCompteAsync();
+            }
+        }
+
+        partial void OnDialogMontantChanged(decimal value)
+        {
+            // Vérifier le solde uniquement pour les paiements de mandats
+            if (IsDialogPaiement && value > 0)
+            {
+                _ = VerifierSoldeCompteAsync();
+            }
+        }
+
+        /// <summary>
+        /// Vérifie le solde du compte de trésorerie selon le mode de règlement
+        /// Uniquement pour les paiements de mandats
+        /// </summary>
+        private async Task VerifierSoldeCompteAsync()
+        {
+            // Ne vérifier que pour les paiements de mandats
+            if (!IsDialogPaiement || DialogMontant <= 0)
+            {
+                MessageErreurSolde = string.Empty;
+                return;
+            }
+
+            try
+            {
+                // Déterminer le numéro de compte selon le mode de règlement
+                string numeroCompte = DialogModeReglement switch
+                {
+                    ModeReglement.Espece => "55",      // Caisse
+                    ModeReglement.Virement => "53",    // Banque
+                    ModeReglement.Cheque => "53",      // Banque
+                    _ => "55"
+                };
+
+                // Récupérer le solde actuel du compte (toutes les écritures)
+                decimal solde = await _mouvementService.GetSoldeCompteParNumeroAsync(numeroCompte);
+
+                // Déterminer le nom du compte pour le message
+                string nomCompte = DialogModeReglement switch
+                {
+                    ModeReglement.Espece => "Caisse (55)",
+                    ModeReglement.Virement => "Banque (53)",
+                    ModeReglement.Cheque => "Banque (53)",
+                    _ => "Caisse (55)"
+                };
+
+                // Vérifier si le solde est suffisant
+                // Pour un paiement, on débite le compte de trésorerie (on crédite)
+                // Le solde doit être suffisant pour supporter le paiement
+                // Si le compte est débiteur (solde positif), on peut payer
+                // Si le compte est créditeur (solde négatif), on doit vérifier que le solde + montant reste acceptable
+                
+                // Pour un compte de trésorerie (actif), un solde débiteur (positif) est normal
+                // Un paiement crédite le compte, donc réduit le solde débiteur
+                // On vérifie que le solde débiteur est suffisant pour le paiement
+                
+                if (solde < DialogMontant)
+                {
+                    MessageErreurSolde = $"⚠️ Solde insuffisant : Le solde du compte {nomCompte} est de {solde:N0} GNF, " +
+                                        $"ce qui est inférieur au montant à payer ({DialogMontant:N0} GNF). " +
+                                        $"Veuillez vérifier votre trésorerie avant de procéder au paiement.";
+                }
+                else
+                {
+                    MessageErreurSolde = string.Empty;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageErreurSolde = $"Erreur lors de la vérification du solde : {ex.Message}";
+            }
         }
 
         #endregion

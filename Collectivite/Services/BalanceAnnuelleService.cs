@@ -1,4 +1,4 @@
-﻿using Collectivite.Models;
+using Collectivite.Models;
 using Collectivite.Services;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -39,6 +39,10 @@ namespace Collectivite.Services
             {
                 comptesQuery = comptesQuery.Where(c => c.NumeroCompte == filtre.NumeroCompte);
             }
+
+            // Exclure les comptes de gestion/budgétaires (classes 6 et 7)
+            comptesQuery = comptesQuery.Where(c =>
+                !c.NumeroCompte.StartsWith("6") && !c.NumeroCompte.StartsWith("7"));
 
             var comptes = await comptesQuery.OrderBy(c => c.NumeroCompte).ToListAsync();
 
@@ -117,7 +121,7 @@ namespace Collectivite.Services
                 // ═══════════════════════════════════════
                 // BALANCE D'ENTRÉE (solde de l'exercice précédent)
                 // ═══════════════════════════════════════
-                if (ecrituresAnneePrecedente.Count > 0)
+                if (!EstCompteGestionOuBudgetaire(compte.NumeroCompte) && ecrituresAnneePrecedente.Count > 0)
                 {
                     var soldeAnneePrecedente = CalculerSoldeCompte(ecrituresAnneePrecedente, compte.Id);
 
@@ -175,6 +179,17 @@ namespace Collectivite.Services
             }
 
             return lignes;
+        }
+
+        private static bool EstCompteGestionOuBudgetaire(string? numeroCompte)
+        {
+            if (string.IsNullOrWhiteSpace(numeroCompte))
+            {
+                return false;
+            }
+
+            return numeroCompte.StartsWith("6", StringComparison.Ordinal) ||
+                   numeroCompte.StartsWith("7", StringComparison.Ordinal);
         }
 
         /// <summary>

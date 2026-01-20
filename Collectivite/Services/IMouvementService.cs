@@ -76,5 +76,12 @@ namespace Collectivite.Services
         /// Récupère les comptes de trésorerie disponibles
         /// </summary>
         Task<List<CompteComptable>> GetComptesTresorerieAsync();
+
+        /// <summary>
+        /// Récupère le solde actuel d'un compte par son numéro (toutes les écritures)
+        /// </summary>
+        /// <param name="numeroCompte">Le numéro du compte (ex: "55" pour Caisse, "53" pour Banque)</param>
+        /// <returns>Le solde du compte (positif = débiteur, négatif = créditeur)</returns>
+        Task<decimal> GetSoldeCompteParNumeroAsync(string numeroCompte);
     }
 }
