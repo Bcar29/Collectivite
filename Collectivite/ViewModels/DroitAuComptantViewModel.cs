@@ -1,4 +1,4 @@
-﻿
+
 using Collectivite.Models;
 using Collectivite.Services;
 using System;
@@ -34,6 +34,12 @@ namespace Collectivite.ViewModels
             field = value;
             OnPropertyChanged(propertyName);
             return true;
+        }
+
+        private void RafraichirEtatEnregistrer()
+        {
+            OnPropertyChanged(nameof(CanEnregistrerOperation));
+            CommandManager.InvalidateRequerySuggested();
         }
 
         #region Propriétés - Liste principale
@@ -129,7 +135,13 @@ namespace Collectivite.ViewModels
         public ImputationDTO? SelectedImputation
         {
             get => _selectedImputation;
-            set => SetProperty(ref _selectedImputation, value);
+            set
+            {
+                if (SetProperty(ref _selectedImputation, value))
+                {
+                    RafraichirEtatEnregistrer();
+                }
+            }
         }
 
         private ObservableCollection<Tiers> _tiersList = new();
@@ -172,6 +184,7 @@ namespace Collectivite.ViewModels
                     OnPropertyChanged(nameof(DialogButtonText));
                     OnPropertyChanged(nameof(DialogButtonIcon));
                     OnPropertyChanged(nameof(DialogButtonColor));
+                    RafraichirEtatEnregistrer();
                 }
             }
         }
@@ -196,21 +209,39 @@ namespace Collectivite.ViewModels
         public DateTime DialogDate
         {
             get => _dialogDate;
-            set => SetProperty(ref _dialogDate, value);
+            set
+            {
+                if (SetProperty(ref _dialogDate, value))
+                {
+                    RafraichirEtatEnregistrer();
+                }
+            }
         }
 
         private decimal _dialogMontant;
         public decimal DialogMontant
         {
             get => _dialogMontant;
-            set => SetProperty(ref _dialogMontant, value);
+            set
+            {
+                if (SetProperty(ref _dialogMontant, value))
+                {
+                    RafraichirEtatEnregistrer();
+                }
+            }
         }
 
         private string _dialogComptable = string.Empty;
         public string DialogComptable
         {
             get => _dialogComptable;
-            set => SetProperty(ref _dialogComptable, value);
+            set
+            {
+                if (SetProperty(ref _dialogComptable, value))
+                {
+                    RafraichirEtatEnregistrer();
+                }
+            }
         }
 
         private string _dialogMotifs = string.Empty;
@@ -230,6 +261,7 @@ namespace Collectivite.ViewModels
                 {
                     OnPropertyChanged(nameof(IsVirementVisible));
                     OnPropertyChanged(nameof(IsChequeVisible));
+                    RafraichirEtatEnregistrer();
                 }
             }
         }
@@ -238,7 +270,13 @@ namespace Collectivite.ViewModels
         public string? DialogRefVirement
         {
             get => _dialogRefVirement;
-            set => SetProperty(ref _dialogRefVirement, value);
+            set
+            {
+                if (SetProperty(ref _dialogRefVirement, value))
+                {
+                    RafraichirEtatEnregistrer();
+                }
+            }
         }
 
         private string? _dialogNumBanque;
@@ -252,11 +290,32 @@ namespace Collectivite.ViewModels
         public string? DialogRefCheque
         {
             get => _dialogRefCheque;
-            set => SetProperty(ref _dialogRefCheque, value);
+            set
+            {
+                if (SetProperty(ref _dialogRefCheque, value))
+                {
+                    RafraichirEtatEnregistrer();
+                }
+            }
         }
 
         public bool IsVirementVisible => DialogModeReglement == ModeReglement.Virement;
         public bool IsChequeVisible => DialogModeReglement == ModeReglement.Cheque;
+
+        public bool CanEnregistrerOperation
+        {
+            get
+            {
+                if (DialogMontant <= 0) return false;
+                if (string.IsNullOrWhiteSpace(DialogComptable)) return false;
+                if (IsCreationMode && SelectedImputation == null) return false;
+                if (DialogModeReglement == ModeReglement.Virement && string.IsNullOrWhiteSpace(DialogRefVirement))
+                    return false;
+                if (DialogModeReglement == ModeReglement.Cheque && string.IsNullOrWhiteSpace(DialogRefCheque))
+                    return false;
+                return true;
+            }
+        }
 
         #endregion
 
@@ -329,7 +388,7 @@ namespace Collectivite.ViewModels
             ChargerDonneesCommand = new RelayCommandAsync(ChargerDonneesAsync);
             OuvrirDialogCommand = new RelayCommandSync(OuvrirDialogCreation);
             FermerDialogCommand = new RelayCommandSync(FermerDialog);
-            EnregistrerOperationCommand = new RelayCommandAsync(EnregistrerOperationAsync);
+            EnregistrerOperationCommand = new RelayCommandAsync(EnregistrerOperationAsync, () => CanEnregistrerOperation);
 
             // Commandes de filtrage
             AppliquerFiltresCommand = new RelayCommandSync(AppliquerFiltres);
@@ -452,6 +511,7 @@ namespace Collectivite.ViewModels
 
             OnPropertyChanged(nameof(IsVirementVisible));
             OnPropertyChanged(nameof(IsChequeVisible));
+            RafraichirEtatEnregistrer();
 
             IsDialogOpen = true;
         }
@@ -500,6 +560,7 @@ namespace Collectivite.ViewModels
 
             OnPropertyChanged(nameof(IsVirementVisible));
             OnPropertyChanged(nameof(IsChequeVisible));
+            RafraichirEtatEnregistrer();
 
             IsDialogOpen = true;
         }

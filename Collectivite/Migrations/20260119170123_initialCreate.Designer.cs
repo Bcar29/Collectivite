@@ -12,13 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Collectivite.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-<<<<<<<< HEAD:Collectivite/Migrations/20260102201640_initCreate.Designer.cs
-    [Migration("20260102201640_initCreate")]
-    partial class initCreate
-========
-    [Migration("20260105120521_CreateInitiale")]
-    partial class CreateInitiale
->>>>>>>> bf04c4f3bafaf9efa7657135ef96348910c04add:Collectivite/Migrations/20260105120521_CreateInitiale.Designer.cs
+    [Migration("20260119170123_initialCreate")]
+    partial class initialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
