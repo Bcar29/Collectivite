@@ -1,10 +1,13 @@
-﻿
+
 using Collectivite.Models;
 using Collectivite.Utils;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Collectivite.Services
@@ -16,6 +19,7 @@ namespace Collectivite.Services
     {
         private readonly AppDbContext _context;
         private readonly EcritureComptableMouvementHelper _ecritureHelper;
+        private readonly string _logPath = Path.Combine(Path.GetTempPath(), "collectivite_mouvement.log");
 
         public MouvementService(AppDbContext context)
         {
@@ -40,6 +44,10 @@ namespace Collectivite.Services
                 .Where(m => m.Etat == Mandat.EtatMandat.Validé && exerciceService.CurrentExercice.Id == m.Engagement.ExerciceId)
                 .Include(m => m.Engagement)
                     .ThenInclude(e => e.Tiers)
+                .Include(m => m.Engagement)
+                    .ThenInclude(e => e.Facture)
+                .Include(m => m.Engagement)
+                    .ThenInclude(e => e.BonCommande)
                 .OrderByDescending(m => m.DateEmission)
                 .ToListAsync();
 
@@ -60,6 +68,9 @@ namespace Collectivite.Services
                     DateEmission = mandat.DateEmission,
                     Objet = mandat.Objet,
                     Motif = mandat.Objet,
+                    EngagementId = mandat.EngagementId,
+                    FactureId = mandat.Engagement?.FactureId,
+                    BonCommandeId = mandat.Engagement?.BonCommandeId,
                     Beneficiaire = mandat.Engagement?.Tiers?.Nom
                         ?? mandat.Engagement?.Tiers?.RaisonSociale
                         ?? "Tiers non défini",
@@ -88,6 +99,10 @@ namespace Collectivite.Services
             var mandat = await _context.Mandats
                 .Include(m => m.Engagement)
                     .ThenInclude(e => e.Tiers)
+                .Include(m => m.Engagement)
+                    .ThenInclude(e => e.Facture)
+                .Include(m => m.Engagement)
+                    .ThenInclude(e => e.BonCommande)
                 .FirstOrDefaultAsync(m => m.Id == mandatId);
 
             if (mandat == null) return null;
@@ -104,6 +119,9 @@ namespace Collectivite.Services
                 DateEmission = mandat.DateEmission,
                 Objet = mandat.Objet,
                 Motif = mandat.Objet,
+                EngagementId = mandat.EngagementId,
+                FactureId = mandat.Engagement?.FactureId,
+                BonCommandeId = mandat.Engagement?.BonCommandeId,
                 Beneficiaire = mandat.Engagement?.Tiers?.Nom
                     ?? mandat.Engagement?.Tiers?.RaisonSociale
                     ?? "Tiers non défini",
@@ -280,17 +298,32 @@ namespace Collectivite.Services
         /// </summary>
         public async Task<List<OrdreRecetteEncaissementDTO>> GetOrdresRecetteNonEncaissesAsync()
         {
+            Log("MouvementService.GetOrdresRecetteNonEncaissesAsync - start");
             var exerciceService = ExerciceService.Instance;
 
             if (exerciceService.CurrentExercice == null)
             {
+                Log("MouvementService.GetOrdresRecetteNonEncaissesAsync - no exercice");
                 return new List<OrdreRecetteEncaissementDTO>();
             }
-            var ordres = await _context.OrdreRecettes
+            Log("MouvementService.GetOrdresRecetteNonEncaissesAsync - query start");
+            _context.Database.SetCommandTimeout(10);
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            var queryTask = _context.OrdreRecettes
                 .Where(o => o.Etat == OrdreRecette.EtatOdre.Validé && o.ExerciceId == exerciceService.CurrentExercice.Id)
                 .Include(o => o.Tiers)
+                .AsNoTracking()
                 .OrderByDescending(o => o.DateOrdre)
-                .ToListAsync();
+                .ToListAsync(cts.Token);
+
+            if (await Task.WhenAny(queryTask, Task.Delay(TimeSpan.FromSeconds(10), cts.Token)) != queryTask)
+            {
+                Log("MouvementService.GetOrdresRecetteNonEncaissesAsync - query timeout");
+                throw new TimeoutException("Timeout lors du chargement des ordres de recette.");
+            }
+
+            var ordres = await queryTask;
+            Log($"MouvementService.GetOrdresRecetteNonEncaissesAsync - query done ({ordres.Count})");
 
             var result = new List<OrdreRecetteEncaissementDTO>();
 
@@ -320,7 +353,22 @@ namespace Collectivite.Services
                 }
             }
 
+            Log($"MouvementService.GetOrdresRecetteNonEncaissesAsync - done ({result.Count})");
             return result;
+        }
+
+        private void Log(string message)
+        {
+            var line = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff} | {message}";
+            Debug.WriteLine(line);
+            try
+            {
+                File.AppendAllText(_logPath, line + Environment.NewLine);
+            }
+            catch
+            {
+                // ignorer les erreurs d'écriture de log
+            }
         }
 
         /// <summary>

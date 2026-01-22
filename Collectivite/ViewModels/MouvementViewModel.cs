@@ -1,10 +1,11 @@
-﻿using Collectivite.Models;
+using Collectivite.Models;
 using Collectivite.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -13,6 +14,7 @@ namespace Collectivite.ViewModels
     public partial class MouvementViewModel : ObservableObject
     {
         private readonly IMouvementService _mouvementService;
+        private readonly string _logPath = Path.Combine(Path.GetTempPath(), "collectivite_mouvement.log");
 
         #region Propriétés observables - Listes principales
 
@@ -124,7 +126,17 @@ namespace Collectivite.ViewModels
         [RelayCommand]
         public async Task InitialiserAsync()
         {
-            await ChargerDonneesAsync();
+            Log("MouvementViewModel.InitialiserAsync - start");
+            try
+            {
+                await ChargerDonneesAsync();
+                Log("MouvementViewModel.InitialiserAsync - done");
+            }
+            catch (Exception ex)
+            {
+                Log($"MouvementViewModel.InitialiserAsync - error: {ex.Message}\n{ex.StackTrace}");
+                throw;
+            }
         }
 
         /// <summary>
@@ -135,6 +147,7 @@ namespace Collectivite.ViewModels
         public async Task ChargerDonneesAsync()
         {
             Debug.WriteLine("=== ChargerDonneesAsync DÉBUT ===");
+            Log("MouvementViewModel.ChargerDonneesAsync - start");
 
             try
             {
@@ -147,15 +160,18 @@ namespace Collectivite.ViewModels
                 // ═══════════════════════════════════════
                 try
                 {
+                    Log("ChargerDonneesAsync - mandats: start");
                     Debug.WriteLine("Chargement des mandats...");
                     var mandats = await _mouvementService.GetMandatsNonPayesAsync();
                     MandatsNonPayes = new ObservableCollection<MandatPaiementDTO>(mandats ?? new());
                     Debug.WriteLine($"✓ Mandats chargés: {MandatsNonPayes.Count}");
+                    Log($"ChargerDonneesAsync - mandats: ok ({MandatsNonPayes.Count})");
                 }
                 catch (Exception exMandats)
                 {
                     Debug.WriteLine($"❌ Erreur mandats: {exMandats.Message}");
                     Debug.WriteLine($"StackTrace: {exMandats.StackTrace}");
+                    Log($"ChargerDonneesAsync - mandats: error {exMandats.Message}\n{exMandats.StackTrace}");
 
                     MessageErreur = $"Erreur lors du chargement des mandats : {exMandats.Message}";
                     MandatsNonPayes = new ObservableCollection<MandatPaiementDTO>();
@@ -166,15 +182,18 @@ namespace Collectivite.ViewModels
                 // ═══════════════════════════════════════
                 try
                 {
+                    Log("ChargerDonneesAsync - ordres: start");
                     Debug.WriteLine("Chargement des ordres de recette...");
                     var ordres = await _mouvementService.GetOrdresRecetteNonEncaissesAsync();
                     OrdresRecetteNonEncaisses = new ObservableCollection<OrdreRecetteEncaissementDTO>(ordres ?? new());
                     Debug.WriteLine($"✓ Ordres chargés: {OrdresRecetteNonEncaisses.Count}");
+                    Log($"ChargerDonneesAsync - ordres: ok ({OrdresRecetteNonEncaisses.Count})");
                 }
                 catch (Exception exOrdres)
                 {
                     Debug.WriteLine($"❌ Erreur ordres: {exOrdres.Message}");
                     Debug.WriteLine($"StackTrace: {exOrdres.StackTrace}");
+                    Log($"ChargerDonneesAsync - ordres: error {exOrdres.Message}\n{exOrdres.StackTrace}");
 
                     // Seulement mettre à jour MessageErreur si pas déjà d'erreur de mandats
                     if (string.IsNullOrEmpty(MessageErreur))
@@ -190,16 +209,19 @@ namespace Collectivite.ViewModels
                 }
 
                 Debug.WriteLine("=== ChargerDonneesAsync COMPLÉTÉ ===");
+                Log("MouvementViewModel.ChargerDonneesAsync - done");
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"❌ ERREUR GÉNÉRALE: {ex.Message}");
                 Debug.WriteLine($"StackTrace: {ex.StackTrace}");
                 MessageErreur = $"Erreur générale de chargement : {ex.Message}";
+                Log($"MouvementViewModel.ChargerDonneesAsync - error: {ex.Message}\n{ex.StackTrace}");
             }
             finally
             {
                 IsLoading = false;
+                Log("MouvementViewModel.ChargerDonneesAsync - finally");
             }
         }
 
@@ -520,6 +542,38 @@ namespace Collectivite.ViewModels
 
         #endregion
 
+        #region Commandes - Menu détails
+
+        [RelayCommand]
+        public void OuvrirDetailsEngagement(int engagementId)
+        {
+            if (engagementId <= 0) return;
+            NavigationService.Instance.NavigateTo(new Views.Pages.EngagementDetailPage(engagementId));
+        }
+
+        [RelayCommand]
+        public void OuvrirDetailsFacture(int factureId)
+        {
+            if (factureId <= 0) return;
+            NavigationService.Instance.NavigateTo(new Views.Pages.FactureDetailsPage(factureId));
+        }
+
+        [RelayCommand]
+        public void OuvrirDetailsBonCommande(int bonCommandeId)
+        {
+            if (bonCommandeId <= 0) return;
+            NavigationService.Instance.NavigateTo(new Views.Pages.BonCommandeDetailsPage(bonCommandeId));
+        }
+
+        [RelayCommand]
+        public void OuvrirDetailsOrdreRecette(int ordreRecetteId)
+        {
+            if (ordreRecetteId <= 0) return;
+            NavigationService.Instance.NavigateTo(new Views.Pages.OrdreRecetteDetailPage(ordreRecetteId));
+        }
+
+        #endregion
+
         #region Méthodes privées
 
         // ════════════════════════════════════════════════════════════
@@ -668,6 +722,20 @@ namespace Collectivite.ViewModels
             catch (Exception ex)
             {
                 MessageErreurSolde = $"Erreur lors de la vérification du solde : {ex.Message}";
+            }
+        }
+
+        private void Log(string message)
+        {
+            var line = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff} | {message}";
+            Debug.WriteLine(line);
+            try
+            {
+                File.AppendAllText(_logPath, line + Environment.NewLine);
+            }
+            catch
+            {
+                // ignorer les erreurs d'écriture de log
             }
         }
 

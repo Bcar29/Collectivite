@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="Collectivite.Views.Pages.MouvementPage"
+<UserControl x:Class="Collectivite.Views.Pages.MouvementPage"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -462,6 +462,47 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
+                                <!-- Bouton Voir pièces -->
+                                <DataGridTemplateColumn Header="" Width="140">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <materialDesign:PopupBox PlacementMode="BottomAndAlignLeftEdges"
+                                                                     StaysOpen="False"
+                                                                     HorizontalAlignment="Center"
+                                                                     ToggleContent="Voir pièces">
+                                                <materialDesign:PopupBox.ToggleContentTemplate>
+                                                    <DataTemplate>
+                                                        <Border Background="#0EA5E9" CornerRadius="6" Padding="12,6">
+                                                            <TextBlock Text="{Binding}" Foreground="White" FontWeight="Medium"/>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </materialDesign:PopupBox.ToggleContentTemplate>
+                                                <materialDesign:PopupBox.PopupContent>
+                                                    <StackPanel Background="White" MinWidth="180">
+                                                        <Button Content="Engagement"
+                                                                Command="{Binding DataContext.OuvrirDetailsEngagementCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                                CommandParameter="{Binding EngagementId}"
+                                                                Style="{StaticResource MaterialDesignFlatButton}"
+                                                                HorizontalContentAlignment="Left"/>
+                                                        <Button Content="Facture"
+                                                                Command="{Binding DataContext.OuvrirDetailsFactureCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                                CommandParameter="{Binding FactureId}"
+                                                                Style="{StaticResource MaterialDesignFlatButton}"
+                                                                HorizontalContentAlignment="Left"
+                                                                Visibility="{Binding HasFacture, Converter={StaticResource BoolToVisConverter}}"/>
+                                                        <Button Content="Bon de commande"
+                                                                Command="{Binding DataContext.OuvrirDetailsBonCommandeCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                                CommandParameter="{Binding BonCommandeId}"
+                                                                Style="{StaticResource MaterialDesignFlatButton}"
+                                                                HorizontalContentAlignment="Left"
+                                                                Visibility="{Binding HasBonCommande, Converter={StaticResource BoolToVisConverter}}"/>
+                                                    </StackPanel>
+                                                </materialDesign:PopupBox.PopupContent>
+                                            </materialDesign:PopupBox>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
                                 <!-- Bouton Payer -->
                                 <DataGridTemplateColumn Header="" Width="120">
                                     <DataGridTemplateColumn.CellTemplate>
@@ -627,6 +668,22 @@
                                                  FontWeight="SemiBold" 
                                                  HorizontalAlignment="Left"/>
                                             </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <!-- Bouton Détails -->
+                                <DataGridTemplateColumn Header="" Width="140">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="Détails"
+                                                    Command="{Binding DataContext.OuvrirDetailsOrdreRecetteCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding Id}"
+                                                    Background="#0EA5E9"
+                                                    BorderBrush="#0EA5E9"
+                                                    Foreground="White"
+                                                    Style="{StaticResource ActionButtonStyle}"
+                                                    HorizontalAlignment="Center"/>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
