@@ -108,7 +108,7 @@ namespace Collectivite.Services
                 .HasOne(b => b.Exercice)
                 .WithOne(e => e.BudgetPrimitif)
                 .HasForeignKey<BudgetPrimitif>(b => b.ExerciceId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<BudgetPrimitif>()
                 .HasIndex(b => b.ExerciceId)

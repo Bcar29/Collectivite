@@ -1748,7 +1748,7 @@ namespace Collectivite.Migrations
                     b.HasOne("Collectivite.Models.Exercice", "Exercice")
                         .WithOne("BudgetPrimitif")
                         .HasForeignKey("Collectivite.Models.BudgetPrimitif", "ExerciceId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Exercice");

@@ -284,10 +284,10 @@ namespace Collectivite.Services
                     if (ordreRecette.BudgetLine.Nommenclature.Nature == NatureType.Recette && ordreRecette.BudgetLine.Nommenclature.Section == SectionType.Fonctionnement)
                     {
                         var n662 = await context.BudgetLines
-                            .FirstOrDefaultAsync(n => n.Nommenclature.Article == "662");
+                            .FirstOrDefaultAsync(n => n.Nommenclature.Article == "662" && ordreRecette.BudgetLine.BudgetPrimitifId == n.BudgetPrimitifId);
 
                         var n110 = await context.BudgetLines
-                            .FirstOrDefaultAsync(n => n.Nommenclature.Article == "110");
+                            .FirstOrDefaultAsync(n => n.Nommenclature.Article == "110" && ordreRecette.BudgetLine.BudgetPrimitifId == n.BudgetPrimitifId);
                         if (n110 != null)
                         {
                             n110.MontantRealise += ordreRecette.MontantOrdre * 0.6m;

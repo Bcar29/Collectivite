@@ -160,7 +160,7 @@
                               ItemsSource="{Binding Mois}"
                               SelectedValue="{Binding MoisSelectionne}"
                               SelectedValuePath="Numero"
-                              DisplayMemberPath="NomComplet"
+                              DisplayMemberPath="Nom"
                               Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
                 </StackPanel>
 

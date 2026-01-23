@@ -159,14 +159,14 @@
                             
                             <!-- Colonne centrale : Drapeau de la Guinée -->
                             <StackPanel Grid.Column="1" 
-            VerticalAlignment="Top"
-            HorizontalAlignment="Center"
-            Margin="30,0">
+                                    VerticalAlignment="Top"
+                                    HorizontalAlignment="Center"
+                                    Margin="30,0">
                                 <Border CornerRadius="3" 
-            BorderBrush="#424242" 
-            BorderThickness="1"
-            HorizontalAlignment="Center"
-            Effect="{StaticResource MaterialDesignShadowDepth1}">
+                                    BorderBrush="#424242" 
+                                    BorderThickness="1"
+                                    HorizontalAlignment="Center"
+                                    Effect="{StaticResource MaterialDesignShadowDepth1}">
                                     <Grid Width="54" Height="36">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
@@ -203,7 +203,7 @@
                         <!-- ═══════════════════════════════════════════════════════════ -->
                         <StackPanel Grid.Row="1" Margin="0,0,0,25">
                             <!-- Titre principal -->
-                            <TextBlock Text="EXPRESSION DE BES"
+                            <TextBlock Text="EXPRESSION DE BESOIN"
                        FontSize="22"
                        FontWeight="Bold"
                        Foreground="#1E293B"

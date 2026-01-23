@@ -29,7 +29,7 @@ namespace Collectivite.Services
 
             var exerciceService = ExerciceService.Instance;
             var year = exerciceService.CurrentExercice?.GetAnnee() ?? DateTime.Now.Year;
-            var prefix = $"M-{year}-";
+            var prefix = $"MD-{year}-";
 
             // Récupérer tous les mandats de l'année en cours
             var mandatsThisYear = await context.Mandats

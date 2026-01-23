@@ -608,6 +608,11 @@ namespace Collectivite.ViewModels
                 if (DialogEcriture.Id == 0)
                 {
                     // Création
+                    var exerciceService = ExerciceService.Instance;
+                    if (exerciceService.CurrentExercice != null)
+                    {
+                        DialogEcriture.idExercice = exerciceService.CurrentExercice.Id;
+                    }
                     context.EcritureComptables.Add(DialogEcriture);
                 }
                 else

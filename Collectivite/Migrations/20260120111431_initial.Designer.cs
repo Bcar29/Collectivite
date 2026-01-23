@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Collectivite.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260119170123_initialCreate")]
-    partial class initialCreate
+    [Migration("20260120111431_initial")]
+    partial class initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -1751,7 +1751,7 @@ namespace Collectivite.Migrations
                     b.HasOne("Collectivite.Models.Exercice", "Exercice")
                         .WithOne("BudgetPrimitif")
                         .HasForeignKey("Collectivite.Models.BudgetPrimitif", "ExerciceId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Exercice");

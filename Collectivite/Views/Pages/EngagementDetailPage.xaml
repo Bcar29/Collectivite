@@ -149,16 +149,32 @@
                                 </StackPanel>
                             </StackPanel>
 
-                            <!-- Colonne centrale : Symbole -->
+                            <!-- Colonne centrale : Drapeau de la Guinée -->
                             <StackPanel Grid.Column="1" 
-                               VerticalAlignment="Top"
-                               HorizontalAlignment="Center"
-                               Margin="20,0">
-                                <TextBlock Text="⚜" 
-                                 FontSize="36" 
-                                 Foreground="#059669"
-                                 HorizontalAlignment="Center"/>
+                                 VerticalAlignment="Top"
+                                 HorizontalAlignment="Center"
+                                 Margin="30,0">
+                                <Border CornerRadius="3" 
+                                     BorderBrush="#424242" 
+                                     BorderThickness="1"
+                                     HorizontalAlignment="Center"
+                                     Effect="{StaticResource MaterialDesignShadowDepth1}">
+                                    <Grid Width="54" Height="36">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <!-- Rouge -->
+                                        <Rectangle Grid.Column="0" Fill="#CE1126"/>
+                                        <!-- Jaune -->
+                                        <Rectangle Grid.Column="1" Fill="#FCD116"/>
+                                        <!-- Vert -->
+                                        <Rectangle Grid.Column="2" Fill="#009460"/>
+                                    </Grid>
+                                </Border>
                             </StackPanel>
+
 
                             <!-- Colonne droite : République -->
                             <StackPanel Grid.Column="2" HorizontalAlignment="Right">
@@ -265,7 +281,7 @@
                             <TextBlock Grid.Row="10" Grid.Column="1" Text="{Binding Engagement.BonCommande.Numero, FallbackValue='Non spécifié'}"/>
 
                             <TextBlock Grid.Row="12" Grid.Column="0" Text="Facture :" FontWeight="SemiBold"/>
-                            <TextBlock Grid.Row="12" Grid.Column="1" Text="{Binding Engagement.Facture.Numero, FallbackValue='Non spécifiée'}"/>
+                            <TextBlock Grid.Row="12" Grid.Column="1" Text="{Binding Engagement.Facture.NumeroFacture, FallbackValue='Non spécifiée'}"/>
 
                             <TextBlock Grid.Row="14" Grid.Column="0" Text="Objet :" FontWeight="SemiBold"/>
                             <TextBlock Grid.Row="14" Grid.Column="1" Text="{Binding Engagement.Objet}" TextWrapping="Wrap"/>

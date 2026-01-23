@@ -29,9 +29,6 @@ namespace Collectivite.Services
             return new AppDbContext();
         }
 
-        private string GetUsername()
-            => SessionManager.CurrentUser?.Username ?? "SYSTEM";
-
         #region Initialisation / Sélection
 
         public async Task InitializeCurrentExerciceAsync()
@@ -200,11 +197,11 @@ namespace Collectivite.Services
                 if (exercice == null)
                     return (false, "Exercice non trouvé.");
 
-                var hasDependencies = await context.BudgetsPrimitifs
-                    .AnyAsync(b => b.ExerciceId == exerciceId);
+                //var hasDependencies = await context.BudgetsPrimitifs
+                //    .AnyAsync(b => b.ExerciceId == exerciceId);
 
-                if (hasDependencies)
-                    return (false, "Impossible de supprimer : dépendances existantes.");
+                //if (hasDependencies)
+                //    return (false, "Impossible de supprimer : dépendances existantes.");
 
                 context.Exercices.Remove(exercice);
                 await context.SaveChangesAsync();

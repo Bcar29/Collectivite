@@ -37,7 +37,7 @@ namespace Collectivite
 
                 // Seeds dans l'ordre
                 SeedNomenclature.Seed(db);
-                Utils.SeedRolesPermissions.Seed(db);
+                SeedRolesPermissions.Seed(db);
 
                 // Seed du plan comptable
                 var seedPlanComptable = new SeedPlanComptable(db);
