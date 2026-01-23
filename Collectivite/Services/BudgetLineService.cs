@@ -101,8 +101,8 @@ namespace Collectivite.Services
                     {
                         bp.MontantRecette -= oldMontant;
                         bp.MontantRecette += line.MontantPrevu;
-                        bp.MontantTotal -= oldMontant;
-                        bp.MontantTotal += line.MontantPrevu;
+                        //bp.MontantTotal -= oldMontant;
+                        //bp.MontantTotal += line.MontantPrevu;
 
                         if(line.Nommenclature.Section == SectionType.Fonctionnement)
                         {
@@ -371,7 +371,7 @@ namespace Collectivite.Services
                 if (newLine.Nommenclature.Nature == NatureType.Recette)
                 {
                     newLine.BudgetPrimitif.MontantRecette += newLine.MontantPrevu;
-                    newLine.BudgetPrimitif.MontantTotal = newLine.BudgetPrimitif.MontantRecette;
+                    //newLine.BudgetPrimitif.MontantTotal = newLine.BudgetPrimitif.MontantRecette;
                 }
                 else if (newLine.Nommenclature.Nature == NatureType.Depense)
                 {

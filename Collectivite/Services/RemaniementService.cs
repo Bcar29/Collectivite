@@ -503,10 +503,10 @@ namespace Collectivite.Services
 
                         if (type == TypeRemaniement.en_plus)
                         {
-                            budgetPrimitif.MontantTotal += remaniement.Montant;
                             
                             if (isRecette)
                             {
+                                //budgetPrimitif.MontantTotal += remaniement.Montant;
                                 budgetPrimitif.MontantRecette += remaniement.Montant;
                             }
                             else if (isDepense)
@@ -516,10 +516,10 @@ namespace Collectivite.Services
                         }
                         else if (type == TypeRemaniement.en_moins)
                         {
-                            budgetPrimitif.MontantTotal -= remaniement.Montant;
                             
                             if (isRecette)
                             {
+                                //budgetPrimitif.MontantTotal -= remaniement.Montant;
                                 budgetPrimitif.MontantRecette -= remaniement.Montant;
                             }
                             else if (isDepense)
@@ -654,7 +654,7 @@ namespace Collectivite.Services
                     // Si c'était en_moins, on ajoute maintenant
                     if (remaniement.TypeRemaniement == TypeRemaniement.en_plus)
                     {
-                        budgetPrimitif.MontantTotal -= remaniement.Montant;
+                        //budgetPrimitif.MontantTotal -= remaniement.Montant;
                         
                         if (isRecette)
                         {
@@ -667,7 +667,7 @@ namespace Collectivite.Services
                     }
                     else if (remaniement.TypeRemaniement == TypeRemaniement.en_moins)
                     {
-                        budgetPrimitif.MontantTotal += remaniement.Montant;
+                        //budgetPrimitif.MontantTotal += remaniement.Montant;
                         
                         if (isRecette)
                         {

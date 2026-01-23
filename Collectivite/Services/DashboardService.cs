@@ -31,7 +31,7 @@ namespace Collectivite.Services
 
             if (budgetPrimitif != null)
             {
-                statistics.BudgetTotal = budgetPrimitif.MontantTotal;
+                statistics.BudgetTotal = budgetPrimitif.MontantRecette;
             }
 
             // 2. Dépenses Engagées (somme des engagements)
@@ -256,12 +256,12 @@ namespace Collectivite.Services
                 case "budget":
                     montantActuel = await context.BudgetsPrimitifs
                         .Where(b => b.ExerciceId == exerciceId)
-                        .Select(b => b.MontantTotal)
+                        .Select(b => b.MontantRecette)
                         .FirstOrDefaultAsync();
 
                     montantPrecedent = await context.BudgetsPrimitifs
                         .Where(b => b.ExerciceId == exercicePrecedent.Id)
-                        .Select(b => b.MontantTotal)
+                        .Select(b => b.MontantRecette)
                         .FirstOrDefaultAsync();
                     break;
 

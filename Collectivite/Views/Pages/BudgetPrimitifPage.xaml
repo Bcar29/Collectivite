@@ -72,7 +72,7 @@
                                               FontWeight="Medium"/>
 
                             <!-- Montant Total -->
-                            <DataGridTemplateColumn Header="Montant total" Width="200">
+                            <DataGridTemplateColumn Header="Budget total" Width="200">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal">
@@ -81,7 +81,7 @@
                                                      Foreground="#388E3C">
                                                 <TextBlock.Text>
                                                     <MultiBinding StringFormat="{}{0:N0} GNF">
-                                                        <Binding Path="MontantTotal"/>
+                                                            <Binding Path="MontantRecette"/>
                                                     </MultiBinding>
                                                 </TextBlock.Text>
                                             </TextBlock>

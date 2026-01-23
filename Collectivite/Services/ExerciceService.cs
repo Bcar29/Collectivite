@@ -116,7 +116,7 @@ namespace Collectivite.Services
                 var budgetPrimitif = new BudgetPrimitif
                 {
                     ExerciceId = exercice.Id,
-                    MontantTotal = 0,
+                    //MontantTotal = 0,
                     MontantDepense = 0,
                     MontantRecette = 0,
                     Status = BudgetPrimitif.Statusbudget.DRAFT
