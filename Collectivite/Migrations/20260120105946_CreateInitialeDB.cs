@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Collectivite.Migrations
 {
     /// <inheritdoc />
-    public partial class CreateInitiale : Migration
+    public partial class CreateInitialeDB : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

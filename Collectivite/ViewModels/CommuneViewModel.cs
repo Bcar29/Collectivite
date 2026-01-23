@@ -1,4 +1,4 @@
-﻿using Collectivite.Models;
+using Collectivite.Models;
 using Collectivite.Services;
 using System;
 using Collectivite.Utils;
@@ -64,7 +64,7 @@ namespace Collectivite.ViewModels
         }
 
         #region Properties 
-        public ObservableCollection<Commune> Communes { get; } = [];
+        public ObservableCollection<Commune> Communes { get; } = new ObservableCollection<Commune>();
 
         // Permissions dynamiques
         public bool CanViewCommune => SessionManager.HasPermission("Commune.View");

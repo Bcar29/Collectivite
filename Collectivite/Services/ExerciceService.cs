@@ -1,4 +1,4 @@
-﻿using Collectivite.Models;
+using Collectivite.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -12,7 +12,7 @@ namespace Collectivite.Services
         private static ExerciceService? _instance;
         private Exercice? _currentExercice;
 
-        public static ExerciceService Instance => _instance ??= new ExerciceService();
+        public static ExerciceService Instance => _instance ?? (_instance = new ExerciceService());
 
         private readonly AuditService _auditService = new AuditService();
 

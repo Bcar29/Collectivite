@@ -1,4 +1,4 @@
-﻿using Collectivite.Models;
+using Collectivite.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -237,7 +237,7 @@ namespace Collectivite.Services
                 var beneficiaire = await context.Set<BeneficiairePDL>().FindAsync(beneficiaireId);
                 if (beneficiaire == null) return false;
 
-                activite.Beneficiaires ??= new List<BeneficiairePDL>();
+                if (activite.Beneficiaires == null) activite.Beneficiaires = new List<BeneficiairePDL>();
                 if (!activite.Beneficiaires.Any(b => b.Id == beneficiaireId))
                 {
                     activite.Beneficiaires.Add(beneficiaire);
@@ -324,7 +324,7 @@ namespace Collectivite.Services
                 var acteur = await context.Set<ActeurPDL>().FindAsync(acteurId);
                 if (acteur == null) return false;
 
-                activite.Acteurs ??= new List<ActeurPDL>();
+                if (activite.Acteurs == null) activite.Acteurs = new List<ActeurPDL>();
                 if (!activite.Acteurs.Any(a => a.Id == acteurId))
                 {
                     activite.Acteurs.Add(acteur);
@@ -409,7 +409,7 @@ namespace Collectivite.Services
                 var structure = await context.Set<StructureExecutionPDL>().FindAsync(structureId);
                 if (structure == null) return false;
 
-                activite.StructureExecutions ??= new List<StructureExecutionPDL>();
+                if (activite.StructureExecutions == null) activite.StructureExecutions = new List<StructureExecutionPDL>();
                 if (!activite.StructureExecutions.Any(s => s.Id == structureId))
                 {
                     activite.StructureExecutions.Add(structure);

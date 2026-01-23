@@ -1,0 +1,191 @@
+<Window x:Class="Collectivite.Views.ServerConfigurationWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        TextElement.FontWeight="Regular"
+        TextElement.FontSize="13"
+        TextOptions.TextFormattingMode="Ideal"
+        TextOptions.TextRenderingMode="Auto"
+        Background="{DynamicResource MaterialDesignPaper}"
+        FontFamily="{DynamicResource MaterialDesignFont}"
+        Title="Configuration du Serveur"
+        Height="650" 
+        Width="600"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        AllowsTransparency="True">
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </Window.Resources>
+
+    <Border CornerRadius="10" Background="White">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="30" 
+                            ShadowDepth="0" 
+                            Opacity="0.3" 
+                            Color="Black"/>
+        </Border.Effect>
+
+        <Grid Margin="40">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Header -->
+            <StackPanel Grid.Row="0" Margin="0,0,0,20">
+                <materialDesign:PackIcon Kind="DatabaseSettings" 
+                                       Width="64" 
+                                       Height="64"
+                                       Foreground="{DynamicResource PrimaryHueMidBrush}"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,0,0,15"/>
+                
+                <TextBlock Text="Configuration du Serveur"
+                         FontSize="24"
+                         FontWeight="Bold"
+                         HorizontalAlignment="Center"
+                         Foreground="{DynamicResource MaterialDesignBody}"/>
+                
+                <TextBlock Text="Configurez les paramètres de connexion à la base de données"
+                         FontSize="13"
+                         HorizontalAlignment="Center"
+                         Margin="0,10,0,0"
+                         Foreground="{DynamicResource MaterialDesignBodyLight}"
+                         TextWrapping="Wrap"
+                         TextAlignment="Center"/>
+            </StackPanel>
+
+            <!-- Formulaire avec ScrollViewer -->
+            <ScrollViewer Grid.Row="1" 
+                        VerticalScrollBarVisibility="Auto"
+                        HorizontalScrollBarVisibility="Disabled"
+                        Padding="0,10,0,10">
+                <StackPanel>
+                    
+                    <!-- Serveur -->
+                    <TextBox materialDesign:HintAssist.Hint="Serveur (ex: localhost ou 192.168.1.100)"
+                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                           Margin="0,0,0,15"
+                           FontSize="14"
+                           Padding="15,15"
+                           Text="{Binding Server, UpdateSourceTrigger=PropertyChanged}">
+                        <materialDesign:TextFieldAssist.LeadingIcon>
+                            Server
+                        </materialDesign:TextFieldAssist.LeadingIcon>
+                    </TextBox>
+
+                    <!-- Base de données -->
+                    <TextBox materialDesign:HintAssist.Hint="Base de données"
+                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                           Margin="0,0,0,15"
+                           FontSize="14"
+                           Padding="15,15"
+                           Text="{Binding Database, UpdateSourceTrigger=PropertyChanged}">
+                        <materialDesign:TextFieldAssist.LeadingIcon>
+                            Database
+                        </materialDesign:TextFieldAssist.LeadingIcon>
+                    </TextBox>
+
+                    <!-- Utilisateur -->
+                    <TextBox materialDesign:HintAssist.Hint="Utilisateur"
+                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                           Margin="0,0,0,15"
+                           FontSize="14"
+                           Padding="15,15"
+                           Text="{Binding User, UpdateSourceTrigger=PropertyChanged}">
+                        <materialDesign:TextFieldAssist.LeadingIcon>
+                            Account
+                        </materialDesign:TextFieldAssist.LeadingIcon>
+                    </TextBox>
+
+                    <!-- Mot de passe -->
+                    <PasswordBox x:Name="PasswordBox"
+                               materialDesign:HintAssist.Hint="Mot de passe"
+                               Style="{StaticResource MaterialDesignOutlinedPasswordBox}"
+                               Margin="0,0,0,15"
+                               FontSize="14"
+                               Padding="15,15"
+                               PasswordChanged="PasswordBox_PasswordChanged">
+                        <materialDesign:TextFieldAssist.LeadingIcon>
+                            Lock
+                        </materialDesign:TextFieldAssist.LeadingIcon>
+                    </PasswordBox>
+
+                    <!-- Mode SSL -->
+                    <ComboBox materialDesign:HintAssist.Hint="Mode SSL"
+                           Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                           Margin="0,0,0,15"
+                           FontSize="14"
+                           Padding="15,15"
+                           ItemsSource="{Binding SslModes}"
+                           SelectedItem="{Binding SslMode, UpdateSourceTrigger=PropertyChanged}">
+                        <materialDesign:TextFieldAssist.LeadingIcon>
+                            Security
+                        </materialDesign:TextFieldAssist.LeadingIcon>
+                    </ComboBox>
+
+                    <!-- Timeout de connexion -->
+                    <TextBox materialDesign:HintAssist.Hint="Timeout de connexion (secondes)"
+                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                           Margin="0,0,0,15"
+                           FontSize="14"
+                           Padding="15,15"
+                           Text="{Binding ConnectTimeoutText, UpdateSourceTrigger=PropertyChanged}">
+                        <materialDesign:TextFieldAssist.LeadingIcon>
+                            Timer
+                        </materialDesign:TextFieldAssist.LeadingIcon>
+                    </TextBox>
+
+                    <!-- Message d'erreur -->
+                    <TextBlock Text="{Binding ErrorMessage}"
+                             Foreground="#F44336"
+                             FontSize="12"
+                             Margin="5,0,0,10"
+                             TextWrapping="Wrap"
+                             Visibility="{Binding ErrorMessage, Converter={StaticResource BoolToVis}}"/>
+
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Boutons -->
+            <StackPanel Grid.Row="2" 
+                      Orientation="Horizontal" 
+                      HorizontalAlignment="Right"
+                      Margin="0,15,0,0">
+                
+                <Button Content="Annuler"
+                      Style="{StaticResource MaterialDesignOutlinedButton}"
+                      Height="40"
+                      Width="120"
+                      Margin="0,0,15,0"
+                      Command="{Binding CancelCommand}"/>
+                
+                <Button Content="Enregistrer"
+                      Style="{StaticResource MaterialDesignRaisedButton}"
+                      Height="40"
+                      Width="120"
+                      Command="{Binding SaveCommand}"
+                      Click="SaveButton_Click"
+                      materialDesign:ButtonProgressAssist.IsIndicatorVisible="{Binding IsLoading}"
+                      materialDesign:ButtonProgressAssist.Value="-1"
+                      materialDesign:ButtonProgressAssist.IsIndeterminate="True"/>
+            </StackPanel>
+
+            <!-- Bouton fermer -->
+            <Button Grid.Row="0"
+                  Style="{StaticResource MaterialDesignIconButton}"
+                  VerticalAlignment="Top"
+                  HorizontalAlignment="Right"
+                  Margin="0,-10,-10,0"
+                  Click="CloseButton_Click"
+                  Foreground="{DynamicResource MaterialDesignBody}">
+                <materialDesign:PackIcon Kind="Close" Width="24" Height="24"/>
+            </Button>
+        </Grid>
+    </Border>
+</Window>

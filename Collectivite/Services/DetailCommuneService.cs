@@ -1,4 +1,4 @@
-﻿using Collectivite.Models;
+using Collectivite.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -10,10 +10,14 @@ namespace Collectivite.Services
     /// <summary>
     /// Service de gestion des détails des communes
     /// </summary>
-    /// <param name="context">Contexte de base de données</param>
-    public class DetailCommuneService(AppDbContext context)
+    public class DetailCommuneService
     {
-        private readonly AppDbContext _context = context;
+        private readonly AppDbContext _context;
+
+        public DetailCommuneService(AppDbContext context)
+        {
+            _context = context;
+        }
 
         // ══════════════════════════════════════════════════════════
         // RÉCUPÉRER TOUS LES DÉTAILS

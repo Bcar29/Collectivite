@@ -273,7 +273,7 @@ namespace Collectivite.Utils
                         .First(r => r.Name == roleName);
                 }
 
-                var permissionCodes = roleEntry.Value ?? [];
+                var permissionCodes = roleEntry.Value ?? Array.Empty<string>();
                 var permissionIds = db.Permissions
                     .Where(p => permissionCodes.Contains(p.Code))
                     .Select(p => p.Id)

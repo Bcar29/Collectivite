@@ -1,4 +1,4 @@
-﻿using Collectivite.Models;
+using Collectivite.Models;
 using Collectivite.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -82,7 +82,7 @@ namespace Collectivite.ViewModels
             try
             {
                 IsLoading = true;
-                SelectedItem ??= new BeneficiairePDL();
+                if (SelectedItem == null) SelectedItem = new BeneficiairePDL();
                 SelectedItem.Nom = Nom.Trim();
                 SelectedItem.Description = Description;
 
@@ -198,7 +198,7 @@ namespace Collectivite.ViewModels
             try
             {
                 IsLoading = true;
-                SelectedItem ??= new ActeurPDL();
+                if (SelectedItem == null) SelectedItem = new ActeurPDL();
                 SelectedItem.Nom = Nom.Trim();
                 SelectedItem.Description = Description;
 
@@ -314,7 +314,7 @@ namespace Collectivite.ViewModels
             try
             {
                 IsLoading = true;
-                SelectedItem ??= new StructureExecutionPDL();
+                if (SelectedItem == null) SelectedItem = new StructureExecutionPDL();
                 SelectedItem.Nom = Nom.Trim();
                 SelectedItem.Description = Description;
 
@@ -430,7 +430,7 @@ namespace Collectivite.ViewModels
             try
             {
                 IsLoading = true;
-                SelectedItem ??= new ODD();
+                if (SelectedItem == null) SelectedItem = new ODD();
                 SelectedItem.Numero = Numero.Trim();
                 SelectedItem.Description = Description.Trim();
 
@@ -546,7 +546,7 @@ namespace Collectivite.ViewModels
             try
             {
                 IsLoading = true;
-                SelectedItem ??= new CompetenceCollectivite();
+                if (SelectedItem == null) SelectedItem = new CompetenceCollectivite();
                 SelectedItem.Numero = Numero.Trim();
                 SelectedItem.Description = Description.Trim();
 

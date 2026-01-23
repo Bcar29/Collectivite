@@ -8,7 +8,7 @@ namespace Collectivite.Services
         private Frame? _mainFrame;
         private static NavigationService? _instance;
 
-        public static NavigationService Instance => _instance ??= new NavigationService();
+        public static NavigationService Instance => _instance ?? (_instance = new NavigationService());
 
         public Frame MainFrame
         {

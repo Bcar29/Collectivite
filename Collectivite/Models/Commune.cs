@@ -1,4 +1,4 @@
-﻿using Collectivite.Services;
+using Collectivite.Services;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -28,7 +28,7 @@ namespace Collectivite.Models
 
         // Relations
         public ICollection<DetailCommune>? DetailCommunes { get; set; } = new List<DetailCommune>();
-        public ICollection<User>? Users { get; set; } = [];
+        public ICollection<User>? Users { get; set; } = new List<User>();
 
         public ICollection<Engagement>? Engagements { get; set; }
 

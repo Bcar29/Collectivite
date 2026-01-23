@@ -1,4 +1,5 @@
-﻿using Collectivite.Models;
+using Collectivite.Models;
+using Collectivite.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System.ComponentModel;
@@ -62,15 +63,48 @@ namespace Collectivite.Services
         {
             if (!optionsBuilder.IsConfigured)
             {
-                var configuration = new ConfigurationBuilder()
-                    .SetBasePath(AppContext.BaseDirectory) // ✅ CORRECT
-                    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                    .Build();
+                string connectionString;
 
-                var connectionString = configuration.GetConnectionString("DefaultConnection");
+                // Tentative de lecture depuis le registre (méthode sécurisée)
+                if (RegistryManager.ConfigurationExists())
+                {
+                    try
+                    {
+                        var encryptedConnectionString = RegistryManager.GetConnectionString();
+                        if (string.IsNullOrWhiteSpace(encryptedConnectionString))
+                            throw new InvalidOperationException("La chaîne de connexion chiffrée est vide dans le registre.");
+
+                        // Déchiffrement de la chaîne de connexion
+                        connectionString = CryptoHelper.Decrypt(encryptedConnectionString);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new InvalidOperationException(
+                            "Erreur lors de la lecture de la configuration sécurisée. " +
+                            "Veuillez reconfigurer le serveur de base de données.", ex);
+                    }
+                }
+                else
+                {
+                    // Fallback vers appsettings.json pour la compatibilité (développement uniquement)
+                    // En production, cette section ne devrait jamais être utilisée
+                    var configuration = new ConfigurationBuilder()
+                        .SetBasePath(AppContext.BaseDirectory)
+                        .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                        .Build();
+
+                    connectionString = configuration?.GetConnectionString("DefaultConnection");
+
+                    if (string.IsNullOrWhiteSpace(connectionString))
+                    {
+                        throw new InvalidOperationException(
+                            "Aucune configuration de base de données trouvée. " +
+                            "Veuillez configurer le serveur de base de données.");
+                    }
+                }
 
                 if (string.IsNullOrWhiteSpace(connectionString))
-                    throw new InvalidOperationException("Connection string 'DefaultConnection' introuvable.");
+                    throw new InvalidOperationException("La chaîne de connexion est vide.");
 
                 optionsBuilder.UseMySql(
                     connectionString,

@@ -24,7 +24,7 @@ namespace Collectivite.Services
         }
 
         public static AuthService Instance
-            => _instance ??= new AuthService();
+            => _instance ?? (_instance = new AuthService());
 
         private AppDbContext CreateContext()
         {

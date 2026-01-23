@@ -1,4 +1,4 @@
-﻿using Collectivite.Models;
+using Collectivite.Models;
 using Collectivite.Services;
 using Collectivite.Utils;
 using System;
@@ -52,9 +52,9 @@ namespace Collectivite.ViewModels
 
         #region Properties
 
-        public ObservableCollection<DetailCommune> DetailCommunes { get; } = [];
-        public ObservableCollection<Commune> Communes { get; } = [];
-        public ObservableCollection<Exercice> Exercices { get; } = [];
+        public ObservableCollection<DetailCommune> DetailCommunes { get; } = new ObservableCollection<DetailCommune>();
+        public ObservableCollection<Commune> Communes { get; } = new ObservableCollection<Commune>();
+        public ObservableCollection<Exercice> Exercices { get; } = new ObservableCollection<Exercice>();
 
         public bool IsLoading
         {

@@ -1,4 +1,4 @@
-﻿using Collectivite.Models;
+using Collectivite.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -10,7 +10,7 @@ namespace Collectivite.Services
     public class AuditService
     {
         private static AuditService? _instance;
-        public static AuditService Instance => _instance ??= new AuditService();
+        public static AuditService Instance => _instance ?? (_instance = new AuditService());
 
         public AuditService() { }
 

@@ -1,4 +1,4 @@
-﻿using Collectivite.Models;
+using Collectivite.Models;
 using Collectivite.Services;
 using System;
 using Collectivite.Utils;
@@ -58,11 +58,11 @@ namespace Collectivite.ViewModels
         }
 
         #region Properties 
-        public ObservableCollection<CompteComptable> CompteComptables { get; } = [];
-        public ObservableCollection<CompteComptable> ComptesParentDisponibles { get; } = [];
+        public ObservableCollection<CompteComptable> CompteComptables { get; } = new ObservableCollection<CompteComptable>();
+        public ObservableCollection<CompteComptable> ComptesParentDisponibles { get; } = new ObservableCollection<CompteComptable>();
 
         // Nouvelle collection pour les nomenclatures
-        public ObservableCollection<Nommenclature> NomenclaturesDisponibles { get; } = [];
+        public ObservableCollection<Nommenclature> NomenclaturesDisponibles { get; } = new ObservableCollection<Nommenclature>();
 
         public bool CanViewCompteComptable => SessionManager.HasPermission("CompteComptable.View");
         public bool CanCreateCompteComptable => SessionManager.HasPermission("CompteComptable.Create");
