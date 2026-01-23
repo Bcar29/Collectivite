@@ -130,16 +130,17 @@ namespace Collectivite.Services
         {
             using var context = CreateContext();
 
-            System.Diagnostics.Debug.WriteLine("🔍 Début GetAllBudgetLinesAsync");
+            //System.Diagnostics.Debug.WriteLine("🔍 Début GetAllBudgetLinesAsync");
 
             // ✅ Charger toutes les lignes budgétaires avec leurs nomenclatures
             var allLines = await context.BudgetLines
+                .Where(bl => bl.Nommenclature.Nature == NatureType.Recette)
                 .Include(bl => bl.Nommenclature)
                 .Include(bl => bl.Remaniements)
                 .AsNoTracking()
                 .ToListAsync();
 
-            System.Diagnostics.Debug.WriteLine($"   Total BudgetLines : {allLines.Count}");
+            //System.Diagnostics.Debug.WriteLine($"   Total BudgetLines : {allLines.Count}");
 
             // ✅ Charger toutes les lignes budgétaires avec leurs nomenclatures
             var allExercices = await context.Exercices
@@ -152,7 +153,7 @@ namespace Collectivite.Services
                 .AsNoTracking()
                 .ToListAsync();
 
-            System.Diagnostics.Debug.WriteLine($"   Total Nomenclatures : {allNommenclatures.Count}");
+            //System.Diagnostics.Debug.WriteLine($"   Total Nomenclatures : {allNommenclatures.Count}");
 
             // ✅ Identifier les nomenclatures sans enfants (derniers niveaux)
             var nommenclaturesSansEnfants = allNommenclatures
@@ -160,14 +161,14 @@ namespace Collectivite.Services
                 .Select(n => n.Id)
                 .ToHashSet();
 
-            System.Diagnostics.Debug.WriteLine($"   Nomenclatures sans enfants : {nommenclaturesSansEnfants.Count}");
+            //System.Diagnostics.Debug.WriteLine($"   Nomenclatures sans enfants : {nommenclaturesSansEnfants.Count}");
 
             // ✅ Filtrer uniquement les derniers enfants
             var budgetLines = allLines
                 .Where(bl => nommenclaturesSansEnfants.Contains(bl.NommenclatureId) && bl.Nommenclature != null)
                 .ToList();
 
-            System.Diagnostics.Debug.WriteLine($"✅ Total lignes budgétaires trouvées : {budgetLines.Count}");
+            //System.Diagnostics.Debug.WriteLine($"✅ Total lignes budgétaires trouvées : {budgetLines.Count}");
 
             // Trier par hiérarchie
             return budgetLines

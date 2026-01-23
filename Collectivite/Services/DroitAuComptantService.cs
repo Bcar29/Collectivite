@@ -262,7 +262,8 @@ namespace Collectivite.Services
                         CompteCreditId = compteImputation.Id,
                         Montant = dto.Montant,
                         OrdreRecetteId = ordreRecette.Id,
-                        MouvementId = mouvement.id
+                        MouvementId = mouvement.id,
+                        idExercice = ordreRecette.ExerciceId
                     };
 
                     context.EcritureComptables.Add(ecritureComptable);

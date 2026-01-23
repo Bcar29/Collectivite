@@ -101,6 +101,39 @@ namespace Collectivite.Services
                     {
                         bp.MontantRecette -= oldMontant;
                         bp.MontantRecette += line.MontantPrevu;
+                        bp.MontantTotal -= oldMontant;
+                        bp.MontantTotal += line.MontantPrevu;
+
+                        if(line.Nommenclature.Section == SectionType.Fonctionnement)
+                        {
+                            var n662 = await context.BudgetLines
+                            .FirstOrDefaultAsync(n => n.Nommenclature.Article == "662" && bp.Id == n.BudgetPrimitifId);
+
+                            var n110 = await context.BudgetLines
+                                .FirstOrDefaultAsync(n => n.Nommenclature.Article == "110" && bp.Id == n.BudgetPrimitifId);
+                            if (n110 != null)
+                            {
+                                n110.MontantPrevu -= oldMontant * 0.6m;
+                                n110.MontantPrevu += line.MontantPrevu * 0.6m;
+                                await context.SaveChangesAsync();
+
+                                await RecalculateAncestorsAsync(
+                                    n110.NommenclatureId,
+                                    n110.BudgetPrimitifId
+                                );
+                            }
+                            if (n662 != null)
+                            {
+                                n662.MontantPrevu -= oldMontant * 0.6m;
+                                n662.MontantPrevu += line.MontantPrevu * 0.6m;
+                                await context.SaveChangesAsync();
+
+                                await RecalculateAncestorsAsync(
+                                    n662.NommenclatureId,
+                                    n662.BudgetPrimitifId
+                                );
+                            }
+                        }
                         await context.SaveChangesAsync();
 
                     }
@@ -110,7 +143,10 @@ namespace Collectivite.Services
                         bp.MontantDepense += line.MontantPrevu;
                         await context.SaveChangesAsync();
                     }
+
+
                 }
+
                 // Recalculer les ancêtres
                 await RecalculateAncestorsAsync(line.NommenclatureId, line.BudgetPrimitifId);
 
@@ -118,11 +154,10 @@ namespace Collectivite.Services
                 await context.Entry(line).ReloadAsync();
 
                 return (true,
-                    $"✅ Ligne budgétaire mise à jour avec succès.\n" +
+                    $" Ligne budgétaire mise à jour avec succès.\n" +
                     $"Nomenclature : {line.Nommenclature.Intitule}\n" +
                     $"Ancien montant : {oldMontant:N0} GNF\n" +
-                    $"Nouveau montant : {newMontantPrevu:N0} GNF\n" +
-                    $"Les montants des parents ont été recalculés.",
+                    $"Nouveau montant : {newMontantPrevu:N0} GNF\n",
                     line);
             }
             catch (Exception ex)

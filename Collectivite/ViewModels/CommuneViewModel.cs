@@ -398,7 +398,7 @@ namespace Collectivite.ViewModels
 
         private bool CanSaveCommune()
         {
-            return !string.IsNullOrWhiteSpace(DialogCommune.Nom);
+            return !string.IsNullOrWhiteSpace(DialogCommune.Nom) && !string.IsNullOrWhiteSpace(DialogCommune.Region);
         }
 
         private async System.Threading.Tasks.Task SaveCommuneAsync()

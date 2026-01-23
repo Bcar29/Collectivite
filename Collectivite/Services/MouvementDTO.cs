@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using static Collectivite.Models.Mandat;
 using static Collectivite.Models.OrdreRecette;
 
@@ -28,6 +28,13 @@ namespace Collectivite.Services
 
         // Bénéficiaire (via Engagement -> Tiers)
         public string Beneficiaire { get; set; } = string.Empty;
+
+        // Liens
+        public int EngagementId { get; set; }
+        public int? FactureId { get; set; }
+        public int? BonCommandeId { get; set; }
+        public bool HasFacture => FactureId.HasValue;
+        public bool HasBonCommande => BonCommandeId.HasValue;
 
         // Montants
         public decimal MontantBrut { get; set; }

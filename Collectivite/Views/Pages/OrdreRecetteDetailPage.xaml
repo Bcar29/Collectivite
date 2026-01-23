@@ -478,7 +478,6 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
 
-                            <Separator Margin="0,10,0,20"/>
                         </StackPanel>
 
                         <!-- Section Signatures (uniquement si ordre validé) -->

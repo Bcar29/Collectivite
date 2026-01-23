@@ -1,4 +1,4 @@
-﻿using Collectivite.Models;
+using Collectivite.Models;
 using Collectivite.Utils;
 using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using Microsoft.EntityFrameworkCore;
@@ -29,7 +29,7 @@ namespace Collectivite.Services
 
             var exerciceService = ExerciceService.Instance;
             var year = exerciceService.CurrentExercice?.GetAnnee() ?? DateTime.Now.Year;
-            var prefix = $"M-{year}-";
+            var prefix = $"MD-{year}-";
 
             // Récupérer tous les mandats de l'année en cours
             var mandatsThisYear = await context.Mandats
@@ -125,6 +125,25 @@ namespace Collectivite.Services
                 .Include(m => m.Engagement)
                     .ThenInclude(e => e.Tiers)
                 .Include(m => m.EcritureComptables)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(m => m.Id == id);
+        }
+
+        /// <summary>
+        /// Récupère un mandat avec pièces jointes liées (engagement, facture, bon de commande)
+        /// </summary>
+        public async Task<Mandat?> GetMandatWithPiecesAsync(int id)
+        {
+            if (!SessionManager.HasPermission("Mandat.View"))
+                throw new UnauthorizedAccessException("Permission Mandat.View requise pour consulter ce mandat.");
+
+            using var context = CreateContext();
+
+            return await context.Mandats
+                .Include(m => m.Engagement)
+                    .ThenInclude(e => e.Facture)
+                .Include(m => m.Engagement)
+                    .ThenInclude(e => e.BonCommande)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(m => m.Id == id);
         }

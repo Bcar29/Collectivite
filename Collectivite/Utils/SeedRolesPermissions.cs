@@ -407,5 +407,6 @@ namespace Collectivite.Utils
             System.Console.WriteLine("⚠️  IMPORTANT: Changez ce mot de passe dès la première connexion !");
             System.Console.WriteLine("═══════════════════════════════════════════════════════");
         }
+   
     }
 }

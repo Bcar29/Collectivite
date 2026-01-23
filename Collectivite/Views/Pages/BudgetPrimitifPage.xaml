@@ -236,7 +236,7 @@
                                                 </StackPanel>
                                             </Border>
 
-                                            <!-- Bouton Supprimer -->
+                                            <!-- Bouton Supprimer 
                                             <Button Style="{StaticResource MaterialDesignIconButton}"
                                                   ToolTip="Supprimer"
                                                   Command="{Binding DataContext.DeleteBudgetPrimitifCommand, 
@@ -253,7 +253,7 @@
                                                    Foreground="#F44336"
                                                    Width="20"
                                                    Height="20"/>
-                                            </Button>
+                                            </Button>-->
                                         </StackPanel>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
