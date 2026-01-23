@@ -1,4 +1,4 @@
-﻿using Collectivite.Models;
+using Collectivite.Models;
 using Collectivite.Services;
 using Collectivite.Utils;
 using System;
@@ -70,6 +70,19 @@ namespace Collectivite.ViewModels
             set => SetProperty(ref _mandat, value);
         }
 
+        public string MandatObjet
+        {
+            get => Mandat.Objet;
+            set
+            {
+                if (Mandat.Objet != value)
+                {
+                    Mandat.Objet = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         /// <summary>
         /// Engagement sélectionné - Charge automatiquement le montant brut
         /// </summary>
@@ -87,6 +100,9 @@ namespace Collectivite.ViewModels
 
                         // Charger automatiquement le montant brut depuis l'engagement
                         Mandat.MontantBrut = value.MontantEngagement;
+
+                        // Copier l'objet de l'engagement dans l'objet du mandat
+                        MandatObjet = value.Objet ?? string.Empty;
 
                         // Réinitialiser les précomptes si c'est une nouvelle sélection
                         if (!IsEditMode)
@@ -109,6 +125,7 @@ namespace Collectivite.ViewModels
                     {
                         Mandat.EngagementId = 0;
                         Mandat.MontantBrut = 0;
+                        MandatObjet = string.Empty;
                         SelectedBudgetLine = null;
                         CalculerMontantNet();
                         OnPropertyChanged(nameof(Mandat));
