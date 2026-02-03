@@ -603,7 +603,7 @@
                         </StackPanel>
                         <!-- Section Gestion Comptable Fin  -->
                         
-                        <!-- Section PDL-->
+                        <!-- Section PDL
                         <Expander Style="{StaticResource MaterialDesignExpander}" 
                                    HorizontalAlignment="Left"
                                    Width="250"
@@ -729,7 +729,7 @@
                       
 
                             </StackPanel>
-                        </Expander>
+                        </Expander>-->
                         <!-- PDL fin-->
 
                         <!-- Section Administration -->
