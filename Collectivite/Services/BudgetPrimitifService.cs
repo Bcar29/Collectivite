@@ -71,6 +71,7 @@ namespace Collectivite.Services
             return await context.BudgetLines
                 .Where(bl => bl.Nommenclature.ParentId == null && bl.BudgetPrimitif.ExerciceId == exerciceService.CurrentExercice.Id)
                 .Include(b => b.Nommenclature)
+                .Include(b => b.Remaniements)
                 .ToListAsync();
         }
         // ajouter un budgetprimitif
@@ -260,8 +261,8 @@ namespace Collectivite.Services
                 return (true,
                     $"✅ Budget primitif approuvé avec succès.\n\n" +
                     $"Exercice : {budget.Exercice?.Libelle ?? "Non défini"}\n" +
-                    $"Date d'approbation : {dateApprobation:dd/MM/yyyy}\n" +
-                    $"Montant total : {budget.MontantTotal:N0} GNF");
+                    $"Date d'approbation : {dateApprobation:dd/MM/yyyy}\n");
+                    //$"Montant total : {budget.MontantTotal:N0} GNF");
             }
             catch (Exception ex)
             {
@@ -365,7 +366,7 @@ namespace Collectivite.Services
                     $"✅ Budget primitif validé avec succès.\n\n" +
                     $"Exercice : {budget.Exercice?.Libelle ?? "Non défini"}\n" +
                     $"Date de validation : {dateValidation:dd/MM/yyyy}\n" +
-                    $"Montant total : {budget.MontantTotal:N0} GNF\n\n" +
+                    //$"Montant total : {budget.MontantTotal:N0} GNF\n\n" +
                     $"⚠️ Le budget ne pourra plus être modifié.");
             }
             catch (Exception ex)
