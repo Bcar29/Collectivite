@@ -622,7 +622,9 @@ namespace Collectivite.ViewModels
                     "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
-            var defaultExerciceId = Exercices.FirstOrDefault(e => !e.EstCloture)?.Id ??
+            // Utiliser l'exercice courant du service
+            var defaultExerciceId = ExerciceService.Instance.CurrentExercice?.Id ??
+                                    Exercices.FirstOrDefault(e => !e.EstCloture)?.Id ??
                                     Exercices.FirstOrDefault()?.Id ?? 0;
             var defaultTiersId = TiersList.FirstOrDefault(t => t.Id > 0)?.Id ?? 0;
 

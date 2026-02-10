@@ -64,7 +64,9 @@ namespace Collectivite.Services
         {
             using var context = CreateContext();
 
-            var year = DateTime.Now.Year;
+            // Utiliser l'exercice courant ou l'année actuelle par défaut
+            var exerciceCourant = ExerciceService.Instance.CurrentExercice;
+            var year = exerciceCourant?.GetAnnee() ?? DateTime.Now.Year;
             var prefix = $"F-{year}-";
 
             var factures = await context.Factures

@@ -1,6 +1,7 @@
 using Collectivite.Models;
 using Collectivite.Services;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -212,12 +213,117 @@ namespace Collectivite.Utils
 
         };
 
+        // ───────────── Groupes de permissions par fonctionnalité (pour assignation aux rôles) ─────────────
+        private static readonly string[] GestionBudgetaire = new[]
+        {
+            "Budget.Approve", "Budget.Validate",
+            "BudgetLine.Create", "BudgetLine.Edit", "BudgetLine.View", "BudgetLine.Delete",
+            "BudgetPrimitif.Create", "BudgetPrimitif.Edit", "BudgetPrimitif.View", "BudgetPrimitif.Delete",
+            "Remaniement.Create", "Remaniement.Edit", "Remaniement.View", "Remaniement.Delete",
+            "Synthese.View", "CompteAdministratif.View"
+        };
+
+        private static readonly string[] EcrituresComptables = new[]
+        {
+            "EcritureComptable.Create", "EcritureComptable.Edit", "EcritureComptable.View", "EcritureComptable.Delete"
+        };
+
+        private static readonly string[] GestionComptableComplete = new[]
+        {
+            "EcritureComptable.Create", "EcritureComptable.Edit", "EcritureComptable.View", "EcritureComptable.Delete",
+            "GestionComptable.Access",
+            "LivreJournal.View", "GrandLivre.View", "DroitConstate.View", "DroitAuComptant.View",
+            "BalanceMensuelle.View", "BalanceAnnuelle.View",
+            "CompteComptable.Create", "CompteComptable.Edit", "CompteComptable.View", "CompteComptable.Delete"
+        };
+
+        private static readonly string[] SaisiePieces = new[]
+        {
+            "ExpressionBesoin.Create", "ExpressionBesoin.Edit", "ExpressionBesoin.View", "ExpressionBesoin.Delete",
+            "BonCommande.Create", "BonCommande.Edit", "BonCommande.View", "BonCommande.Delete",
+            "DetailBonCommande.Create", "DetailBonCommande.Edit", "DetailBonCommande.View", "DetailBonCommande.Delete",
+            "Contrats.Create", "Contrats.Edit", "Contrats.View", "Contrats.Delete",
+            "Facture.Create", "Facture.Edit", "Facture.View", "Facture.Delete",
+            "DetailsFacture.Create", "DetailsFacture.Edit", "DetailsFacture.View", "DetailsFacture.Delete",
+            "Mandat.Create", "Mandat.Edit", "Mandat.View", "Mandat.Delete",
+            "OrdreRecette.Create", "OrdreRecette.Edit", "OrdreRecette.View", "OrdreRecette.Delete"
+        };
+
+        private static readonly string[] ValidationPieces = new[]
+        {
+            "Validation.Access", "Valider.validate", "Validation.rejet"
+        };
+
+        private static readonly string[] ValiderBudget = new[]
+        {
+            "Budget.Approve", "Budget.Validate"
+        };
+
+        private static readonly string[] Parametrage = new[]
+        {
+            "Commune.Create", "Commune.Edit", "Commune.View", "Commune.Delete",
+            "DetailCommune.Create", "DetailCommune.Edit", "DetailCommune.View", "DetailCommune.Delete",
+            "Exercice.Create", "Exercice.Edit", "Exercice.View", "Exercice.Delete",
+            "Nommenclature.Create", "Nommenclature.Edit", "Nommenclature.View", "Nommenclature.Delete",
+            "CompteComptable.Create", "CompteComptable.Edit", "CompteComptable.View", "CompteComptable.Delete"
+        };
+
+        private static readonly string[] GestionTiers = new[]
+        {
+            "Tiers.Create", "Tiers.Edit", "Tiers.View", "Tiers.Delete",
+            "DocumentTiers.Create", "DocumentTiers.Edit", "DocumentTiers.View", "DocumentTiers.Delete"
+        };
+
+        private static readonly string[] Recensement = new[]
+        {
+            "Recensement.Create", "Recensement.Edit", "Recensement.View", "Recensement.Delete"
+        };
+
+        private static readonly string[] DettesCreances = new[]
+        {
+            "Engagement.Create", "Engagement.Edit", "Engagement.View", "Engagement.Delete"
+        };
+
+        private static readonly string[] CompteBancaire = new[]
+        {
+            "CompteBancaire.Create", "CompteBancaire.Edit", "CompteBancaire.View", "CompteBancaire.Delete"
+        };
+
+        // Rôles SG et SFL : mêmes permissions (gestion budgétaire, écritures comptables, saisie pièces, paramétrage, tiers, recensement, dettes et créances, compte bancaire)
+        private static readonly string[] PermissionsSgSfl = GestionBudgetaire
+            .Concat(EcrituresComptables)
+            .Concat(SaisiePieces)
+            .Concat(Parametrage)
+            .Concat(GestionTiers)
+            .Concat(Recensement)
+            .Concat(DettesCreances)
+            .Concat(CompteBancaire)
+            .Distinct()
+            .ToArray();
+
+        // Receveur : gestion comptable complète, paramétrage, gestion des tiers, dettes et créances, compte bancaire
+        private static readonly string[] PermissionsReceveur = GestionComptableComplete
+            .Concat(Parametrage)
+            .Concat(GestionTiers)
+            .Concat(DettesCreances)
+            .Concat(CompteBancaire)
+            .Distinct()
+            .ToArray();
+
+        // Maire : uniquement Paramétrage, validation des pièces saisies, et valider le budget (pas d'autres permissions)
+        private static readonly string[] PermissionsMaire = Parametrage
+            .Concat(ValidationPieces)
+            .Concat(ValiderBudget)
+            .Distinct()
+            .ToArray();
+
         private static readonly Dictionary<string, string[]> RolePermissions = new()
         {
-            { "Maire", new[] { "Budget.Approve", "Budget.Validate" } },
-            { "Admin", Array.Empty<string>() }, // Le rôle Admin recevra toutes les permissions dans la section dédiée
-            //{ "Secrétaire Général", new[] { "Courrier.Register", "Remaniement.Manage" } },
-            //{ "Receveur", new[] { "Finance.Manage", "Remaniement.Manage" } }
+            { "SG", PermissionsSgSfl },
+            { "SFL", PermissionsSgSfl },
+            { "Receveur", PermissionsReceveur },
+            { "Maire", PermissionsMaire }
+            // Admin : traité séparément ci-dessous (toutes les permissions, module Sécurité exclusif)
         };
 
         public static void Seed(AppDbContext db)
@@ -295,6 +401,22 @@ namespace Collectivite.Utils
                     }
                 }
 
+                db.SaveChanges();
+
+                // Seul Admin doit avoir toutes les permissions. Pour tous les autres rôles (SG, SFL, Receveur, Maire),
+                // on retire toute permission qui n'est pas dans leur liste prévue.
+                var allowedCodesForRole = roleEntry.Value ?? Array.Empty<string>();
+                var allowedIds = db.Permissions
+                    .Where(p => allowedCodesForRole.Contains(p.Code))
+                    .Select(p => p.Id)
+                    .ToHashSet();
+                var toRemove = role.RolePermissions
+                    .Where(rp => !allowedIds.Contains(rp.PermissionId))
+                    .ToList();
+                foreach (var rp in toRemove)
+                {
+                    db.RolePermissions.Remove(rp);
+                }
                 db.SaveChanges();
             }
 

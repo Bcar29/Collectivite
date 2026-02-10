@@ -16,6 +16,9 @@
 
         <!-- 🆕 Nouveau converter pour les boutons d'actions -->
         <Utils:ShowActionsConverter x:Key="ShowActionsConverter"/>
+        
+        <!-- Converter pour activer/désactiver les ComboBox en cascade -->
+        <Utils:NullToBooleanConverter x:Key="NullToBooleanConverter"/>
     </Page.Resources>
 
     <Grid>
@@ -796,12 +799,16 @@
                         <!-- Contenu -->
                         <StackPanel Grid.Row="1" Margin="20">
 
-                            <!-- Nomenclature (visible seulement en mode ajout) -->
-                            <ComboBox ItemsSource="{Binding AvailableNomenclatures}"
+                            <!-- Nomenclature avec recherche (visible seulement en mode ajout) -->
+                            <ComboBox ItemsSource="{Binding FilteredNomenclatures}"
                                       SelectedItem="{Binding SelectedNomenclature}"
                                       DisplayMemberPath="DisplayLabel"
-                                      materialDesign:HintAssist.Hint="Sélectionner une nomenclature *"
+                                      Text="{Binding NomenclatureSearchText, UpdateSourceTrigger=PropertyChanged}"
+                                      materialDesign:HintAssist.Hint="Rechercher une nomenclature *"
                                       Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                      IsEditable="True"
+                                      IsTextSearchEnabled="False"
+                                      StaysOpenOnEdit="True"
                                       Visibility="{Binding IsAddMode, Converter={StaticResource BooleanToVisibilityConverter}}"
                                       Margin="0,0,0,20"/>
 
