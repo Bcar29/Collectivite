@@ -526,7 +526,18 @@ namespace Collectivite.ViewModels
         public Nommenclature? SelectedNomenclature
         {
             get => _selectedNomenclature;
-            set => SetProperty(ref _selectedNomenclature, value);
+            set
+            {
+                if (SetProperty(ref _selectedNomenclature, value))
+                {
+                    // Mettre à jour le texte affiché quand une nomenclature est sélectionnée
+                    if (value != null)
+                    {
+                        _nomenclatureSearchText = value.DisplayLabel;
+                        OnPropertyChanged(nameof(NomenclatureSearchText));
+                    }
+                }
+            }
         }
 
         public string MontantPrevu
@@ -536,6 +547,27 @@ namespace Collectivite.ViewModels
         }
 
         public string NomenclatureLibelle => _currentLine?.Nommenclature?.Intitule ?? "N/A";
+
+        // ═══════════════════════════════════════════════════════════
+        // PROPRIÉTÉS - FILTRAGE PAR RECHERCHE POUR LE DIALOG
+        // ═══════════════════════════════════════════════════════════
+
+        private List<Nommenclature> _allAvailableNomenclatures = new();
+        private string? _nomenclatureSearchText;
+
+        public ObservableCollection<Nommenclature> FilteredNomenclatures { get; } = new();
+
+        public string? NomenclatureSearchText
+        {
+            get => _nomenclatureSearchText;
+            set
+            {
+                if (SetProperty(ref _nomenclatureSearchText, value))
+                {
+                    FilterNomenclaturesByText();
+                }
+            }
+        }
 
         #endregion
         // ═══════════════════════════════════════════════════════════
@@ -1081,6 +1113,55 @@ namespace Collectivite.ViewModels
             }
         }
         // ═══════════════════════════════════════════════════════════
+        // FILTRAGE PAR TEXTE - MÉTHODES
+        // ═══════════════════════════════════════════════════════════
+
+        private void InitializeNomenclatureFilter(List<Nommenclature> nomenclatures)
+        {
+            _allAvailableNomenclatures = nomenclatures;
+            _nomenclatureSearchText = null;
+            OnPropertyChanged(nameof(NomenclatureSearchText));
+
+            // Afficher toutes les nomenclatures initialement
+            FilterNomenclaturesByText();
+        }
+
+        private void FilterNomenclaturesByText()
+        {
+            FilteredNomenclatures.Clear();
+
+            var filtered = _allAvailableNomenclatures.AsEnumerable();
+
+            // Filtrer par texte de recherche
+            if (!string.IsNullOrWhiteSpace(NomenclatureSearchText))
+            {
+                var searchText = NomenclatureSearchText.ToLower();
+                filtered = filtered.Where(n =>
+                    (n.DisplayLabel?.ToLower().Contains(searchText) == true) ||
+                    (n.Chapitre?.ToLower().Contains(searchText) == true) ||
+                    (n.Article?.ToLower().Contains(searchText) == true) ||
+                    (n.Paragraphe?.ToLower().Contains(searchText) == true) ||
+                    (n.SousParagraphe?.ToLower().Contains(searchText) == true) ||
+                    (n.Intitule?.ToLower().Contains(searchText) == true) ||
+                    (n.CodeNomenclature?.ToLower().Contains(searchText) == true)
+                );
+            }
+
+            foreach (var nom in filtered.OrderBy(n => n.CodeNomenclature))
+            {
+                FilteredNomenclatures.Add(nom);
+            }
+        }
+
+        private void ResetNomenclatureFilter()
+        {
+            _nomenclatureSearchText = null;
+            OnPropertyChanged(nameof(NomenclatureSearchText));
+            FilteredNomenclatures.Clear();
+            _allAvailableNomenclatures.Clear();
+        }
+
+        // ═══════════════════════════════════════════════════════════
         // DIALOG - AJOUT
         // ═══════════════════════════════════════════════════════════
 
@@ -1131,11 +1212,15 @@ namespace Collectivite.ViewModels
                 SelectedNomenclature = null;
                 MontantPrevu = "0";
 
+                // Conserver l'ancienne liste pour compatibilité
                 AvailableNomenclatures.Clear();
                 foreach (var nom in available.OrderBy(n => n.CodeNomenclature))
                 {
                     AvailableNomenclatures.Add(nom);
                 }
+
+                // Initialiser le filtre par recherche
+                InitializeNomenclatureFilter(available);
 
                 IsDialogOpen = true;
             }

@@ -78,6 +78,17 @@ namespace Collectivite
             }
         }
 
+        // Ouvre le ContextMenu au clic gauche sur les boutons en mode réduit
+        private void OpenContextMenu_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.ContextMenu != null)
+            {
+                button.ContextMenu.PlacementTarget = button;
+                button.ContextMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.Right;
+                button.ContextMenu.IsOpen = true;
+            }
+        }
+
         private void DashboardButton_Click(object sender, RoutedEventArgs e)
         {
             NavigateToDashboard();

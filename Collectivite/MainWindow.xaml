@@ -19,6 +19,8 @@
     <Window.Resources>
         <!-- Converter pour les permissions -->
         <local:PermissionToVisibilityConverter x:Key="PermissionToVisibilityConverter"/>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
+        <local:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVisibility"/>
 
         <!-- Style pour les boutons de menu -->
         <Style x:Key="MenuButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignFlatButton}">
@@ -34,83 +36,174 @@
             </Style.Triggers>
         </Style>
 
+        <!-- Style pour les boutons de menu en mode réduit (icônes seulement) -->
+        <Style x:Key="MenuButtonCollapsedStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignFlatButton}">
+            <Setter Property="Height" Value="50"/>
+            <Setter Property="Width" Value="50"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Foreground" Value="#424242"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#E3F2FD"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
         <!-- Style pour les en-têtes de section du menu -->
         <Style x:Key="MenuHeaderStyle" TargetType="TextBlock">
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Foreground" Value="#9E9E9E"/>
             <Setter Property="Margin" Value="20,15,0,5"/>
-
         </Style>
-
-
-        <!-- Style pour les Expander de section du menu -->
-
 
     </Window.Resources>
 
-    <materialDesign:DrawerHost IsLeftDrawerOpen="{Binding IsMenuOpen}">
-        <!-- Sidebar (Drawer gauche) -->
-        <materialDesign:DrawerHost.LeftDrawerContent>
-            <DockPanel Width="280" Background="White">
-                <!-- Header de la sidebar -->
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- SIDEBAR FIXE AVEC ANIMATION -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <Border x:Name="SidebarBorder" Grid.Column="0" Background="White" 
+                BorderBrush="#E0E0E0" BorderThickness="0,0,1,0"
+                HorizontalAlignment="Left">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Width" Value="280"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsMenuCollapsed}" Value="True">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetProperty="Width" 
+                                                        To="70" Duration="0:0:0.2">
+                                            <DoubleAnimation.EasingFunction>
+                                                <CubicEase EasingMode="EaseOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetProperty="Width" 
+                                                        To="280" Duration="0:0:0.2">
+                                            <DoubleAnimation.EasingFunction>
+                                                <CubicEase EasingMode="EaseOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            
+            <DockPanel>
+                <!-- Header de la sidebar avec bouton toggle -->
                 <Border DockPanel.Dock="Top" 
                        Background="{DynamicResource PrimaryHueMidBrush}"
-                       Height="180"
-                       Padding="20">
-                    <StackPanel VerticalAlignment="Center">
+                       Padding="10">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Height" Value="180"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsMenuCollapsed}" Value="True">
+                                    <Setter Property="Height" Value="70"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    
+                    <Grid>
+                        <!-- Bouton Toggle en haut -->
+                        <Button Command="{Binding ToggleMenuCommand}"
+                                Style="{StaticResource MaterialDesignIconButton}"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Top"
+                                Width="36" Height="36"
+                                Foreground="#424242"
+                                ToolTip="Réduire/Agrandir le menu">
+                            <materialDesign:PackIcon Width="24" Height="24">
+                                <materialDesign:PackIcon.Style>
+                                    <Style TargetType="materialDesign:PackIcon">
+                                        <Setter Property="Kind" Value="ChevronLeft"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsMenuCollapsed}" Value="True">
+                                                <Setter Property="Kind" Value="ChevronRight"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </materialDesign:PackIcon.Style>
+                            </materialDesign:PackIcon>
+                        </Button>
+                        
+                        <!-- Contenu du header (visible en mode étendu) -->
+                        <StackPanel VerticalAlignment="Center"
+                                    Visibility="{Binding IsMenuExpanded, Converter={StaticResource BoolToVisibility}}">
+                            <materialDesign:PackIcon Kind="CityVariant" 
+                                                   Width="50" 
+                                                   Height="50"
+                                                   Foreground="Green"
+                                                   HorizontalAlignment="Center"/>
+                            <TextBlock Text="Gestion Budgetaire"
+                                     FontSize="13"
+                                     FontWeight="Bold"
+                                     Foreground="Black"
+                                     TextAlignment="Center"
+                                     Margin="0,10,0,0"/>
+                            <TextBlock Text="et Comptable"
+                                     FontSize="12"
+                                     Foreground="Black"
+                                     TextAlignment="Center"
+                                     Opacity="0.9"/>
+                        </StackPanel>
+                        
+                        <!-- Icône seule (visible en mode réduit) -->
                         <materialDesign:PackIcon Kind="CityVariant" 
-                                               Width="60" 
-                                               Height="60"
+                                               Width="40" Height="40"
                                                Foreground="Green"
-                                               HorizontalAlignment="Center"/>
-                        <TextBlock Text="Plateforme de Gestion Budgetaire "
-                                 FontSize="15"
-                                 FontWeight="Bold"
-                                 Foreground="Black"
-                                 TextAlignment="Center"
-                                 Margin="0,15,0,0"/>
-                        <TextBlock Text="et Comptable des Collectivités"
-                                 FontSize="15"
-                                   FontWeight="Bold"
-                                 Foreground="Black"
-                                 TextAlignment="Center"
-                                 Opacity="0.9"
-                                 Margin="0,5,0,0"/>
-                        <TextBlock Text="Locales"
-                                 FontSize="15"
-                                   FontWeight="Bold"
-                                 Foreground="Black"
-                                 TextAlignment="Center"
-                                 Opacity="0.9"
-                                 Margin="0,5,0,0"/>
-                    </StackPanel>
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               Visibility="{Binding IsMenuCollapsed, Converter={StaticResource BoolToVisibility}}"/>
+                    </Grid>
                 </Border>
 
                 <!-- Menu de navigation -->
-                <ScrollViewer DockPanel.Dock="Top" 
-                            VerticalScrollBarVisibility="Auto"
+                <ScrollViewer VerticalScrollBarVisibility="Auto"
                             HorizontalScrollBarVisibility="Disabled">
                     <StackPanel Margin="0,10,0,20">
                         <!-- Tableau de bord -->
                         <Button Style="{StaticResource MenuButtonStyle}"
                                Click="DashboardButton_Click"
-                               Tag="Dashboard">
+                               Tag="Dashboard"
+                               ToolTip="Tableau de bord">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="ViewDashboard" 
                                                        VerticalAlignment="Center"
                                                        Width="22"
                                                        Height="22"
                                                        Margin="0,0,15,0"/>
-                                <TextBlock Text="Tableau de bord" VerticalAlignment="Center"/>
+                                <TextBlock Text="Tableau de bord" VerticalAlignment="Center"
+                                          Visibility="{Binding DataContext.IsMenuExpanded, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibility}}"/>
                             </StackPanel>
                         </Button>
 
                         <!-- Section Configuration -->
+                        <!-- Expander visible en mode étendu -->
                         <Expander Style="{StaticResource MaterialDesignExpander}" 
                                   HorizontalAlignment="Left"
                                   Width="250"
-                                  Margin="10,10,0,10">
+                                  Margin="10,10,0,10"
+                                  Visibility="{Binding IsMenuExpanded, Converter={StaticResource BoolToVisibility}}">
                             <Expander.Header>
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Kind="Settings" 
@@ -178,14 +271,31 @@
 
                             </StackPanel>
                         </Expander>
+                        
+                        <!-- Bouton Paramétrage en mode réduit avec ContextMenu -->
+                        <Button Style="{StaticResource MenuButtonCollapsedStyle}"
+                                ToolTip="Paramétrage"
+                                Visibility="{Binding IsMenuCollapsed, Converter={StaticResource BoolToVisibility}}"
+                                Margin="10,5"
+                                Click="OpenContextMenu_Click">
+                            <Button.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="Commune" Click="CommuneButton_Click"/>
+                                    <MenuItem Header="Nomenclature" Click="NommenclatureButton_Click"/>
+                                    <MenuItem Header="Plan comptables" Click="CompteComptable_Click"/>
+                                    <MenuItem Header="Exercice" Click="ExerciceButton_Click"/>
+                                </ContextMenu>
+                            </Button.ContextMenu>
+                            <materialDesign:PackIcon Kind="Settings" Width="22" Height="22"/>
+                        </Button>
                         <!-- Section Configuration FIN -->
 
                         <!-- Section Gestion Budgétaire -->
-
                         <Expander Style="{StaticResource MaterialDesignExpander}" 
                                       HorizontalAlignment="Left"
                                       Width="250"
-                                      Margin="10,10,0,10">
+                                      Margin="10,10,0,10"
+                                      Visibility="{Binding IsMenuExpanded, Converter={StaticResource BoolToVisibility}}">
                             <Expander.Header>
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Kind="CashEdit" 
@@ -292,18 +402,38 @@
                             </StackPanel>
                         </Expander>
                         
+                        <!-- Bouton Gestion Budgétaire en mode réduit avec ContextMenu -->
+                        <Button Style="{StaticResource MenuButtonCollapsedStyle}"
+                                ToolTip="Gestion Budgétaire"
+                                Visibility="{Binding IsMenuCollapsed, Converter={StaticResource BoolToVisibility}}"
+                                Margin="10,5"
+                                Click="OpenContextMenu_Click">
+                            <Button.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="Saisie Prévisions" Click="BtnSaisie_Click"/>
+                                    <MenuItem Header="Synthèse" Click="Sythese_Click"/>
+                                    <MenuItem Header="Budget Primitif" Click="BtnBudgetPrimitif_Click"/>
+                                    <MenuItem Header="Budget Remanié" Click="RemaniementButton_Click"/>
+                                    <MenuItem Header="Compte Administratif" Click="CompteAdministratif_Click"/>
+                                </ContextMenu>
+                            </Button.ContextMenu>
+                            <materialDesign:PackIcon Kind="CashEdit" Width="22" Height="22"/>
+                        </Button>
                         <!-- Section Gestion Budgétaire Fin -->
+                        
                         <!-- Section Gestion Compte Bancaire et Tiers -->
-                        <TextBlock Text="Compte Bancaire et Tiers" Style="{StaticResource MenuHeaderStyle}"/>
+                        <TextBlock Text="Compte Bancaire et Tiers" Style="{StaticResource MenuHeaderStyle}"
+                                   Visibility="{Binding IsMenuExpanded, Converter={StaticResource BoolToVisibility}}"/>
 
-                        <Button Style="{StaticResource MenuButtonStyle}" Click="TiersButton_Click">
+                        <Button Style="{StaticResource MenuButtonStyle}" Click="TiersButton_Click" ToolTip="Gestion des Tiers">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="AccountGroup" 
                                  VerticalAlignment="Center"
                                  Width="22"
                                  Height="22"
                                  Margin="0,0,15,0"/>
-                                <TextBlock Text="Gestion des Tiers" VerticalAlignment="Center"/>
+                                <TextBlock Text="Gestion des Tiers" VerticalAlignment="Center"
+                                          Visibility="{Binding DataContext.IsMenuExpanded, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibility}}"/>
                             </StackPanel>
                         </Button>
 
@@ -331,16 +461,14 @@
                         </Button>
 
                         <!-- Section Saisie des Pièces debut -->
-
-
-
                         <Expander Style="{StaticResource MaterialDesignExpander}" 
                               HorizontalAlignment="Left"
                                   Width="250"
-                              Margin="10,10,0,10">
+                              Margin="10,10,0,10"
+                              Visibility="{Binding IsMenuExpanded, Converter={StaticResource BoolToVisibility}}">
                             <Expander.Header>
                                 <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="FileDocumentEdit" 
+                                    <materialDesign:PackIcon Kind="FolderEditOutline" 
                                        VerticalAlignment="Center"
                                        Width="22"
                                        Height="22"
@@ -358,7 +486,7 @@
                                 </StackPanel.Resources>
                                 <Button Style="{StaticResource MenuButtonStyle}" Click="ExpressionBesoin_Click">
                                     <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="FileDocumentEdit" 
+                                        <materialDesign:PackIcon Kind="ClipboardTextOutline" 
                                             VerticalAlignment="Center"
                                             Width="22"
                                             Height="22"
@@ -369,7 +497,7 @@
                                 
                                 <Button Style="{StaticResource MenuButtonStyle}" Click="BonCommande_Click">
                                     <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="FileDocumentEdit" 
+                                        <materialDesign:PackIcon Kind="CartOutline" 
                                             VerticalAlignment="Center"
                                             Width="22"
                                             Height="22"
@@ -380,7 +508,7 @@
 
                                 <Button Style="{StaticResource MenuButtonStyle}" Click="FactureButton_Click">
                                     <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="ClipboardText" 
+                                        <materialDesign:PackIcon Kind="ReceiptTextOutline" 
                                            VerticalAlignment="Center"
                                            Width="22"
                                            Height="22"
@@ -402,7 +530,7 @@
 
                                 <Button Style="{StaticResource MenuButtonStyle}" Click="FicheEngagement_Click">
                                     <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="ClipboardText" 
+                                        <materialDesign:PackIcon Kind="ClipboardCheckOutline" 
                                             VerticalAlignment="Center"
                                             Width="22"
                                             Height="22"
@@ -423,7 +551,7 @@
 
                                 <Button Style="{StaticResource MenuButtonStyle}" Click="OrdreRecette_Click">
                                     <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="Receipt" 
+                                        <materialDesign:PackIcon Kind="CashPlus" 
                                            VerticalAlignment="Center"
                                            Width="22"
                                            Height="22"
@@ -438,7 +566,7 @@
                                     <Button.ContentTemplate>
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal">
-                                                <materialDesign:PackIcon Kind="ShieldCheck" Margin="0,0,8,0"/>
+                                                <materialDesign:PackIcon Kind="CheckDecagram" Margin="0,0,8,0"/>
                                                 <TextBlock Text="Validation"/>
                                             </StackPanel>
                                         </DataTemplate>
@@ -447,8 +575,28 @@
                                 
                             </StackPanel>
                         </Expander>
+                        
+                        <!-- Bouton Saisie des Pièces en mode réduit avec ContextMenu -->
+                        <Button Style="{StaticResource MenuButtonCollapsedStyle}"
+                                ToolTip="Saisie des Pièces"
+                                Visibility="{Binding IsMenuCollapsed, Converter={StaticResource BoolToVisibility}}"
+                                Margin="10,5"
+                                Click="OpenContextMenu_Click">
+                            <Button.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="Expression Besoin" Click="ExpressionBesoin_Click"/>
+                                    <MenuItem Header="Bon de Commande" Click="BonCommande_Click"/>
+                                    <MenuItem Header="Facture et Détails" Click="FactureButton_Click"/>
+                                    <MenuItem Header="Contrat" Click="Contrat_Click"/>
+                                    <MenuItem Header="Fiche d'Engagement" Click="FicheEngagement_Click"/>
+                                    <MenuItem Header="Mandat" Click="Mandat_Click"/>
+                                    <MenuItem Header="Ordre de Recette" Click="OrdreRecette_Click"/>
+                                    <MenuItem Header="Validation" Click="Validation_Click"/>
+                                </ContextMenu>
+                            </Button.ContextMenu>
+                            <materialDesign:PackIcon Kind="FolderEditOutline" Width="22" Height="22"/>
+                        </Button>
                         <!-- Section Saisie des Pièces Fin -->
-
 
                         <!-- Section Gestion Comptable debut-->
 
@@ -457,7 +605,8 @@
                         <Expander Style="{StaticResource MaterialDesignExpander}" 
                                           HorizontalAlignment="Left"
                                           Width="250"
-                                          Margin="10,10,0,10">
+                                          Margin="10,10,0,10"
+                                          Visibility="{Binding IsMenuExpanded, Converter={StaticResource BoolToVisibility}}">
                             <Expander.Header>
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Kind="ChartLine" 
@@ -600,6 +749,27 @@
                                 
                             </StackPanel>
                         </Expander>
+                        
+                        <!-- Bouton Gestion Comptable en mode réduit avec ContextMenu -->
+                        <Button Style="{StaticResource MenuButtonCollapsedStyle}"
+                                ToolTip="Gestion Comptable"
+                                Visibility="{Binding IsMenuCollapsed, Converter={StaticResource BoolToVisibility}}"
+                                Margin="10,5"
+                                Click="OpenContextMenu_Click">
+                            <Button.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="Compte de Gestion" Click="CompteGestion_Click"/>
+                                    <MenuItem Header="Livre Journal" Click="LivreJournalButton_Click"/>
+                                    <MenuItem Header="Grand Livre" Click="GrandLivreButton_Click"/>
+                                    <MenuItem Header="Balance mensuelle" Click="BalanceButton_Click"/>
+                                    <MenuItem Header="Balance Annuelle" Click="BalanceAnnuelleButton_Click"/>
+                                    <MenuItem Header="Droits Constatés" Click="MouvementButton_Click"/>
+                                    <MenuItem Header="Droit Au Comptant" Click="DroitsAuComptantButton_Click"/>
+                                    <MenuItem Header="Dettes et Créances" Click="DebiteurCrediteur_Click"/>
+                                </ContextMenu>
+                            </Button.ContextMenu>
+                            <materialDesign:PackIcon Kind="ChartLine" Width="22" Height="22"/>
+                        </Button>
                         </StackPanel>
                         <!-- Section Gestion Comptable Fin  -->
                         
@@ -607,7 +777,8 @@
                         <Expander Style="{StaticResource MaterialDesignExpander}" 
                                    HorizontalAlignment="Left"
                                    Width="250"
-                                   Margin="10,10,0,10">
+                                   Margin="10,10,0,10"
+                                   Visibility="{Binding IsMenuExpanded, Converter={StaticResource BoolToVisibility}}">
                             <Expander.Header>
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Kind="ChartTimelineVariant" 
@@ -730,15 +901,39 @@
 
                             </StackPanel>
                         </Expander>
+                        
+                        <!-- Bouton PDL en mode réduit avec ContextMenu -->
+                        <Button Style="{StaticResource MenuButtonCollapsedStyle}"
+                                ToolTip="P-D-L"
+                                Visibility="{Binding IsMenuCollapsed, Converter={StaticResource BoolToVisibility}}"
+                                Margin="10,5"
+                                Click="OpenContextMenu_Click">
+                            <Button.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="PDL" Click="PDLPage_Click"/>
+                                    <MenuItem Header="Programmes" Click="PROGRAMMES_Click"/>
+                                    <MenuItem Header="Secteurs" Click="SECTEUR_Click"/>
+                                    <MenuItem Header="Bénéficiaires" Click="BENEFICIAIRE_Click"/>
+                                    <MenuItem Header="Acteurs" Click="ACTEURS_Click"/>
+                                    <MenuItem Header="Structures" Click="STRUCTURES_Click"/>
+                                    <MenuItem Header="O-D-D" Click="ODD_Click"/>
+                                    <MenuItem Header="Compétences" Click="COMPETENCE_COLLECTIVITE_Click"/>
+                                    <MenuItem Header="Activités" Click="ACTIVITE_Click"/>
+                                </ContextMenu>
+                            </Button.ContextMenu>
+                            <materialDesign:PackIcon Kind="ChartTimelineVariant" Width="22" Height="22"/>
+                        </Button>
                         <!-- PDL fin-->
 
                         <!-- Section Administration -->
                         <StackPanel Visibility="{Binding Converter={StaticResource PermissionToVisibilityConverter}, ConverterParameter=Administration.Access}">
-                            <TextBlock Text="Administration" Style="{StaticResource MenuHeaderStyle}" Margin="20,10,0,5"/>
+                            <TextBlock Text="Administration" Style="{StaticResource MenuHeaderStyle}" Margin="20,10,0,5"
+                                       Visibility="{Binding DataContext.IsMenuExpanded, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibility}}"/>
                             <Expander Style="{StaticResource MaterialDesignExpander}" 
                                       HorizontalAlignment="Left"
                                       Width="250"
-                                      Margin="10,10,0,10">
+                                      Margin="10,10,0,10"
+                                      Visibility="{Binding DataContext.IsMenuExpanded, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibility}}">
                                 <Expander.Header>
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="ShieldAccount" 
@@ -795,6 +990,22 @@
                                     </Button>
                                 </StackPanel>
                             </Expander>
+                            
+                            <!-- Bouton Administration en mode réduit avec ContextMenu -->
+                            <Button Style="{StaticResource MenuButtonCollapsedStyle}"
+                                    ToolTip="Administration"
+                                    Visibility="{Binding DataContext.IsMenuCollapsed, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibility}}"
+                                    Margin="10,5"
+                                    Click="OpenContextMenu_Click">
+                                <Button.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Header="Rôles" Click="RolesButton_Click"/>
+                                        <MenuItem Header="Permissions" Click="PermissionsButton_Click"/>
+                                        <MenuItem Header="Utilisateurs" Click="UsersButton_Click"/>
+                                    </ContextMenu>
+                                </Button.ContextMenu>
+                                <materialDesign:PackIcon Kind="ShieldAccount" Width="22" Height="22"/>
+                            </Button>
                         </StackPanel>
                         <!-- Section Administration FIN -->
 
@@ -803,10 +1014,12 @@
                     </StackPanel>
                 </ScrollViewer>
             </DockPanel>
-        </materialDesign:DrawerHost.LeftDrawerContent>
+        </Border>
 
-        <!-- Contenu principal -->
-        <DockPanel>
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- CONTENU PRINCIPAL (Colonne droite) -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <DockPanel Grid.Column="1">
             <!-- Header -->
             <Border DockPanel.Dock="Top" 
                    Background="White"
@@ -827,17 +1040,10 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <!-- Bouton menu + Titre -->
+                    <!-- Titre de la page -->
                     <StackPanel Grid.Column="0" 
                               Orientation="Horizontal" 
                               VerticalAlignment="Center">
-                        <Button Style="{StaticResource MaterialDesignIconButton}"
-                               Command="{Binding OpenMenuCommand}"
-                               Width="40"
-                               Height="40"
-                               Margin="0,0,20,0">
-                            <materialDesign:PackIcon Kind="Menu" Width="26" Height="26"/>
-                        </Button>
 
                         <StackPanel VerticalAlignment="Center">
                             <TextBlock Text="{Binding CurrentPageTitle}"
@@ -1028,9 +1234,7 @@
             <Border DockPanel.Dock="Top" Background="#F5F5F5">
                 <Frame x:Name="MainContentFrame"
                        NavigationUIVisibility="Hidden"/>
-                
             </Border>
-            
         </DockPanel>
-    </materialDesign:DrawerHost>
+    </Grid>
 </Window>

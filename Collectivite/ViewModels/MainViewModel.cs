@@ -22,6 +22,7 @@ namespace Collectivite.ViewModels
         private string _exerciceText = "";
         private string _communeName = string.Empty;
         private bool _isMenuOpen;
+        private bool _isMenuCollapsed;
         private string _userIdentifier = "Utilisateur";
         private string _userEmail = "Email non défini";
         private string _userPhone = "Téléphone non défini";
@@ -45,6 +46,7 @@ namespace Collectivite.ViewModels
             OpenLoginCommand = _openLoginCommand;
             OpenMenuCommand = new RelayCommand(_ => IsMenuOpen = true);
             CloseMenuCommand = new RelayCommand(_ => IsMenuOpen = false);
+            ToggleMenuCommand = new RelayCommand(_ => IsMenuCollapsed = !IsMenuCollapsed);
 
             // S'abonner aux changements d'exercice
             _exerciceService.ExerciceChanged += OnExerciceChanged;
@@ -131,6 +133,26 @@ namespace Collectivite.ViewModels
         }
 
         /// <summary>
+        /// Indique si le menu latéral est réduit (icônes seulement)
+        /// </summary>
+        public bool IsMenuCollapsed
+        {
+            get => _isMenuCollapsed;
+            set
+            {
+                if (SetProperty(ref _isMenuCollapsed, value))
+                {
+                    OnPropertyChanged(nameof(IsMenuExpanded));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Inverse de IsMenuCollapsed pour les bindings
+        /// </summary>
+        public bool IsMenuExpanded => !_isMenuCollapsed;
+
+        /// <summary>
         /// Indique si un utilisateur est actuellement connecté.
         /// </summary>
         public bool IsUserLoggedIn => _authService.CurrentUser != null;
@@ -142,6 +164,7 @@ namespace Collectivite.ViewModels
         public ICommand OpenLoginCommand { get; }
         public ICommand OpenMenuCommand { get; }
         public ICommand CloseMenuCommand { get; }
+        public ICommand ToggleMenuCommand { get; }
 
         #region methodes
         /// <summary>
