@@ -22,7 +22,7 @@ namespace Collectivite.Models
         public int ExerciceId { get; set; }
         public Exercice Exercice { get; set; } = null!;
         [Required(ErrorMessage = "le montant du budget est obligatoire")]
-        public decimal MontantTotal { get; set; } = 0;
+        //public decimal MontantTotal { get; set; } = 0;
         public decimal MontantDepense { get; set; } = 0;
         public decimal MontantRecette { get; set; } = 0;
         public DateOnly? DateApprobation { get; set; }

@@ -56,11 +56,11 @@ namespace Collectivite.ViewModels
 
             //Commandes
             LoadBudgetPrimitifCommand = new RelayCommand(async _ => await LoadBudgetPrimitifAsync());
-            OppenAddBudgetPrimitifCommand = new RelayCommand(_ => OpenAddBudgetPrimitif());
-            OppenEditBudgetPrimitifCommand = new RelayCommand<BudgetPrimitif>(budgetPrimitif => OppenEditBudgetPrimitif(budgetPrimitif));
-            SaveBudgetPrimitifCommand = new RelayCommand(async _ => await SaveBudgetPrimitifAsync(), _ => CanSaveBudgetPrimitif());
-            CancelBudgetPrimitifCommand = new RelayCommand(_ => CancelBudgetPrimitif());
-            DeleteBudgetPrimitifCommand = new RelayCommand<BudgetPrimitif>(async budgetPrimitif => await DeleteBudgetPrimitifAsync(budgetPrimitif));
+            //OppenAddBudgetPrimitifCommand = new RelayCommand(_ => OpenAddBudgetPrimitif());
+            //OppenEditBudgetPrimitifCommand = new RelayCommand<BudgetPrimitif>(budgetPrimitif => OppenEditBudgetPrimitif(budgetPrimitif));
+            //SaveBudgetPrimitifCommand = new RelayCommand(async _ => await SaveBudgetPrimitifAsync(), _ => CanSaveBudgetPrimitif());
+            //CancelBudgetPrimitifCommand = new RelayCommand(_ => CancelBudgetPrimitif());
+            //DeleteBudgetPrimitifCommand = new RelayCommand<BudgetPrimitif>(async budgetPrimitif => await DeleteBudgetPrimitifAsync(budgetPrimitif));
             OpenValidationDialogCommand = new RelayCommand<BudgetPrimitif>(budget => OpenValidationDialog(budget));
             OpenApprovalDialogCommand = new RelayCommand<BudgetPrimitif>(budget => OpenApprovalDialog(budget));
             ConfirmValidationCommand = new RelayCommand(async _ => await ConfirmValidationAsync(), _ => CanConfirmValidation());
@@ -737,150 +737,150 @@ namespace Collectivite.ViewModels
         }
 
         // Reste des méthodes inchangées...
-        public void OpenAddBudgetPrimitif()
-        {
-            MessageBox.Show(
-                "Les budgets primitifs sont créés automatiquement lors de la création d'un exercice.\n\n" +
-                "Pour créer un nouveau budget primitif, veuillez créer un nouvel exercice.",
-                "Information",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
-        }
+        //public void OpenAddBudgetPrimitif()
+        //{
+        //    MessageBox.Show(
+        //        "Les budgets primitifs sont créés automatiquement lors de la création d'un exercice.\n\n" +
+        //        "Pour créer un nouveau budget primitif, veuillez créer un nouvel exercice.",
+        //        "Information",
+        //        MessageBoxButton.OK,
+        //        MessageBoxImage.Information);
+        //}
 
-        private void OppenEditBudgetPrimitif(BudgetPrimitif? budgetPrimitif)
-        {
-            if (budgetPrimitif == null)
-                return;
+        //private void OppenEditBudgetPrimitif(BudgetPrimitif? budgetPrimitif)
+        //{
+        //    if (budgetPrimitif == null)
+        //        return;
 
-            MessageBox.Show(
-                "La modification du budget primitif n'est plus disponible.\n" +
-                "Veuillez utiliser le bouton d'approbation pour approuver le budget.",
-                "Information",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
-        }
+        //    MessageBox.Show(
+        //        "La modification du budget primitif n'est plus disponible.\n" +
+        //        "Veuillez utiliser le bouton d'approbation pour approuver le budget.",
+        //        "Information",
+        //        MessageBoxButton.OK,
+        //        MessageBoxImage.Information);
+        //}
 
-        private bool CanSaveBudgetPrimitif()
-        {
-            return !string.IsNullOrWhiteSpace(DialogBudgetPrimitif.MontantTotal.ToString());
-        }
+        //private bool CanSaveBudgetPrimitif()
+        //{
+        //    return !string.IsNullOrWhiteSpace(DialogBudgetPrimitif.MontantTotal.ToString());
+        //}
 
-        private async Task SaveBudgetPrimitifAsync()
-        {
-            try
-            {
-                if (IsEditMode)
-                {
-                    if (!CanEditBudgetPrimitif)
-                    {
-                        MessageBox.Show(
-                            "Accès refusé : permission requise BudgetPrimitif.Edit",
-                            "Accès refusé",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Warning);
-                        return;
-                    }
+        //private async Task SaveBudgetPrimitifAsync()
+        //{
+        //    try
+        //    {
+        //        if (IsEditMode)
+        //        {
+        //            if (!CanEditBudgetPrimitif)
+        //            {
+        //                MessageBox.Show(
+        //                    "Accès refusé : permission requise BudgetPrimitif.Edit",
+        //                    "Accès refusé",
+        //                    MessageBoxButton.OK,
+        //                    MessageBoxImage.Warning);
+        //                return;
+        //            }
 
-                    var (success, message) = await _budgetPrimitifService.UpdateBudgetPrimitifAsync(DialogBudgetPrimitif);
-                    if (success)
-                    {
-                        MessageBox.Show(
-                            "Budget mis à jour avec succès.",
-                            "Succès",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Information);
-                        await LoadBudgetPrimitifAsync();
-                        IsDialogOpen = false;
-                    }
-                    else
-                    {
-                        MessageBox.Show(message, "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
-                    }
-                }
-                else
-                {
-                    if (!CanCreateBudgetPrimitif)
-                    {
-                        MessageBox.Show(
-                            "Accès refusé : permission requise BudgetPrimitif.Create",
-                            "Accès refusé",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Warning);
-                        return;
-                    }
+        //            var (success, message) = await _budgetPrimitifService.UpdateBudgetPrimitifAsync(DialogBudgetPrimitif);
+        //            if (success)
+        //            {
+        //                MessageBox.Show(
+        //                    "Budget mis à jour avec succès.",
+        //                    "Succès",
+        //                    MessageBoxButton.OK,
+        //                    MessageBoxImage.Information);
+        //                await LoadBudgetPrimitifAsync();
+        //                IsDialogOpen = false;
+        //            }
+        //            else
+        //            {
+        //                MessageBox.Show(message, "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+        //            }
+        //        }
+        //        else
+        //        {
+        //            if (!CanCreateBudgetPrimitif)
+        //            {
+        //                MessageBox.Show(
+        //                    "Accès refusé : permission requise BudgetPrimitif.Create",
+        //                    "Accès refusé",
+        //                    MessageBoxButton.OK,
+        //                    MessageBoxImage.Warning);
+        //                return;
+        //            }
 
-                    var (success, message, _) = await _budgetPrimitifService.CreateBudgetPrimitifAsync(DialogBudgetPrimitif);
-                    if (success)
-                    {
-                        MessageBox.Show(message, "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
-                        await LoadBudgetPrimitifAsync();
-                        IsDialogOpen = false;
-                    }
-                    else
-                    {
-                        MessageBox.Show(message, "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(
-                    $"Erreur lors de l'enregistrement du budget : {ex.Message}",
-                    "Erreur",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-            }
-            finally
-            {
-                IsLoading = false;
-            }
-        }
+        //            var (success, message, _) = await _budgetPrimitifService.CreateBudgetPrimitifAsync(DialogBudgetPrimitif);
+        //            if (success)
+        //            {
+        //                MessageBox.Show(message, "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+        //                await LoadBudgetPrimitifAsync();
+        //                IsDialogOpen = false;
+        //            }
+        //            else
+        //            {
+        //                MessageBox.Show(message, "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+        //            }
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MessageBox.Show(
+        //            $"Erreur lors de l'enregistrement du budget : {ex.Message}",
+        //            "Erreur",
+        //            MessageBoxButton.OK,
+        //            MessageBoxImage.Error);
+        //    }
+        //    finally
+        //    {
+        //        IsLoading = false;
+        //    }
+        //}
 
-        private void CancelBudgetPrimitif()
-        {
-            IsDialogOpen = false;
-        }
+        //private void CancelBudgetPrimitif()
+        //{
+        //    IsDialogOpen = false;
+        //}
 
-        private async Task DeleteBudgetPrimitifAsync(BudgetPrimitif? budgetPrimitif)
-        {
-            if (budgetPrimitif == null) return;
+        //private async Task DeleteBudgetPrimitifAsync(BudgetPrimitif? budgetPrimitif)
+        //{
+        //    if (budgetPrimitif == null) return;
 
-            if (!CanDeleteBudgetPrimitif)
-            {
-                MessageBox.Show(
-                    "Accès refusé : permission requise BudgetPrimitif.Delete",
-                    "Accès refusé",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
-                return;
-            }
+        //    if (!CanDeleteBudgetPrimitif)
+        //    {
+        //        MessageBox.Show(
+        //            "Accès refusé : permission requise BudgetPrimitif.Delete",
+        //            "Accès refusé",
+        //            MessageBoxButton.OK,
+        //            MessageBoxImage.Warning);
+        //        return;
+        //    }
 
-            var result = MessageBox.Show(
-                $"Êtes-vous sûr de vouloir supprimer le budget de '{budgetPrimitif.Exercice.Libelle}' ?",
-                "Confirmation de suppression",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
+        //    var result = MessageBox.Show(
+        //        $"Êtes-vous sûr de vouloir supprimer le budget de '{budgetPrimitif.Exercice.Libelle}' ?",
+        //        "Confirmation de suppression",
+        //        MessageBoxButton.YesNo,
+        //        MessageBoxImage.Question);
 
-            if (result == MessageBoxResult.Yes)
-            {
-                IsLoading = true;
-                var (success, message) = await _budgetPrimitifService.DeleteBudgetPrimitifAsync(budgetPrimitif.Id);
-                if (success)
-                {
-                    MessageBox.Show(
-                        "Budget supprimé avec succès.",
-                        "Succès",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
-                    await LoadBudgetPrimitifAsync();
-                }
-                else
-                {
-                    MessageBox.Show(message, "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-                IsLoading = false;
-            }
-        }
+        //    if (result == MessageBoxResult.Yes)
+        //    {
+        //        IsLoading = true;
+        //        var (success, message) = await _budgetPrimitifService.DeleteBudgetPrimitifAsync(budgetPrimitif.Id);
+        //        if (success)
+        //        {
+        //            MessageBox.Show(
+        //                "Budget supprimé avec succès.",
+        //                "Succès",
+        //                MessageBoxButton.OK,
+        //                MessageBoxImage.Information);
+        //            await LoadBudgetPrimitifAsync();
+        //        }
+        //        else
+        //        {
+        //            MessageBox.Show(message, "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+        //        }
+        //        IsLoading = false;
+        //    }
+        //}
 
         private void OpenApprovalDialog(BudgetPrimitif? budget)
         {

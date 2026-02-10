@@ -773,7 +773,7 @@
                         </StackPanel>
                         <!-- Section Gestion Comptable Fin  -->
                         
-                        <!-- Section PDL-->
+                        <!-- Section PDL
                         <Expander Style="{StaticResource MaterialDesignExpander}" 
                                    HorizontalAlignment="Left"
                                    Width="250"
@@ -900,6 +900,7 @@
                       
 
                             </StackPanel>
+<<<<<<< HEAD
                         </Expander>
                         
                         <!-- Bouton PDL en mode réduit avec ContextMenu -->
@@ -923,6 +924,9 @@
                             </Button.ContextMenu>
                             <materialDesign:PackIcon Kind="ChartTimelineVariant" Width="22" Height="22"/>
                         </Button>
+=======
+                        </Expander>-->
+>>>>>>> 230084a8c0664693a9a09abaec8b6d198e551eb2
                         <!-- PDL fin-->
 
                         <!-- Section Administration -->
