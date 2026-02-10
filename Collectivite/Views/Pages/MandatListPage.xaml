@@ -241,7 +241,7 @@
                                   ItemsSource="{Binding Engagements}"
                                   SelectedValue="{Binding FiltreEngagementId}"
                                   SelectedValuePath="Id"
-                                  DisplayMemberPath="NumeroEngagement"
+                                  DisplayMemberPath="Objet"
                                   Margin="0,0,0,15"/>
 
                         <!-- Montant minimum -->
@@ -328,10 +328,6 @@
                                           Binding="{Binding Mois}" 
                                           Width="100"/>
 
-                        <!-- Engagement -->
-                        <DataGridTextColumn Header="N° Engagement" 
-                                          Binding="{Binding Engagement.NumeroEngagement}" 
-                                          Width="130"/>
 
                         <!-- Tiers -->
                         <DataGridTextColumn Header="Tiers" 

@@ -165,295 +165,140 @@
         </Grid>
 
         <!-- ═══════════════════════════════════════════════════════════
-             CONTENU PRINCIPAL
-             ═══════════════════════════════════════════════════════════ -->
-        <StackPanel Margin="20">
+     CONTENEUR PRINCIPAL
+     ═══════════════════════════════════════════════════════════ -->
+        <Grid Margin="20">
 
-            <!-- ───────────────────────────────────────────────────
-                 HEADER AVEC BOUTON D'AJOUT
-                 ─────────────────────────────────────────────────── -->
-            <Grid Margin="0,0,0,20">
-                <!-- Titre -->
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- ═══════════════════════════════════════════════════════════
+         HEADER AVEC BOUTON D'AJOUT
+         ═══════════════════════════════════════════════════════════ -->
+            <Grid Grid.Row="0" Margin="0,0,0,20">
                 <StackPanel Orientation="Horizontal">
-                    <materialDesign:PackIcon Kind="BookmarkMultiple" 
-                                           Width="32" 
-                                           Height="32"
-                                           Foreground="#1976D2"
-                                           VerticalAlignment="Center"/>
-                    <TextBlock Text="Gestion des Nomenclatures" 
-                             FontSize="24"
-                             FontWeight="SemiBold"
-                             Margin="15,0,0,0"
-                             VerticalAlignment="Center"/>
+                    <materialDesign:PackIcon Kind="BookmarkMultiple"
+                                     Width="32"
+                                     Height="32"
+                                     Foreground="#1976D2"
+                                     VerticalAlignment="Center"/>
+                    <TextBlock Text="Gestion des Nomenclatures"
+                       FontSize="24"
+                       FontWeight="SemiBold"
+                       Margin="15,0,0,0"
+                       VerticalAlignment="Center"/>
                 </StackPanel>
 
-                <!-- Bouton Ajouter -->
                 <Button Style="{StaticResource MaterialDesignRaisedButton}"
-                        Height="40"
-                        Command="{Binding OppenAddNommenclatureCommand}"
-                        HorizontalAlignment="Right"
-                        IsEnabled="{Binding CanCreateNommenclature}">
+                Height="40"
+                Command="{Binding OppenAddNommenclatureCommand}"
+                HorizontalAlignment="Right"
+                IsEnabled="{Binding CanCreateNommenclature}">
                     <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="Plus" 
-                                               VerticalAlignment="Center"
-                                               Margin="0,0,8,0"/>
-                        <TextBlock Text="Nouvelle Nomenclature" 
-                                 VerticalAlignment="Center"/>
+                        <materialDesign:PackIcon Kind="Plus"
+                                         VerticalAlignment="Center"
+                                         Margin="0,0,8,0"/>
+                        <TextBlock Text="Nouvelle Nomenclature"
+                           VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
             </Grid>
 
             <!-- ═══════════════════════════════════════════════════════════
-                 ONGLETS PRINCIPAUX : RECETTE / DÉPENSE
-                 ═══════════════════════════════════════════════════════════ -->
-            <materialDesign:Card UniformCornerRadius="8"
-                               Visibility="{Binding CanViewNommenclature, Converter={StaticResource BoolToVis}}">
-                <TabControl Style="{StaticResource MaterialDesignNavigationRailTabControl}"
-                          materialDesign:ColorZoneAssist.Mode="PrimaryMid">
+         CONTENU PRINCIPAL
+         ═══════════════════════════════════════════════════════════ -->
+            <materialDesign:Card Grid.Row="1"
+                          UniformCornerRadius="8"
+                          Visibility="{Binding CanViewNommenclature, Converter={StaticResource BoolToVis}}">
 
-                    <!-- ═══════════════════════════════════════════════════
-                         ONGLET RECETTE
-                         ═══════════════════════════════════════════════════ -->
+                <TabControl Style="{StaticResource MaterialDesignNavigationRailTabControl}"
+                    materialDesign:ColorZoneAssist.Mode="PrimaryMid">
+
+                    <!-- ═════════════════════════ RECETTES ═════════════════════════ -->
                     <TabItem>
                         <TabItem.Header>
                             <StackPanel>
-                                <materialDesign:PackIcon Kind="ArrowUp" 
-                                                       Width="24" 
-                                                       Height="24"
-                                                       HorizontalAlignment="Center"
-                                                       Foreground="#388E3C"/>
-                                <TextBlock Text="RECETTES" 
-                                         FontWeight="SemiBold"
-                                         FontSize="12"
-                                         Margin="0,4,0,0"/>
+                                <materialDesign:PackIcon Kind="ArrowUp"
+                                                 Width="24"
+                                                 Height="24"
+                                                 HorizontalAlignment="Center"
+                                                 Foreground="#388E3C"/>
+                                <TextBlock Text="RECETTES"
+                                   FontWeight="SemiBold"
+                                   FontSize="12"
+                                   Margin="0,4,0,0"/>
                             </StackPanel>
                         </TabItem.Header>
 
-                        <!-- Sous-onglets Fonctionnement / Investissement -->
                         <TabControl Style="{StaticResource MaterialDesignFilledTabControl}"
-                                  Margin="10">
+                            Margin="10">
 
-                            <!-- Recette - Fonctionnement -->
-                            <TabItem>
-                                <TabItem.Header>
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="Cog" 
-                                                               Width="18" 
-                                                               Height="18"
-                                                               VerticalAlignment="Center"
-                                                               Margin="0,0,8,0"/>
-                                        <TextBlock Text="Fonctionnement" 
-                                                 VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </TabItem.Header>
-
-                                <!-- TreeView pour Recette - Fonctionnement -->
-                                <ScrollViewer VerticalScrollBarVisibility="Auto"
-                                            HorizontalScrollBarVisibility="Auto">
-                                    <TreeView ItemsSource="{Binding RecetteFonctionnementTree}"
-                                            
-                                            ItemContainerStyle="{StaticResource NomenclatureTreeViewItemStyle}"
-                                            ItemTemplate="{StaticResource NomenclatureTreeTemplate}">
-                                        <!-- Message si vide -->
-                                        <TreeView.Style>
-                                            <Style TargetType="TreeView" BasedOn="{StaticResource NomenclatureTreeViewStyle}">
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding RecetteFonctionnementTree.Count}" Value="0">
-                                                        <Setter Property="Template">
-                                                            <Setter.Value>
-                                                                <ControlTemplate>
-                                                                    <Border Background="#F5F5F5" 
-                                                                          CornerRadius="8"
-                                                                          Padding="40"
-                                                                          Margin="20">
-                                                                        <StackPanel HorizontalAlignment="Center" 
-                                                                                  VerticalAlignment="Center">
-                                                                            <materialDesign:PackIcon Kind="FileDocumentOutline" 
-                                                                                                   Width="64" 
-                                                                                                   Height="64"
-                                                                                                   Foreground="#BDBDBD"
-                                                                                                   HorizontalAlignment="Center"/>
-                                                                            <TextBlock Text="Aucune nomenclature" 
-                                                                                     FontSize="16"
-                                                                                     Foreground="#757575"
-                                                                                     Margin="0,20,0,0"
-                                                                                     HorizontalAlignment="Center"/>
-                                                                            <TextBlock Text="Cliquez sur 'Nouvelle Nomenclature' pour commencer" 
-                                                                                     FontSize="13"
-                                                                                     Foreground="#9E9E9E"
-                                                                                     Margin="0,8,0,0"
-                                                                                     HorizontalAlignment="Center"/>
-                                                                        </StackPanel>
-                                                                    </Border>
-                                                                </ControlTemplate>
-                                                            </Setter.Value>
-                                                        </Setter>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TreeView.Style>
-                                    </TreeView>
-                                </ScrollViewer>
+                            <!-- Recette Fonctionnement -->
+                            <TabItem Header="Fonctionnement">
+                                <TreeView ItemsSource="{Binding RecetteFonctionnementTree}"
+                                  ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                  ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                  VirtualizingStackPanel.IsVirtualizing="True"
+                                  VirtualizingStackPanel.VirtualizationMode="Recycling"
+                                  ItemContainerStyle="{StaticResource NomenclatureTreeViewItemStyle}"
+                                  ItemTemplate="{StaticResource NomenclatureTreeTemplate}"/>
                             </TabItem>
 
-                            <!-- Recette - Investissement -->
-                            <TabItem>
-                                <TabItem.Header>
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="ChartLine" 
-                                                               Width="18" 
-                                                               Height="18"
-                                                               VerticalAlignment="Center"
-                                                               Margin="0,0,8,0"/>
-                                        <TextBlock Text="Investissement" 
-                                                 VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </TabItem.Header>
-
-                                <!-- TreeView pour Recette - Investissement -->
-                                <ScrollViewer VerticalScrollBarVisibility="Auto"
-                                            HorizontalScrollBarVisibility="Auto">
-                                    <TreeView ItemsSource="{Binding RecetteInvestissementTree}"
-                                            
-                                            ItemContainerStyle="{StaticResource NomenclatureTreeViewItemStyle}"
-                                            ItemTemplate="{StaticResource NomenclatureTreeTemplate}">
-                                        <TreeView.Style>
-                                            <Style TargetType="TreeView" BasedOn="{StaticResource NomenclatureTreeViewStyle}">
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding RecetteInvestissementTree.Count}" Value="0">
-                                                        <Setter Property="Template">
-                                                            <Setter.Value>
-                                                                <ControlTemplate>
-                                                                    <Border Background="#F5F5F5" CornerRadius="8" Padding="40" Margin="20">
-                                                                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                                                            <materialDesign:PackIcon Kind="FileDocumentOutline" Width="64" Height="64" Foreground="#BDBDBD" HorizontalAlignment="Center"/>
-                                                                            <TextBlock Text="Aucune nomenclature" FontSize="16" Foreground="#757575" Margin="0,20,0,0" HorizontalAlignment="Center"/>
-                                                                        </StackPanel>
-                                                                    </Border>
-                                                                </ControlTemplate>
-                                                            </Setter.Value>
-                                                        </Setter>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TreeView.Style>
-                                    </TreeView>
-                                </ScrollViewer>
+                            <!-- Recette Investissement -->
+                            <TabItem Header="Investissement">
+                                <TreeView ItemsSource="{Binding RecetteInvestissementTree}"
+                                  ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                  ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                  VirtualizingStackPanel.IsVirtualizing="True"
+                                  VirtualizingStackPanel.VirtualizationMode="Recycling"
+                                  ItemContainerStyle="{StaticResource NomenclatureTreeViewItemStyle}"
+                                  ItemTemplate="{StaticResource NomenclatureTreeTemplate}"/>
                             </TabItem>
 
                         </TabControl>
                     </TabItem>
 
-                    <!-- ═══════════════════════════════════════════════════
-                         ONGLET DÉPENSE
-                         ═══════════════════════════════════════════════════ -->
+                    <!-- ═════════════════════════ DEPENSES ═════════════════════════ -->
                     <TabItem>
                         <TabItem.Header>
                             <StackPanel>
-                                <materialDesign:PackIcon Kind="ArrowDown" 
-                                                       Width="24" 
-                                                       Height="24"
-                                                       HorizontalAlignment="Center"
-                                                       Foreground="#D32F2F"/>
-                                <TextBlock Text="DÉPENSES" 
-                                         FontWeight="SemiBold"
-                                         FontSize="12"
-                                         Margin="0,4,0,0"/>
+                                <materialDesign:PackIcon Kind="ArrowDown"
+                                                 Width="24"
+                                                 Height="24"
+                                                 HorizontalAlignment="Center"
+                                                 Foreground="#D32F2F"/>
+                                <TextBlock Text="DÉPENSES"
+                                   FontWeight="SemiBold"
+                                   FontSize="12"
+                                   Margin="0,4,0,0"/>
                             </StackPanel>
                         </TabItem.Header>
 
-                        <!-- Sous-onglets Fonctionnement / Investissement -->
                         <TabControl Style="{StaticResource MaterialDesignFilledTabControl}"
-                                  Margin="10">
+                            Margin="10">
 
-                            <!-- Dépense - Fonctionnement -->
-                            <TabItem>
-                                <TabItem.Header>
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="Cog" 
-                                                               Width="18" 
-                                                               Height="18"
-                                                               VerticalAlignment="Center"
-                                                               Margin="0,0,8,0"/>
-                                        <TextBlock Text="Fonctionnement" 
-                                                 VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </TabItem.Header>
-
-                                <!-- TreeView pour Dépense - Fonctionnement -->
-                                <ScrollViewer VerticalScrollBarVisibility="Auto"
-                                            HorizontalScrollBarVisibility="Auto">
-                                    <TreeView ItemsSource="{Binding DepenseFonctionnementTree}"
-                                            
-                                            ItemContainerStyle="{StaticResource NomenclatureTreeViewItemStyle}"
-                                            ItemTemplate="{StaticResource NomenclatureTreeTemplate}">
-                                        <TreeView.Style>
-                                            <Style TargetType="TreeView" BasedOn="{StaticResource NomenclatureTreeViewStyle}">
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding DepenseFonctionnementTree.Count}" Value="0">
-                                                        <Setter Property="Template">
-                                                            <Setter.Value>
-                                                                <ControlTemplate>
-                                                                    <Border Background="#F5F5F5" CornerRadius="8" Padding="40" Margin="20">
-                                                                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                                                            <materialDesign:PackIcon Kind="FileDocumentOutline" Width="64" Height="64" Foreground="#BDBDBD" HorizontalAlignment="Center"/>
-                                                                            <TextBlock Text="Aucune nomenclature" FontSize="16" Foreground="#757575" Margin="0,20,0,0" HorizontalAlignment="Center"/>
-                                                                        </StackPanel>
-                                                                    </Border>
-                                                                </ControlTemplate>
-                                                            </Setter.Value>
-                                                        </Setter>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TreeView.Style>
-                                    </TreeView>
-                                </ScrollViewer>
+                            <!-- Dépense Fonctionnement -->
+                            <TabItem Header="Fonctionnement">
+                                <TreeView ItemsSource="{Binding DepenseFonctionnementTree}"
+                                  ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                  ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                  VirtualizingStackPanel.IsVirtualizing="True"
+                                  VirtualizingStackPanel.VirtualizationMode="Recycling"
+                                  ItemContainerStyle="{StaticResource NomenclatureTreeViewItemStyle}"
+                                  ItemTemplate="{StaticResource NomenclatureTreeTemplate}"/>
                             </TabItem>
 
-                            <!-- Dépense - Investissement -->
-                            <TabItem>
-                                <TabItem.Header>
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="ChartLine" 
-                                                               Width="18" 
-                                                               Height="18"
-                                                               VerticalAlignment="Center"
-                                                               Margin="0,0,8,0"/>
-                                        <TextBlock Text="Investissement" 
-                                                 VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </TabItem.Header>
-
-                                <!-- TreeView pour Dépense - Investissement -->
-                                <ScrollViewer VerticalScrollBarVisibility="Auto"
-                                            HorizontalScrollBarVisibility="Auto">
-                                    <TreeView ItemsSource="{Binding DepenseInvestissementTree}"
-                                            
-                                            ItemContainerStyle="{StaticResource NomenclatureTreeViewItemStyle}"
-                                            ItemTemplate="{StaticResource NomenclatureTreeTemplate}">
-                                        <TreeView.Style>
-                                            <Style TargetType="TreeView" BasedOn="{StaticResource NomenclatureTreeViewStyle}">
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding DepenseInvestissementTree.Count}" Value="0">
-                                                        <Setter Property="Template">
-                                                            <Setter.Value>
-                                                                <ControlTemplate>
-                                                                    <Border Background="#F5F5F5" CornerRadius="8" Padding="40" Margin="20">
-                                                                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                                                            <materialDesign:PackIcon Kind="FileDocumentOutline" Width="64" Height="64" Foreground="#BDBDBD" HorizontalAlignment="Center"/>
-                                                                            <TextBlock Text="Aucune nomenclature" FontSize="16" Foreground="#757575" Margin="0,20,0,0" HorizontalAlignment="Center"/>
-                                                                        </StackPanel>
-                                                                    </Border>
-                                                                </ControlTemplate>
-                                                            </Setter.Value>
-                                                        </Setter>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TreeView.Style>
-                                    </TreeView>
-                                </ScrollViewer>
+                            <!-- Dépense Investissement -->
+                            <TabItem Header="Investissement">
+                                <TreeView ItemsSource="{Binding DepenseInvestissementTree}"
+                                  ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                  ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                  VirtualizingStackPanel.IsVirtualizing="True"
+                                  VirtualizingStackPanel.VirtualizationMode="Recycling"
+                                  ItemContainerStyle="{StaticResource NomenclatureTreeViewItemStyle}"
+                                  ItemTemplate="{StaticResource NomenclatureTreeTemplate}"/>
                             </TabItem>
 
                         </TabControl>
@@ -462,7 +307,8 @@
                 </TabControl>
             </materialDesign:Card>
 
-        </StackPanel>
+        </Grid>
+
 
         <!-- ═══════════════════════════════════════════════════════════
              DIALOG MODAL AJOUT/MODIFICATION
