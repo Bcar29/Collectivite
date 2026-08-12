@@ -29,6 +29,31 @@ namespace Collectivite.ViewModels
         private DateTime? _filtreDateEmissionFin;
         private bool? _filtreEstPaye;
         private bool _isDisposed;
+        private bool _isFiltered;
+
+        // Pagination
+        private const int PageSize = 20;
+        private int _pageNumber = 1;
+        public int PageNumber
+        {
+            get => _pageNumber;
+            set => SetProperty(ref _pageNumber, value);
+        }
+
+        private int _totalCount;
+        public int TotalCount
+        {
+            get => _totalCount;
+            set
+            {
+                if (SetProperty(ref _totalCount, value))
+                {
+                    OnPropertyChanged(nameof(TotalPages));
+                }
+            }
+        }
+
+        public int TotalPages => Math.Max(1, (int)Math.Ceiling(TotalCount / (double)PageSize));
 
         // ══════════════════════════════════════════════════════
         // AJOUT : Dictionnaire pour stocker les montants payés
@@ -53,8 +78,8 @@ namespace Collectivite.ViewModels
             _exerciceService = ExerciceService.Instance;
             _exerciceService.ExerciceChanged += OnExerciceChanged;
             // Commandes
-            LoadDataCommand = new RelayCommand(async _ => await LoadDataAsync());
-            ApplyFiltersCommand = new RelayCommand(async _ => await ApplyFiltersAsync());
+            LoadDataCommand = new RelayCommand(async _ => await LoadDataResetAsync());
+            ApplyFiltersCommand = new RelayCommand(async _ => await ApplyFiltersResetAsync());
             ClearFiltersCommand = new RelayCommand(_ => ClearFilters());
             OpenAddPageCommand = new RelayCommand(_ => OpenAddPage());
             OpenEditPageCommand = new RelayCommand<Mandat>(m => OpenEditPage(m));
@@ -62,6 +87,8 @@ namespace Collectivite.ViewModels
             DeleteCommand = new RelayCommand<Mandat>(async m => await DeleteAsync(m));
             MarquerPayeCommand = new RelayCommand<Mandat>(async m => await MarquerCommePaye(m));
             AnnulerPaiementCommand = new RelayCommand<Mandat>(async m => await AnnulerPaiement(m));
+            NextPageCommand = new RelayCommand(async _ => await NextPageAsync(), _ => PageNumber < TotalPages);
+            PreviousPageCommand = new RelayCommand(async _ => await PreviousPageAsync(), _ => PageNumber > 1);
 
             // Charger les données
             LoadDataCommand.Execute(null);
@@ -183,6 +210,8 @@ namespace Collectivite.ViewModels
         public ICommand DeleteCommand { get; }
         public ICommand MarquerPayeCommand { get; }
         public ICommand AnnulerPaiementCommand { get; }
+        public ICommand NextPageCommand { get; }
+        public ICommand PreviousPageCommand { get; }
 
         #endregion
 
@@ -191,15 +220,22 @@ namespace Collectivite.ViewModels
         {
             await Application.Current.Dispatcher.InvokeAsync(async () =>
             {
-                await LoadDataAsync();
+                await LoadDataResetAsync();
             });
+        }
+
+        private async System.Threading.Tasks.Task LoadDataResetAsync()
+        {
+            _isFiltered = false;
+            PageNumber = 1;
+            await LoadDataAsync();
         }
 
         private async System.Threading.Tasks.Task LoadDataAsync()
         {
             if (!CanViewMandat)
             {
-                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning(_accessDeniedMessage);
                 return;
             }
 
@@ -208,7 +244,8 @@ namespace Collectivite.ViewModels
             try
             {
                 var mandatService = new MandatService();
-                var mandats = await mandatService.GetAllMandatsAsync();
+                var (mandats, totalCount) = await mandatService.GetAllMandatsAsync(PageNumber, PageSize);
+                TotalCount = totalCount;
 
                 // ══════════════════════════════════════════════════════
                 // MODIFIÉ : Calculer le statut et le montant payé
@@ -243,8 +280,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors du chargement : {ex.Message}");
             }
             finally
             {
@@ -252,11 +288,18 @@ namespace Collectivite.ViewModels
             }
         }
 
+        private async System.Threading.Tasks.Task ApplyFiltersResetAsync()
+        {
+            _isFiltered = true;
+            PageNumber = 1;
+            await ApplyFiltersAsync();
+        }
+
         private async System.Threading.Tasks.Task ApplyFiltersAsync()
         {
             if (!CanViewMandat)
             {
-                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning(_accessDeniedMessage);
                 return;
             }
 
@@ -265,7 +308,7 @@ namespace Collectivite.ViewModels
             try
             {
                 var mandatService = new MandatService();
-                var mandats = await mandatService.GetMandatsFilteredAsync(
+                var (mandats, totalCount) = await mandatService.GetMandatsFilteredAsync(
                     numeroMandat: FiltreNumeroMandat,
                     bordereau: FiltreBordereau,
                     mois: FiltreMois,
@@ -274,8 +317,11 @@ namespace Collectivite.ViewModels
                     montantMax: FiltreMontantMax,
                     dateEmissionDebut: FiltreDateEmissionDebut,
                     dateEmissionFin: FiltreDateEmissionFin,
-                    estPaye: FiltreEstPaye
+                    estPaye: FiltreEstPaye,
+                    pageNumber: PageNumber,
+                    pageSize: PageSize
                 );
+                TotalCount = totalCount;
 
                 // ══════════════════════════════════════════════════════
                 // MODIFIÉ : Calculer le statut et le montant payé
@@ -300,13 +346,26 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de l'application des filtres : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors de l'application des filtres : {ex.Message}");
             }
             finally
             {
                 IsLoading = false;
             }
+        }
+
+        private async System.Threading.Tasks.Task NextPageAsync()
+        {
+            if (PageNumber >= TotalPages) return;
+            PageNumber++;
+            await (_isFiltered ? ApplyFiltersAsync() : LoadDataAsync());
+        }
+
+        private async System.Threading.Tasks.Task PreviousPageAsync()
+        {
+            if (PageNumber <= 1) return;
+            PageNumber--;
+            await (_isFiltered ? ApplyFiltersAsync() : LoadDataAsync());
         }
 
         private void ClearFilters()
@@ -328,7 +387,7 @@ namespace Collectivite.ViewModels
         {
             if (!CanCreateMandat)
             {
-                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning(_accessDeniedMessage);
                 return;
             }
 
@@ -341,7 +400,7 @@ namespace Collectivite.ViewModels
             if (mandat == null) return;
             if (!CanEditMandat)
             {
-                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning(_accessDeniedMessage);
                 return;
             }
 
@@ -354,7 +413,7 @@ namespace Collectivite.ViewModels
             if (mandat == null) return;
             if (!CanViewMandat)
             {
-                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning(_accessDeniedMessage);
                 return;
             }
 
@@ -368,7 +427,7 @@ namespace Collectivite.ViewModels
 
             if (!CanDeleteMandat)
             {
-                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning(_accessDeniedMessage);
                 return;
             }
 
@@ -390,20 +449,20 @@ namespace Collectivite.ViewModels
                 var mandatService = new MandatService();
                 var (success, message) = await mandatService.DeleteMandatAsync(mandat.Id);
 
-                MessageBox.Show(message,
-                    success ? "Succès" : "Erreur",
-                    MessageBoxButton.OK,
-                    success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                if (success)
+                    NotificationService.ShowSuccess(message);
+                else
+                    NotificationService.ShowWarning(message);
 
                 if (success)
                 {
+                    _isFiltered = false;
                     await LoadDataAsync();
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
             finally
             {
@@ -417,14 +476,13 @@ namespace Collectivite.ViewModels
 
             if (!CanEditMandat)
             {
-                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning(_accessDeniedMessage);
                 return;
             }
 
             if (mandat.DatePaiement != null)
             {
-                MessageBox.Show("Ce mandat a déjà été payé.", "Information",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.ShowInfo("Ce mandat a déjà été payé.");
                 return;
             }
 
@@ -444,20 +502,20 @@ namespace Collectivite.ViewModels
                 var mandatService = new MandatService();
                 var (success, message) = await mandatService.MarquerCommePaye(mandat.Id, DateTime.Now);
 
-                MessageBox.Show(message,
-                    success ? "Succès" : "Erreur",
-                    MessageBoxButton.OK,
-                    success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                if (success)
+                    NotificationService.ShowSuccess(message);
+                else
+                    NotificationService.ShowWarning(message);
 
                 if (success)
                 {
+                    _isFiltered = false;
                     await LoadDataAsync();
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
             finally
             {
@@ -471,14 +529,13 @@ namespace Collectivite.ViewModels
 
             if (!CanEditMandat)
             {
-                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning(_accessDeniedMessage);
                 return;
             }
 
             if (mandat.DatePaiement == null)
             {
-                MessageBox.Show("Ce mandat n'a pas encore été payé.", "Information",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.ShowInfo("Ce mandat n'a pas encore été payé.");
                 return;
             }
 
@@ -499,20 +556,20 @@ namespace Collectivite.ViewModels
                 var mandatService = new MandatService();
                 var (success, message) = await mandatService.AnnulerPaiement(mandat.Id);
 
-                MessageBox.Show(message,
-                    success ? "Succès" : "Erreur",
-                    MessageBoxButton.OK,
-                    success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                if (success)
+                    NotificationService.ShowSuccess(message);
+                else
+                    NotificationService.ShowWarning(message);
 
                 if (success)
                 {
+                    _isFiltered = false;
                     await LoadDataAsync();
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
             finally
             {

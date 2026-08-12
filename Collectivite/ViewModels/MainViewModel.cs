@@ -16,7 +16,6 @@ namespace Collectivite.ViewModels
         private readonly ExerciceService _exerciceService;
         private readonly NavigationService _navigationService;
         private readonly RelayCommand _openProfileCommand;
-        private readonly RelayCommand _openSettingsCommand;
         private readonly RelayCommand _openLoginCommand;
         private string _currentPageTitle = "TABLEAU DE BORD";
         private string _exerciceText = "";
@@ -38,11 +37,9 @@ namespace Collectivite.ViewModels
             // Initialiser les commandes
             LogoutCommand = new RelayCommand(_ => Logout());
             _openProfileCommand = new RelayCommand(_ => ShowProfile(), _ => _authService.CurrentUser != null);
-            _openSettingsCommand = new RelayCommand(_ => ShowSettings());
             _openLoginCommand = new RelayCommand(_ => OpenLogin());
             SelectExerciceCommand = new RelayCommand(param => SelectExercice(param));
             OpenProfileCommand = _openProfileCommand;
-            OpenSettingsCommand = _openSettingsCommand;
             OpenLoginCommand = _openLoginCommand;
             OpenMenuCommand = new RelayCommand(_ => IsMenuOpen = true);
             CloseMenuCommand = new RelayCommand(_ => IsMenuOpen = false);
@@ -160,7 +157,6 @@ namespace Collectivite.ViewModels
         #endregion
         public ICommand LogoutCommand { get; }
         public ICommand OpenProfileCommand { get; }
-        public ICommand OpenSettingsCommand { get; }
         public ICommand OpenLoginCommand { get; }
         public ICommand OpenMenuCommand { get; }
         public ICommand CloseMenuCommand { get; }
@@ -203,11 +199,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
-                    $"Erreur lors du chargement des exercices : {ex.Message}",
-                    "Erreur",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors du chargement des exercices : {ex.Message}");
             }
         }
 
@@ -360,15 +352,6 @@ namespace Collectivite.ViewModels
                 OnPropertyChanged(nameof(UserEmail));
                 OnPropertyChanged(nameof(UserPhone));
             }
-        }
-
-        private void ShowSettings()
-        {
-            var settingsWindow = new Views.SettingsWindow();
-            settingsWindow.Owner = Application.Current.Windows
-                .OfType<Window>()
-                .FirstOrDefault(w => w is MainWindow);
-            settingsWindow.ShowDialog();
         }
 
         public void UpdatePageTitle(string title)

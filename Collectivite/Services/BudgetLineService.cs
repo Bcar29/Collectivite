@@ -193,18 +193,15 @@ namespace Collectivite.Services
                 if (line == null)
                     return (false, "❌ Ligne budgétaire introuvable.");
 
-                // Vérifier s'il y a des engagements ou recensements liés
+                // Vérifier s'il y a des engagements liés
                 var hasEngagements = await context.Engagements
                     .AnyAsync(e => e.BudgetLineId == budgetLineId);
 
-                var hasRecensements = await context.Recensements
-                    .AnyAsync(r => r.BudgetLineId == budgetLineId);
-
-                if (hasEngagements || hasRecensements)
+                if (hasEngagements)
                 {
                     return (false,
                         "❌ Impossible de supprimer cette ligne budgétaire : " +
-                        "elle est liée à des engagements ou des recensements.\n" +
+                        "elle est liée à des engagements.\n" +
                         "Veuillez d'abord supprimer les documents associés.");
                 }
 
@@ -406,7 +403,7 @@ namespace Collectivite.Services
                 }
                 else
                 {
-                    MessageBox.Show("N110 est null");
+                    NotificationService.ShowWarning("N110 est null");
                 }
 
                 var N662 = await context.Nommenclatures
@@ -430,7 +427,7 @@ namespace Collectivite.Services
                 }
                 else
                 {
-                    MessageBox.Show("N662 est null");
+                    NotificationService.ShowWarning("N662 est null");
                 }
 
             }

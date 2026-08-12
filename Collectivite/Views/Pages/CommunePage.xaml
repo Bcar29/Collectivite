@@ -60,7 +60,7 @@
                             Height="40"
                             Command="{Binding OppenAddCommuneCommand}"
                             HorizontalAlignment="Right"
-                            IsEnabled="{Binding CanCreateCommune}">
+                            Visibility="{Binding CanCreateCommune, Converter={StaticResource BoolToVis}}">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="Plus" 
                                                    VerticalAlignment="Center"
@@ -74,8 +74,9 @@
                 <!-- ───────────────────────────────────────────────────
                      DATAGRID DES COMMUNES
                      ─────────────────────────────────────────────────── -->
-                <materialDesign:Card Padding="0" 
+                <materialDesign:Card Padding="0"
                                    UniformCornerRadius="8">
+                  <Grid>
                     <DataGrid ItemsSource="{Binding Communes}"
                               SelectedItem="{Binding SelectedCommune}"
                               AutoGenerateColumns="False"
@@ -178,77 +179,94 @@
                             </DataGridTemplateColumn>
 
                             <!-- Actions -->
-                            <DataGridTemplateColumn Header="Actions" Width="280">
+                            <DataGridTemplateColumn Header="Actions" Width="60">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <StackPanel Orientation="Horizontal" 
-                                                  HorizontalAlignment="Center">
+                                        <materialDesign:PopupBox Style="{StaticResource RowActionsPopupBoxStyle}">
+                                            <StackPanel>
+                                                <!-- Modifier -->
+                                                <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                        Command="{Binding DataContext.OppenEditCommuneCommand,
+                                                                RelativeSource={RelativeSource AncestorType=Page}}"
+                                                        CommandParameter="{Binding}"
+                                                        Visibility="{Binding DataContext.CanEditCommune, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2" Margin="0,0,10,0"/>
+                                                        <TextBlock Text="Modifier"/>
+                                                    </StackPanel>
+                                                </Button>
 
-                                            <!-- Bouton Modifier -->
-                                            <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                  ToolTip="Modifier"
-                                                  Command="{Binding DataContext.OppenEditCommuneCommand, 
-                                                          RelativeSource={RelativeSource AncestorType=Page}}"
-                                                  CommandParameter="{Binding}"
-                                                  Margin="4,0"
-                                                  IsEnabled="{Binding DataContext.CanEditCommune, RelativeSource={RelativeSource AncestorType=Page}}">
-                                                <materialDesign:PackIcon Kind="Pencil" 
-                                                                       Foreground="#1976D2"/>
-                                            </Button>
+                                                <!-- Supprimer -->
+                                                <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                        Command="{Binding DataContext.DeleteCommuneCommand,
+                                                                RelativeSource={RelativeSource AncestorType=Page}}"
+                                                        CommandParameter="{Binding}"
+                                                        Visibility="{Binding DataContext.CanDeleteCommune, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <materialDesign:PackIcon Kind="Delete" Foreground="#F44336" Margin="0,0,10,0"/>
+                                                        <TextBlock Text="Supprimer"/>
+                                                    </StackPanel>
+                                                </Button>
 
-                                            <!-- Bouton Supprimer -->
-                                            <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                  ToolTip="Supprimer"
-                                                  Command="{Binding DataContext.DeleteCommuneCommand, 
-                                                          RelativeSource={RelativeSource AncestorType=Page}}"
-                                                  CommandParameter="{Binding}"
-                                                  Margin="4,0"
-                                                  IsEnabled="{Binding DataContext.CanDeleteCommune, RelativeSource={RelativeSource AncestorType=Page}}">
-                                                <materialDesign:PackIcon Kind="Delete" 
-                                                                       Foreground="#F44336"/>
-                                            </Button>
+                                                <!-- Détail -->
+                                                <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                        Command="{Binding DataContext.OpenDetailCommuneCommand,
+                                                                RelativeSource={RelativeSource AncestorType=Page}}"
+                                                        CommandParameter="{Binding}">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <materialDesign:PackIcon Kind="InformationOutline" Foreground="#009688" Margin="0,0,10,0"/>
+                                                        <TextBlock Text="Voir les détails"/>
+                                                    </StackPanel>
+                                                </Button>
 
-                                            <!-- Bouton Détail -->
-                                            <Button Style="{StaticResource MaterialDesignIconButton}"
-                                              ToolTip="Voir les détails"
-                                              Command="{Binding DataContext.OpenDetailCommuneCommand, 
-                                                        RelativeSource={RelativeSource AncestorType=Page}}"
-                                              CommandParameter="{Binding}"
-                                              Margin="4,0">
-                                                <materialDesign:PackIcon Kind="InformationOutline" 
-                                           Foreground="#009688"/>
-                                            </Button>
+                                                <!-- Export PDF -->
+                                                <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                        Command="{Binding DataContext.ExportPdfCommand,
+                                                                RelativeSource={RelativeSource AncestorType=Page}}"
+                                                        CommandParameter="{Binding}">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <materialDesign:PackIcon Kind="FilePdfBox" Foreground="#D32F2F" Margin="0,0,10,0"/>
+                                                        <TextBlock Text="Exporter en PDF"/>
+                                                    </StackPanel>
+                                                </Button>
 
-                                            <!-- ✅ NOUVEAU : Bouton Export PDF -->
-                                            <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                  ToolTip="Exporter en PDF"
-                                                  Command="{Binding DataContext.ExportPdfCommand, 
-                                                          RelativeSource={RelativeSource AncestorType=Page}}"
-                                                  CommandParameter="{Binding}"
-                                                  Margin="4,0">
-                                                <materialDesign:PackIcon Kind="FilePdfBox" 
-                                                                       Foreground="#D32F2F"/>
-                                            </Button>
-
-                                            <!-- ✅ NOUVEAU : Bouton Imprimer -->
-                                            <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                  ToolTip="Exporter et Imprimer"
-                                                  Command="{Binding DataContext.ExportPdfWithPrintCommand, 
-                                                          RelativeSource={RelativeSource AncestorType=Page}}"
-                                                  CommandParameter="{Binding}"
-                                                  Margin="4,0">
-                                                <materialDesign:PackIcon Kind="Printer" 
-                                                                       Foreground="#FF6F00"/>
-                                            </Button>
-
-                                        </StackPanel>
-
+                                                <!-- Imprimer -->
+                                                <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                        Command="{Binding DataContext.ExportPdfWithPrintCommand,
+                                                                RelativeSource={RelativeSource AncestorType=Page}}"
+                                                        CommandParameter="{Binding}">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <materialDesign:PackIcon Kind="Printer" Foreground="#FF6F00" Margin="0,0,10,0"/>
+                                                        <TextBlock Text="Exporter et imprimer"/>
+                                                    </StackPanel>
+                                                </Button>
+                                            </StackPanel>
+                                        </materialDesign:PopupBox>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
                         </DataGrid.Columns>
                     </DataGrid>
+
+                    <!-- Message si vide -->
+                    <Border Background="#F5F5F5" CornerRadius="8" Padding="40">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Communes.Count}" Value="0">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <materialDesign:PackIcon Kind="City" Width="64" Height="64" Foreground="#BDBDBD" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Aucune commune" FontSize="16" Foreground="#757575" Margin="0,20,0,0" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                  </Grid>
                 </materialDesign:Card>
 
             </StackPanel>

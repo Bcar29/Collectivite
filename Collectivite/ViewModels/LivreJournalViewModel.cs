@@ -102,6 +102,34 @@ namespace Collectivite.ViewModels
 
         #endregion
 
+        #region Propriétés - Pagination
+
+        private const int PageSize = 20;
+
+        private int _pageNumber = 1;
+        public int PageNumber
+        {
+            get => _pageNumber;
+            set => SetProperty(ref _pageNumber, value);
+        }
+
+        private int _totalCount;
+        public int TotalCount
+        {
+            get => _totalCount;
+            set
+            {
+                if (SetProperty(ref _totalCount, value))
+                {
+                    OnPropertyChanged(nameof(TotalPages));
+                }
+            }
+        }
+
+        public int TotalPages => Math.Max(1, (int)Math.Ceiling(TotalCount / (double)PageSize));
+
+        #endregion
+
         #region Propriétés - Totaux
 
         private decimal _totalDebit;
@@ -191,6 +219,8 @@ namespace Collectivite.ViewModels
         public ICommand SaveEcritureCommand { get; }
         public ICommand CancelEcritureCommand { get; }
         public ICommand DeleteEcritureCommand { get; }
+        public ICommand NextPageCommand { get; }
+        public ICommand PreviousPageCommand { get; }
 
         #endregion
 
@@ -203,7 +233,7 @@ namespace Collectivite.ViewModels
             // Initialiser les commandes
             LoadDataCommand = new RelayCommandAsync(LoadDataAsync);
             ToggleFiltersCommand = new RelayCommandSync(() => ShowFilters = !ShowFilters);
-            ApplyFiltersCommand = new RelayCommandAsync(ApplyFiltersAsync);
+            ApplyFiltersCommand = new RelayCommandAsync(ApplyFiltersButtonAsync);
             ClearFiltersCommand = new RelayCommandAsync(ClearFiltersAsync);
             VerifierEquilibreCommand = new RelayCommandSync(VerifierEquilibre);
 
@@ -218,6 +248,8 @@ namespace Collectivite.ViewModels
             SaveEcritureCommand = new RelayCommandAsync(SaveEcritureAsync);
             CancelEcritureCommand = new RelayCommandSync(() => IsDialogOpen = false);
             DeleteEcritureCommand = new RelayCommandWithParamAsync<EcritureComptable>(DeleteEcritureAsync);
+            NextPageCommand = new RelayCommandAsync(NextPageAsync, () => PageNumber < TotalPages);
+            PreviousPageCommand = new RelayCommandAsync(PreviousPageAsync, () => PageNumber > 1);
         }
 
         #region Méthodes - Chargement
@@ -244,12 +276,12 @@ namespace Collectivite.ViewModels
                 ComptesDisponibles = new ObservableCollection<CompteComptable>(comptes);
 
                 // Charger les écritures
+                PageNumber = 1;
                 await ApplyFiltersAsync();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur de chargement:\n{ex.Message}", "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur de chargement:\n{ex.Message}");
             }
             finally
             {
@@ -302,8 +334,12 @@ namespace Collectivite.ViewModels
                         e.CompteCreditId == CompteFiltre.Id);
                 }
 
+                TotalCount = await query.CountAsync();
+
                 var ecritures = await query
                     .OrderByDescending(e => e.Id)
+                    .Skip((PageNumber - 1) * PageSize)
+                    .Take(PageSize)
                     .ToListAsync();
 
                 Ecritures = new ObservableCollection<EcritureComptable>(ecritures);
@@ -311,8 +347,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de l'application des filtres:\n{ex.Message}", "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors de l'application des filtres:\n{ex.Message}");
             }
             finally
             {
@@ -320,11 +355,32 @@ namespace Collectivite.ViewModels
             }
         }
 
+        public async Task ApplyFiltersButtonAsync()
+        {
+            PageNumber = 1;
+            await ApplyFiltersAsync();
+        }
+
         public async Task ClearFiltersAsync()
         {
             DateDebutDateTime = null;
             DateFinDateTime = null;
             CompteFiltre = null;
+            PageNumber = 1;
+            await ApplyFiltersAsync();
+        }
+
+        public async Task NextPageAsync()
+        {
+            if (PageNumber >= TotalPages) return;
+            PageNumber++;
+            await ApplyFiltersAsync();
+        }
+
+        public async Task PreviousPageAsync()
+        {
+            if (PageNumber <= 1) return;
+            PageNumber--;
             await ApplyFiltersAsync();
         }
 
@@ -348,9 +404,14 @@ namespace Collectivite.ViewModels
                 ? $"✓ Le journal est équilibré.\n\nTotal Débit: {TotalDebit:N0} GNF\nTotal Crédit: {TotalCredit:N0} GNF"
                 : $"✗ Le journal n'est PAS équilibré!\n\nTotal Débit: {TotalDebit:N0} GNF\nTotal Crédit: {TotalCredit:N0} GNF\nDifférence: {Difference:N0} GNF";
 
-            MessageBox.Show(message, "Vérification de l'équilibre",
-                MessageBoxButton.OK,
-                IsEquilibre ? MessageBoxImage.Information : MessageBoxImage.Warning);
+            if (IsEquilibre)
+            {
+                NotificationService.ShowSuccess(message);
+            }
+            else
+            {
+                NotificationService.ShowWarning(message);
+            }
         }
 
         /// <summary>
@@ -395,8 +456,7 @@ namespace Collectivite.ViewModels
         {
             if (Ecritures == null || !Ecritures.Any())
             {
-                MessageBox.Show("Aucune écriture à exporter.", "Information",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.ShowInfo("Aucune écriture à exporter.");
                 return;
             }
 
@@ -456,8 +516,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de l'export Excel:\n{ex.Message}", "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors de l'export Excel:\n{ex.Message}");
             }
             finally
             {
@@ -469,14 +528,13 @@ namespace Collectivite.ViewModels
         {
             if (Ecritures == null || !Ecritures.Any())
             {
-                MessageBox.Show("Aucune écriture à exporter.", "Information",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.ShowInfo("Aucune écriture à exporter.");
                 return;
             }
 
             if (!CanEditEcritureComptable)
             {
-                MessageBox.Show("Accès refusé", "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Accès refusé");
                 return;
             }
 
@@ -536,8 +594,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de l'export PDF:\n{ex.Message}", "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors de l'export PDF:\n{ex.Message}");
             }
             finally
             {
@@ -582,22 +639,19 @@ namespace Collectivite.ViewModels
                 // Validation
                 if (DialogEcriture.CompteDebitId <= 0 || DialogEcriture.CompteCreditId <= 0)
                 {
-                    MessageBox.Show("Veuillez sélectionner les comptes débit et crédit.", "Validation",
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    NotificationService.ShowWarning("Veuillez sélectionner les comptes débit et crédit.");
                     return;
                 }
 
                 if (DialogEcriture.Montant <= 0)
                 {
-                    MessageBox.Show("Le montant doit être supérieur à zéro.", "Validation",
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    NotificationService.ShowWarning("Le montant doit être supérieur à zéro.");
                     return;
                 }
 
                 if (DialogEcriture.CompteDebitId == DialogEcriture.CompteCreditId)
                 {
-                    MessageBox.Show("Les comptes débit et crédit doivent être différents.", "Validation",
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    NotificationService.ShowWarning("Les comptes débit et crédit doivent être différents.");
                     return;
                 }
 
@@ -632,13 +686,11 @@ namespace Collectivite.ViewModels
                 IsDialogOpen = false;
                 await ApplyFiltersAsync();
 
-                MessageBox.Show("Écriture enregistrée avec succès.", "Succès",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.ShowSuccess("Écriture enregistrée avec succès.");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de l'enregistrement:\n{ex.Message}", "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors de l'enregistrement:\n{ex.Message}");
             }
             finally
             {
@@ -674,13 +726,11 @@ namespace Collectivite.ViewModels
 
                     await ApplyFiltersAsync();
 
-                    MessageBox.Show("Écriture supprimée avec succès.", "Succès",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    NotificationService.ShowSuccess("Écriture supprimée avec succès.");
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Erreur lors de la suppression:\n{ex.Message}", "Erreur",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    NotificationService.ShowError($"Erreur lors de la suppression:\n{ex.Message}");
                 }
                 finally
                 {

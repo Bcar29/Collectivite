@@ -4,6 +4,7 @@
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
       xmlns:models="clr-namespace:Collectivite.Models"
       xmlns:utils="clr-namespace:Collectivite.Utils"
+      xmlns:controls="clr-namespace:Collectivite.Views.Controls"
       Background="#F5F5F5"
       Title="Gestion des Comptes comptable">
 
@@ -85,7 +86,7 @@
                 <!-- ───────────────────────────────────────────────────
              FILTRES (Optionnel - pour naviguer dans la hiérarchie)
              ─────────────────────────────────────────────────── -->
-                <materialDesign:Card Padding="15" 
+                <materialDesign:Card Padding="15"
                            UniformCornerRadius="8"
                            Margin="0,0,0,15">
                     <StackPanel Orientation="Horizontal">
@@ -94,24 +95,42 @@
                                 Height="36"
                                 Margin="0,0,10,0">
                             <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="FormatListBulleted" 
+                                <materialDesign:PackIcon Kind="FormatListBulleted"
                                                VerticalAlignment="Center"
                                                Margin="0,0,8,0"/>
-                                <TextBlock Text="Tous les comptes" 
+                                <TextBlock Text="Tous les comptes"
                                  VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
 
                         <Button Style="{StaticResource MaterialDesignOutlinedButton}"
                                 Command="{Binding LoadComptesRacinesCommand}"
-                                Height="36">
+                                Height="36"
+                                Margin="0,0,20,0">
                             <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="FileTree" 
+                                <materialDesign:PackIcon Kind="FileTree"
                                                VerticalAlignment="Center"
                                                Margin="0,0,8,0"/>
-                                <TextBlock Text="Comptes racines" 
+                                <TextBlock Text="Comptes racines"
                                  VerticalAlignment="Center"/>
                             </StackPanel>
+                        </Button>
+
+                        <TextBox materialDesign:HintAssist.Hint="Rechercher (numéro ou intitulé)"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 Text="{Binding SearchTerm, UpdateSourceTrigger=PropertyChanged}"
+                                 Width="280"
+                                 Height="36"
+                                 Margin="0,0,10,0">
+                            <TextBox.InputBindings>
+                                <KeyBinding Key="Enter" Command="{Binding SearchCommand}"/>
+                            </TextBox.InputBindings>
+                        </TextBox>
+
+                        <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Command="{Binding SearchCommand}"
+                                Height="36">
+                            <materialDesign:PackIcon Kind="Magnify" VerticalAlignment="Center"/>
                         </Button>
                     </StackPanel>
                 </materialDesign:Card>
@@ -119,10 +138,15 @@
                 <!-- ───────────────────────────────────────────────────
              DATAGRID DES COMPTES COMPTABLES
              ─────────────────────────────────────────────────── -->
-                <materialDesign:Card Padding="0" 
+                <materialDesign:Card Padding="0"
                            UniformCornerRadius="8"
                            Visibility="{Binding CanViewCompteComptable, Converter={StaticResource BoolToVis}}">
-                    <DataGrid
+                  <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <DataGrid Grid.Row="0"
                       ItemsSource="{Binding CompteComptables}"
                       SelectedItem="{Binding SelectedCompte}"
                       AutoGenerateColumns="False"
@@ -203,44 +227,48 @@
                             </DataGridTemplateColumn>
 
                             <!-- Actions -->
-                            <DataGridTemplateColumn Header="Actions" Width="150">
+                            <DataGridTemplateColumn Header="Actions" Width="60">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <StackPanel Orientation="Horizontal" 
-                                          HorizontalAlignment="Center">
+                                        <materialDesign:PopupBox Style="{StaticResource RowActionsPopupBoxStyle}">
+                                            <StackPanel>
+                                                <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                        Command="{Binding DataContext.OppenEditCompteCommand,
+                                                                RelativeSource={RelativeSource AncestorType=Page}}"
+                                                        CommandParameter="{Binding}"
+                                                        IsEnabled="{Binding DataContext.CanEditCompteComptable, RelativeSource={RelativeSource AncestorType=Page}}">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2" Margin="0,0,10,0"/>
+                                                        <TextBlock Text="Modifier"/>
+                                                    </StackPanel>
+                                                </Button>
 
-                                            <!-- Bouton Modifier -->
-                                            <Button Style="{StaticResource MaterialDesignIconButton}"
-                                          ToolTip="Modifier"
-                                          Command="{Binding DataContext.OppenEditCompteCommand, 
-                                                  RelativeSource={RelativeSource AncestorType=Page}}"
-                                          CommandParameter="{Binding}"
-                                          Margin="4,0"
-                                          IsEnabled="{Binding DataContext.CanEditCompteComptable, RelativeSource={RelativeSource AncestorType=Page}}">
-                                                <materialDesign:PackIcon Kind="Pencil" 
-                                                               Foreground="#1976D2"/>
-                                            </Button>
-
-                                            <!-- Bouton Supprimer -->
-                                            <Button Style="{StaticResource MaterialDesignIconButton}"
-                                          ToolTip="Supprimer"
-                                          Command="{Binding DataContext.DeleteCompteCommand, 
-                                                  RelativeSource={RelativeSource AncestorType=Page}}"
-                                          CommandParameter="{Binding}"
-                                          Margin="4,0"
-                                          IsEnabled="{Binding DataContext.CanDeleteCompteComptable, RelativeSource={RelativeSource AncestorType=Page}}">
-                                                <materialDesign:PackIcon Kind="Delete" 
-                                                               Foreground="#F44336"/>
-                                            </Button>
-
-                                        </StackPanel>
-
+                                                <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                        Command="{Binding DataContext.DeleteCompteCommand,
+                                                                RelativeSource={RelativeSource AncestorType=Page}}"
+                                                        CommandParameter="{Binding}"
+                                                        IsEnabled="{Binding DataContext.CanDeleteCompteComptable, RelativeSource={RelativeSource AncestorType=Page}}">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <materialDesign:PackIcon Kind="Delete" Foreground="#F44336" Margin="0,0,10,0"/>
+                                                        <TextBlock Text="Supprimer"/>
+                                                    </StackPanel>
+                                                </Button>
+                                            </StackPanel>
+                                        </materialDesign:PopupBox>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
                         </DataGrid.Columns>
                     </DataGrid>
+
+                    <controls:PaginationBar Grid.Row="1"
+                                            PageNumber="{Binding PageNumber}"
+                                            TotalPages="{Binding TotalPages}"
+                                            TotalCount="{Binding TotalCount}"
+                                            PreviousCommand="{Binding PreviousPageCommand}"
+                                            NextCommand="{Binding NextPageCommand}"/>
+                  </Grid>
                 </materialDesign:Card>
 
             </StackPanel>

@@ -255,12 +255,12 @@ namespace Collectivite.ViewModels
                 if (dialog.ShowDialog() == true)
                 {
                     await File.WriteAllBytesAsync(dialog.FileName, bytes);
-                    MessageBox.Show("Export Excel réussi !", "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+                    NotificationService.ShowSuccess("Export Excel réussi !");
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur d'export : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur d'export : {ex.Message}");
             }
             finally
             {
@@ -293,12 +293,12 @@ namespace Collectivite.ViewModels
                 if (dialog.ShowDialog() == true)
                 {
                     await File.WriteAllBytesAsync(dialog.FileName, bytes);
-                    MessageBox.Show("Export PDF réussi !", "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+                    NotificationService.ShowSuccess("Export PDF réussi !");
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur d'export : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur d'export : {ex.Message}");
             }
             finally
             {
@@ -343,7 +343,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur d'impression : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur d'impression : {ex.Message}");
             }
             finally
             {
@@ -365,19 +365,13 @@ namespace Collectivite.ViewModels
 
                 using var process = Process.Start(processInfo);
 
-                MessageBox.Show(
-                    "Le document a été envoyé à l'imprimante.\n\nSi la boîte de dialogue d'impression s'ouvre, sélectionnez votre imprimante et cliquez sur Imprimer.",
-                    "Impression en cours",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                NotificationService.ShowInfo(
+                    "Le document a été envoyé à l'imprimante.\n\nSi la boîte de dialogue d'impression s'ouvre, sélectionnez votre imprimante et cliquez sur Imprimer.");
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
-                    $"L'impression directe n'est pas disponible.\nLe document va s'ouvrir pour aperçu.\n\nDétail : {ex.Message}",
-                    "Information",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                NotificationService.ShowWarning(
+                    $"L'impression directe n'est pas disponible.\nLe document va s'ouvrir pour aperçu.\n\nDétail : {ex.Message}");
 
                 OuvrirPdfPourApercu(filePath);
             }
@@ -397,7 +391,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Impossible d'ouvrir le PDF : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Impossible d'ouvrir le PDF : {ex.Message}");
             }
         }
 

@@ -4,6 +4,7 @@
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
       xmlns:local="clr-namespace:Collectivite.Utils"
       Background="#F5F5F5"
+      Unloaded="Page_Unloaded"
       Title="Dashboard">
 
     <Page.Resources>
@@ -138,11 +139,11 @@
                                         <materialDesign:PackIcon.Style>
                                             <Style TargetType="materialDesign:PackIcon">
                                                 <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsPositive}" Value="True">
+                                                    <DataTrigger Binding="{Binding IsPositiveChange}" Value="True">
                                                         <Setter Property="Kind" Value="TrendingUp"/>
                                                         <Setter Property="Foreground" Value="#4CAF50"/>
                                                     </DataTrigger>
-                                                    <DataTrigger Binding="{Binding IsPositive}" Value="False">
+                                                    <DataTrigger Binding="{Binding IsPositiveChange}" Value="False">
                                                         <Setter Property="Kind" Value="TrendingDown"/>
                                                         <Setter Property="Foreground" Value="#F44336"/>
                                                     </DataTrigger>
@@ -157,10 +158,10 @@
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="Text" Value="{Binding PercentageChange, Converter={StaticResource PercentageConverter}}"/>
                                                 <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsPositive}" Value="True">
+                                                    <DataTrigger Binding="{Binding IsPositiveChange}" Value="True">
                                                         <Setter Property="Foreground" Value="#4CAF50"/>
                                                     </DataTrigger>
-                                                    <DataTrigger Binding="{Binding IsPositive}" Value="False">
+                                                    <DataTrigger Binding="{Binding IsPositiveChange}" Value="False">
                                                         <Setter Property="Foreground" Value="#F44336"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
@@ -256,14 +257,11 @@
                                    Style="{StaticResource SectionCardStyle}">
                     <StackPanel>
                         <Grid Margin="0,0,0,20">
-                            <TextBlock Text="Activités Récentes" 
+                            <TextBlock Text="Activités Récentes"
                                      FontSize="18"
                                      FontWeight="SemiBold"
                                      HorizontalAlignment="Left"
                                      VerticalAlignment="Center"/>
-                            <Button Style="{StaticResource MaterialDesignFlatButton}"
-                                  Content="Voir tout"
-                                  HorizontalAlignment="Right"/>
                         </Grid>
 
                         <ItemsControl ItemsSource="{Binding RecentActivities}">

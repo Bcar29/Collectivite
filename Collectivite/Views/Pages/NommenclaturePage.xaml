@@ -103,39 +103,32 @@
 
                     <!-- Boutons d'actions -->
                     <StackPanel Grid.Column="3"
-                              Orientation="Horizontal"
                               Margin="10,0,0,0">
-                        
-                        <!-- Bouton Modifier -->
-                        <Button Style="{StaticResource MaterialDesignIconButton}"
-                              ToolTip="Modifier"
-                              Width="32"
-                              Height="32"
-                              Command="{Binding DataContext.OppenEditNommenclatureCommand, 
-                                      RelativeSource={RelativeSource AncestorType=Page}}"
-                              CommandParameter="{Binding Nommenclature}"
-                              IsEnabled="{Binding DataContext.CanEditNommenclature, RelativeSource={RelativeSource AncestorType=Page}}">
-                            <materialDesign:PackIcon Kind="Pencil" 
-                                                   Width="18"
-                                                   Height="18"
-                                                   Foreground="#1976D2"/>
-                        </Button>
+                        <materialDesign:PopupBox Style="{StaticResource RowActionsPopupBoxStyle}">
+                            <StackPanel>
+                                <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                        Command="{Binding DataContext.OppenEditNommenclatureCommand,
+                                                RelativeSource={RelativeSource AncestorType=Page}}"
+                                        CommandParameter="{Binding Nommenclature}"
+                                        IsEnabled="{Binding DataContext.CanEditNommenclature, RelativeSource={RelativeSource AncestorType=Page}}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2" Margin="0,0,10,0"/>
+                                        <TextBlock Text="Modifier"/>
+                                    </StackPanel>
+                                </Button>
 
-                        <!-- Bouton Supprimer -->
-                        <Button Style="{StaticResource MaterialDesignIconButton}"
-                              ToolTip="Supprimer"
-                              Width="32"
-                              Height="32"
-                              Command="{Binding DataContext.DeleteNommenclatureCommand, 
-                                      RelativeSource={RelativeSource AncestorType=Page}}"
-                              CommandParameter="{Binding Nommenclature}"
-                              Margin="4,0,0,0"
-                              IsEnabled="{Binding DataContext.CanDeleteNommenclature, RelativeSource={RelativeSource AncestorType=Page}}">
-                            <materialDesign:PackIcon Kind="Delete" 
-                                                   Width="18"
-                                                   Height="18"
-                                                   Foreground="#F44336"/>
-                        </Button>
+                                <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                        Command="{Binding DataContext.DeleteNommenclatureCommand,
+                                                RelativeSource={RelativeSource AncestorType=Page}}"
+                                        CommandParameter="{Binding Nommenclature}"
+                                        IsEnabled="{Binding DataContext.CanDeleteNommenclature, RelativeSource={RelativeSource AncestorType=Page}}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Delete" Foreground="#F44336" Margin="0,0,10,0"/>
+                                        <TextBlock Text="Supprimer"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </materialDesign:PopupBox>
                     </StackPanel>
                 </Grid>
             </Border>

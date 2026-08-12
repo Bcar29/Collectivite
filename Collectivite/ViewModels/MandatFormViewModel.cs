@@ -267,8 +267,7 @@ namespace Collectivite.ViewModels
                     }
                     else
                     {
-                        MessageBox.Show("Mandat introuvable.", "Erreur",
-                            MessageBoxButton.OK, MessageBoxImage.Error);
+                        NotificationService.ShowError("Mandat introuvable.");
                         Cancel();
                     }
                 }
@@ -283,8 +282,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors du chargement : {ex.Message}");
             }
             finally
             {
@@ -405,15 +403,13 @@ namespace Collectivite.ViewModels
             // Validation finale des précomptes avant sauvegarde
             if (!PrecomptesValides)
             {
-                MessageBox.Show(ErreurPrecomptes ?? "Les précomptes sont invalides.",
-                    "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning(ErreurPrecomptes ?? "Les précomptes sont invalides.");
                 return;
             }
 
             if (Mandat.MontantNet <= 0)
             {
-                MessageBox.Show("Le montant net doit être supérieur à zéro.",
-                    "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Le montant net doit être supérieur à zéro.");
                 return;
             }
 
@@ -427,10 +423,14 @@ namespace Collectivite.ViewModels
                 {
                     var (success, message) = await mandatService.UpdateMandatAsync(Mandat);
 
-                    MessageBox.Show(message,
-                        success ? "Succès" : "Erreur",
-                        MessageBoxButton.OK,
-                        success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                    if (success)
+                    {
+                        NotificationService.ShowSuccess(message);
+                    }
+                    else
+                    {
+                        NotificationService.ShowWarning(message);
+                    }
 
                     if (success)
                     {
@@ -472,10 +472,14 @@ namespace Collectivite.ViewModels
                         }
                     }
 
-                    MessageBox.Show(message,
-                        success ? "Succès" : "Erreur",
-                        MessageBoxButton.OK,
-                        success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                    if (success)
+                    {
+                        NotificationService.ShowSuccess(message);
+                    }
+                    else
+                    {
+                        NotificationService.ShowWarning(message);
+                    }
 
                     if (success)
                     {
@@ -485,8 +489,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
             finally
             {
@@ -508,8 +511,7 @@ namespace Collectivite.ViewModels
             }
             else
             {
-                MessageBox.Show("Le montant net doit être supérieur à zéro pour être converti en lettres.",
-                    "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.ShowInfo("Le montant net doit être supérieur à zéro pour être converti en lettres.");
             }
         }
 

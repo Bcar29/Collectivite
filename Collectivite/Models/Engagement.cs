@@ -61,9 +61,6 @@ namespace Collectivite.Models
         public string MontantLettre { get; set; } = null!;
         public byte[]? FichierJoin { get; set; }
         public string? FichierName { get; set; }
-        public int? ContratId { get; set; }
-        [ForeignKey(nameof(ContratId))]
-        public Contrats? Contrat { get; set; }
 
         public int? FactureId { get; set; }
         [ForeignKey(nameof(FactureId))]

@@ -427,11 +427,8 @@ namespace Collectivite.ViewModels
             {
                 if (!CanViewRemaniement)
                 {
-                    MessageBox.Show(
-                        "Accès refusé : vous n'avez pas la permission de consulter les remaniements.",
-                        "Accès refusé",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning);
+                    NotificationService.ShowWarning(
+                        "Accès refusé : vous n'avez pas la permission de consulter les remaniements.");
 
                     BudgetLines.Clear();
                     return;
@@ -447,8 +444,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors du chargement : {ex.Message}");
             }
             finally
             {
@@ -741,18 +737,14 @@ namespace Collectivite.ViewModels
             {
                 if (SelectedBudgetLine == null)
                 {
-                    MessageBox.Show("Veuillez sélectionner une ligne budgétaire.",
-                        "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                    NotificationService.ShowInfo("Veuillez sélectionner une ligne budgétaire.");
                     return;
                 }
 
                 if (!CanCreateRemaniement)
                 {
-                    MessageBox.Show(
-                        _accessDeniedMessage + "\nPermission requise : Remaniement.Create",
-                        "Accès refusé",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning);
+                    NotificationService.ShowWarning(
+                        _accessDeniedMessage + "\nPermission requise : Remaniement.Create");
                     return;
                 }
 
@@ -763,10 +755,14 @@ namespace Collectivite.ViewModels
                     DialogRemaniement,
                     DialogRemaniement.TypeRemaniement);
 
-                MessageBox.Show(message,
-                    success ? "Succès" : "Erreur",
-                    MessageBoxButton.OK,
-                    success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                if (success)
+                {
+                    NotificationService.ShowSuccess(message);
+                }
+                else
+                {
+                    NotificationService.ShowWarning(message);
+                }
 
                 if (success)
                 {
@@ -777,8 +773,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
             finally
             {
@@ -828,8 +823,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement des détails : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors du chargement des détails : {ex.Message}");
             }
         }
 
@@ -862,11 +856,8 @@ namespace Collectivite.ViewModels
 
             if (!CanDeleteRemaniement)
             {
-                MessageBox.Show(
-                    _accessDeniedMessage + "\nPermission requise : Remaniement.Delete",
-                    "Accès refusé",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                NotificationService.ShowWarning(
+                    _accessDeniedMessage + "\nPermission requise : Remaniement.Delete");
                 return;
             }
 
@@ -877,10 +868,14 @@ namespace Collectivite.ViewModels
                 var service = new RemaniementService();
                 var (success, message) = await service.DeleteRemaniementAsync(remaniement.Id);
 
-                MessageBox.Show(message,
-                    success ? "Succès" : "Erreur",
-                    MessageBoxButton.OK,
-                    success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                if (success)
+                {
+                    NotificationService.ShowSuccess(message);
+                }
+                else
+                {
+                    NotificationService.ShowWarning(message);
+                }
 
                 if (success)
                 {
@@ -890,8 +885,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
             finally
             {

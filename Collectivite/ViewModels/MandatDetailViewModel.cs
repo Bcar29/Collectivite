@@ -223,15 +223,13 @@ namespace Collectivite.ViewModels
                 }
                 else
                 {
-                    MessageBox.Show("Mandat introuvable.", "Erreur",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    NotificationService.ShowError("Mandat introuvable.");
                     RetourListe();
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement : {ex.Message}\n\nStack trace:\n{ex.StackTrace}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors du chargement : {ex.Message}\n\nStack trace:\n{ex.StackTrace}");
             }
             finally
             {
@@ -246,8 +244,7 @@ namespace Collectivite.ViewModels
         {
             if (Mandat == null)
             {
-                MessageBox.Show("Aucun mandat à imprimer.", "Information",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.ShowInfo("Aucun mandat à imprimer.");
                 return;
             }
 
@@ -272,17 +269,13 @@ namespace Collectivite.ViewModels
                     UseShellExecute = true
                 });
 
-                MessageBox.Show(
+                NotificationService.ShowInfo(
                     "Le document s'ouvre dans votre lecteur PDF.\n\n" +
-                    "Utilisez Ctrl+P ou le menu Fichier → Imprimer pour lancer l'impression.",
-                    "Impression",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                    "Utilisez Ctrl+P ou le menu Fichier → Imprimer pour lancer l'impression.");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de l'impression : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors de l'impression : {ex.Message}");
             }
             finally
             {
@@ -297,8 +290,7 @@ namespace Collectivite.ViewModels
         {
             if (Mandat == null)
             {
-                MessageBox.Show("Aucun mandat à exporter.", "Information",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.ShowInfo("Aucun mandat à exporter.");
                 return;
             }
 
@@ -348,8 +340,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de l'export PDF : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors de l'export PDF : {ex.Message}");
             }
             finally
             {

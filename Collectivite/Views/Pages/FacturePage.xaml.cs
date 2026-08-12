@@ -14,21 +14,6 @@ namespace Collectivite.Views.Pages
             DataContext = new FactureViewModel(authService, auditService);
         }
 
-        private void BtnDetail_Click(object sender, RoutedEventArgs e)
-        {
-            if (sender is Button button && button.Tag is int factureId)
-            {
-                if (!SessionManager.HasPermission("Facture.View"))
-                {
-                    MessageBox.Show("Accès refusé : vous n'avez pas la permission de consulter les factures.",
-                        "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                var detailPage = new FactureDetailsPage(factureId);
-                NavigationService?.Navigate(detailPage);
-            }
-        }
         private void Page_Unloaded(object sender, RoutedEventArgs e)
         {
             if (DataContext is FactureViewModel viewModel)

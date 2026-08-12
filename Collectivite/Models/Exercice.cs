@@ -21,9 +21,6 @@ namespace Collectivite.Models
 
         public DateOnly DateFin { get; set; }
         public bool EstCloture { get; set; }
-        [ForeignKey("PDL")]
-        public int? PDLId { get; set; }
-        public PDL? PDL { get; set; }
         public BudgetPrimitif? BudgetPrimitif { get; set; }
 
         //[ForeignKey("DetailCommune")]
@@ -31,9 +28,7 @@ namespace Collectivite.Models
 
         public DetailCommune? DetailCommune { get; set; } = null!;
 
-        public ICollection<Contrats>? Contrats { get; set; }
         public ICollection<Engagement>? Engagements { get; set; }
-        public ICollection<Recensement>? Recensements { get; set; }
 
 
         // ⭐ MÉTHODE POUR EXTRAIRE L'ANNÉE DU LIBELLÉ ⭐

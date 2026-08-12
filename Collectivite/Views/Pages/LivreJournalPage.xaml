@@ -5,7 +5,8 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
       xmlns:utils="clr-namespace:Collectivite.Utils"
-      mc:Ignorable="d" 
+      xmlns:controls="clr-namespace:Collectivite.Views.Controls"
+      mc:Ignorable="d"
       d:DesignHeight="800" d:DesignWidth="1400"
       Background="{DynamicResource MaterialDesignPaper}"
       Unloaded="Page_Unloaded"
@@ -203,7 +204,13 @@
 
         <!-- DataGrid du Livre Journal -->
         <materialDesign:Card Grid.Row="3">
-            <DataGrid ItemsSource="{Binding Ecritures}"
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+            <DataGrid Grid.Row="0"
+                      ItemsSource="{Binding Ecritures}"
                       SelectedItem="{Binding SelectedEcriture}"
                       AutoGenerateColumns="False"
                       CanUserAddRows="False"
@@ -308,34 +315,46 @@
                                         HeaderStyle="{StaticResource DataGridHeaderStyle}"
                                         CellStyle="{StaticResource DataGridCellCenterStyle}"/>
 
-                    <!-- Actions 
-                    <DataGridTemplateColumn Header="Actions" Width="100" HeaderStyle="{StaticResource DataGridHeaderStyle}">
+                    <!-- Actions -->
+                    <DataGridTemplateColumn Header="Actions" Width="60" HeaderStyle="{StaticResource DataGridHeaderStyle}">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                    <Button Style="{StaticResource MaterialDesignIconButton}"
-                                            Command="{Binding DataContext.OpenEditEcritureCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                            CommandParameter="{Binding}"
-                                            ToolTip="Modifier"
-                                            Margin="2">
-                                        <materialDesign:PackIcon Kind="Pencil" Foreground="#FF9800"/>
-                                    </Button>
+                                <materialDesign:PopupBox Style="{StaticResource RowActionsPopupBoxStyle}">
+                                    <StackPanel>
+                                        <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                Command="{Binding DataContext.OpenEditEcritureCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}"
+                                                Visibility="{Binding DataContext.CanEditEcritureComptable, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="Pencil" Foreground="#FF9800" Margin="0,0,10,0"/>
+                                                <TextBlock Text="Modifier"/>
+                                            </StackPanel>
+                                        </Button>
 
-                                    <Button Style="{StaticResource MaterialDesignIconButton}"
-                                            Command="{Binding DataContext.DeleteEcritureCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                            CommandParameter="{Binding}"
-                                            ToolTip="Supprimer"
-                                            Margin="2"
-                                            Visibility="{Binding DataContext.CanDeleteEcritureComptable, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                        <materialDesign:PackIcon Kind="Delete" Foreground="#D32F2F"/>
-                                    </Button>
-                                </StackPanel>
+                                        <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                Command="{Binding DataContext.DeleteEcritureCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}"
+                                                Visibility="{Binding DataContext.CanDeleteEcritureComptable, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="Delete" Foreground="#D32F2F" Margin="0,0,10,0"/>
+                                                <TextBlock Text="Supprimer"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </StackPanel>
+                                </materialDesign:PopupBox>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
-                    -->
                 </DataGrid.Columns>
             </DataGrid>
+
+            <controls:PaginationBar Grid.Row="1"
+                                    PageNumber="{Binding PageNumber}"
+                                    TotalPages="{Binding TotalPages}"
+                                    TotalCount="{Binding TotalCount}"
+                                    PreviousCommand="{Binding PreviousPageCommand}"
+                                    NextCommand="{Binding NextPageCommand}"/>
+            </Grid>
         </materialDesign:Card>
 
         <!-- Totaux et informations -->

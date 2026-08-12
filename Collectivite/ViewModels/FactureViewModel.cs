@@ -53,6 +53,7 @@ namespace Collectivite.ViewModels
             // Commandes
             LoadDataCommand = new RelayCommand(async _ => await LoadDataAsync());
             OpenAddDialogCommand = new RelayCommand(async _ => await OpenAddDialogAsync());
+            OpenDetailsCommand = new RelayCommand<Facture>(f => OpenDetails(f));
             OpenEditDialogCommand = new RelayCommand<Facture>(f => OpenEditDialog(f));
             SaveCommand = new RelayCommand(async _ => await SaveAsync(), _ => CanSave());
             CancelCommand = new RelayCommand(_ => CancelDialog());
@@ -89,7 +90,6 @@ namespace Collectivite.ViewModels
         public ObservableCollection<Facture> Factures { get; } = new();
         public ObservableCollection<Tiers> TiersList { get; } = new();
         public ObservableCollection<Exercice> Exercices { get; } = new();
-        public ObservableCollection<Contrats> ContratsList { get; } = new();
         public ObservableCollection<DetailsFacture> DialogDetails { get; } = new();
 
 
@@ -171,6 +171,7 @@ namespace Collectivite.ViewModels
 
         public ICommand LoadDataCommand { get; }
         public ICommand OpenAddDialogCommand { get; }
+        public ICommand OpenDetailsCommand { get; }
         public ICommand OpenEditDialogCommand { get; }
         public ICommand SaveCommand { get; }
         public ICommand CancelCommand { get; }
@@ -237,8 +238,6 @@ private void ExportToPdf(Facture? facture)
             AddInfoRow(infoTable, "Tiers:", facture.Tiers?.NomComplet ?? "N/A", normalFont);
             AddInfoRow(infoTable, "Exercice:", facture.Exercice?.Libelle ?? "N/A", normalFont);
             AddInfoRow(infoTable, "Statut:", facture.Status.ToString().ToUpper(), normalFont);
-            if (facture.Contrats != null)
-                AddInfoRow(infoTable, "Contrat:", facture.Contrats.NumeroContrat, normalFont);
 
             document.Add(infoTable);
 
@@ -311,8 +310,7 @@ private void ExportToPdf(Facture? facture)
 
             document.Close();
 
-            MessageBox.Show($"PDF exporté avec succès :\n{saveFileDialog.FileName}", 
-                "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+            NotificationService.ShowSuccess($"PDF exporté avec succès :\n{saveFileDialog.FileName}");
 
             // Ouvrir le fichier
             Process.Start(new ProcessStartInfo(saveFileDialog.FileName) { UseShellExecute = true });
@@ -320,8 +318,7 @@ private void ExportToPdf(Facture? facture)
     }
     catch (Exception ex)
     {
-        MessageBox.Show($"Erreur lors de l'export PDF : {ex.Message}", 
-            "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+        NotificationService.ShowError($"Erreur lors de l'export PDF : {ex.Message}");
     }
 }
 
@@ -423,13 +420,6 @@ private void ExportToExcel(Facture? facture)
                 worksheet.Cell(row, 2).Value = facture.Status.ToString().ToUpper();
                 row++;
 
-                if (facture.Contrats != null)
-                {
-                    worksheet.Cell(row, 1).Value = "Contrat:";
-                    worksheet.Cell(row, 2).Value = facture.Contrats.NumeroContrat;
-                    row++;
-                }
-
                 worksheet.Cell(row, 1).Value = "Description:";
                 worksheet.Cell(row, 2).Value = facture.Description;
                 row += 2;
@@ -488,8 +478,7 @@ private void ExportToExcel(Facture? facture)
 
                 workbook.SaveAs(saveFileDialog.FileName);
 
-                MessageBox.Show($"Excel exporté avec succès :\n{saveFileDialog.FileName}", 
-                    "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.ShowSuccess($"Excel exporté avec succès :\n{saveFileDialog.FileName}");
 
                 Process.Start(new ProcessStartInfo(saveFileDialog.FileName) { UseShellExecute = true });
             }
@@ -497,8 +486,7 @@ private void ExportToExcel(Facture? facture)
     }
     catch (Exception ex)
     {
-        MessageBox.Show($"Erreur lors de l'export Excel : {ex.Message}", 
-            "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+        NotificationService.ShowError($"Erreur lors de l'export Excel : {ex.Message}");
     }
 }
 
@@ -543,13 +531,11 @@ private void Imprimer(Facture? facture)
 
         Process.Start(info);
 
-        MessageBox.Show("Document envoyé à l'imprimante.", 
-            "Impression", MessageBoxButton.OK, MessageBoxImage.Information);
+        NotificationService.ShowSuccess("Document envoyé à l'imprimante.");
     }
     catch (Exception ex)
     {
-        MessageBox.Show($"Erreur lors de l'impression : {ex.Message}", 
-            "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+        NotificationService.ShowError($"Erreur lors de l'impression : {ex.Message}");
     }
 }
 
@@ -571,8 +557,7 @@ private void Imprimer(Facture? facture)
             {
                 if (!CanViewFacture)
                 {
-                    MessageBox.Show("Accès refusé : vous n'avez pas la permission de consulter les factures.",
-                        "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    NotificationService.ShowWarning("Accès refusé : vous n'avez pas la permission de consulter les factures.");
                     Factures.Clear();
                     IsLoading = false;
                     return;
@@ -609,25 +594,10 @@ private void Imprimer(Facture? facture)
                         Exercices.Add(ex);
                     }
                 }
-
-                // Charger les contrats
-                using (var context = new AppDbContext())
-                {
-                    var contratService = new ContratService(context);
-                    var contrats = await contratService.GetAllContratsAsync();
-
-                    ContratsList.Clear();
-                
-                    foreach (var c in contrats)
-                    {
-                       ContratsList.Add(c);
-                    }
-                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors du chargement : {ex.Message}");
             }
             finally
             {
@@ -639,8 +609,7 @@ private void Imprimer(Facture? facture)
         {
             if (!CanCreateFacture)
             {
-                MessageBox.Show("Accès refusé : vous n'avez pas la permission de créer des factures.",
-                    "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Accès refusé : vous n'avez pas la permission de créer des factures.");
                 return;
             }
 
@@ -684,13 +653,24 @@ private void Imprimer(Facture? facture)
             IsDialogOpen = true;
         }
 
+        private void OpenDetails(Facture? facture)
+        {
+            if (facture == null) return;
+            if (!CanViewFacture)
+            {
+                NotificationService.ShowWarning("Accès refusé : vous n'avez pas la permission de consulter les factures.");
+                return;
+            }
+
+            NavigationService.Instance.NavigateTo(new Views.Pages.FactureDetailsPage(facture.Id));
+        }
+
         private void OpenEditDialog(Facture? facture)
         {
             if (facture == null) return;
             if (!CanEditFacture)
             {
-                MessageBox.Show("Accès refusé : vous n'avez pas la permission de modifier les factures.",
-                    "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Accès refusé : vous n'avez pas la permission de modifier les factures.");
                 return;
             }
 
@@ -708,7 +688,6 @@ private void Imprimer(Facture? facture)
                 Description = facture.Description,
                 TiersId = facture.TiersId,
                 ExerciceId = facture.ExerciceId,
-                ContratId = facture.ContratId,
                 Status = facture.Status,
                 FichierJoin = facture.FichierJoin
             };
@@ -750,8 +729,7 @@ private void Imprimer(Facture? facture)
             {
                 if (!CanEditFacture)
                 {
-                    MessageBox.Show("Accès refusé : vous n'avez pas la permission de modifier les factures.",
-                        "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    NotificationService.ShowWarning("Accès refusé : vous n'avez pas la permission de modifier les factures.");
                     return;
                 }
             }
@@ -759,8 +737,7 @@ private void Imprimer(Facture? facture)
             {
                 if (!CanCreateFacture)
                 {
-                    MessageBox.Show("Accès refusé : vous n'avez pas la permission de créer des factures.",
-                        "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    NotificationService.ShowWarning("Accès refusé : vous n'avez pas la permission de créer des factures.");
                     return;
                 }
             }
@@ -789,16 +766,16 @@ private void Imprimer(Facture? facture)
                     var (success, message, fact) = await factureService.UpdateFactureAsync(
                         DialogFacture, detailsList);
 
-                    MessageBox.Show(message,
-                        success ? "Succès" : "Erreur",
-                        MessageBoxButton.OK,
-                        success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                    if (success)
+                        NotificationService.ShowSuccess(message);
+                    else
+                        NotificationService.ShowWarning(message);
 
                     if (success)
                     {
                         var username = _authService.CurrentUser?.Username ?? "Utilisateur inconnu";
                         await _auditService.LogAsync(
-                                   "Expression besoin modifié ",
+                                   "Facture modifiée",
                                    $"{fact?.NumeroFacture}  {username} le {DateTime.Now:dd/MM/yyyy HH:mm}",
                                    username);
                         IsDialogOpen = false;
@@ -810,16 +787,16 @@ private void Imprimer(Facture? facture)
                     var (success, message, facture) = await factureService.CreateFactureAsync(
                         DialogFacture, detailsList);
 
-                    MessageBox.Show(message,
-                        success ? "Succès" : "Erreur",
-                        MessageBoxButton.OK,
-                        success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                    if (success)
+                        NotificationService.ShowSuccess(message);
+                    else
+                        NotificationService.ShowWarning(message);
 
                     if (success)
                     {
                         var username = _authService.CurrentUser?.Username ?? "Utilisateur inconnu";
                         await _auditService.LogAsync(
-                                   "Expression besoin modifié ",
+                                   "Facture créée",
                                    $"{facture?.NumeroFacture}  {username} le {DateTime.Now:dd/MM/yyyy HH:mm}",
                                    username);
                         IsDialogOpen = false;
@@ -829,8 +806,7 @@ private void Imprimer(Facture? facture)
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
             finally
             {
@@ -849,8 +825,7 @@ private void Imprimer(Facture? facture)
 
             if (!CanDeleteFacture)
             {
-                MessageBox.Show("Accès refusé : vous n'avez pas la permission de supprimer les factures.",
-                    "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Accès refusé : vous n'avez pas la permission de supprimer les factures.");
                 return;
             }
 
@@ -870,10 +845,10 @@ private void Imprimer(Facture? facture)
                 var factureService = new FactureService();
                 var (success, message) = await factureService.DeleteFactureAsync(facture.Id);
 
-                MessageBox.Show(message,
-                    success ? "Succès" : "Erreur",
-                    MessageBoxButton.OK,
-                    success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                if (success)
+                    NotificationService.ShowSuccess(message);
+                else
+                    NotificationService.ShowWarning(message);
 
                 if (success)
                 {
@@ -882,8 +857,7 @@ private void Imprimer(Facture? facture)
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
             finally
             {
@@ -915,10 +889,10 @@ private void Imprimer(Facture? facture)
                 var factureService = new FactureService();
                 var (success, message) = await factureService.ChangeStatusAsync(facture.Id, newStatus);
 
-                MessageBox.Show(message,
-                    success ? "Succès" : "Erreur",
-                    MessageBoxButton.OK,
-                    success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                if (success)
+                    NotificationService.ShowSuccess(message);
+                else
+                    NotificationService.ShowWarning(message);
 
                 if (success)
                 {
@@ -927,8 +901,7 @@ private void Imprimer(Facture? facture)
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
             finally
             {
@@ -953,8 +926,7 @@ private void Imprimer(Facture? facture)
 
                     if (fileBytes.Length > 5 * 1024 * 1024)
                     {
-                        MessageBox.Show("Le fichier est trop volumineux (max 5 MB).",
-                            "Avertissement", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        NotificationService.ShowWarning("Le fichier est trop volumineux (max 5 MB).");
                         return;
                     }
 
@@ -964,8 +936,7 @@ private void Imprimer(Facture? facture)
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
         }
 

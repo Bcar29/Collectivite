@@ -15,20 +15,34 @@ namespace Collectivite.Services
             _appDbContext = appDbContext;
         }
 
-        // Récupérer tous les comptes comptables 
-        public async Task<List<CompteComptable>> GetCompteComptablesAsync()
+        // Récupérer tous les comptes comptables, page par page
+        public async Task<(List<CompteComptable> Items, int TotalCount)> GetCompteComptablesAsync(int pageNumber = 1, int pageSize = 30, string? search = null)
         {
             if (!SessionManager.HasPermission("CompteComptable.View"))
                 throw new UnauthorizedAccessException("Permission CompteComptable.View requise pour consulter les comptes comptables.");
 
-            return await _appDbContext.CompteComptables
+            var query = _appDbContext.CompteComptables.AsNoTracking().AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                query = query.Where(c => c.NumeroCompte.Contains(search) || c.IntituleCompte.Contains(search));
+            }
+
+            var totalCount = await query.CountAsync();
+
+            var items = await query
                 .Include(c => c.ContrePartie)
                 .Include(c => c.SousComptes)
-                .AsNoTracking()
                 .OrderBy(c => c.NumeroCompte)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
+
+            return (items, totalCount);
         }
-        // Récupérer tous les comptes de contrepartire
+
+        // Récupérer tous les comptes de contrepartie (liste complète, non paginée — utilisée pour
+        // remplir le sélecteur de compte parent dans le formulaire d'ajout/édition)
         public async Task<List<CompteComptable>> GetContrePartie()
         {
             if (!SessionManager.HasPermission("CompteComptable.View"))
@@ -38,6 +52,35 @@ namespace Collectivite.Services
                 .Where(c => c.ContrePartieId == null)
                 .OrderBy(c => c.NumeroCompte)
                 .ToListAsync();
+        }
+
+        // Récupérer les comptes racines (sans contre-partie), page par page — utilisée par la grille
+        public async Task<(List<CompteComptable> Items, int TotalCount)> GetComptesRacinesPagedAsync(int pageNumber = 1, int pageSize = 30, string? search = null)
+        {
+            if (!SessionManager.HasPermission("CompteComptable.View"))
+                throw new UnauthorizedAccessException("Permission CompteComptable.View requise pour consulter les comptes comptables.");
+
+            var query = _appDbContext.CompteComptables
+                .AsNoTracking()
+                .Where(c => c.ContrePartieId == null)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                query = query.Where(c => c.NumeroCompte.Contains(search) || c.IntituleCompte.Contains(search));
+            }
+
+            var totalCount = await query.CountAsync();
+
+            var items = await query
+                .Include(c => c.ContrePartie)
+                .Include(c => c.SousComptes)
+                .OrderBy(c => c.NumeroCompte)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (items, totalCount);
         }
 
         // Récupérer un compte comptable par ID
@@ -67,18 +110,32 @@ namespace Collectivite.Services
         }
 
 
-        // Récupérer les sous-comptes d'un compte parent
-        public async Task<List<CompteComptable>> GetSousComptesAsync(int contrePartieId)
+        // Récupérer les sous-comptes d'un compte parent, page par page
+        public async Task<(List<CompteComptable> Items, int TotalCount)> GetSousComptesAsync(int contrePartieId, int pageNumber = 1, int pageSize = 30, string? search = null)
         {
             if (!SessionManager.HasPermission("CompteComptable.View"))
                 throw new UnauthorizedAccessException("Permission CompteComptable.View requise pour consulter les comptes comptables.");
 
-            return await _appDbContext.CompteComptables
-                .Where(c => c.ContrePartieId == contrePartieId)
-                .Include(c => c.SousComptes)
+            var query = _appDbContext.CompteComptables
                 .AsNoTracking()
+                .Where(c => c.ContrePartieId == contrePartieId)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                query = query.Where(c => c.NumeroCompte.Contains(search) || c.IntituleCompte.Contains(search));
+            }
+
+            var totalCount = await query.CountAsync();
+
+            var items = await query
+                .Include(c => c.SousComptes)
                 .OrderBy(c => c.NumeroCompte)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
+
+            return (items, totalCount);
         }
 
         // Ajouter un compte comptable

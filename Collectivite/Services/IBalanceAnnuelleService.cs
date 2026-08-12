@@ -20,9 +20,19 @@ namespace Collectivite.Services
         Task<BalanceAnnuelleTotauxDTO> GetTotauxAsync(BalanceAnnuelleFiltreDTO filtre);
 
         /// <summary>
+        /// Calcule les totaux à partir d'une balance annuelle déjà chargée, sans nouvelle requête.
+        /// </summary>
+        BalanceAnnuelleTotauxDTO CalculerTotaux(List<BalanceAnnuelleLigneDTO> lignes);
+
+        /// <summary>
         /// Récupère les statistiques de la balance annuelle
         /// </summary>
         Task<BalanceAnnuelleStatsDTO> GetStatistiquesAsync(BalanceAnnuelleFiltreDTO filtre);
+
+        /// <summary>
+        /// Calcule les statistiques à partir d'une balance annuelle déjà chargée, sans nouvelle requête.
+        /// </summary>
+        BalanceAnnuelleStatsDTO CalculerStatistiques(List<BalanceAnnuelleLigneDTO> lignes);
 
         /// <summary>
         /// Récupère la liste des années disponibles

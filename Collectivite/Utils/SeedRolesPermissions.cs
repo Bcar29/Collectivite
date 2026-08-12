@@ -65,12 +65,6 @@ namespace Collectivite.Utils
             new Permission { Name = "Voir les comptes comptables", Code = "CompteComptable.View", Description = "Permet de consulter les comptes comptables." },
             new Permission { Name = "Supprimer un compte comptable", Code = "CompteComptable.Delete", Description = "Permet de supprimer un compte comptable." },
 
-            // Contrats
-            new Permission { Name = "Créer un contrat", Code = "Contrats.Create", Description = "Permet de créer un contrat." },
-            new Permission { Name = "Modifier un contrat", Code = "Contrats.Edit", Description = "Permet de modifier un contrat." },
-            new Permission { Name = "Voir les contrats", Code = "Contrats.View", Description = "Permet de consulter les contrats." },
-            new Permission { Name = "Supprimer un contrat", Code = "Contrats.Delete", Description = "Permet de supprimer un contrat." },
-
             // DetailBonCommande
             new Permission { Name = "Créer un détail de bon de commande", Code = "DetailBonCommande.Create", Description = "Permet de créer un détail de bon de commande." },
             new Permission { Name = "Modifier un détail de bon de commande", Code = "DetailBonCommande.Edit", Description = "Permet de modifier un détail de bon de commande." },
@@ -142,12 +136,6 @@ namespace Collectivite.Utils
             new Permission { Name = "Modifier une permission", Code = "Permission.Edit", Description = "Permet de modifier une permission." },
             new Permission { Name = "Voir les permissions", Code = "Permission.View", Description = "Permet de consulter les permissions." },
             new Permission { Name = "Supprimer une permission", Code = "Permission.Delete", Description = "Permet de supprimer une permission." },
-
-            // Recensement
-            new Permission { Name = "Créer un recensement", Code = "Recensement.Create", Description = "Permet de créer un recensement." },
-            new Permission { Name = "Modifier un recensement", Code = "Recensement.Edit", Description = "Permet de modifier un recensement." },
-            new Permission { Name = "Voir les recensements", Code = "Recensement.View", Description = "Permet de consulter les recensements." },
-            new Permission { Name = "Supprimer un recensement", Code = "Recensement.Delete", Description = "Permet de supprimer un recensement." },
 
             // Remaniement
             new Permission { Name = "Créer un remaniement", Code = "Remaniement.Create", Description = "Permet de créer un remaniement budgétaire." },
@@ -242,7 +230,6 @@ namespace Collectivite.Utils
             "ExpressionBesoin.Create", "ExpressionBesoin.Edit", "ExpressionBesoin.View", "ExpressionBesoin.Delete",
             "BonCommande.Create", "BonCommande.Edit", "BonCommande.View", "BonCommande.Delete",
             "DetailBonCommande.Create", "DetailBonCommande.Edit", "DetailBonCommande.View", "DetailBonCommande.Delete",
-            "Contrats.Create", "Contrats.Edit", "Contrats.View", "Contrats.Delete",
             "Facture.Create", "Facture.Edit", "Facture.View", "Facture.Delete",
             "DetailsFacture.Create", "DetailsFacture.Edit", "DetailsFacture.View", "DetailsFacture.Delete",
             "Mandat.Create", "Mandat.Edit", "Mandat.View", "Mandat.Delete",
@@ -274,11 +261,6 @@ namespace Collectivite.Utils
             "DocumentTiers.Create", "DocumentTiers.Edit", "DocumentTiers.View", "DocumentTiers.Delete"
         };
 
-        private static readonly string[] Recensement = new[]
-        {
-            "Recensement.Create", "Recensement.Edit", "Recensement.View", "Recensement.Delete"
-        };
-
         private static readonly string[] DettesCreances = new[]
         {
             "Engagement.Create", "Engagement.Edit", "Engagement.View", "Engagement.Delete"
@@ -295,7 +277,6 @@ namespace Collectivite.Utils
             .Concat(SaisiePieces)
             .Concat(Parametrage)
             .Concat(GestionTiers)
-            .Concat(Recensement)
             .Concat(DettesCreances)
             .Concat(CompteBancaire)
             .Distinct()

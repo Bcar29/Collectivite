@@ -95,8 +95,7 @@ namespace Collectivite.ViewModels
             {
                 if (!CanViewBonCommande)
                 {
-                    MessageBox.Show("Accès refusé : vous n'avez pas la permission de consulter les bons de commande.",
-                        "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    NotificationService.ShowWarning("Accès refusé : vous n'avez pas la permission de consulter les bons de commande.");
                     BonCommandes.Clear();
                     return;
                 }
@@ -112,8 +111,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors du chargement : {ex.Message}");
             }
             finally
             {
@@ -125,8 +123,7 @@ namespace Collectivite.ViewModels
         {
             if (!CanCreateBonCommande)
             {
-                MessageBox.Show("Accès refusé : vous n'avez pas la permission de créer des bons de commande.",
-                    "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Accès refusé : vous n'avez pas la permission de créer des bons de commande.");
                 return;
             }
             NavigationService.Instance.NavigateTo(new Views.Pages.BonCommandeFormPage(_authService));
@@ -137,8 +134,7 @@ namespace Collectivite.ViewModels
             if (bonCommande == null) return;
             if (!CanEditBonCommande)
             {
-                MessageBox.Show("Accès refusé : vous n'avez pas la permission de modifier des bons de commande.",
-                    "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Accès refusé : vous n'avez pas la permission de modifier des bons de commande.");
                 return;
             }
             NavigationService.Instance.NavigateTo(new Views.Pages.BonCommandeFormPage(_authService,bonCommande.Id));
@@ -149,8 +145,7 @@ namespace Collectivite.ViewModels
             if (bonCommande == null) return;
             if (!CanViewBonCommande)
             {
-                MessageBox.Show("Accès refusé : vous n'avez pas la permission de consulter les bons de commande.",
-                    "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Accès refusé : vous n'avez pas la permission de consulter les bons de commande.");
                 return;
             }
             NavigationService.Instance.NavigateTo(new Views.Pages.BonCommandeDetailsPage(bonCommande.Id));
@@ -161,8 +156,7 @@ namespace Collectivite.ViewModels
             if (bonCommande == null) return;
             if (!CanDeleteBonCommande)
             {
-                MessageBox.Show("Accès refusé : vous n'avez pas la permission de supprimer des bons de commande.",
-                    "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Accès refusé : vous n'avez pas la permission de supprimer des bons de commande.");
                 return;
             }
 
@@ -184,10 +178,14 @@ namespace Collectivite.ViewModels
                 var service = new BonCommandeService();
                 var (success, message) = await service.DeleteBonCommandeAsync(bonCommande.Id);
 
-                MessageBox.Show(message,
-                    success ? "Succès" : "Erreur",
-                    MessageBoxButton.OK,
-                    success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                if (success)
+                {
+                    NotificationService.ShowSuccess(message);
+                }
+                else
+                {
+                    NotificationService.ShowWarning(message);
+                }
 
                 if (success)
                 {
@@ -196,8 +194,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
             finally
             {

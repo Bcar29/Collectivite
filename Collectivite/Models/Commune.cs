@@ -32,8 +32,6 @@ namespace Collectivite.Models
 
         public ICollection<Engagement>? Engagements { get; set; }
 
-        public ICollection<Recensement>? Recensements { get;set; }
-
         /// <summary>
         /// Retourne le nom de la commune ou une chaîne vide
         /// </summary>

@@ -56,8 +56,7 @@ namespace Collectivite.Views.Pages
             catch (Exception ex)
             {
                 Log($"ERREUR ctor: {ex.Message}\n{ex.StackTrace}");
-                MessageBox.Show($"ERREUR dans constructeur:\n{ex.Message}\n\nStackTrace:\n{ex.StackTrace}",
-                    "Erreur Constructeur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"ERREUR dans constructeur:\n{ex.Message}\n\nStackTrace:\n{ex.StackTrace}");
             }
         }
 
@@ -91,14 +90,13 @@ namespace Collectivite.Views.Pages
                 else
                 {
                     Log("MouvementPage Loaded - _viewModel est null");
-                    MessageBox.Show("ERREUR: _viewModel est null!", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                    NotificationService.ShowError("ERREUR: _viewModel est null!");
                 }
             }
             catch (Exception ex)
             {
                 Log($"ERREUR Loaded: {ex.Message}\nInner: {ex.InnerException?.Message}\n{ex.StackTrace}");
-                MessageBox.Show($"ERREUR dans UserControl_Loaded:\n{ex.Message}\n\nInner:\n{ex.InnerException?.Message}",
-                    "Erreur Loaded", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"ERREUR dans UserControl_Loaded:\n{ex.Message}\n\nInner:\n{ex.InnerException?.Message}");
             }
         }
 

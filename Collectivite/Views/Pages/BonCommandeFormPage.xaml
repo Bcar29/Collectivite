@@ -2,12 +2,14 @@
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+      xmlns:utils="clr-namespace:Collectivite.Utils"
       Language="fr-FR"
       Background="#F5F5F5"
       Title="Formulaire Bon de Commande">
 
     <Page.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <utils:InverseBooleanConverter x:Key="InverseBool"/>
 
         <!-- Converter pour afficher le message quand la liste est vide -->
         <Style x:Key="EmptyMessageStyle" TargetType="Border">
@@ -386,6 +388,7 @@
                             Height="45"/>
                     <Button Style="{StaticResource MaterialDesignRaisedButton}"
                             Command="{Binding SaveCommand}"
+                            IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBool}}"
                             Width="180"
                             Height="45"
                             Background="#4CAF50"

@@ -116,15 +116,13 @@ namespace Collectivite.ViewModels
                 }
                 else
                 {
-                    MessageBox.Show("Engagement introuvable.", "Erreur",
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    NotificationService.ShowWarning("Engagement introuvable.");
                     GoBack();
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors du chargement : {ex.Message}");
             }
             finally
             {
@@ -144,8 +142,7 @@ namespace Collectivite.ViewModels
         {
             if (Engagement == null)
             {
-                MessageBox.Show("Aucun engagement à imprimer.", "Information",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.ShowInfo("Aucun engagement à imprimer.");
                 return;
             }
 
@@ -170,17 +167,13 @@ namespace Collectivite.ViewModels
                     UseShellExecute = true
                 });
 
-                MessageBox.Show(
+                NotificationService.ShowInfo(
                     "Le document s'ouvre dans votre lecteur PDF.\n\n" +
-                    "Utilisez Ctrl+P ou le menu Fichier → Imprimer pour lancer l'impression.",
-                    "Impression",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                    "Utilisez Ctrl+P ou le menu Fichier → Imprimer pour lancer l'impression.");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de l'impression : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors de l'impression : {ex.Message}");
             }
             finally
             {
@@ -195,8 +188,7 @@ namespace Collectivite.ViewModels
         {
             if (Engagement == null)
             {
-                MessageBox.Show("Aucun engagement à exporter.", "Information",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.ShowInfo("Aucun engagement à exporter.");
                 return;
             }
 
@@ -246,8 +238,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de l'export PDF : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors de l'export PDF : {ex.Message}");
             }
             finally
             {
@@ -262,8 +253,7 @@ namespace Collectivite.ViewModels
         {
             if (Engagement?.FichierJoin == null || Engagement.FichierJoin.Length == 0)
             {
-                MessageBox.Show("Aucun fichier disponible.", "Information",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.ShowInfo("Aucun fichier disponible.");
                 return;
             }
 
@@ -307,8 +297,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du téléchargement : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors du téléchargement : {ex.Message}");
             }
         }
 

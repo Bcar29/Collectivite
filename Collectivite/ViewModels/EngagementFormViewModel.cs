@@ -231,8 +231,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors du chargement : {ex.Message}");
             }
             finally
             {
@@ -265,7 +264,6 @@ namespace Collectivite.ViewModels
                         MontantEngagement = engagement.MontantEngagement,
                         FichierJoin = engagement.FichierJoin,
                         FichierName = engagement.FichierName,
-                        ContratId = engagement.ContratId,
                         FactureId = engagement.FactureId,
                         MontantLettre = engagement.MontantLettre,
                         BonCommandeId = engagement.BonCommandeId
@@ -278,15 +276,13 @@ namespace Collectivite.ViewModels
                 }
                 else
                 {
-                    MessageBox.Show("Engagement introuvable.", "Erreur",
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    NotificationService.ShowWarning("Engagement introuvable.");
                     Cancel();
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
             finally
             {
@@ -308,11 +304,8 @@ namespace Collectivite.ViewModels
             // Validation supplémentaire
             if (Engagement.MontantEngagement > DisponibleBudgetaire)
             {
-                MessageBox.Show(
-                    $"Le montant de l'engagement ({Engagement.MontantEngagement:N0} GNF) dépasse le disponible budgétaire ({DisponibleBudgetaire:N0} GNF).",
-                    "Validation",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                NotificationService.ShowWarning(
+                    $"Le montant de l'engagement ({Engagement.MontantEngagement:N0} GNF) dépasse le disponible budgétaire ({DisponibleBudgetaire:N0} GNF).");
                 return;
             }
 
@@ -321,8 +314,7 @@ namespace Collectivite.ViewModels
             {
                 if (!SessionManager.HasPermission("Engagement.Edit"))
                 {
-                    MessageBox.Show("Accès refusé : vous n'avez pas la permission de modifier les engagements.",
-                        "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    NotificationService.ShowWarning("Accès refusé : vous n'avez pas la permission de modifier les engagements.");
                     return;
                 }
             }
@@ -330,8 +322,7 @@ namespace Collectivite.ViewModels
             {
                 if (!SessionManager.HasPermission("Engagement.Create"))
                 {
-                    MessageBox.Show("Accès refusé : vous n'avez pas la permission de créer des engagements.",
-                        "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    NotificationService.ShowWarning("Accès refusé : vous n'avez pas la permission de créer des engagements.");
                     return;
                 }
             }
@@ -347,10 +338,14 @@ namespace Collectivite.ViewModels
                     //Engagement.EngagementsAnterieurs -= Engagement.MontantEngagement;
                     var (success, message) = await service.UpdateEngagementAsync(Engagement);
 
-                    MessageBox.Show(message,
-                        success ? "Succès" : "Erreur",
-                        MessageBoxButton.OK,
-                        success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                    if (success)
+                    {
+                        NotificationService.ShowSuccess(message);
+                    }
+                    else
+                    {
+                        NotificationService.ShowWarning(message);
+                    }
 
                     if (success)
                     {
@@ -361,10 +356,14 @@ namespace Collectivite.ViewModels
                 {
                     var (success, message, engagement) = await service.CreateEngagementAsync(Engagement);
 
-                    MessageBox.Show(message,
-                        success ? "Succès" : "Erreur",
-                        MessageBoxButton.OK,
-                        success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                    if (success)
+                    {
+                        NotificationService.ShowSuccess(message);
+                    }
+                    else
+                    {
+                        NotificationService.ShowWarning(message);
+                    }
 
                     if (success)
                     {
@@ -374,8 +373,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
             finally
             {
@@ -411,12 +409,9 @@ namespace Collectivite.ViewModels
 
                     if (fileBytes.Length > 5 * 1024 * 1024)
                     {
-                        MessageBox.Show("Le fichier est trop volumineux (max 5 MB).",
-                            "Avertissement", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        NotificationService.ShowWarning("Le fichier est trop volumineux (max 5 MB).");
                         return;
                     }
-                    MessageBox.Show("Le fichier est selectionner.",
-                            "Avertissement", MessageBoxButton.OK, MessageBoxImage.Warning);
                     Engagement.FichierJoin = fileBytes;
                     Engagement.FichierName = Path.GetFileName(openFileDialog.FileName);
                     FichierName = Engagement.FichierName;
@@ -426,8 +421,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de la sélection du fichier : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors de la sélection du fichier : {ex.Message}");
             }
         }
 

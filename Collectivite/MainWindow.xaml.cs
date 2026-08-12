@@ -1,4 +1,4 @@
-using Collectivite.Services;
+﻿using Collectivite.Services;
 using Collectivite.Tests;
 using Collectivite.ViewModels;
 using Collectivite.Views;
@@ -99,10 +99,7 @@ namespace Collectivite
         {
             if (!SessionManager.HasPermission("Commune.View"))
             {
-                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section. Contactez l'administrateur",
-                               "Accès refusé",
-                               MessageBoxButton.OK,
-                               MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
                 _viewModel.IsMenuOpen = false;
                 return;
             }
@@ -116,10 +113,7 @@ namespace Collectivite
         {
             if (!SessionManager.HasPermission("Exercice.View"))
             {
-                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section. Contactez l'administrateur",
-                               "Accès refusé",
-                               MessageBoxButton.OK,
-                               MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
                 _viewModel.IsMenuOpen = false;
                 return;
             }
@@ -132,10 +126,7 @@ namespace Collectivite
         {
             if (!SessionManager.HasPermission("Nommenclature.View"))
             {
-                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section. Contactez l'administrateur",
-                               "Accès refusé",
-                               MessageBoxButton.OK,
-                               MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
                 _viewModel.IsMenuOpen = false;
                 return;
             }
@@ -149,10 +140,7 @@ namespace Collectivite
         {
             if (!SessionManager.HasPermission("CompteComptable.View"))
             {
-                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section. Contactez l'administrateur",
-                               "Accès refusé",
-                               MessageBoxButton.OK,
-                               MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
                 _viewModel.IsMenuOpen = false;
                 return;
             }
@@ -160,33 +148,11 @@ namespace Collectivite
             NavigationService.Instance.NavigateTo(new Views.Pages.CompteComptablePage());
             _viewModel.IsMenuOpen = false;
         }
-        // COMPTE CONTRAT CLICK
-        private void Contrat_Click(object sender, RoutedEventArgs e)
-        {
-            if (!SessionManager.HasPermission("Contrats.View"))
-            {
-                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section. Contactez l'administrateur",
-                               "Accès refusé",
-                               MessageBoxButton.OK,
-                               MessageBoxImage.Warning);
-                _viewModel.IsMenuOpen = false;
-                return;
-            }
-
-            _viewModel.UpdatePageTitle("SAISIE - DES CONTRATS");
-            NavigationService.Instance.NavigateTo(new Views.Pages.ContratPage());
-            _viewModel.IsMenuOpen = false;
-        }
-
-        
         private void Sythese_Click(object sender, RoutedEventArgs e)
         {
             if(!SessionManager.HasPermission("Synthese.View"))
             {
-                 MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section. Contactez l'administrateur",
-                               "Accès refusé",
-                               MessageBoxButton.OK,
-                               MessageBoxImage.Warning);
+                 NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
                 _viewModel.IsMenuOpen = false;
                 return;
             }
@@ -199,10 +165,7 @@ namespace Collectivite
         {
             if(!SessionManager.HasPermission("BudgetLine.View"))
             {
-                 MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section. Contactez l'administrateur",
-                               "Accès refusé",
-                               MessageBoxButton.OK,
-                               MessageBoxImage.Warning);
+                 NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
                 _viewModel.IsMenuOpen = false;
                 return;
             }
@@ -215,10 +178,7 @@ namespace Collectivite
             // Vérifier la permission correcte (suffixe .View) et inverser la condition
             if (!SessionManager.HasPermission("CompteAdministratif.View"))
             {
-                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section. Contactez l'administrateur",
-                              "Accès refusé",
-                              MessageBoxButton.OK,
-                              MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
                 _viewModel.IsMenuOpen = false;
                 return;
             }
@@ -230,10 +190,7 @@ namespace Collectivite
         {
             if (!SessionManager.HasPermission("GestionComptable.Access"))
             {
-                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section. Contactez l'administrateur",
-                               "Accès refusé",
-                               MessageBoxButton.OK,
-                               MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
                 _viewModel.IsMenuOpen = false;
                 return;
             }
@@ -249,10 +206,7 @@ namespace Collectivite
         {
             if (!SessionManager.HasPermission("BonCommande.View"))
             {
-                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section. Contactez l'administrateur",
-                               "Accès refusé",
-                               MessageBoxButton.OK,
-                               MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
                 _viewModel.IsMenuOpen = false;
                 return;
             }
@@ -264,10 +218,7 @@ namespace Collectivite
         {
             if (!SessionManager.HasPermission("ExpressionBesoin.View"))
             {
-                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section. Contactez l'administrateur",
-                               "Accès refusé",
-                               MessageBoxButton.OK,
-                               MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
                 _viewModel.IsMenuOpen = false;
                 return;
             }
@@ -283,10 +234,7 @@ namespace Collectivite
             _viewModel.UpdatePageTitle("SAISIE DES PIECES - ORDRE RECETTE");
             if (!SessionManager.HasPermission("OrdreRecette.View"))
             {
-                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section. Contactez l'administrateur",
-                               "Accès refusé",
-                               MessageBoxButton.OK,
-                               MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
                 _viewModel.IsMenuOpen = false;
                 return;
             }
@@ -298,10 +246,7 @@ namespace Collectivite
         {
             if (!SessionManager.HasPermission("Engagement.View"))
             {
-                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section. Contactez l'administrateur",
-                               "Accès refusé",
-                               MessageBoxButton.OK,
-                               MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
                 _viewModel.IsMenuOpen = false;
                 return;
             }
@@ -314,10 +259,7 @@ namespace Collectivite
         {
             if (!SessionManager.HasPermission("Mandat.View"))
             {
-                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section. Contactez l'administrateur",
-                               "Accès refusé",
-                               MessageBoxButton.OK,
-                               MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
                 _viewModel.IsMenuOpen = false;
                 return;
             }
@@ -330,10 +272,7 @@ namespace Collectivite
         {
             if (!SessionManager.HasPermission("Remaniement.View"))
             {
-                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section. Contactez l'administrateur",
-                               "Accès refusé",
-                               MessageBoxButton.OK,
-                               MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
                 _viewModel.IsMenuOpen = false;
                 return;
             }
@@ -355,10 +294,7 @@ namespace Collectivite
         {
             if (!SessionManager.HasPermission("Tiers.View"))
             {
-                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section. Contactez l'administrateur",
-                               "Accès refusé",
-                               MessageBoxButton.OK,
-                               MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
                 _viewModel.IsMenuOpen = false;
                 return;
             }
@@ -372,10 +308,7 @@ namespace Collectivite
         {
             if (!SessionManager.HasPermission("Facture.View"))
             {
-                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section. Contactez l'administrateur",
-                               "Accès refusé",
-                               MessageBoxButton.OK,
-                               MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
                 _viewModel.IsMenuOpen = false;
                 return;
             }
@@ -384,31 +317,11 @@ namespace Collectivite
             _viewModel.IsMenuOpen = false;
         }
 
-        private void RecensementButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (!SessionManager.HasPermission("Recensement.View"))
-            {
-                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section. Contactez l'administrateur",
-                               "Accès refusé",
-                               MessageBoxButton.OK,
-                               MessageBoxImage.Warning);
-                _viewModel.IsMenuOpen = false;
-                return;
-            }
-
-            _viewModel.UpdatePageTitle("CONFIGURATION - RECENSEMENTS");
-            NavigationService.Instance.NavigateTo(new Views.Pages.RecensementPage());
-            _viewModel.IsMenuOpen = false;
-        }
-
         private void RolesButton_Click(object sender, RoutedEventArgs e)
         {
             if (!SessionManager.HasPermission("Administration.Access"))
             {
-                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section. Contactez l'administrateur",
-                               "Accès refusé",
-                               MessageBoxButton.OK,
-                               MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
                 _viewModel.IsMenuOpen = false;
                 return;
             }
@@ -422,10 +335,7 @@ namespace Collectivite
         {
             if (!SessionManager.HasPermission("Administration.Access"))
             {
-                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section. Contactez l'administrateur",
-                               "Accès refusé",
-                               MessageBoxButton.OK,
-                               MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
                 _viewModel.IsMenuOpen = false;
                 return;
             }
@@ -439,10 +349,7 @@ namespace Collectivite
         {
             if (!SessionManager.HasPermission("Administration.Access"))
             {
-                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section. Contactez l'administrateur",
-                               "Accès refusé",
-                               MessageBoxButton.OK,
-                               MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
                 _viewModel.IsMenuOpen = false;
                 return;
             }
@@ -477,10 +384,7 @@ namespace Collectivite
         {
             if(!SessionManager.HasPermission("BudgetPrimitif.View"))
             {
-                  MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section. Contactez l'administrateur",
-                               "Accès refusé",
-                               MessageBoxButton.OK,
-                               MessageBoxImage.Warning);
+                  NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
                 _viewModel.IsMenuOpen = false;
                 return;
             }
@@ -496,10 +400,7 @@ namespace Collectivite
 
             if (estActif)
             {
-                MessageBox.Show("Impossible de saisir une ligne budgétaire!",
-                               "Budget déjà validé",
-                               MessageBoxButton.OK,
-                               MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Impossible de saisir une ligne budgétaire!");
                 _viewModel.IsMenuOpen = false;
                 return;
             }
@@ -513,6 +414,13 @@ namespace Collectivite
 
         private async void BtnBudgetPrimitif_Click(object sender, RoutedEventArgs e)
         {
+            if(!SessionManager.HasPermission("BudgetPrimitif.View"))
+            {
+                  NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
+                _viewModel.IsMenuOpen = false;
+                return;
+            }
+
             var service = new BudgetPrimitifService();
             var exerciceService = ExerciceService.Instance;
 
@@ -525,10 +433,7 @@ namespace Collectivite
 
             if (!estActif)
             {
-                MessageBox.Show("Impossible de naviguer vers cette page !",
-                               "Aucun budget validé",
-                               MessageBoxButton.OK,
-                               MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Impossible de naviguer vers cette page !");
                 return;
             }
 
@@ -544,10 +449,7 @@ namespace Collectivite
         {
             if (!SessionManager.HasPermission("LivreJournal.View"))
             {
-                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section. Contactez l'administrateur",
-                               "Accès refusé",
-                               MessageBoxButton.OK,
-                               MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
                 _viewModel.IsMenuOpen = false;
                 return;
                 
@@ -563,10 +465,7 @@ namespace Collectivite
         {
             if (!SessionManager.HasPermission("GrandLivre.View"))
             {
-                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section. Contactez l'administrateur",
-                               "Accès refusé",
-                               MessageBoxButton.OK,
-                               MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
                 _viewModel.IsMenuOpen = false;
                 return;
             }
@@ -581,10 +480,7 @@ namespace Collectivite
         {
             if(!SessionManager.HasPermission("BalanceMensuelle.View"))
             {
-                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section. Contactez l'administrateur",
-                               "Accès refusé",
-                               MessageBoxButton.OK,
-                               MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
                 _viewModel.IsMenuOpen = false;
                 return;
             }
@@ -597,10 +493,7 @@ namespace Collectivite
         {
             if (!SessionManager.HasPermission("BalanceAnnuelle.View"))
             {
-                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section. Contactez l'administrateur",
-                               "Accès refusé",
-                               MessageBoxButton.OK,
-                               MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
                 _viewModel.IsMenuOpen = false;
                 return;
             }
@@ -614,10 +507,7 @@ namespace Collectivite
         {
             if (!SessionManager.HasPermission("DroitConstate.View"))
             {
-                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section. Contactez l'administrateur",
-                               "Accès refusé",
-                               MessageBoxButton.OK,
-                               MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
                 _viewModel.IsMenuOpen = false;
                 return;
             }
@@ -631,10 +521,7 @@ namespace Collectivite
         {
             if (!SessionManager.HasPermission("DroitAuComptant.View"))
             {
-                MessageBox.Show("Vous n'avez pas les permissions nécessaires pour accéder à cette section. Contactez l'administrateur",
-                               "Accès refusé",
-                               MessageBoxButton.OK,
-                               MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
                 _viewModel.IsMenuOpen = false;
                 return;
             }
@@ -658,80 +545,6 @@ namespace Collectivite
             MainContentFrame.Navigate(new Views.Pages.DebiteurCrediteurPage());
             _viewModel.IsMenuOpen = false;
         }
-
-        // Navigation vers la page PDL
-        private void PDLPage_Click(object sender, RoutedEventArgs e)
-        {
-            _viewModel.UpdatePageTitle("PDL - GESTION DES P-D-L ");
-            MainContentFrame.Navigate(new Views.Pages.PDLPage());
-            _viewModel.IsMenuOpen = false;
-        }
-
-        // Navigation vers la page PDL PROGRAMMES
-        private void PROGRAMMES_Click(object sender, RoutedEventArgs e)
-        {
-            _viewModel.UpdatePageTitle("PDL - GESTION DES PROGRAMMES ");
-            MainContentFrame.Navigate(new Views.Pages.ProgrammePDLPage());
-            _viewModel.IsMenuOpen = false;
-        }
-
-        // Navigation vers la page PDL SECTEURS
-        private void SECTEUR_Click(object sender, RoutedEventArgs e)
-        {
-            _viewModel.UpdatePageTitle("PDL - GESTION DES SECTEURS ");
-            MainContentFrame.Navigate(new Views.Pages.SecteurPDLPage());
-            _viewModel.IsMenuOpen = false;
-        }
-
-        // Navigation vers la page PDL ACTEURS
-        private void ACTEURS_Click(object sender, RoutedEventArgs e)
-        {
-            _viewModel.UpdatePageTitle("PDL - GESTION DES ACTEURS ");
-            MainContentFrame.Navigate(new Views.Pages.ActeurPDLPage());
-            _viewModel.IsMenuOpen = false;
-        }
-
-        // Navigation vers la page PDL BENEFICIAIRES
-        private void BENEFICIAIRE_Click(object sender, RoutedEventArgs e)
-        {
-            _viewModel.UpdatePageTitle("PDL - GESTION DES BENEFICIAIRES ");
-            MainContentFrame.Navigate(new Views.Pages.BeneficiairePDLPage());
-            _viewModel.IsMenuOpen = false;
-        }
-
-        // Navigation vers la page PDL STRUCTURES
-        private void STRUCTURES_Click(object sender, RoutedEventArgs e)
-        {
-            _viewModel.UpdatePageTitle("PDL - GESTION DES STRUCTURES ");
-            MainContentFrame.Navigate(new Views.Pages.StructureExecutionPDLPage());
-            _viewModel.IsMenuOpen = false;
-        }
-
-        // Navigation vers la page PDL ODD
-        private void ODD_Click(object sender, RoutedEventArgs e)
-        {
-            _viewModel.UpdatePageTitle("PDL - GESTION DES O-D-D ");
-            MainContentFrame.Navigate(new Views.Pages.ODDPage());
-            _viewModel.IsMenuOpen = false;
-        }
-
-        // Navigation vers la page PDL COMPETENCES
-        private void COMPETENCE_COLLECTIVITE_Click(object sender, RoutedEventArgs e)
-        {
-            _viewModel.UpdatePageTitle("PDL - GESTION DES COMPETENCES ");
-            MainContentFrame.Navigate(new Views.Pages.CompetenceCollectivitePage());
-            _viewModel.IsMenuOpen = false;
-        }
-
-        // Navigation vers la page PDL ACTIVITES
-        private void ACTIVITE_Click(object sender, RoutedEventArgs e)
-        {
-            _viewModel.UpdatePageTitle("PDL - GESTION DES ACTIVITES ");
-            MainContentFrame.Navigate(new Views.Pages.ActivitePDLPage());
-            _viewModel.IsMenuOpen = false;
-        }
-
-        
 
         // Méthode temporaire pour afficher un placeholder
         private static FrameworkElement CreatePlaceholderContent(string pageName)

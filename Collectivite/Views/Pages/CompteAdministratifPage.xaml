@@ -60,7 +60,7 @@
 
                 <!-- 🆕 Bouton Imprimer -->
                 <Button Style="{StaticResource MaterialDesignOutlinedButton}"
-                        Command="{Binding PrintCommand}"
+                        Command="{Binding PrintCompteAdminCommand}"
                         Height="36"
                         Margin="0,0,10,0">
                     <StackPanel Orientation="Horizontal">

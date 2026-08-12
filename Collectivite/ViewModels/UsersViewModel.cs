@@ -48,6 +48,11 @@ namespace Collectivite.ViewModels
         public ObservableCollection<Role> Roles { get; } = new();
         public ObservableCollection<Commune> Communes { get; } = new();
 
+        public bool CanViewUser => SessionManager.HasPermission("User.View");
+        public bool CanCreateUser => SessionManager.HasPermission("User.Create");
+        public bool CanEditUser => SessionManager.HasPermission("User.Edit");
+        public bool CanDeleteUser => SessionManager.HasPermission("User.Delete");
+
         public bool IsLoading
         {
             get => _isLoading;
@@ -110,8 +115,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors du chargement : {ex.Message}");
             }
             finally
             {
@@ -121,6 +125,12 @@ namespace Collectivite.ViewModels
 
         private void OpenAddDialog()
         {
+            if (!CanCreateUser)
+            {
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
+                return;
+            }
+
             DialogUser = CreateEmptyUser();
             DialogUser.CommuneId = Communes.FirstOrDefault()?.Id ?? 0;
             DialogUser.RoleId = Roles.FirstOrDefault()?.Id ?? 0;
@@ -132,6 +142,12 @@ namespace Collectivite.ViewModels
         private void OpenEditDialog(User? user)
         {
             if (user == null) return;
+
+            if (!CanEditUser)
+            {
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
+                return;
+            }
 
             DialogUser = new User
             {
@@ -151,13 +167,19 @@ namespace Collectivite.ViewModels
         private bool CanSave()
         {
             return !string.IsNullOrWhiteSpace(DialogUser.Username)
-                && !string.IsNullOrWhiteSpace(DialogUser.Password)
+                && (IsEditMode || !string.IsNullOrWhiteSpace(DialogUser.Password))
                 && DialogUser.CommuneId > 0
                 && DialogUser.RoleId > 0;
         }
 
         private async System.Threading.Tasks.Task SaveAsync()
         {
+            if (!(IsEditMode ? CanEditUser : CanCreateUser))
+            {
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
+                return;
+            }
+
             IsLoading = true;
 
             try
@@ -165,20 +187,28 @@ namespace Collectivite.ViewModels
                 if (IsEditMode)
                 {
                     var (success, message) = await _userService.UpdateAsync(DialogUser);
-                    MessageBox.Show(message,
-                        success ? "Succès" : "Erreur",
-                        MessageBoxButton.OK,
-                        success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                    if (success)
+                    {
+                        NotificationService.ShowSuccess(message);
+                    }
+                    else
+                    {
+                        NotificationService.ShowWarning(message);
+                    }
 
                     if (!success) return;
                 }
                 else
                 {
                     var (success, message, _) = await _userService.CreateAsync(DialogUser);
-                    MessageBox.Show(message,
-                        success ? "Succès" : "Erreur",
-                        MessageBoxButton.OK,
-                        success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                    if (success)
+                    {
+                        NotificationService.ShowSuccess(message);
+                    }
+                    else
+                    {
+                        NotificationService.ShowWarning(message);
+                    }
 
                     if (!success) return;
                 }
@@ -188,8 +218,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
             finally
             {
@@ -200,6 +229,12 @@ namespace Collectivite.ViewModels
         private async System.Threading.Tasks.Task DeleteAsync(User? user)
         {
             if (user == null) return;
+
+            if (!CanDeleteUser)
+            {
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
+                return;
+            }
 
             var confirm = MessageBox.Show(
                 $"Supprimer l'utilisateur '{user.Username}' ?",
@@ -215,10 +250,14 @@ namespace Collectivite.ViewModels
             try
             {
                 var (success, message) = await _userService.DeleteAsync(user.Id);
-                MessageBox.Show(message,
-                    success ? "Succès" : "Erreur",
-                    MessageBoxButton.OK,
-                    success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                if (success)
+                {
+                    NotificationService.ShowSuccess(message);
+                }
+                else
+                {
+                    NotificationService.ShowWarning(message);
+                }
 
                 if (success)
                 {
@@ -227,8 +266,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
             finally
             {
@@ -245,14 +283,12 @@ namespace Collectivite.ViewModels
                 var (success, message) = await _userService.UpdateRoleAsync(user.Id, user.RoleId);
                 if (!success)
                 {
-                    MessageBox.Show(message,
-                        "Erreur", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    NotificationService.ShowWarning(message);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de la mise à jour du rôle : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors de la mise à jour du rôle : {ex.Message}");
             }
         }
 

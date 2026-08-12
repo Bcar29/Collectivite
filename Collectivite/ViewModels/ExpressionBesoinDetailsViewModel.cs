@@ -97,15 +97,13 @@ namespace Collectivite.ViewModels
                 }
                 else
                 {
-                    MessageBox.Show("Expression de besoin introuvable.", "Erreur",
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    NotificationService.ShowWarning("Expression de besoin introuvable.");
                     GoBack();
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors du chargement : {ex.Message}");
             }
             finally
             {
@@ -120,8 +118,7 @@ namespace Collectivite.ViewModels
         {
             if (ExpressionBesoin == null)
             {
-                MessageBox.Show("Aucune expression de besoin à imprimer.",
-                    "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.ShowInfo("Aucune expression de besoin à imprimer.");
                 return;
             }
 
@@ -151,17 +148,13 @@ namespace Collectivite.ViewModels
                     UseShellExecute = true
                 });
 
-                MessageBox.Show(
+                NotificationService.ShowInfo(
                     "Le document s'ouvre dans votre lecteur PDF.\n\n" +
-                    "Utilisez Ctrl+P ou le menu Fichier → Imprimer pour lancer l'impression.",
-                    "Impression",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                    "Utilisez Ctrl+P ou le menu Fichier → Imprimer pour lancer l'impression.");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de l'impression : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors de l'impression : {ex.Message}");
             }
             finally
             {
@@ -176,8 +169,7 @@ namespace Collectivite.ViewModels
         {
             if (ExpressionBesoin == null)
             {
-                MessageBox.Show("Aucune expression de besoin à exporter.",
-                    "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.ShowInfo("Aucune expression de besoin à exporter.");
                 return;
             }
 
@@ -226,8 +218,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de l'export PDF : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors de l'export PDF : {ex.Message}");
             }
             finally
             {

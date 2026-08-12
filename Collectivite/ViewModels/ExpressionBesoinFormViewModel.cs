@@ -152,8 +152,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors du chargement : {ex.Message}");
             }
             finally
             {
@@ -183,10 +182,10 @@ namespace Collectivite.ViewModels
                     var (success, message, eb) = await expressionBesoinService.UpdateExpressionBesoinAsync(
                         ExpressionBesoin, detailsList);
 
-                    MessageBox.Show(message,
-                        success ? "Succès" : "Erreur",
-                        MessageBoxButton.OK,
-                        success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                    if (success)
+                        NotificationService.ShowSuccess(message);
+                    else
+                        NotificationService.ShowWarning(message);
 
                     if (success)
                     {
@@ -203,10 +202,10 @@ namespace Collectivite.ViewModels
                     var (success, message, expressionBesoin) = await expressionBesoinService.CreateExpressionBesoinAsync(
                         ExpressionBesoin, detailsList);
 
-                    MessageBox.Show(message,
-                        success ? "Succès" : "Erreur",
-                        MessageBoxButton.OK,
-                        success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                    if (success)
+                        NotificationService.ShowSuccess(message);
+                    else
+                        NotificationService.ShowWarning(message);
 
                     if (success)
                     {
@@ -221,8 +220,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
             finally
             {

@@ -25,15 +25,6 @@ namespace Collectivite.Views
             this.KeyDown += LoginWindow_KeyDown;
         }
 
-        // Synchroniser le PasswordBox avec le ViewModel
-        private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
-        {
-            if (sender is PasswordBox passwordBox && DataContext is LoginViewModel viewModel)
-            {
-                viewModel.Password = passwordBox.Password;
-            }
-        }
-
         // Validation avec Enter
         private void LoginWindow_KeyDown(object sender, KeyEventArgs e)
         {

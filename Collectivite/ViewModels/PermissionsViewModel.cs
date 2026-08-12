@@ -39,6 +39,11 @@ namespace Collectivite.ViewModels
 
         public ObservableCollection<Permission> Permissions { get; } = new();
 
+        public bool CanViewPermission => SessionManager.HasPermission("Permission.View");
+        public bool CanCreatePermission => SessionManager.HasPermission("Permission.Create");
+        public bool CanEditPermission => SessionManager.HasPermission("Permission.Edit");
+        public bool CanDeletePermission => SessionManager.HasPermission("Permission.Delete");
+
         public bool IsLoading
         {
             get => _isLoading;
@@ -92,8 +97,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors du chargement : {ex.Message}");
             }
             finally
             {
@@ -103,6 +107,12 @@ namespace Collectivite.ViewModels
 
         private void OpenAddDialog()
         {
+            if (!CanCreatePermission)
+            {
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
+                return;
+            }
+
             DialogPermission = CreateEmptyPermission();
             IsEditMode = false;
             IsDialogOpen = true;
@@ -111,6 +121,12 @@ namespace Collectivite.ViewModels
         private void OpenEditDialog(Permission? permission)
         {
             if (permission == null) return;
+
+            if (!CanEditPermission)
+            {
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
+                return;
+            }
 
             DialogPermission = new Permission
             {
@@ -132,6 +148,12 @@ namespace Collectivite.ViewModels
 
         private async System.Threading.Tasks.Task SaveAsync()
         {
+            if (!(IsEditMode ? CanEditPermission : CanCreatePermission))
+            {
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
+                return;
+            }
+
             IsLoading = true;
 
             try
@@ -139,20 +161,28 @@ namespace Collectivite.ViewModels
                 if (IsEditMode)
                 {
                     var (success, message) = await _permissionService.UpdateAsync(DialogPermission);
-                    MessageBox.Show(message,
-                        success ? "Succès" : "Erreur",
-                        MessageBoxButton.OK,
-                        success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                    if (success)
+                    {
+                        NotificationService.ShowSuccess(message);
+                    }
+                    else
+                    {
+                        NotificationService.ShowWarning(message);
+                    }
 
                     if (!success) return;
                 }
                 else
                 {
                     var (success, message, _) = await _permissionService.CreateAsync(DialogPermission);
-                    MessageBox.Show(message,
-                        success ? "Succès" : "Erreur",
-                        MessageBoxButton.OK,
-                        success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                    if (success)
+                    {
+                        NotificationService.ShowSuccess(message);
+                    }
+                    else
+                    {
+                        NotificationService.ShowWarning(message);
+                    }
 
                     if (!success) return;
                 }
@@ -162,8 +192,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
             finally
             {
@@ -174,6 +203,12 @@ namespace Collectivite.ViewModels
         private async System.Threading.Tasks.Task DeleteAsync(Permission? permission)
         {
             if (permission == null) return;
+
+            if (!CanDeletePermission)
+            {
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
+                return;
+            }
 
             var confirm = MessageBox.Show(
                 $"Supprimer la permission '{permission.Name}' ?",
@@ -190,10 +225,14 @@ namespace Collectivite.ViewModels
             {
                 var (success, message) = await _permissionService.DeleteAsync(permission.Id);
 
-                MessageBox.Show(message,
-                    success ? "Succès" : "Erreur",
-                    MessageBoxButton.OK,
-                    success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                if (success)
+                {
+                    NotificationService.ShowSuccess(message);
+                }
+                else
+                {
+                    NotificationService.ShowWarning(message);
+                }
 
                 if (success)
                 {
@@ -202,8 +241,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
             finally
             {

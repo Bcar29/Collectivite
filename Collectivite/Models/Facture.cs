@@ -54,8 +54,6 @@ namespace Collectivite.Models
         public int ExerciceId { get; set; }
         public Exercice Exercice { get; set; } = null!;
 
-        public int? ContratId { get; set; }
-        public Contrats? Contrats { get; set; }
         // 🔹 Statut de la facture
         [Required]
         public StatusFact Status { get; set; } = StatusFact.impayee;

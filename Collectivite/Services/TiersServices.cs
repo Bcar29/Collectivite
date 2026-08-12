@@ -445,25 +445,21 @@ namespace Collectivite.Services
                 var tiers = await context.Tiers
                     .Include(t => t.Documents)
                     .Include(t => t.CompteBancaires)
-                    .Include(t => t.Contrats)
                     .Include(t => t.Engagements)
                     .Include(t => t.Factures)
-                    .Include(t => t.Recensements)
                     .FirstOrDefaultAsync(t => t.Id == id);
 
                 if (tiers == null)
                     return (false, "Tiers introuvable.");
 
                 // Vérifier s'il y a des dépendances
-                var hasDependencies = (tiers.Contrats?.Any() ?? false) ||
-                                     (tiers.Engagements?.Any() ?? false) ||
-                                     (tiers.Factures?.Any() ?? false) ||
-                                     (tiers.Recensements?.Any() ?? false);
+                var hasDependencies = (tiers.Engagements?.Any() ?? false) ||
+                                     (tiers.Factures?.Any() ?? false);
 
                 if (hasDependencies)
                 {
                     return (false,
-                        "Impossible de supprimer ce tiers car il est lié à des contrats, engagements, factures ou recensements.\n" +
+                        "Impossible de supprimer ce tiers car il est lié à des engagements ou factures.\n" +
                         "Vous pouvez le désactiver à la place.");
                 }
 

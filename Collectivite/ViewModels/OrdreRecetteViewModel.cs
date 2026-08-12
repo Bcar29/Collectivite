@@ -29,6 +29,31 @@ namespace Collectivite.ViewModels
         private DateTime? _filterDateFin;
         private decimal? _filterMontantMin;
         private decimal? _filterMontantMax;
+        private bool _isFiltered;
+
+        // Pagination
+        private const int PageSize = 20;
+        private int _pageNumber = 1;
+        public int PageNumber
+        {
+            get => _pageNumber;
+            set => SetProperty(ref _pageNumber, value);
+        }
+
+        private int _totalCount;
+        public int TotalCount
+        {
+            get => _totalCount;
+            set
+            {
+                if (SetProperty(ref _totalCount, value))
+                {
+                    OnPropertyChanged(nameof(TotalPages));
+                }
+            }
+        }
+
+        public int TotalPages => Math.Max(1, (int)Math.Ceiling(TotalCount / (double)PageSize));
 
         public OrdreRecetteViewModel()
         {
@@ -43,7 +68,7 @@ namespace Collectivite.ViewModels
             _searchNumeroOrdre = string.Empty;
 
             // Commandes
-            LoadDataCommand = new RelayCommand(async _ => await LoadDataAsync());
+            LoadDataCommand = new RelayCommand(async _ => await LoadDataResetAsync());
             SaveCommand = new RelayCommand(async _ => await SaveAsync(), _ => CanSave());
             CancelCommand = new RelayCommand(_ => CancelDialog());
             DeleteCommand = new RelayCommand<OrdreRecetteDisplay>(async o => await DeleteAsync(o));
@@ -52,9 +77,11 @@ namespace Collectivite.ViewModels
             NavigateToEditCommand = new RelayCommand<OrdreRecetteDisplay>(o => NavigateToEdit(o));
 
             // Commandes de recherche et filtrage
-            SearchCommand = new RelayCommand(async _ => await SearchAsync());
+            SearchCommand = new RelayCommand(async _ => await SearchResetAsync());
             ClearFiltersCommand = new RelayCommand(async _ => await ClearFiltersAsync());
             ToggleFilterPanelCommand = new RelayCommand(_ => ToggleFilterPanel());
+            NextPageCommand = new RelayCommand(async _ => await NextPageAsync(), _ => PageNumber < TotalPages);
+            PreviousPageCommand = new RelayCommand(async _ => await PreviousPageAsync(), _ => PageNumber > 1);
 
             // Commande pour générer le montant en lettres
             ConvertMontantToLettresCommand = new RelayCommand(_ => ConvertMontantToLettres());
@@ -199,16 +226,25 @@ namespace Collectivite.ViewModels
         public ICommand NavigateToAddCommand { get; }
         public ICommand NavigateToEditCommand { get; }
         public ICommand NavigateToDetailCommand { get; }
+        public ICommand NextPageCommand { get; }
+        public ICommand PreviousPageCommand { get; }
 
         #endregion
 
         #region Methods
 
+        private async System.Threading.Tasks.Task LoadDataResetAsync()
+        {
+            _isFiltered = false;
+            PageNumber = 1;
+            await LoadDataAsync();
+        }
+
         private async System.Threading.Tasks.Task LoadDataAsync()
         {
             if (!CanViewOrdreRecette)
             {
-                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning(_accessDeniedMessage);
                 return;
             }
 
@@ -217,7 +253,8 @@ namespace Collectivite.ViewModels
             try
             {
                 var ordreRecetteService = new OrdreRecetteService();
-                var ordres = await ordreRecetteService.GetAllOrdresRecetteAsync();
+                var (ordres, totalCount) = await ordreRecetteService.GetAllOrdresRecetteAsync(PageNumber, PageSize);
+                TotalCount = totalCount;
 
                 // ══════════════════════════════════════════════════════
                 // AJOUT : Calculer le montant encaissé et le statut
@@ -280,8 +317,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors du chargement : {ex.Message}");
             }
             finally
             {
@@ -365,7 +401,7 @@ namespace Collectivite.ViewModels
             {
                 if (!CanEditOrdreRecette)
                 {
-                    MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    NotificationService.ShowWarning(_accessDeniedMessage);
                     return;
                 }
             }
@@ -373,7 +409,7 @@ namespace Collectivite.ViewModels
             {
                 if (!CanCreateOrdreRecette)
                 {
-                    MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    NotificationService.ShowWarning(_accessDeniedMessage);
                     return;
                 }
             }
@@ -388,37 +424,36 @@ namespace Collectivite.ViewModels
                 {
                     var (success, message) = await ordreRecetteService.UpdateOrdreRecetteAsync(DialogOrdreRecette);
 
-                    MessageBox.Show(message,
-                        success ? "Succès" : "Erreur",
-                        MessageBoxButton.OK,
-                        success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                    if (success)
+                        NotificationService.ShowSuccess(message);
+                    else
+                        NotificationService.ShowWarning(message);
 
                     if (success)
                     {
                         IsDialogOpen = false;
-                        await LoadDataAsync();
+                        await LoadDataResetAsync();
                     }
                 }
                 else
                 {
                     var (success, message, ordreRecette) = await ordreRecetteService.CreateOrdreRecetteAsync(DialogOrdreRecette);
 
-                    MessageBox.Show(message,
-                        success ? "Succès" : "Erreur",
-                        MessageBoxButton.OK,
-                        success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                    if (success)
+                        NotificationService.ShowSuccess(message);
+                    else
+                        NotificationService.ShowWarning(message);
 
                     if (success)
                     {
                         IsDialogOpen = false;
-                        await LoadDataAsync();
+                        await LoadDataResetAsync();
                     }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
             finally
             {
@@ -440,7 +475,7 @@ namespace Collectivite.ViewModels
 
             if (!CanDeleteOrdreRecette)
             {
-                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning(_accessDeniedMessage);
                 return;
             }
 
@@ -462,20 +497,20 @@ namespace Collectivite.ViewModels
                 var ordreRecetteService = new OrdreRecetteService();
                 var (success, message) = await ordreRecetteService.DeleteOrdreRecetteAsync(ordreDisplay.Id);
 
-                MessageBox.Show(message,
-                    success ? "Succès" : "Erreur",
-                    MessageBoxButton.OK,
-                    success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                if (success)
+                    NotificationService.ShowSuccess(message);
+                else
+                    NotificationService.ShowWarning(message);
 
                 if (success)
                 {
+                    _isFiltered = false;
                     await LoadDataAsync();
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
             finally
             {
@@ -487,7 +522,7 @@ namespace Collectivite.ViewModels
         {
             if (!CanCreateOrdreRecette)
             {
-                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning(_accessDeniedMessage);
                 return;
             }
             NavigationService.Instance.NavigateTo(new Views.Pages.OrdreRecetteFormPage());
@@ -501,7 +536,7 @@ namespace Collectivite.ViewModels
             if (ordreDisplay == null) return;
             if (!CanEditOrdreRecette)
             {
-                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning(_accessDeniedMessage);
                 return;
             }
             NavigationService.Instance.NavigateTo(new Views.Pages.OrdreRecetteFormPage(ordreDisplay.Id));
@@ -515,7 +550,7 @@ namespace Collectivite.ViewModels
             if (ordreDisplay == null) return;
             if (!CanViewOrdreRecette)
             {
-                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning(_accessDeniedMessage);
                 return;
             }
             NavigationService.Instance.NavigateTo(new Views.Pages.OrdreRecetteDetailPage(ordreDisplay.Id));
@@ -524,11 +559,18 @@ namespace Collectivite.ViewModels
 
         #region Recherche et Filtrage
 
+        private async System.Threading.Tasks.Task SearchResetAsync()
+        {
+            _isFiltered = true;
+            PageNumber = 1;
+            await SearchAsync();
+        }
+
         private async System.Threading.Tasks.Task SearchAsync()
         {
             if (!CanViewOrdreRecette)
             {
-                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning(_accessDeniedMessage);
                 return;
             }
 
@@ -538,7 +580,7 @@ namespace Collectivite.ViewModels
             {
                 var ordreRecetteService = new OrdreRecetteService();
 
-                var resultats = await ordreRecetteService.SearchOrdresRecetteAsync(
+                var (resultats, totalCount) = await ordreRecetteService.SearchOrdresRecetteAsync(
                     numeroOrdre: SearchNumeroOrdre,
                     exerciceId: FilterExerciceId,
                     communeId: FilterCommuneId,
@@ -546,8 +588,11 @@ namespace Collectivite.ViewModels
                     dateDebut: FilterDateDebut,
                     dateFin: FilterDateFin,
                     montantMin: FilterMontantMin,
-                    montantMax: FilterMontantMax
+                    montantMax: FilterMontantMax,
+                    pageNumber: PageNumber,
+                    pageSize: PageSize
                 );
+                TotalCount = totalCount;
 
                 // ══════════════════════════════════════════════════════
                 // AJOUT : Calculer le montant encaissé et le statut
@@ -565,13 +610,26 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de la recherche : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors de la recherche : {ex.Message}");
             }
             finally
             {
                 IsLoading = false;
             }
+        }
+
+        private async System.Threading.Tasks.Task NextPageAsync()
+        {
+            if (PageNumber >= TotalPages) return;
+            PageNumber++;
+            await (_isFiltered ? SearchAsync() : LoadDataAsync());
+        }
+
+        private async System.Threading.Tasks.Task PreviousPageAsync()
+        {
+            if (PageNumber <= 1) return;
+            PageNumber--;
+            await (_isFiltered ? SearchAsync() : LoadDataAsync());
         }
 
         private async System.Threading.Tasks.Task ClearFiltersAsync()
@@ -585,7 +643,7 @@ namespace Collectivite.ViewModels
             FilterMontantMin = null;
             FilterMontantMax = null;
 
-            await LoadDataAsync();
+            await LoadDataResetAsync();
         }
 
         private void ToggleFilterPanel()

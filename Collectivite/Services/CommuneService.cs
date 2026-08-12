@@ -26,7 +26,6 @@ namespace Collectivite.Services
                 .Include(c => c.DetailCommunes)
                 .Include(c => c.Users)
                 .Include(c => c.Engagements)
-                .Include(c => c.Recensements)
                 .FirstOrDefaultAsync(c => c.Id == id);
         }
 

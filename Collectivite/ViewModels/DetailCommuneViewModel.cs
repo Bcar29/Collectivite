@@ -56,6 +56,11 @@ namespace Collectivite.ViewModels
         public ObservableCollection<Commune> Communes { get; } = new ObservableCollection<Commune>();
         public ObservableCollection<Exercice> Exercices { get; } = new ObservableCollection<Exercice>();
 
+        public bool CanViewDetailCommune => SessionManager.HasPermission("DetailCommune.View");
+        public bool CanCreateDetailCommune => SessionManager.HasPermission("DetailCommune.Create");
+        public bool CanEditDetailCommune => SessionManager.HasPermission("DetailCommune.Edit");
+        public bool CanDeleteDetailCommune => SessionManager.HasPermission("DetailCommune.Delete");
+
         public bool IsLoading
         {
             get => _isLoading;
@@ -132,8 +137,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de l'initialisation : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors de l'initialisation : {ex.Message}");
             }
         }
 
@@ -163,8 +167,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors du chargement : {ex.Message}");
             }
             finally
             {
@@ -187,8 +190,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement des communes : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors du chargement des communes : {ex.Message}");
             }
         }
 
@@ -213,13 +215,18 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement des exercices : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors du chargement des exercices : {ex.Message}");
             }
         }
 
         private void OpenAddDetailCommune()
         {
+            if (!CanCreateDetailCommune)
+            {
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
+                return;
+            }
+
             IsEditMode = false;
             DialogDetailCommune = new DetailCommune
             {
@@ -239,6 +246,12 @@ namespace Collectivite.ViewModels
         private void OpenEditDetailCommune(DetailCommune? detail)
         {
             if (detail == null) return;
+
+            if (!CanEditDetailCommune)
+            {
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
+                return;
+            }
 
             IsEditMode = true;
             DialogDetailCommune = new DetailCommune
@@ -317,19 +330,23 @@ namespace Collectivite.ViewModels
                 }
                 else
                 {
-                    MessageBox.Show("Impossible de naviguer vers la page de détails.",
-                        "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                    NotificationService.ShowError("Impossible de naviguer vers la page de détails.");
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de l'ouverture des détails : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors de l'ouverture des détails : {ex.Message}");
             }
         }
 
         private async System.Threading.Tasks.Task SaveDetailCommuneAsync()
         {
+            if (!(IsEditMode ? CanEditDetailCommune : CanCreateDetailCommune))
+            {
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
+                return;
+            }
+
             IsLoading = true;
 
             try
@@ -349,7 +366,7 @@ namespace Collectivite.ViewModels
                     }
                     else
                     {
-                        MessageBox.Show("Veuillez sélectionner un exercice.", "Erreur", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        NotificationService.ShowWarning("Veuillez sélectionner un exercice.");
                         IsLoading = false;
                         return;
                     }
@@ -375,13 +392,13 @@ namespace Collectivite.ViewModels
 
                     if (success)
                     {
-                        MessageBox.Show(message, "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+                        NotificationService.ShowSuccess(message);
                         IsDialogOpen = false;
                         await LoadDetailCommuneAsync();
                     }
                     else
                     {
-                        MessageBox.Show(message, "Erreur", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        NotificationService.ShowWarning(message);
                     }
                 }
                 else
@@ -390,19 +407,19 @@ namespace Collectivite.ViewModels
 
                     if (success)
                     {
-                        MessageBox.Show(message, "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+                        NotificationService.ShowSuccess(message);
                         IsDialogOpen = false;
                         await LoadDetailCommuneAsync();
                     }
                     else
                     {
-                        MessageBox.Show(message, "Erreur", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        NotificationService.ShowWarning(message);
                     }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
             finally
             {
@@ -419,6 +436,12 @@ namespace Collectivite.ViewModels
         {
             if (detail == null) return;
 
+            if (!CanDeleteDetailCommune)
+            {
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
+                return;
+            }
+
             var result = MessageBox.Show(
                 $"Êtes-vous sûr de vouloir supprimer les détails de la commune '{detail.Commune?.Nom}' ?",
                 "Confirmation",
@@ -431,10 +454,14 @@ namespace Collectivite.ViewModels
 
                 var (success, message) = await _detailCommuneService.DeleteAsync(detail.Id);
 
-                MessageBox.Show(message,
-                    success ? "Succès" : "Erreur",
-                    MessageBoxButton.OK,
-                    success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                if (success)
+                {
+                    NotificationService.ShowSuccess(message);
+                }
+                else
+                {
+                    NotificationService.ShowWarning(message);
+                }
 
                 if (success)
                 {
@@ -455,8 +482,7 @@ namespace Collectivite.ViewModels
             }
             else
             {
-                MessageBox.Show("La superficie doit être supérieure à 0 pour calculer la densité.",
-                    "Attention", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning("La superficie doit être supérieure à 0 pour calculer la densité.");
             }
         }
 

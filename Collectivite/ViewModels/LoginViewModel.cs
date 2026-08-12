@@ -112,7 +112,6 @@ namespace Collectivite.ViewModels
             else
             {
                 ErrorMessage = message;
-                MessageBox.Show(message);
             }
         }
     }

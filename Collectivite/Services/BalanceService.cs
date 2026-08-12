@@ -239,7 +239,14 @@ namespace Collectivite.Services
         public async Task<BalanceTotauxDTO> GetTotauxAsync(BalanceFiltreDTO filtre)
         {
             var balance = await GetBalanceAsync(filtre);
+            return CalculerTotaux(balance);
+        }
 
+        /// <summary>
+        /// Calcule les totaux à partir d'une balance déjà chargée, sans nouvelle requête.
+        /// </summary>
+        public BalanceTotauxDTO CalculerTotaux(List<BalanceLigneDTO> balance)
+        {
             return new BalanceTotauxDTO
             {
                 // Totaux Débit
@@ -264,7 +271,14 @@ namespace Collectivite.Services
         public async Task<BalanceStatsDTO> GetStatistiquesAsync(BalanceFiltreDTO filtre)
         {
             var balance = await GetBalanceAsync(filtre);
+            return CalculerStatistiques(balance);
+        }
 
+        /// <summary>
+        /// Calcule les statistiques à partir d'une balance déjà chargée, sans nouvelle requête.
+        /// </summary>
+        public BalanceStatsDTO CalculerStatistiques(List<BalanceLigneDTO> balance)
+        {
             return new BalanceStatsDTO
             {
                 NombreComptes = balance.Count,

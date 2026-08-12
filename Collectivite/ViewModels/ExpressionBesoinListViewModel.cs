@@ -93,8 +93,7 @@ namespace Collectivite.ViewModels
             {
                 if (!CanViewExpressionBesoin)
                 {
-                    MessageBox.Show("Accès refusé : vous n'avez pas la permission de consulter les expressions de besoin.",
-                        "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    NotificationService.ShowWarning("Accès refusé : vous n'avez pas la permission de consulter les expressions de besoin.");
                     ExpressionBesoins.Clear();
                     return;
                 }
@@ -110,8 +109,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors du chargement : {ex.Message}");
             }
             finally
             {
@@ -123,8 +121,7 @@ namespace Collectivite.ViewModels
         {
             if (!CanCreateExpressionBesoin)
             {
-                MessageBox.Show("Accès refusé : vous n'avez pas la permission de créer des expressions de besoin.",
-                    "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Accès refusé : vous n'avez pas la permission de créer des expressions de besoin.");
                 return;
             }
             NavigationService.Instance.NavigateTo(new Views.Pages.ExpressionBesoinFormPage(_authService));
@@ -135,8 +132,7 @@ namespace Collectivite.ViewModels
             if (expressionBesoin == null) return;
             if (!CanEditExpressionBesoin)
             {
-                MessageBox.Show("Accès refusé : vous n'avez pas la permission de modifier des expressions de besoin.",
-                    "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Accès refusé : vous n'avez pas la permission de modifier des expressions de besoin.");
                 return;
             }
             NavigationService.Instance.NavigateTo(new Views.Pages.ExpressionBesoinFormPage(_authService, expressionBesoin.Id));
@@ -147,8 +143,7 @@ namespace Collectivite.ViewModels
             if (expressionBesoin == null) return;
             if (!CanViewExpressionBesoin)
             {
-                MessageBox.Show("Accès refusé : vous n'avez pas la permission de consulter les expressions de besoin.",
-                    "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Accès refusé : vous n'avez pas la permission de consulter les expressions de besoin.");
                 return;
             }
             NavigationService.Instance.NavigateTo(new Views.Pages.ExpressionBesoinDetailsPage(expressionBesoin.Id));
@@ -159,8 +154,7 @@ namespace Collectivite.ViewModels
             if (expressionBesoin == null) return;
             if (!CanDeleteExpressionBesoin)
             {
-                MessageBox.Show("Accès refusé : vous n'avez pas la permission de supprimer des expressions de besoin.",
-                    "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Accès refusé : vous n'avez pas la permission de supprimer des expressions de besoin.");
                 return;
             }
 
@@ -181,10 +175,14 @@ namespace Collectivite.ViewModels
                 var service = new ExpressionBesoinService();
                 var (success, message) = await service.DeleteExpressionBesoinAsync(expressionBesoin.Id);
 
-                MessageBox.Show(message,
-                    success ? "Succès" : "Erreur",
-                    MessageBoxButton.OK,
-                    success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                if (success)
+                {
+                    NotificationService.ShowSuccess(message);
+                }
+                else
+                {
+                    NotificationService.ShowWarning(message);
+                }
 
                 if (success)
                 {
@@ -193,8 +191,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
             finally
             {

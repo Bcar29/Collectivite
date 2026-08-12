@@ -4,6 +4,7 @@
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
       xmlns:local="clr-namespace:Collectivite.Models"
       xmlns:utils="clr-namespace:Collectivite.Utils"
+      xmlns:controls="clr-namespace:Collectivite.Views.Controls"
       Language="fr-FR"
       Background="#F5F5F5"
       Title="Gestion des Mandats"
@@ -304,6 +305,11 @@
 
             <!-- DataGrid -->
             <materialDesign:Card Grid.Row="3" Padding="0">
+              <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
                 <DataGrid ItemsSource="{Binding Mandats}"
                           SelectedItem="{Binding SelectedMandat}"
                           AutoGenerateColumns="False"
@@ -416,81 +422,81 @@
                         </DataGridTemplateColumn>
 
                         <!-- Actions -->
-                        <DataGridTemplateColumn Header="Actions" Width="180">
+                        <DataGridTemplateColumn Header="Actions" Width="60">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                        <!-- Détail -->
-                                        <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                Visibility="{Binding DataContext.CanViewMandat, ElementName=MandatListPageRoot, Converter={StaticResource BoolToVis}}"
-                                                Command="{Binding DataContext.OpenDetailPageCommand, ElementName=MandatListPageRoot}"
-                                                CommandParameter="{Binding}"
-                                                ToolTip="Détails">
-                                            <materialDesign:PackIcon Kind="Eye" Foreground="#1976D2"/>
-                                        </Button>
+                                    <materialDesign:PopupBox Style="{StaticResource RowActionsPopupBoxStyle}">
+                                        <StackPanel>
+                                            <!-- Détail -->
+                                            <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                    Visibility="{Binding DataContext.CanViewMandat, ElementName=MandatListPageRoot, Converter={StaticResource BoolToVis}}"
+                                                    Command="{Binding DataContext.OpenDetailPageCommand, ElementName=MandatListPageRoot}"
+                                                    CommandParameter="{Binding}">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <materialDesign:PackIcon Kind="Eye" Foreground="#1976D2" Margin="0,0,10,0"/>
+                                                    <TextBlock Text="Détails"/>
+                                                </StackPanel>
+                                            </Button>
 
-                                        <!-- ══════════════════════════════════════════════════════ -->
-                                        <!-- MODIFIÉ : Bouton Modifier visible seulement si non payé -->
-                                        <!-- ══════════════════════════════════════════════════════ -->
-                                        <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                Command="{Binding DataContext.OpenEditPageCommand, ElementName=MandatListPageRoot}"
-                                                CommandParameter="{Binding}"
-                                                ToolTip="Modifier">
-                                            <Button.Visibility>
-                                                <MultiBinding Converter="{StaticResource EditButtonVisibilityConverter}">
-                                                    <Binding Path="DataContext.CanEditMandat" ElementName="MandatListPageRoot"/>
-                                                    <Binding Path="status"/>
-                                                </MultiBinding>
-                                            </Button.Visibility>
-                                            <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2"/>
-                                        </Button>
+                                            <!-- Modifier : visible seulement si non payé -->
+                                            <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                    Command="{Binding DataContext.OpenEditPageCommand, ElementName=MandatListPageRoot}"
+                                                    CommandParameter="{Binding}">
+                                                <Button.Visibility>
+                                                    <MultiBinding Converter="{StaticResource EditButtonVisibilityConverter}">
+                                                        <Binding Path="DataContext.CanEditMandat" ElementName="MandatListPageRoot"/>
+                                                        <Binding Path="status"/>
+                                                    </MultiBinding>
+                                                </Button.Visibility>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2" Margin="0,0,10,0"/>
+                                                    <TextBlock Text="Modifier"/>
+                                                </StackPanel>
+                                            </Button>
 
-                                        <!-- Marquer payé / Annuler paiement 
-                                        <Button Style="{StaticResource MaterialDesignIconButton}"
-                                            Visibility="{Binding DataContext.CanEditMandat, ElementName=MandatListPageRoot, Converter={StaticResource BoolToVis}}"
-                                            ToolTip="{Binding DatePaiement, Converter={StaticResource PaymentTooltipConverter}}">
-                                            <Button.Command>
-                                                <MultiBinding Converter="{StaticResource PaymentCommandConverter}">
-                                                    <Binding Path="DataContext.MarquerPayeCommand" ElementName="MandatListPageRoot"/>
-                                                    <Binding Path="DataContext.AnnulerPaiementCommand" ElementName="MandatListPageRoot"/>
-                                                    <Binding Path="DatePaiement"/>
-                                                </MultiBinding>
-                                            </Button.Command>
-                                            <Button.CommandParameter>
-                                                <Binding/>
-                                            </Button.CommandParameter>
-                                            <materialDesign:PackIcon>
-                                                <materialDesign:PackIcon.Style>
-                                                    <Style TargetType="materialDesign:PackIcon">
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding DatePaiement, Converter={StaticResource NullToBooleanConverter}}" Value="False">
-                                                                <Setter Property="Kind" Value="CheckCircle"/>
-                                                                <Setter Property="Foreground" Value="#4CAF50"/>
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding DatePaiement, Converter={StaticResource NullToBooleanConverter}}" Value="True">
-                                                                <Setter Property="Kind" Value="CloseCircle"/>
-                                                                <Setter Property="Foreground" Value="#FF9800"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </materialDesign:PackIcon.Style>
-                                            </materialDesign:PackIcon>
-                                        </Button>
-                                            -->
-                                        <!-- Supprimer -->
-                                        <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                Visibility="{Binding DataContext.CanDeleteMandat, ElementName=MandatListPageRoot, Converter={StaticResource BoolToVis}}"
-                                                Command="{Binding DataContext.DeleteCommand, ElementName=MandatListPageRoot}"
-                                                CommandParameter="{Binding}"
-                                                ToolTip="Supprimer">
-                                            <materialDesign:PackIcon Kind="Delete" Foreground="#F44336"/>
-                                        </Button>
-                                    </StackPanel>
+                                            <!-- Supprimer -->
+                                            <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                    Visibility="{Binding DataContext.CanDeleteMandat, ElementName=MandatListPageRoot, Converter={StaticResource BoolToVis}}"
+                                                    Command="{Binding DataContext.DeleteCommand, ElementName=MandatListPageRoot}"
+                                                    CommandParameter="{Binding}">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <materialDesign:PackIcon Kind="Delete" Foreground="#F44336" Margin="0,0,10,0"/>
+                                                    <TextBlock Text="Supprimer"/>
+                                                </StackPanel>
+                                            </Button>
+                                        </StackPanel>
+                                    </materialDesign:PopupBox>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
                     </DataGrid.Columns>
                 </DataGrid>
+
+                <!-- Message si vide -->
+                <Border Background="#F5F5F5" CornerRadius="8" Padding="40">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Mandats.Count}" Value="0">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <materialDesign:PackIcon Kind="FileDocument" Width="64" Height="64" Foreground="#BDBDBD" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Aucun mandat" FontSize="16" Foreground="#757575" Margin="0,20,0,0" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+
+                <controls:PaginationBar Grid.Row="1"
+                                        PageNumber="{Binding PageNumber}"
+                                        TotalPages="{Binding TotalPages}"
+                                        TotalCount="{Binding TotalCount}"
+                                        PreviousCommand="{Binding PreviousPageCommand}"
+                                        NextCommand="{Binding NextPageCommand}"/>
+              </Grid>
             </materialDesign:Card>
         </Grid>
     </Grid>

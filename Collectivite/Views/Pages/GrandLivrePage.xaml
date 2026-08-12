@@ -153,6 +153,15 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
+                <!-- Filtre Année -->
+                <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                    <TextBlock Text="Année" FontSize="11" Foreground="#666666" Margin="0,0,0,4"/>
+                    <ComboBox Width="110"
+                              ItemsSource="{Binding AnneesDisponibles}"
+                              SelectedItem="{Binding AnneeSelectionnee}"
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
+                </StackPanel>
+
                 <!-- Filtre Mois -->
                 <StackPanel Grid.Column="1" Margin="0,0,16,0">
                     <TextBlock Text="Mois" FontSize="11" Foreground="#666666" Margin="0,0,0,4"/>

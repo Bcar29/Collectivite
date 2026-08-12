@@ -122,6 +122,7 @@
 
             <!-- DataGrid -->
             <materialDesign:Card Grid.Row="1" Padding="0">
+              <Grid>
                 <DataGrid ItemsSource="{Binding Factures}"
                           SelectedItem="{Binding SelectedFacture}"
                           AutoGenerateColumns="False"
@@ -205,49 +206,83 @@
 
 
                         <!-- Actions -->
-                        <DataGridTemplateColumn Header="Actions" Width="340">
+                        <DataGridTemplateColumn Header="Actions" Width="60">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                        <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                ToolTip="Voir les détails"
-                                                Click="BtnDetail_Click"
-                                                Tag="{Binding Id}"
-                                                Margin="4,0"
-                                                Visibility="{Binding DataContext.CanViewFacture, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
-                                            <materialDesign:PackIcon Kind="Eye" Foreground="#4CAF50"/>
-                                        </Button>
-                                        <Button Style="{StaticResource MaterialDesignIconButton}"
-                        Command="{Binding DataContext.ExportPdfCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                        CommandParameter="{Binding}"
-                        ToolTip="Export PDF">
-                                            <materialDesign:PackIcon Kind="FilePdfBox" Foreground="#F44336"/>
-                                        </Button>
-                                        <Button Style="{StaticResource MaterialDesignIconButton}"
-                        Command="{Binding DataContext.ExportExcelCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                        CommandParameter="{Binding}"
-                        ToolTip="Export Excel">
-                                            <materialDesign:PackIcon Kind="FileExcel" Foreground="#4CAF50"/>
-                                        </Button>
-                                        <Button Style="{StaticResource MaterialDesignIconButton}"
-                        
-                        Command="{Binding DataContext.OpenEditDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                        CommandParameter="{Binding}"
-                        ToolTip="Modifier">
-                                            <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2"/>
-                                        </Button>
-                                        <Button Style="{StaticResource MaterialDesignIconButton}"
-                        Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                        CommandParameter="{Binding}"
-                        ToolTip="Supprimer">
-                                            <materialDesign:PackIcon Kind="Delete" Foreground="#F44336"/>
-                                        </Button>
-                                    </StackPanel>
+                                    <materialDesign:PopupBox Style="{StaticResource RowActionsPopupBoxStyle}">
+                                        <StackPanel>
+                                            <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                    Command="{Binding DataContext.OpenDetailsCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                    CommandParameter="{Binding}"
+                                                    Visibility="{Binding DataContext.CanViewFacture, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <materialDesign:PackIcon Kind="Eye" Foreground="#4CAF50" Margin="0,0,10,0"/>
+                                                    <TextBlock Text="Voir les détails"/>
+                                                </StackPanel>
+                                            </Button>
+                                            <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                    Command="{Binding DataContext.OpenEditDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                    CommandParameter="{Binding}"
+                                                    Visibility="{Binding DataContext.CanEditFacture, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2" Margin="0,0,10,0"/>
+                                                    <TextBlock Text="Modifier"/>
+                                                </StackPanel>
+                                            </Button>
+                                            <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                    Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                    CommandParameter="{Binding}"
+                                                    Visibility="{Binding DataContext.CanDeleteFacture, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <materialDesign:PackIcon Kind="Delete" Foreground="#F44336" Margin="0,0,10,0"/>
+                                                    <TextBlock Text="Supprimer"/>
+                                                </StackPanel>
+                                            </Button>
+                                            <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                    Command="{Binding DataContext.ExportPdfCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                    CommandParameter="{Binding}"
+                                                    Visibility="{Binding DataContext.CanViewFacture, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <materialDesign:PackIcon Kind="FilePdfBox" Foreground="#F44336" Margin="0,0,10,0"/>
+                                                    <TextBlock Text="Export PDF"/>
+                                                </StackPanel>
+                                            </Button>
+                                            <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                    Command="{Binding DataContext.ExportExcelCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                    CommandParameter="{Binding}"
+                                                    Visibility="{Binding DataContext.CanViewFacture, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <materialDesign:PackIcon Kind="FileExcel" Foreground="#4CAF50" Margin="0,0,10,0"/>
+                                                    <TextBlock Text="Export Excel"/>
+                                                </StackPanel>
+                                            </Button>
+                                        </StackPanel>
+                                    </materialDesign:PopupBox>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
                     </DataGrid.Columns>
                 </DataGrid>
+
+                <!-- Message si vide -->
+                <Border Background="#F5F5F5" CornerRadius="8" Padding="40">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Factures.Count}" Value="0">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <materialDesign:PackIcon Kind="ClipboardText" Width="64" Height="64" Foreground="#BDBDBD" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Aucune facture" FontSize="16" Foreground="#757575" Margin="0,20,0,0" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Cliquez sur 'Nouvelle Facture' pour commencer" FontSize="13" Foreground="#9E9E9E" Margin="0,8,0,0" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+              </Grid>
             </materialDesign:Card>
         </Grid>
 
@@ -281,7 +316,6 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
@@ -337,18 +371,8 @@
                               SelectedItem="{Binding DialogFacture.Status}"
                               Margin="0,0,0,10"/>
 
-                            <!-- Contrat (optionnel) -->
-                            <ComboBox Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3"
-                              materialDesign:HintAssist.Hint="Contrat (optionnel)"
-                              Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                              ItemsSource="{Binding ContratsList}"
-                              SelectedValue="{Binding DialogFacture.ContratId}"
-                              SelectedValuePath="Id"
-                              DisplayMemberPath="NumeroContrat"
-                              Margin="0,0,0,10"/>
-
                             <!-- Description -->
-                            <TextBox Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3"
+                            <TextBox Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3"
                              materialDesign:HintAssist.Hint="Description *"
                              Style="{StaticResource MaterialDesignOutlinedTextBox}"
                              Text="{Binding DialogFacture.Description, UpdateSourceTrigger=PropertyChanged}"

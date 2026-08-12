@@ -28,6 +28,41 @@ namespace Collectivite.ViewModels
         private Nommenclature? _nomenclatureSelectionnee;
         private bool _isNommenclatureMode = true;
 
+        // Pagination et navigation dans la grille
+        private enum ComptesMode { Tous, Racines, SousComptes }
+        private ComptesMode _currentMode = ComptesMode.Tous;
+        private int? _currentParentId;
+
+        private const int PageSize = 30;
+        private int _pageNumber = 1;
+        public int PageNumber
+        {
+            get => _pageNumber;
+            set => SetProperty(ref _pageNumber, value);
+        }
+
+        private int _totalCount;
+        public int TotalCount
+        {
+            get => _totalCount;
+            set
+            {
+                if (SetProperty(ref _totalCount, value))
+                {
+                    OnPropertyChanged(nameof(TotalPages));
+                }
+            }
+        }
+
+        public int TotalPages => Math.Max(1, (int)Math.Ceiling(TotalCount / (double)PageSize));
+
+        private string? _searchTerm;
+        public string? SearchTerm
+        {
+            get => _searchTerm;
+            set => SetProperty(ref _searchTerm, value);
+        }
+
         public CompteComptableViewModel(CompteComptableService compteService, NommenclatureService nomenclatureService)
         {
             _compteService = compteService;
@@ -42,6 +77,7 @@ namespace Collectivite.ViewModels
 
             // Commandes existantes
             LoadCompteCommand = new RelayCommand(async _ => await LoadCompteAsync());
+            LoadComptesRacinesCommand = new RelayCommand(async _ => await LoadComptesRacinesAsync());
             LoadSousComptesCommand = new RelayCommand<int?>(async parentId => await LoadSousComptesAsync(parentId));
             OppenAddCompteCommand = new RelayCommand(_ => OpenAddCompte());
             OppenEditCompteCommand = new RelayCommand<CompteComptable>(compte => OpenEditCompte(compte));
@@ -52,6 +88,11 @@ namespace Collectivite.ViewModels
             // Nouvelles commandes pour les nomenclatures
             LoadNomenclaturesCommand = new RelayCommand(async _ => await LoadNomenclaturesAsync());
             ChangerModeCommand = new RelayCommand<bool?>(mode => ChangerMode(mode));
+
+            // Pagination et recherche
+            SearchCommand = new RelayCommand(async _ => await SearchAsync());
+            NextPageCommand = new RelayCommand(async _ => await NextPageAsync(), _ => PageNumber < TotalPages);
+            PreviousPageCommand = new RelayCommand(async _ => await PreviousPageAsync(), _ => PageNumber > 1);
 
             // Charger les données au démarrage
             LoadCompteCommand.Execute(null);
@@ -165,7 +206,7 @@ namespace Collectivite.ViewModels
 
         #region Commands
         public ICommand LoadCompteCommand { get; }
-        //public ICommand LoadComptesRacinesCommand { get; }
+        public ICommand LoadComptesRacinesCommand { get; }
         public ICommand LoadSousComptesCommand { get; }
         public ICommand OppenAddCompteCommand { get; }
         public ICommand OppenEditCompteCommand { get; }
@@ -176,6 +217,11 @@ namespace Collectivite.ViewModels
         // Nouvelles commandes
         public ICommand LoadNomenclaturesCommand { get; }
         public ICommand ChangerModeCommand { get; }
+
+        // Pagination et recherche
+        public ICommand SearchCommand { get; }
+        public ICommand NextPageCommand { get; }
+        public ICommand PreviousPageCommand { get; }
         #endregion
 
         #region Methods
@@ -183,13 +229,62 @@ namespace Collectivite.ViewModels
         // Charger tous les comptes
         public async System.Threading.Tasks.Task LoadCompteAsync()
         {
+            _currentMode = ComptesMode.Tous;
+            _currentParentId = null;
+            PageNumber = 1;
+            await RefreshGridAsync();
+        }
+
+        // Charger uniquement les comptes racines (sans contre-partie)
+        public async System.Threading.Tasks.Task LoadComptesRacinesAsync()
+        {
+            _currentMode = ComptesMode.Racines;
+            _currentParentId = null;
+            PageNumber = 1;
+            await RefreshGridAsync();
+        }
+
+        // Charger les sous-comptes d'un compte parent
+        public async System.Threading.Tasks.Task LoadSousComptesAsync(int? parentId)
+        {
+            if (!parentId.HasValue)
+                return;
+
+            _currentMode = ComptesMode.SousComptes;
+            _currentParentId = parentId;
+            PageNumber = 1;
+            await RefreshGridAsync();
+        }
+
+        // Recherche par numéro ou intitulé (dans le mode actuellement affiché)
+        public async System.Threading.Tasks.Task SearchAsync()
+        {
+            PageNumber = 1;
+            await RefreshGridAsync();
+        }
+
+        public async System.Threading.Tasks.Task NextPageAsync()
+        {
+            if (PageNumber >= TotalPages) return;
+            PageNumber++;
+            await RefreshGridAsync();
+        }
+
+        public async System.Threading.Tasks.Task PreviousPageAsync()
+        {
+            if (PageNumber <= 1) return;
+            PageNumber--;
+            await RefreshGridAsync();
+        }
+
+        // Recharge la grille depuis la source correspondant au mode courant (Tous/Racines/SousComptes),
+        // avec la pagination et la recherche en cours.
+        private async System.Threading.Tasks.Task RefreshGridAsync()
+        {
             if (!CanViewCompteComptable)
             {
-                MessageBox.Show(
-                    "Accès refusé : vous n'avez pas la permission de consulter les comptes comptables.",
-                    "Accès refusé",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                NotificationService.ShowWarning(
+                    "Accès refusé : vous n'avez pas la permission de consulter les comptes comptables.");
 
                 CompteComptables.Clear();
                 return;
@@ -198,7 +293,23 @@ namespace Collectivite.ViewModels
             IsLoading = true;
             try
             {
-                var comptes = await _compteService.GetCompteComptablesAsync();
+                List<CompteComptable> comptes;
+                int totalCount;
+
+                switch (_currentMode)
+                {
+                    case ComptesMode.Racines:
+                        (comptes, totalCount) = await _compteService.GetComptesRacinesPagedAsync(PageNumber, PageSize, SearchTerm);
+                        break;
+                    case ComptesMode.SousComptes:
+                        (comptes, totalCount) = await _compteService.GetSousComptesAsync(_currentParentId!.Value, PageNumber, PageSize, SearchTerm);
+                        break;
+                    default:
+                        (comptes, totalCount) = await _compteService.GetCompteComptablesAsync(PageNumber, PageSize, SearchTerm);
+                        break;
+                }
+
+                TotalCount = totalCount;
                 CompteComptables.Clear();
                 foreach (var compte in comptes)
                 {
@@ -207,48 +318,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement des comptes : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-            finally
-            {
-                IsLoading = false;
-            }
-        }
-
-
-        // Charger les sous-comptes d'un compte parent
-        public async System.Threading.Tasks.Task LoadSousComptesAsync(int? parentId)
-        {
-            if (!parentId.HasValue)
-                return;
-
-            if (!CanViewCompteComptable)
-            {
-                MessageBox.Show(
-                    "Accès refusé : vous n'avez pas la permission de consulter les comptes comptables.",
-                    "Accès refusé",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
-
-                CompteComptables.Clear();
-                return;
-            }
-
-            IsLoading = true;
-            try
-            {
-                var sousComptes = await _compteService.GetSousComptesAsync(parentId.Value);
-                CompteComptables.Clear();
-                foreach (var compte in sousComptes)
-                {
-                    CompteComptables.Add(compte);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Erreur lors du chargement des sous-comptes : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors du chargement des comptes : {ex.Message}");
             }
             finally
             {
@@ -283,8 +353,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement des comptes parents : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors du chargement des comptes parents : {ex.Message}");
             }
         }
 
@@ -306,8 +375,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement des nomenclatures : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors du chargement des nomenclatures : {ex.Message}");
             }
         }
 
@@ -339,11 +407,8 @@ namespace Collectivite.ViewModels
         {
             if (!CanCreateCompteComptable)
             {
-                MessageBox.Show(
-                    _accessDeniedMessage + "\nPermission requise : CompteComptable.Create",
-                    "Accès refusé",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                NotificationService.ShowWarning(
+                    _accessDeniedMessage + "\nPermission requise : CompteComptable.Create");
                 return;
             }
 
@@ -383,11 +448,8 @@ namespace Collectivite.ViewModels
 
             if (!CanEditCompteComptable)
             {
-                MessageBox.Show(
-                    _accessDeniedMessage + "\nPermission requise : CompteComptable.Edit",
-                    "Accès refusé",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                NotificationService.ShowWarning(
+                    _accessDeniedMessage + "\nPermission requise : CompteComptable.Edit");
                 return;
             }
 
@@ -420,21 +482,15 @@ namespace Collectivite.ViewModels
         {
             if (IsEditMode && !CanEditCompteComptable)
             {
-                MessageBox.Show(
-                    _accessDeniedMessage + "\nPermission requise : CompteComptable.Edit",
-                    "Accès refusé",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                NotificationService.ShowWarning(
+                    _accessDeniedMessage + "\nPermission requise : CompteComptable.Edit");
                 return;
             }
 
             if (!IsEditMode && !CanCreateCompteComptable)
             {
-                MessageBox.Show(
-                    _accessDeniedMessage + "\nPermission requise : CompteComptable.Create",
-                    "Accès refusé",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                NotificationService.ShowWarning(
+                    _accessDeniedMessage + "\nPermission requise : CompteComptable.Create");
                 return;
             }
 
@@ -453,15 +509,13 @@ namespace Collectivite.ViewModels
                     var (success, message) = await _compteService.UpdateCompteComptable(DialogCompte);
                     if (success)
                     {
-                        MessageBox.Show("Compte mis à jour avec succès",
-                            "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+                        NotificationService.ShowSuccess("Compte mis à jour avec succès");
                         IsDialogOpen = false;
                         await LoadCompteAsync();
                     }
                     else
                     {
-                        MessageBox.Show(message, "Erreur",
-                            MessageBoxButton.OK, MessageBoxImage.Error);
+                        NotificationService.ShowError(message);
                     }
                 }
                 else
@@ -469,22 +523,19 @@ namespace Collectivite.ViewModels
                     var (success, message, _) = await _compteService.CreateCompteComptable(DialogCompte);
                     if (success)
                     {
-                        MessageBox.Show(message, "Succès",
-                            MessageBoxButton.OK, MessageBoxImage.Information);
+                        NotificationService.ShowSuccess(message);
                         IsDialogOpen = false;
                         await LoadCompteAsync();
                     }
                     else
                     {
-                        MessageBox.Show(message, "Erreur",
-                            MessageBoxButton.OK, MessageBoxImage.Error);
+                        NotificationService.ShowError(message);
                     }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de l'enregistrement du compte : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors de l'enregistrement du compte : {ex.Message}");
             }
             finally
             {
@@ -504,11 +555,8 @@ namespace Collectivite.ViewModels
 
             if (!CanDeleteCompteComptable)
             {
-                MessageBox.Show(
-                    _accessDeniedMessage + "\nPermission requise : CompteComptable.Delete",
-                    "Accès refusé",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                NotificationService.ShowWarning(
+                    _accessDeniedMessage + "\nPermission requise : CompteComptable.Delete");
                 return;
             }
 
@@ -527,14 +575,12 @@ namespace Collectivite.ViewModels
 
                 if (success)
                 {
-                    MessageBox.Show(message, "Succès",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    NotificationService.ShowSuccess(message);
                     await LoadCompteAsync();
                 }
                 else
                 {
-                    MessageBox.Show(message, "Erreur",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    NotificationService.ShowError(message);
                 }
 
                 IsLoading = false;

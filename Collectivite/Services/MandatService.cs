@@ -76,9 +76,9 @@ namespace Collectivite.Services
         }
 
         /// <summary>
-        /// Récupère tous les mandats avec leurs relations
+        /// Récupère tous les mandats avec leurs relations, page par page
         /// </summary>
-        public async Task<List<Mandat>> GetAllMandatsAsync()
+        public async Task<(List<Mandat> Items, int TotalCount)> GetAllMandatsAsync(int pageNumber = 1, int pageSize = 20)
         {
             if (!SessionManager.HasPermission("Mandat.View"))
                 throw new UnauthorizedAccessException("Permission Mandat.View requise pour consulter les mandats.");
@@ -88,11 +88,16 @@ namespace Collectivite.Services
 
             if (exerciceService.CurrentExercice == null)
             {
-                return new List<Mandat>();
+                return (new List<Mandat>(), 0);
             }
 
-            return await context.Mandats
+            var query = context.Mandats
                 .Where(m => m.Engagement.ExerciceId == exerciceService.CurrentExercice.Id)
+                .AsNoTracking();
+
+            var totalCount = await query.CountAsync();
+
+            var items = await query
                 .Include(m => m.Engagement)
                     .ThenInclude(e => e.BudgetLine)
                         .ThenInclude(bl => bl.Nommenclature)
@@ -101,9 +106,13 @@ namespace Collectivite.Services
                 .Include(m => m.Engagement)
                     .ThenInclude(e => e.Tiers)
                 .Include(m => m.EcritureComptables)
-                .AsNoTracking()
                 .OrderByDescending(m => m.DateEmission)
+                .ThenByDescending(m => m.Id)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
+
+            return (items, totalCount);
         }
 
         /// <summary>
@@ -169,7 +178,7 @@ namespace Collectivite.Services
         /// <summary>
         /// Récupère les mandats filtrés
         /// </summary>
-        public async Task<List<Mandat>> GetMandatsFilteredAsync(
+        public async Task<(List<Mandat> Items, int TotalCount)> GetMandatsFilteredAsync(
             string? numeroMandat = null,
             string? bordereau = null,
             TypeMois? mois = null,
@@ -178,21 +187,23 @@ namespace Collectivite.Services
             decimal? montantMax = null,
             DateTime? dateEmissionDebut = null,
             DateTime? dateEmissionFin = null,
-            bool? estPaye = null)
+            bool? estPaye = null,
+            int pageNumber = 1,
+            int pageSize = 20)
         {
             if (!SessionManager.HasPermission("Mandat.View"))
                 throw new UnauthorizedAccessException("Permission Mandat.View requise pour consulter les mandats.");
 
             using var context = CreateContext();
+            var exerciceService = ExerciceService.Instance;
+
+            if (exerciceService.CurrentExercice == null)
+            {
+                return (new List<Mandat>(), 0);
+            }
 
             var query = context.Mandats
-                .Include(m => m.Engagement)
-                    .ThenInclude(e => e.BudgetLine)
-                        .ThenInclude(bl => bl.Nommenclature)
-                .Include(m => m.Engagement)
-                    .ThenInclude(e => e.Exercice)
-                .Include(m => m.Engagement)
-                    .ThenInclude(e => e.Tiers)
+                .Where(m => m.Engagement.ExerciceId == exerciceService.CurrentExercice.Id)
                 .AsQueryable();
 
             // Filtre par numéro de mandat
@@ -252,10 +263,25 @@ namespace Collectivite.Services
                 }
             }
 
-            return await query
-                .AsNoTracking()
+            query = query.AsNoTracking();
+
+            var totalCount = await query.CountAsync();
+
+            var items = await query
+                .Include(m => m.Engagement)
+                    .ThenInclude(e => e.BudgetLine)
+                        .ThenInclude(bl => bl.Nommenclature)
+                .Include(m => m.Engagement)
+                    .ThenInclude(e => e.Exercice)
+                .Include(m => m.Engagement)
+                    .ThenInclude(e => e.Tiers)
                 .OrderByDescending(m => m.DateEmission)
+                .ThenByDescending(m => m.Id)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
+
+            return (items, totalCount);
         }
 
         #endregion

@@ -174,6 +174,7 @@
                             </StackPanel>
                         </TabItem.Header>
                         <materialDesign:Card Padding="0" Margin="0,10,0,0">
+                          <Grid>
                             <DataGrid ItemsSource="{Binding TiersContribuables}"
                                       SelectedItem="{Binding SelectedTiers}"
                                       Style="{StaticResource TiersDataGridStyle}">
@@ -264,60 +265,87 @@
                                     </DataGridTemplateColumn>
 
                                     <!-- Actions -->
-                                    <DataGridTemplateColumn Header="Actions" Width="150">
+                                    <DataGridTemplateColumn Header="Actions" Width="60">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                    <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                            Command="{Binding DataContext.OpenEditTiersDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                            CommandParameter="{Binding}"
-                                                            ToolTip="Modifier">
-                                                        <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2"/>
-                                                    </Button>
-                                                    <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                            Command="{Binding DataContext.ToggleActifCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                            CommandParameter="{Binding}"
-                                                            Margin="4,0">
-                                                        <Button.ToolTip>
-                                                            <TextBlock>
-                                                                <TextBlock.Style>
-                                                                    <Style TargetType="TextBlock">
-                                                                        <Setter Property="Text" Value="Désactiver"/>
-                                                                        <Style.Triggers>
-                                                                            <DataTrigger Binding="{Binding IsActif}" Value="False">
-                                                                                <Setter Property="Text" Value="Activer"/>
-                                                                            </DataTrigger>
-                                                                        </Style.Triggers>
-                                                                    </Style>
-                                                                </TextBlock.Style>
-                                                            </TextBlock>
-                                                        </Button.ToolTip>
-                                                        <materialDesign:PackIcon Foreground="#FF9800">
-                                                            <materialDesign:PackIcon.Style>
-                                                                <Style TargetType="materialDesign:PackIcon">
-                                                                    <Setter Property="Kind" Value="EyeOff"/>
-                                                                    <Style.Triggers>
-                                                                        <DataTrigger Binding="{Binding IsActif}" Value="False">
-                                                                            <Setter Property="Kind" Value="Eye"/>
-                                                                        </DataTrigger>
-                                                                    </Style.Triggers>
-                                                                </Style>
-                                                            </materialDesign:PackIcon.Style>
-                                                        </materialDesign:PackIcon>
-                                                    </Button>
-                                                    <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                            Command="{Binding DataContext.DeleteTiersCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                            CommandParameter="{Binding}"
-                                                            ToolTip="Supprimer">
-                                                        <materialDesign:PackIcon Kind="Delete" Foreground="#F44336"/>
-                                                    </Button>
-                                                </StackPanel>
+                                                <materialDesign:PopupBox Style="{StaticResource RowActionsPopupBoxStyle}">
+                                                    <StackPanel>
+                                                        <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                                Command="{Binding DataContext.OpenEditTiersDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                                CommandParameter="{Binding}"
+                                                                Visibility="{Binding DataContext.CanEditTiers, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2" Margin="0,0,10,0"/>
+                                                                <TextBlock Text="Modifier"/>
+                                                            </StackPanel>
+                                                        </Button>
+                                                        <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                                Command="{Binding DataContext.ToggleActifCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                                CommandParameter="{Binding}"
+                                                                Visibility="{Binding DataContext.CanEditTiers, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <materialDesign:PackIcon Foreground="#FF9800" Margin="0,0,10,0">
+                                                                    <materialDesign:PackIcon.Style>
+                                                                        <Style TargetType="materialDesign:PackIcon">
+                                                                            <Setter Property="Kind" Value="EyeOff"/>
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding IsActif}" Value="False">
+                                                                                    <Setter Property="Kind" Value="Eye"/>
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </materialDesign:PackIcon.Style>
+                                                                </materialDesign:PackIcon>
+                                                                <TextBlock>
+                                                                    <TextBlock.Style>
+                                                                        <Style TargetType="TextBlock">
+                                                                            <Setter Property="Text" Value="Désactiver"/>
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding IsActif}" Value="False">
+                                                                                    <Setter Property="Text" Value="Activer"/>
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </TextBlock.Style>
+                                                                </TextBlock>
+                                                            </StackPanel>
+                                                        </Button>
+                                                        <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                                Command="{Binding DataContext.DeleteTiersCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                                CommandParameter="{Binding}"
+                                                                Visibility="{Binding DataContext.CanDeleteTiers, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <materialDesign:PackIcon Kind="Delete" Foreground="#F44336" Margin="0,0,10,0"/>
+                                                                <TextBlock Text="Supprimer"/>
+                                                            </StackPanel>
+                                                        </Button>
+                                                    </StackPanel>
+                                                </materialDesign:PopupBox>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
 
                                 </DataGrid.Columns>
                             </DataGrid>
+
+                            <!-- Message si vide -->
+                            <Border Background="#F5F5F5" CornerRadius="8" Padding="40">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding TiersContribuables.Count}" Value="0">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="AccountCash" Width="64" Height="64" Foreground="#BDBDBD" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Aucun contribuable" FontSize="16" Foreground="#757575" Margin="0,20,0,0" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                          </Grid>
                         </materialDesign:Card>
                     </TabItem>
 
@@ -333,6 +361,7 @@
                             </StackPanel>
                         </TabItem.Header>
                         <materialDesign:Card Padding="0" Margin="0,10,0,0">
+                          <Grid>
                             <DataGrid ItemsSource="{Binding TiersFournisseurs}"
                                       SelectedItem="{Binding SelectedTiers}"
                                       Style="{StaticResource TiersDataGridStyle}">
@@ -408,60 +437,86 @@
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="Actions" Width="150">
+                                    <DataGridTemplateColumn Header="Actions" Width="60">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                   <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                            Command="{Binding DataContext.OpenEditTiersDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                            CommandParameter="{Binding}"
-                                                            Visibility="{Binding DataContext.CanEditTiers, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}"
-                                                            ToolTip="Modifier">
-                                                        <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2"/>
-                                                    </Button>
-                                                        <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                            Command="{Binding DataContext.ToggleActifCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                            CommandParameter="{Binding}"
-                                                            Margin="4,0">
-                                                        <Button.ToolTip>
-                                                            <TextBlock>
-                                                                <TextBlock.Style>
-                                                                    <Style TargetType="TextBlock">
-                                                                        <Setter Property="Text" Value="Désactiver"/>
-                                                                        <Style.Triggers>
-                                                                            <DataTrigger Binding="{Binding IsActif}" Value="False">
-                                                                                <Setter Property="Text" Value="Activer"/>
-                                                                            </DataTrigger>
-                                                                        </Style.Triggers>
-                                                                    </Style>
-                                                                </TextBlock.Style>
-                                                            </TextBlock>
-                                                        </Button.ToolTip>
-                                                        <materialDesign:PackIcon Foreground="#FF9800">
-                                                            <materialDesign:PackIcon.Style>
-                                                                <Style TargetType="materialDesign:PackIcon">
-                                                                    <Setter Property="Kind" Value="EyeOff"/>
-                                                                    <Style.Triggers>
-                                                                        <DataTrigger Binding="{Binding IsActif}" Value="False">
-                                                                            <Setter Property="Kind" Value="Eye"/>
-                                                                        </DataTrigger>
-                                                                    </Style.Triggers>
-                                                                </Style>
-                                                            </materialDesign:PackIcon.Style>
-                                                        </materialDesign:PackIcon>
-                                                    </Button>
-                                                    <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                            Command="{Binding DataContext.DeleteTiersCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                            CommandParameter="{Binding}"
-                                                            ToolTip="Supprimer">
-                                                        <materialDesign:PackIcon Kind="Delete" Foreground="#F44336"/>
-                                                    </Button>
-                                                </StackPanel>
+                                                <materialDesign:PopupBox Style="{StaticResource RowActionsPopupBoxStyle}">
+                                                    <StackPanel>
+                                                        <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                                Command="{Binding DataContext.OpenEditTiersDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                                CommandParameter="{Binding}"
+                                                                Visibility="{Binding DataContext.CanEditTiers, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2" Margin="0,0,10,0"/>
+                                                                <TextBlock Text="Modifier"/>
+                                                            </StackPanel>
+                                                        </Button>
+                                                        <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                                Command="{Binding DataContext.ToggleActifCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                                CommandParameter="{Binding}"
+                                                                Visibility="{Binding DataContext.CanEditTiers, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <materialDesign:PackIcon Foreground="#FF9800" Margin="0,0,10,0">
+                                                                    <materialDesign:PackIcon.Style>
+                                                                        <Style TargetType="materialDesign:PackIcon">
+                                                                            <Setter Property="Kind" Value="EyeOff"/>
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding IsActif}" Value="False">
+                                                                                    <Setter Property="Kind" Value="Eye"/>
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </materialDesign:PackIcon.Style>
+                                                                </materialDesign:PackIcon>
+                                                                <TextBlock>
+                                                                    <TextBlock.Style>
+                                                                        <Style TargetType="TextBlock">
+                                                                            <Setter Property="Text" Value="Désactiver"/>
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding IsActif}" Value="False">
+                                                                                    <Setter Property="Text" Value="Activer"/>
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </TextBlock.Style>
+                                                                </TextBlock>
+                                                            </StackPanel>
+                                                        </Button>
+                                                        <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                                Command="{Binding DataContext.DeleteTiersCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                                CommandParameter="{Binding}"
+                                                                Visibility="{Binding DataContext.CanDeleteTiers, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <materialDesign:PackIcon Kind="Delete" Foreground="#F44336" Margin="0,0,10,0"/>
+                                                                <TextBlock Text="Supprimer"/>
+                                                            </StackPanel>
+                                                        </Button>
+                                                    </StackPanel>
+                                                </materialDesign:PopupBox>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
                                 </DataGrid.Columns>
                             </DataGrid>
+
+                            <!-- Message si vide -->
+                            <Border Background="#F5F5F5" CornerRadius="8" Padding="40">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding TiersFournisseurs.Count}" Value="0">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="TruckDelivery" Width="64" Height="64" Foreground="#BDBDBD" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Aucun fournisseur" FontSize="16" Foreground="#757575" Margin="0,20,0,0" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                          </Grid>
                         </materialDesign:Card>
                     </TabItem>
 
@@ -477,6 +532,7 @@
                             </StackPanel>
                         </TabItem.Header>
                         <materialDesign:Card Padding="0" Margin="0,10,0,0">
+                          <Grid>
                             <DataGrid ItemsSource="{Binding TiersSalaries}"
                                       SelectedItem="{Binding SelectedTiers}"
                                       Style="{StaticResource TiersDataGridStyle}">
@@ -542,60 +598,86 @@
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="Actions" Width="150">
+                                    <DataGridTemplateColumn Header="Actions" Width="60">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                  <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                            Command="{Binding DataContext.OpenEditTiersDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                            CommandParameter="{Binding}"
-                                                            Visibility="{Binding DataContext.CanEditTiers, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}"
-                                                            ToolTip="Modifier">
-                                                        <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2"/>
-                                                    </Button>
-                                                    <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                            Command="{Binding DataContext.ToggleActifCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                            CommandParameter="{Binding}"
-                                                            Margin="4,0">
-                                                        <Button.ToolTip>
-                                                            <TextBlock>
-                                                                <TextBlock.Style>
-                                                                    <Style TargetType="TextBlock">
-                                                                        <Setter Property="Text" Value="Désactiver"/>
-                                                                        <Style.Triggers>
-                                                                            <DataTrigger Binding="{Binding IsActif}" Value="False">
-                                                                                <Setter Property="Text" Value="Activer"/>
-                                                                            </DataTrigger>
-                                                                        </Style.Triggers>
-                                                                    </Style>
-                                                                </TextBlock.Style>
-                                                            </TextBlock>
-                                                        </Button.ToolTip>
-                                                        <materialDesign:PackIcon Foreground="#FF9800">
-                                                            <materialDesign:PackIcon.Style>
-                                                                <Style TargetType="materialDesign:PackIcon">
-                                                                    <Setter Property="Kind" Value="EyeOff"/>
-                                                                    <Style.Triggers>
-                                                                        <DataTrigger Binding="{Binding IsActif}" Value="False">
-                                                                            <Setter Property="Kind" Value="Eye"/>
-                                                                        </DataTrigger>
-                                                                    </Style.Triggers>
-                                                                </Style>
-                                                            </materialDesign:PackIcon.Style>
-                                                        </materialDesign:PackIcon>
-                                                    </Button>
-                                                    <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                            Command="{Binding DataContext.DeleteTiersCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                            CommandParameter="{Binding}"
-                                                            ToolTip="Supprimer">
-                                                        <materialDesign:PackIcon Kind="Delete" Foreground="#F44336"/>
-                                                    </Button>
-                                                </StackPanel>
+                                                <materialDesign:PopupBox Style="{StaticResource RowActionsPopupBoxStyle}">
+                                                    <StackPanel>
+                                                        <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                                Command="{Binding DataContext.OpenEditTiersDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                                CommandParameter="{Binding}"
+                                                                Visibility="{Binding DataContext.CanEditTiers, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2" Margin="0,0,10,0"/>
+                                                                <TextBlock Text="Modifier"/>
+                                                            </StackPanel>
+                                                        </Button>
+                                                        <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                                Command="{Binding DataContext.ToggleActifCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                                CommandParameter="{Binding}"
+                                                                Visibility="{Binding DataContext.CanEditTiers, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <materialDesign:PackIcon Foreground="#FF9800" Margin="0,0,10,0">
+                                                                    <materialDesign:PackIcon.Style>
+                                                                        <Style TargetType="materialDesign:PackIcon">
+                                                                            <Setter Property="Kind" Value="EyeOff"/>
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding IsActif}" Value="False">
+                                                                                    <Setter Property="Kind" Value="Eye"/>
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </materialDesign:PackIcon.Style>
+                                                                </materialDesign:PackIcon>
+                                                                <TextBlock>
+                                                                    <TextBlock.Style>
+                                                                        <Style TargetType="TextBlock">
+                                                                            <Setter Property="Text" Value="Désactiver"/>
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding IsActif}" Value="False">
+                                                                                    <Setter Property="Text" Value="Activer"/>
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </TextBlock.Style>
+                                                                </TextBlock>
+                                                            </StackPanel>
+                                                        </Button>
+                                                        <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                                Command="{Binding DataContext.DeleteTiersCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                                CommandParameter="{Binding}"
+                                                                Visibility="{Binding DataContext.CanDeleteTiers, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <materialDesign:PackIcon Kind="Delete" Foreground="#F44336" Margin="0,0,10,0"/>
+                                                                <TextBlock Text="Supprimer"/>
+                                                            </StackPanel>
+                                                        </Button>
+                                                    </StackPanel>
+                                                </materialDesign:PopupBox>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
                                 </DataGrid.Columns>
                             </DataGrid>
+
+                            <!-- Message si vide -->
+                            <Border Background="#F5F5F5" CornerRadius="8" Padding="40">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding TiersSalaries.Count}" Value="0">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="AccountTie" Width="64" Height="64" Foreground="#BDBDBD" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Aucun salarié" FontSize="16" Foreground="#757575" Margin="0,20,0,0" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                          </Grid>
                         </materialDesign:Card>
                     </TabItem>
 
@@ -839,92 +921,86 @@
                                                         </StackPanel>
 
                                                         <!-- Actions -->
-                                                        <StackPanel Grid.Column="2" 
-                                                                   Orientation="Horizontal" 
+                                                        <StackPanel Grid.Column="2"
                                                                    VerticalAlignment="Center"
                                                                    Margin="10">
-                                                                <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                                    Command="{Binding DataContext.OpenDocumentCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                                    CommandParameter="{Binding}"
-                                                                    ToolTip="Ouvrir"
-                                                                    Width="30" Height="30"
-                                                                    Visibility="{Binding DataContext.CanViewDocumentTiers, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
-                                                                <materialDesign:PackIcon Kind="Eye" 
-                                                                                       Width="18" Height="18"
-                                                                                       Foreground="#1976D2"/>
-                                                            </Button>
+                                                            <materialDesign:PopupBox Style="{StaticResource RowActionsPopupBoxStyle}">
+                                                                <StackPanel>
+                                                                    <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                                            Command="{Binding DataContext.OpenDocumentCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                                            CommandParameter="{Binding}"
+                                                                            Visibility="{Binding DataContext.CanViewDocumentTiers, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
+                                                                        <StackPanel Orientation="Horizontal">
+                                                                            <materialDesign:PackIcon Kind="Eye" Foreground="#1976D2" Margin="0,0,10,0"/>
+                                                                            <TextBlock Text="Ouvrir"/>
+                                                                        </StackPanel>
+                                                                    </Button>
 
-                                                                <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                                    Command="{Binding DataContext.OpenEditDocumentDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                                    CommandParameter="{Binding}"
-                                                                    ToolTip="Modifier les infos"
-                                                                    Width="30" Height="30"
-                                                                    Margin="2,0"
-                                                                    Visibility="{Binding DataContext.CanEditDocumentTiers, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
-                                                                <materialDesign:PackIcon Kind="Pencil" 
-                                                                                       Width="18" Height="18"
-                                                                                       Foreground="#FF9800"/>
-                                                            </Button>
+                                                                    <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                                            Command="{Binding DataContext.OpenEditDocumentDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                                            CommandParameter="{Binding}"
+                                                                            Visibility="{Binding DataContext.CanEditDocumentTiers, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
+                                                                        <StackPanel Orientation="Horizontal">
+                                                                            <materialDesign:PackIcon Kind="Pencil" Foreground="#FF9800" Margin="0,0,10,0"/>
+                                                                            <TextBlock Text="Modifier les infos"/>
+                                                                        </StackPanel>
+                                                                    </Button>
 
-                                                                <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                                    Command="{Binding DataContext.ReplaceDocumentCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                                    CommandParameter="{Binding}"
-                                                                    ToolTip="Remplacer le fichier"
-                                                                    Width="30" Height="30"
-                                                                    Margin="2,0"
-                                                                    Visibility="{Binding DataContext.CanEditDocumentTiers, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
-                                                                <materialDesign:PackIcon Kind="FileReplace" 
-                                                                                       Width="18" Height="18"
-                                                                                       Foreground="#9C27B0"/>
-                                                            </Button>
+                                                                    <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                                            Command="{Binding DataContext.ReplaceDocumentCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                                            CommandParameter="{Binding}"
+                                                                            Visibility="{Binding DataContext.CanEditDocumentTiers, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
+                                                                        <StackPanel Orientation="Horizontal">
+                                                                            <materialDesign:PackIcon Kind="FileReplace" Foreground="#9C27B0" Margin="0,0,10,0"/>
+                                                                            <TextBlock Text="Remplacer le fichier"/>
+                                                                        </StackPanel>
+                                                                    </Button>
 
-                                                            <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                                   Command="{Binding DataContext.ToggleDocumentValiditeCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                                   CommandParameter="{Binding}"
-                                                                   Width="30" Height="30"
-                                                                   Margin="2,0"
-                                                                   Visibility="{Binding DataContext.CanEditDocumentTiers, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
-                                                                <Button.ToolTip>
-                                                                    <TextBlock>
-                                                                        <TextBlock.Style>
-                                                                            <Style TargetType="TextBlock">
-                                                                                <Setter Property="Text" Value="Invalider"/>
-                                                                                <Style.Triggers>
-                                                                                    <DataTrigger Binding="{Binding IsValide}" Value="False">
-                                                                                        <Setter Property="Text" Value="Valider"/>
-                                                                                    </DataTrigger>
-                                                                                </Style.Triggers>
-                                                                            </Style>
-                                                                        </TextBlock.Style>
-                                                                    </TextBlock>
-                                                                </Button.ToolTip>
-                                                                <materialDesign:PackIcon Width="18" Height="18">
-                                                                    <materialDesign:PackIcon.Style>
-                                                                        <Style TargetType="materialDesign:PackIcon">
-                                                                            <Setter Property="Kind" Value="CheckCircle"/>
-                                                                            <Setter Property="Foreground" Value="#4CAF50"/>
-                                                                            <Style.Triggers>
-                                                                                <DataTrigger Binding="{Binding IsValide}" Value="False">
-                                                                                    <Setter Property="Kind" Value="CloseCircle"/>
-                                                                                    <Setter Property="Foreground" Value="#9E9E9E"/>
-                                                                                </DataTrigger>
-                                                                            </Style.Triggers>
-                                                                        </Style>
-                                                                    </materialDesign:PackIcon.Style>
-                                                                </materialDesign:PackIcon>
-                                                            </Button>
+                                                                    <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                                            Command="{Binding DataContext.ToggleDocumentValiditeCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                                            CommandParameter="{Binding}"
+                                                                            Visibility="{Binding DataContext.CanEditDocumentTiers, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
+                                                                        <StackPanel Orientation="Horizontal">
+                                                                            <materialDesign:PackIcon Margin="0,0,10,0">
+                                                                                <materialDesign:PackIcon.Style>
+                                                                                    <Style TargetType="materialDesign:PackIcon">
+                                                                                        <Setter Property="Kind" Value="CheckCircle"/>
+                                                                                        <Setter Property="Foreground" Value="#4CAF50"/>
+                                                                                        <Style.Triggers>
+                                                                                            <DataTrigger Binding="{Binding IsValide}" Value="False">
+                                                                                                <Setter Property="Kind" Value="CloseCircle"/>
+                                                                                                <Setter Property="Foreground" Value="#9E9E9E"/>
+                                                                                            </DataTrigger>
+                                                                                        </Style.Triggers>
+                                                                                    </Style>
+                                                                                </materialDesign:PackIcon.Style>
+                                                                            </materialDesign:PackIcon>
+                                                                            <TextBlock>
+                                                                                <TextBlock.Style>
+                                                                                    <Style TargetType="TextBlock">
+                                                                                        <Setter Property="Text" Value="Invalider"/>
+                                                                                        <Style.Triggers>
+                                                                                            <DataTrigger Binding="{Binding IsValide}" Value="False">
+                                                                                                <Setter Property="Text" Value="Valider"/>
+                                                                                            </DataTrigger>
+                                                                                        </Style.Triggers>
+                                                                                    </Style>
+                                                                                </TextBlock.Style>
+                                                                            </TextBlock>
+                                                                        </StackPanel>
+                                                                    </Button>
 
-                                                                <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                                    Command="{Binding DataContext.DeleteDocumentCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                                    CommandParameter="{Binding}"
-                                                                    ToolTip="Supprimer"
-                                                                    Width="30" Height="30"
-                                                                    Margin="2,0"
-                                                                    Visibility="{Binding DataContext.CanDeleteDocumentTiers, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
-                                                                <materialDesign:PackIcon Kind="Delete" 
-                                                                                       Width="18" Height="18"
-                                                                                       Foreground="#F44336"/>
-                                                            </Button>
+                                                                    <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                                            Command="{Binding DataContext.DeleteDocumentCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                                            CommandParameter="{Binding}"
+                                                                            Visibility="{Binding DataContext.CanDeleteDocumentTiers, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
+                                                                        <StackPanel Orientation="Horizontal">
+                                                                            <materialDesign:PackIcon Kind="Delete" Foreground="#F44336" Margin="0,0,10,0"/>
+                                                                            <TextBlock Text="Supprimer"/>
+                                                                        </StackPanel>
+                                                                    </Button>
+                                                                </StackPanel>
+                                                            </materialDesign:PopupBox>
                                                         </StackPanel>
                                                     </Grid>
                                                 </materialDesign:Card>
@@ -1025,28 +1101,31 @@
                                                             </TextBlock>
                                                         </StackPanel>
 
-                                                        <StackPanel Grid.Column="1" 
-                                                                   Orientation="Horizontal" 
+                                                        <StackPanel Grid.Column="1"
                                                                    VerticalAlignment="Center">
-                                                                <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                                    Command="{Binding DataContext.OpenEditCompteDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                                    CommandParameter="{Binding}"
-                                                                    Visibility="{Binding DataContext.CanEditCompteBancaire, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}"
-                                                                    ToolTip="Modifier">
-                                                                <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2"/>
-                                                            </Button>
+                                                            <materialDesign:PopupBox Style="{StaticResource RowActionsPopupBoxStyle}">
+                                                                <StackPanel>
+                                                                    <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                                            Command="{Binding DataContext.OpenEditCompteDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                                            CommandParameter="{Binding}"
+                                                                            Visibility="{Binding DataContext.CanEditCompteBancaire, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
+                                                                        <StackPanel Orientation="Horizontal">
+                                                                            <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2" Margin="0,0,10,0"/>
+                                                                            <TextBlock Text="Modifier"/>
+                                                                        </StackPanel>
+                                                                    </Button>
 
-                                                                <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                                   Command="{Binding DataContext.DeleteCompteCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                                   CommandParameter="{Binding}"
-                                                                   Visibility="{Binding DataContext.CanDeleteCompteBancaire, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}"
-                                                                   ToolTip="Supprimer"
-                                                                   Width="30" Height="30"
-                                                                   Margin="5,0,0,0">
-                                                                <materialDesign:PackIcon Kind="Delete" 
-                                                                                       Width="18" Height="18"
-                                                                                       Foreground="#F44336"/>
-                                                            </Button>
+                                                                    <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                                            Command="{Binding DataContext.DeleteCompteCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                                            CommandParameter="{Binding}"
+                                                                            Visibility="{Binding DataContext.CanDeleteCompteBancaire, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
+                                                                        <StackPanel Orientation="Horizontal">
+                                                                            <materialDesign:PackIcon Kind="Delete" Foreground="#F44336" Margin="0,0,10,0"/>
+                                                                            <TextBlock Text="Supprimer"/>
+                                                                        </StackPanel>
+                                                                    </Button>
+                                                                </StackPanel>
+                                                            </materialDesign:PopupBox>
                                                         </StackPanel>
                                                     </Grid>
                                                 </materialDesign:Card>

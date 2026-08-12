@@ -44,6 +44,11 @@ namespace Collectivite.ViewModels
         public ObservableCollection<Role> Roles { get; } = new();
         public ObservableCollection<PermissionSelectionViewModel> PermissionSelections { get; } = new();
 
+        public bool CanViewRole => SessionManager.HasPermission("Role.View");
+        public bool CanCreateRole => SessionManager.HasPermission("Role.Create");
+        public bool CanEditRole => SessionManager.HasPermission("Role.Edit");
+        public bool CanDeleteRole => SessionManager.HasPermission("Role.Delete");
+
         public bool IsLoading
         {
             get => _isLoading;
@@ -127,8 +132,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement des rôles : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors du chargement des rôles : {ex.Message}");
             }
             finally
             {
@@ -145,6 +149,12 @@ namespace Collectivite.ViewModels
 
         private void OpenAddDialog()
         {
+            if (!CanCreateRole)
+            {
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
+                return;
+            }
+
             DialogRole = CreateEmptyRole();
 
             IsEditMode = false;
@@ -155,6 +165,12 @@ namespace Collectivite.ViewModels
         private void OpenEditDialog(Role? role)
         {
             if (role == null) return;
+
+            if (!CanEditRole)
+            {
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
+                return;
+            }
 
             DialogRole = new Role
             {
@@ -231,6 +247,12 @@ namespace Collectivite.ViewModels
 
         private async System.Threading.Tasks.Task SaveAsync()
         {
+            if (!(IsEditMode ? CanEditRole : CanCreateRole))
+            {
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
+                return;
+            }
+
             IsLoading = true;
 
             try
@@ -247,7 +269,7 @@ namespace Collectivite.ViewModels
                     var (success, message) = await _roleService.UpdateAsync(DialogRole);
                     if (!success)
                     {
-                        MessageBox.Show(message, "Erreur", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        NotificationService.ShowWarning(message);
                         return;
                     }
 
@@ -258,23 +280,21 @@ namespace Collectivite.ViewModels
                     var (success, message, created) = await _roleService.CreateAsync(DialogRole);
                     if (!success || created == null)
                     {
-                        MessageBox.Show(message, "Erreur", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        NotificationService.ShowWarning(message);
                         return;
                     }
 
                     await _roleService.UpdateRolePermissionsAsync(created.Id, selectedPermissionIds);
                 }
 
-                MessageBox.Show("Rôle sauvegardé avec succès.",
-                    "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.ShowSuccess("Rôle sauvegardé avec succès.");
 
                 IsDialogOpen = false;
                 await LoadAsync();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de l'enregistrement : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors de l'enregistrement : {ex.Message}");
             }
             finally
             {
@@ -285,6 +305,12 @@ namespace Collectivite.ViewModels
         private async System.Threading.Tasks.Task DeleteAsync(Role? role)
         {
             if (role == null) return;
+
+            if (!CanDeleteRole)
+            {
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
+                return;
+            }
 
             var confirm = MessageBox.Show(
                 $"Supprimer le rôle '{role.Name}' ?\n\n" +
@@ -301,10 +327,14 @@ namespace Collectivite.ViewModels
             try
             {
                 var (success, message) = await _roleService.DeleteAsync(role.Id);
-                MessageBox.Show(message,
-                    success ? "Succès" : "Erreur",
-                    MessageBoxButton.OK,
-                    success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                if (success)
+                {
+                    NotificationService.ShowSuccess(message);
+                }
+                else
+                {
+                    NotificationService.ShowWarning(message);
+                }
 
                 if (success)
                 {
@@ -313,8 +343,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
             finally
             {

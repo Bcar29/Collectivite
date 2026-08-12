@@ -216,33 +216,37 @@
                             <DataGridTextColumn Header="Montant prévu" Binding="{Binding BudgetLine.MontantPrevu, StringFormat={}{0:N2} GNF}" Width="150"/>
 
                             <!-- 🆕 Colonne Actions - masquée pour ligne de totaux -->
-                            <DataGridTemplateColumn Header="Actions" Width="150">
+                            <DataGridTemplateColumn Header="Actions" Width="60">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                            <!-- 🆕 Utilisation du ShowActionsConverter -->
-                                            <StackPanel.Visibility>
+                                        <materialDesign:PopupBox Style="{StaticResource RowActionsPopupBoxStyle}">
+                                            <materialDesign:PopupBox.Visibility>
                                                 <MultiBinding Converter="{StaticResource ShowActionsConverter}">
                                                     <Binding Path="BudgetLine.Nommenclature.Enfants"/>
                                                     <Binding Path="IsTotalRow"/>
                                                 </MultiBinding>
-                                            </StackPanel.Visibility>
-
-                                            <Button Style="{StaticResource MaterialDesignIconButton}" ToolTip="Modifier"
-                                               Command="{Binding DataContext.OpenEditDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                               CommandParameter="{Binding BudgetLine}"
-                                               Visibility="{Binding DataContext.CanModifyBudget, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                               Margin="4,0">
-                                                <materialDesign:PackIcon Kind="Pencil" Width="20" Height="20" Foreground="#1976D2"/>
-                                            </Button>
-                                            <Button Style="{StaticResource MaterialDesignIconButton}" ToolTip="Supprimer"
-                                               Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                               CommandParameter="{Binding BudgetLine}"
-                                               Visibility="{Binding DataContext.CanModifyBudget, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                               Margin="4,0">
-                                                <materialDesign:PackIcon Kind="Delete" Width="20" Height="20" Foreground="#F44336"/>
-                                            </Button>
-                                        </StackPanel>
+                                            </materialDesign:PopupBox.Visibility>
+                                            <StackPanel>
+                                                <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                        Command="{Binding DataContext.OpenEditDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                        CommandParameter="{Binding BudgetLine}"
+                                                        Visibility="{Binding DataContext.CanModifyBudget, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2" Margin="0,0,10,0"/>
+                                                        <TextBlock Text="Modifier"/>
+                                                    </StackPanel>
+                                                </Button>
+                                                <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                        Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                        CommandParameter="{Binding BudgetLine}"
+                                                        Visibility="{Binding DataContext.CanModifyBudget, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <materialDesign:PackIcon Kind="Delete" Foreground="#F44336" Margin="0,0,10,0"/>
+                                                        <TextBlock Text="Supprimer"/>
+                                                    </StackPanel>
+                                                </Button>
+                                            </StackPanel>
+                                        </materialDesign:PopupBox>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
@@ -357,33 +361,37 @@
                             <DataGridTextColumn Header="Intitulé" Binding="{Binding BudgetLine.Nommenclature.Intitule}" Width="*"/>
                             <DataGridTextColumn Header="Montant prévu" Binding="{Binding BudgetLine.MontantPrevu, StringFormat={}{0:N2} GNF}" Width="150"/>
 
-                            <DataGridTemplateColumn Header="Actions" Width="150">
+                            <DataGridTemplateColumn Header="Actions" Width="60">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                            <!-- 🆕 Utilisation du ShowActionsConverter -->
-                                            <StackPanel.Visibility>
+                                        <materialDesign:PopupBox Style="{StaticResource RowActionsPopupBoxStyle}">
+                                            <materialDesign:PopupBox.Visibility>
                                                 <MultiBinding Converter="{StaticResource ShowActionsConverter}">
                                                     <Binding Path="BudgetLine.Nommenclature.Enfants"/>
                                                     <Binding Path="IsTotalRow"/>
                                                 </MultiBinding>
-                                            </StackPanel.Visibility>
-
-                                            <Button Style="{StaticResource MaterialDesignIconButton}" ToolTip="Modifier"
-                                               Command="{Binding DataContext.OpenEditDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                               CommandParameter="{Binding BudgetLine}"
-                                               Visibility="{Binding DataContext.CanModifyBudget, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                               Margin="4,0">
-                                                <materialDesign:PackIcon Kind="Pencil" Width="20" Height="20" Foreground="#1976D2"/>
-                                            </Button>
-                                            <Button Style="{StaticResource MaterialDesignIconButton}" ToolTip="Supprimer"
-                                               Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                               CommandParameter="{Binding BudgetLine}"
-                                               Visibility="{Binding DataContext.CanModifyBudget, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                               Margin="4,0">
-                                                <materialDesign:PackIcon Kind="Delete" Width="20" Height="20" Foreground="#F44336"/>
-                                            </Button>
-                                        </StackPanel>
+                                            </materialDesign:PopupBox.Visibility>
+                                            <StackPanel>
+                                                <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                        Command="{Binding DataContext.OpenEditDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                        CommandParameter="{Binding BudgetLine}"
+                                                        Visibility="{Binding DataContext.CanModifyBudget, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2" Margin="0,0,10,0"/>
+                                                        <TextBlock Text="Modifier"/>
+                                                    </StackPanel>
+                                                </Button>
+                                                <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                        Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                        CommandParameter="{Binding BudgetLine}"
+                                                        Visibility="{Binding DataContext.CanModifyBudget, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <materialDesign:PackIcon Kind="Delete" Foreground="#F44336" Margin="0,0,10,0"/>
+                                                        <TextBlock Text="Supprimer"/>
+                                                    </StackPanel>
+                                                </Button>
+                                            </StackPanel>
+                                        </materialDesign:PopupBox>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
@@ -528,33 +536,37 @@
                             <DataGridTextColumn Header="Intitulé" Binding="{Binding BudgetLine.Nommenclature.Intitule}" Width="*"/>
                             <DataGridTextColumn Header="Montant prévu" Binding="{Binding BudgetLine.MontantPrevu, StringFormat={}{0:N2} GNF}" Width="150"/>
 
-                            <DataGridTemplateColumn Header="Actions" Width="150">
+                            <DataGridTemplateColumn Header="Actions" Width="60">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                            <!-- 🆕 Utilisation du ShowActionsConverter -->
-                                            <StackPanel.Visibility>
+                                        <materialDesign:PopupBox Style="{StaticResource RowActionsPopupBoxStyle}">
+                                            <materialDesign:PopupBox.Visibility>
                                                 <MultiBinding Converter="{StaticResource ShowActionsConverter}">
                                                     <Binding Path="BudgetLine.Nommenclature.Enfants"/>
                                                     <Binding Path="IsTotalRow"/>
                                                 </MultiBinding>
-                                            </StackPanel.Visibility>
-
-                                            <Button Style="{StaticResource MaterialDesignIconButton}" ToolTip="Modifier"
-                       Command="{Binding DataContext.OpenEditDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                       CommandParameter="{Binding BudgetLine}"
-                       Visibility="{Binding DataContext.CanModifyBudget, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BooleanToVisibilityConverter}}"
-                       Margin="4,0">
-                                                <materialDesign:PackIcon Kind="Pencil" Width="20" Height="20" Foreground="#1976D2"/>
-                                            </Button>
-                                            <Button Style="{StaticResource MaterialDesignIconButton}" ToolTip="Supprimer"
-                       Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                       CommandParameter="{Binding BudgetLine}"
-                       Visibility="{Binding DataContext.CanModifyBudget, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BooleanToVisibilityConverter}}"
-                       Margin="4,0">
-                                                <materialDesign:PackIcon Kind="Delete" Width="20" Height="20" Foreground="#F44336"/>
-                                            </Button>
-                                        </StackPanel>
+                                            </materialDesign:PopupBox.Visibility>
+                                            <StackPanel>
+                                                <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                        Command="{Binding DataContext.OpenEditDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                        CommandParameter="{Binding BudgetLine}"
+                                                        Visibility="{Binding DataContext.CanModifyBudget, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2" Margin="0,0,10,0"/>
+                                                        <TextBlock Text="Modifier"/>
+                                                    </StackPanel>
+                                                </Button>
+                                                <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                        Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                        CommandParameter="{Binding BudgetLine}"
+                                                        Visibility="{Binding DataContext.CanModifyBudget, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <materialDesign:PackIcon Kind="Delete" Foreground="#F44336" Margin="0,0,10,0"/>
+                                                        <TextBlock Text="Supprimer"/>
+                                                    </StackPanel>
+                                                </Button>
+                                            </StackPanel>
+                                        </materialDesign:PopupBox>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
@@ -685,33 +697,37 @@
                             <DataGridTextColumn Header="Intitulé" Binding="{Binding BudgetLine.Nommenclature.Intitule}" Width="*"/>
                             <DataGridTextColumn Header="Montant prévu" Binding="{Binding BudgetLine.MontantPrevu, StringFormat={}{0:N2} GNF}" Width="150"/>
 
-                            <DataGridTemplateColumn Header="Actions" Width="150">
+                            <DataGridTemplateColumn Header="Actions" Width="60">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                            <!-- 🆕 Utilisation du ShowActionsConverter -->
-                                            <StackPanel.Visibility>
+                                        <materialDesign:PopupBox Style="{StaticResource RowActionsPopupBoxStyle}">
+                                            <materialDesign:PopupBox.Visibility>
                                                 <MultiBinding Converter="{StaticResource ShowActionsConverter}">
                                                     <Binding Path="BudgetLine.Nommenclature.Enfants"/>
                                                     <Binding Path="IsTotalRow"/>
                                                 </MultiBinding>
-                                            </StackPanel.Visibility>
-
-                                            <Button Style="{StaticResource MaterialDesignIconButton}" ToolTip="Modifier"
-                       Command="{Binding DataContext.OpenEditDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                       CommandParameter="{Binding BudgetLine}"
-                       Visibility="{Binding DataContext.CanModifyBudget, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BooleanToVisibilityConverter}}"
-                       Margin="4,0">
-                                                <materialDesign:PackIcon Kind="Pencil" Width="20" Height="20" Foreground="#1976D2"/>
-                                            </Button>
-                                            <Button Style="{StaticResource MaterialDesignIconButton}" ToolTip="Supprimer"
-                       Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                       CommandParameter="{Binding BudgetLine}"
-                       Visibility="{Binding DataContext.CanModifyBudget, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BooleanToVisibilityConverter}}"
-                       Margin="4,0">
-                                                <materialDesign:PackIcon Kind="Delete" Width="20" Height="20" Foreground="#F44336"/>
-                                            </Button>
-                                        </StackPanel>
+                                            </materialDesign:PopupBox.Visibility>
+                                            <StackPanel>
+                                                <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                        Command="{Binding DataContext.OpenEditDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                        CommandParameter="{Binding BudgetLine}"
+                                                        Visibility="{Binding DataContext.CanModifyBudget, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2" Margin="0,0,10,0"/>
+                                                        <TextBlock Text="Modifier"/>
+                                                    </StackPanel>
+                                                </Button>
+                                                <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                        Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                        CommandParameter="{Binding BudgetLine}"
+                                                        Visibility="{Binding DataContext.CanModifyBudget, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <materialDesign:PackIcon Kind="Delete" Foreground="#F44336" Margin="0,0,10,0"/>
+                                                        <TextBlock Text="Supprimer"/>
+                                                    </StackPanel>
+                                                </Button>
+                                            </StackPanel>
+                                        </materialDesign:PopupBox>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>

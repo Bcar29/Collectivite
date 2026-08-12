@@ -121,15 +121,13 @@ namespace Collectivite.ViewModels
                 }
                 else
                 {
-                    MessageBox.Show("Bon de commande introuvable.", "Erreur",
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    NotificationService.ShowWarning("Bon de commande introuvable.");
                     GoBack();
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors du chargement : {ex.Message}");
             }
             finally
             {
@@ -152,8 +150,7 @@ namespace Collectivite.ViewModels
         {
             if (BonCommande == null)
             {
-                MessageBox.Show("Aucun bon de commande à exporter.", "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Aucun bon de commande à exporter.");
                 return;
             }
 
@@ -202,8 +199,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de l'export PDF : {ex.Message}",
-                    "Erreur d'export", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors de l'export PDF : {ex.Message}");
             }
             finally
             {
@@ -218,8 +214,7 @@ namespace Collectivite.ViewModels
         {
             if (BonCommande == null)
             {
-                MessageBox.Show("Aucun bon de commande à imprimer.", "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Aucun bon de commande à imprimer.");
                 return;
             }
 
@@ -244,8 +239,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de l'impression : {ex.Message}",
-                    "Erreur d'impression", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors de l'impression : {ex.Message}");
             }
             finally
             {

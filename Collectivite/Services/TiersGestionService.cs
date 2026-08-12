@@ -166,7 +166,7 @@ namespace Collectivite.Services
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"ERREUR Débiteurs: {ex.Message}");
-                MessageBox.Show($"Erreur Débiteurs:\n{ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur Débiteurs:\n{ex.Message}");
                 return new List<TiersDebiteurDTO>();
             }
         }
@@ -307,7 +307,7 @@ namespace Collectivite.Services
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"ERREUR Créanciers: {ex.Message}");
-                MessageBox.Show($"Erreur Créanciers:\n{ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur Créanciers:\n{ex.Message}");
                 return new List<TiersCreancierDTO>();
             }
         }

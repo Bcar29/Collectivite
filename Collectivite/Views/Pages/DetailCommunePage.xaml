@@ -53,6 +53,7 @@
                     <Button Style="{StaticResource MaterialDesignRaisedButton}"
                             Height="40"
                             Command="{Binding OpenAddDetailCommuneCommand}"
+                            Visibility="{Binding CanCreateDetailCommune, Converter={StaticResource BoolToVis}}"
                             HorizontalAlignment="Right">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="Plus" 
@@ -114,28 +115,34 @@
                                           Width="110"/>
 
                         <!-- Actions -->
-                        <DataGridTemplateColumn Header="Actions" Width="150">
+                        <DataGridTemplateColumn Header="Actions" Width="60">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                        <Button Style="{StaticResource MaterialDesignIconButton}"
-                                              ToolTip="Modifier"
-                                              Command="{Binding DataContext.OpenEditDetailCommuneCommand, 
-                                                      RelativeSource={RelativeSource AncestorType=Page}}"
-                                              CommandParameter="{Binding}"
-                                              Margin="4,0">
-                                            <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2"/>
-                                        </Button>
+                                    <materialDesign:PopupBox Style="{StaticResource RowActionsPopupBoxStyle}">
+                                        <StackPanel>
+                                            <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                    Command="{Binding DataContext.OpenEditDetailCommuneCommand,
+                                                            RelativeSource={RelativeSource AncestorType=Page}}"
+                                                    CommandParameter="{Binding}"
+                                                    Visibility="{Binding DataContext.CanEditDetailCommune, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2" Margin="0,0,10,0"/>
+                                                    <TextBlock Text="Modifier"/>
+                                                </StackPanel>
+                                            </Button>
 
-                                        <Button Style="{StaticResource MaterialDesignIconButton}"
-                                              ToolTip="Supprimer"
-                                              Command="{Binding DataContext.DeleteDetailCommuneCommand, 
-                                                      RelativeSource={RelativeSource AncestorType=Page}}"
-                                              CommandParameter="{Binding}"
-                                              Margin="4,0">
-                                            <materialDesign:PackIcon Kind="Delete" Foreground="#F44336"/>
-                                        </Button>
-                                    </StackPanel>
+                                            <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                    Command="{Binding DataContext.DeleteDetailCommuneCommand,
+                                                            RelativeSource={RelativeSource AncestorType=Page}}"
+                                                    CommandParameter="{Binding}"
+                                                    Visibility="{Binding DataContext.CanDeleteDetailCommune, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <materialDesign:PackIcon Kind="Delete" Foreground="#F44336" Margin="0,0,10,0"/>
+                                                    <TextBlock Text="Supprimer"/>
+                                                </StackPanel>
+                                            </Button>
+                                        </StackPanel>
+                                    </materialDesign:PopupBox>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>

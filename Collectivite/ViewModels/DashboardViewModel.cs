@@ -101,7 +101,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement des indicateurs : {ex.Message}");
+                NotificationService.ShowError($"Erreur lors du chargement des indicateurs : {ex.Message}");
             }
         }
 
@@ -120,7 +120,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement du graphique en barres : {ex.Message}");
+                NotificationService.ShowError($"Erreur lors du chargement du graphique en barres : {ex.Message}");
             }
         }
 
@@ -139,7 +139,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement du graphique en lignes : {ex.Message}");
+                NotificationService.ShowError($"Erreur lors du chargement du graphique en lignes : {ex.Message}");
             }
         }
 
@@ -158,7 +158,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement des activités : {ex.Message}");
+                NotificationService.ShowError($"Erreur lors du chargement des activités : {ex.Message}");
             }
         }
 

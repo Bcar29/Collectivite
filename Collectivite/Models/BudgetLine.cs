@@ -243,7 +243,6 @@ namespace Collectivite.Models
         /// </summary>
 
         public ICollection<Engagement>? Engagements { get; set; }
-        public ICollection<Recensement>? Recensements { get; set; }
 
         // 🔹 Constructeur par défaut
 

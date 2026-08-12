@@ -216,7 +216,14 @@ namespace Collectivite.Services
         public async Task<BalanceAnnuelleTotauxDTO> GetTotauxAsync(BalanceAnnuelleFiltreDTO filtre)
         {
             var lignes = await GetBalanceAnnuelleAsync(filtre);
+            return CalculerTotaux(lignes);
+        }
 
+        /// <summary>
+        /// Calcule les totaux à partir d'une balance annuelle déjà chargée, sans nouvelle requête.
+        /// </summary>
+        public BalanceAnnuelleTotauxDTO CalculerTotaux(List<BalanceAnnuelleLigneDTO> lignes)
+        {
             return new BalanceAnnuelleTotauxDTO
             {
                 TotalDebitBalanceEntree = lignes.Sum(l => l.DebitBalanceEntree),
@@ -234,7 +241,14 @@ namespace Collectivite.Services
         public async Task<BalanceAnnuelleStatsDTO> GetStatistiquesAsync(BalanceAnnuelleFiltreDTO filtre)
         {
             var lignes = await GetBalanceAnnuelleAsync(filtre);
+            return CalculerStatistiques(lignes);
+        }
 
+        /// <summary>
+        /// Calcule les statistiques à partir d'une balance annuelle déjà chargée, sans nouvelle requête.
+        /// </summary>
+        public BalanceAnnuelleStatsDTO CalculerStatistiques(List<BalanceAnnuelleLigneDTO> lignes)
+        {
             return new BalanceAnnuelleStatsDTO
             {
                 NombreComptes = lignes.Count,

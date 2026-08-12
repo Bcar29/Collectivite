@@ -16,20 +16,6 @@ namespace Collectivite
         {
             base.OnStartup(e);
 
-            // Vérification de la licence AVANT toute initialisation lourde
-            var licenseManager = new LicenseManager();
-            if (!licenseManager.CheckLicense(out var _))
-            {
-                // Message volontairement simple, sans détailler la raison exacte
-                MessageBox.Show(
-                    "Erreur inatendue.",
-                    "Erreur",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-                Shutdown(1);
-                return;
-            }
-
             // Vérification de la configuration du serveur de base de données
             if (!RegistryManager.ConfigurationExists())
             {

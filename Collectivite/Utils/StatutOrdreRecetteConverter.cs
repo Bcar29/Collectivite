@@ -25,6 +25,33 @@ namespace Collectivite.Utils
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
             => throw new NotImplementedException();
     }
+
+    /// <summary>
+    /// Converter combiné pour le bouton de modification d'un ordre de recette.
+    /// Prend en compte la permission ET le statut : visible si CanEditOrdreRecette == true ET statut == Non_Encaissé.
+    /// </summary>
+    public class OrdreEditButtonVisibilityConverter : IMultiValueConverter
+    {
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (values.Length < 2)
+                return Visibility.Collapsed;
+
+            bool canEdit = values[0] is bool b && b;
+            if (!canEdit)
+                return Visibility.Collapsed;
+
+            if (values[1] is OrdreRecette.StatutOrdre statut)
+            {
+                return statut == OrdreRecette.StatutOrdre.Non_Encaissé ? Visibility.Visible : Visibility.Collapsed;
+            }
+
+            return Visibility.Visible;
+        }
+
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+            => throw new NotImplementedException();
+    }
     /// <summary>
     /// Convertit StatutOrdre en texte
     /// </summary>

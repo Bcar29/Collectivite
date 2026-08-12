@@ -153,7 +153,7 @@ namespace Collectivite.ViewModels
 
             if (!SessionManager.HasPermission("Valider.validate"))
             {
-                MessageBox.Show("Vous n'avez pas la permission de valider cet engagement.", "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Vous n'avez pas la permission de valider cet engagement.");
                 return;
             }
 
@@ -176,17 +176,17 @@ namespace Collectivite.ViewModels
 
                 if (success)
                 {
-                    MessageBox.Show(message, "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+                    NotificationService.ShowSuccess(message);
                     await ChargerDonneesAsync();
                 }
                 else
                 {
-                    MessageBox.Show(message, "Erreur", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    NotificationService.ShowWarning(message);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
             finally
             {
@@ -201,7 +201,7 @@ namespace Collectivite.ViewModels
 
             if (!SessionManager.HasPermission("Validation.rejet"))
             {
-                MessageBox.Show("Vous n'avez pas la permission de rejeter cet engagement.", "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Vous n'avez pas la permission de rejeter cet engagement.");
                 return;
             }
 
@@ -223,7 +223,7 @@ namespace Collectivite.ViewModels
 
             if (!SessionManager.HasPermission("Valider.validate"))
             {
-                MessageBox.Show("Vous n'avez pas la permission de valider ce mandat.", "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Vous n'avez pas la permission de valider ce mandat.");
                 return;
             }
 
@@ -247,17 +247,17 @@ namespace Collectivite.ViewModels
 
                 if (success)
                 {
-                    MessageBox.Show(message, "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+                    NotificationService.ShowSuccess(message);
                     await ChargerDonneesAsync();
                 }
                 else
                 {
-                    MessageBox.Show(message, "Erreur", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    NotificationService.ShowWarning(message);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
             finally
             {
@@ -272,7 +272,7 @@ namespace Collectivite.ViewModels
 
             if (!SessionManager.HasPermission("Validation.rejet"))
             {
-                MessageBox.Show("Vous n'avez pas la permission de rejeter ce mandat.", "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Vous n'avez pas la permission de rejeter ce mandat.");
                 return;
             }
 
@@ -294,7 +294,7 @@ namespace Collectivite.ViewModels
 
             if (!SessionManager.HasPermission("Valider.validate"))
             {
-                MessageBox.Show("Vous n'avez pas la permission de valider cet ordre de recette.", "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Vous n'avez pas la permission de valider cet ordre de recette.");
                 return;
             }
 
@@ -317,17 +317,17 @@ namespace Collectivite.ViewModels
 
                 if (success)
                 {
-                    MessageBox.Show(message, "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+                    NotificationService.ShowSuccess(message);
                     await ChargerDonneesAsync();
                 }
                 else
                 {
-                    MessageBox.Show(message, "Erreur", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    NotificationService.ShowWarning(message);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
             finally
             {
@@ -342,7 +342,7 @@ namespace Collectivite.ViewModels
 
             if (!SessionManager.HasPermission("Validation.rejet"))
             {
-                MessageBox.Show("Vous n'avez pas la permission de rejeter cet ordre de recette.", "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Vous n'avez pas la permission de rejeter cet ordre de recette.");
                 return;
             }
 
@@ -362,13 +362,13 @@ namespace Collectivite.ViewModels
         {
             if (string.IsNullOrWhiteSpace(MotifRejet))
             {
-                MessageBox.Show("Veuillez saisir un motif de rejet.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Veuillez saisir un motif de rejet.");
                 return;
             }
 
             if (!SessionManager.HasPermission("Validation.rejet"))
             {
-                MessageBox.Show("Vous n'avez pas la permission de rejeter.", "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Vous n'avez pas la permission de rejeter.");
                 return;
             }
 
@@ -395,18 +395,18 @@ namespace Collectivite.ViewModels
 
                 if (result.success)
                 {
-                    MessageBox.Show(result.message, "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+                    NotificationService.ShowSuccess(result.message);
                     IsRejetDialogOpen = false;
                     await ChargerDonneesAsync();
                 }
                 else
                 {
-                    MessageBox.Show(result.message, "Erreur", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    NotificationService.ShowWarning(result.message);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
             finally
             {
@@ -430,13 +430,13 @@ namespace Collectivite.ViewModels
         {
             if (!EngagementsNonValides.Any())
             {
-                MessageBox.Show("Aucun engagement à valider.", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.ShowInfo("Aucun engagement à valider.");
                 return;
             }
 
             if (!SessionManager.HasPermission("Valider.validate"))
             {
-                MessageBox.Show("Vous n'avez pas la permission de valider les engagements.", "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Vous n'avez pas la permission de valider les engagements.");
                 return;
             }
 
@@ -460,12 +460,12 @@ namespace Collectivite.ViewModels
                     if (success) validated++;
                 }
 
-                MessageBox.Show($"{validated} engagement(s) validé(s) avec succès.", "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.ShowSuccess($"{validated} engagement(s) validé(s) avec succès.");
                 await ChargerDonneesAsync();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
             finally
             {
@@ -478,13 +478,13 @@ namespace Collectivite.ViewModels
         {
             if (!MandatsNonValides.Any())
             {
-                MessageBox.Show("Aucun mandat à valider.", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.ShowInfo("Aucun mandat à valider.");
                 return;
             }
 
             if (!SessionManager.HasPermission("Valider.validate"))
             {
-                MessageBox.Show("Vous n'avez pas la permission de valider les mandats.", "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Vous n'avez pas la permission de valider les mandats.");
                 return;
             }
 
@@ -510,12 +510,12 @@ namespace Collectivite.ViewModels
                     else errors++;
                 }
 
-                MessageBox.Show($"{validated} mandat(s) validé(s).\n{errors} erreur(s) (engagement non validé).", "Résultat", MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.ShowInfo($"{validated} mandat(s) validé(s).\n{errors} erreur(s) (engagement non validé).");
                 await ChargerDonneesAsync();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
             finally
             {
@@ -528,13 +528,13 @@ namespace Collectivite.ViewModels
         {
             if (!OrdresRecetteNonValides.Any())
             {
-                MessageBox.Show("Aucun ordre de recette à valider.", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.ShowInfo("Aucun ordre de recette à valider.");
                 return;
             }
 
             if (!SessionManager.HasPermission("Valider.validate"))
             {
-                MessageBox.Show("Vous n'avez pas la permission de valider les ordres de recette.", "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Vous n'avez pas la permission de valider les ordres de recette.");
                 return;
             }
 
@@ -558,12 +558,12 @@ namespace Collectivite.ViewModels
                     if (success) validated++;
                 }
 
-                MessageBox.Show($"{validated} ordre(s) de recette validé(s) avec succès.", "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.ShowSuccess($"{validated} ordre(s) de recette validé(s) avec succès.");
                 await ChargerDonneesAsync();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
             finally
             {

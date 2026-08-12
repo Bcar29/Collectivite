@@ -167,11 +167,7 @@ namespace Collectivite.ViewModels
         {
             if (!CanViewCommune)
             {
-                MessageBox.Show(
-                    "Accès refusé : vous n'avez pas la permission de consulter les communes.",
-                    "Accès refusé",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Accès refusé : vous n'avez pas la permission de consulter les communes.");
                 Communes.Clear();
                 return;
             }
@@ -191,8 +187,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement des communes dans viewmodèle: {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors du chargement des communes dans viewmodèle: {ex.Message}");
             }
             finally
             {
@@ -204,11 +199,7 @@ namespace Collectivite.ViewModels
         {
             if (!CanCreateCommune)
             {
-                MessageBox.Show(
-                    _accessDeniedMessage + "\nPermission requise : Commune.Create",
-                    "Accès refusé",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                NotificationService.ShowWarning(_accessDeniedMessage + "\nPermission requise : Commune.Create");
                 return;
             }
 
@@ -239,11 +230,7 @@ namespace Collectivite.ViewModels
 
             if (!CanEditCommune)
             {
-                MessageBox.Show(
-                    _accessDeniedMessage + "\nPermission requise : Commune.Edit",
-                    "Accès refusé",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                NotificationService.ShowWarning(_accessDeniedMessage + "\nPermission requise : Commune.Edit");
                 return;
             }
 
@@ -290,14 +277,12 @@ namespace Collectivite.ViewModels
                 }
                 else
                 {
-                    MessageBox.Show("Impossible de naviguer vers la page de détails.",
-                        "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                    NotificationService.ShowError("Impossible de naviguer vers la page de détails.");
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de l'ouverture des détails : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors de l'ouverture des détails : {ex.Message}");
             }
         }
 
@@ -323,11 +308,7 @@ namespace Collectivite.ViewModels
                 // Générer le PDF
                 string pdfPath = _communePdfService.GenerateRapportCommune(commune, detailCommune);
 
-                MessageBox.Show(
-                    $"Le rapport PDF a été généré avec succès !\n\nEmplacement : {pdfPath}",
-                    "Export PDF réussi",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                NotificationService.ShowSuccess($"Le rapport PDF a été généré avec succès !\n\nEmplacement : {pdfPath}");
 
                 // Demander si l'utilisateur veut ouvrir le fichier
                 var result = MessageBox.Show(
@@ -343,11 +324,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
-                    $"Erreur lors de l'export PDF : {ex.Message}",
-                    "Erreur",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors de l'export PDF : {ex.Message}");
             }
             finally
             {
@@ -376,19 +353,11 @@ namespace Collectivite.ViewModels
                 // Ouvrir automatiquement le PDF pour impression
                 _communePdfService.OpenPdf(pdfPath);
 
-                MessageBox.Show(
-                    "Le rapport PDF a été généré et ouvert pour impression.",
-                    "Export et impression",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                NotificationService.ShowSuccess("Le rapport PDF a été généré et ouvert pour impression.");
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
-                    $"Erreur lors de l'export PDF : {ex.Message}",
-                    "Erreur",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors de l'export PDF : {ex.Message}");
             }
             finally
             {
@@ -405,21 +374,13 @@ namespace Collectivite.ViewModels
         {
             if (IsEditMode && !CanEditCommune)
             {
-                MessageBox.Show(
-                    _accessDeniedMessage + "\nPermission requise : Commune.Edit",
-                    "Accès refusé",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                NotificationService.ShowWarning(_accessDeniedMessage + "\nPermission requise : Commune.Edit");
                 return;
             }
 
             if (!IsEditMode && !CanCreateCommune)
             {
-                MessageBox.Show(
-                    _accessDeniedMessage + "\nPermission requise : Commune.Create",
-                    "Accès refusé",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                NotificationService.ShowWarning(_accessDeniedMessage + "\nPermission requise : Commune.Create");
                 return;
             }
 
@@ -432,15 +393,13 @@ namespace Collectivite.ViewModels
                     var (success, message) = await _communeService.UpdateCommuneAsync(DialogCommune);
                     if (success)
                     {
-                        MessageBox.Show("Commune mise à jour avec succès",
-                            "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+                        NotificationService.ShowSuccess("Commune mise à jour avec succès");
                         IsDialogOpen = false;
                         await LoadCommuneAsync();
                     }
                     else
                     {
-                        MessageBox.Show(message, "Erreur",
-                            MessageBoxButton.OK, MessageBoxImage.Error);
+                        NotificationService.ShowError(message);
                     }
                 }
                 else
@@ -448,22 +407,19 @@ namespace Collectivite.ViewModels
                     var (success, message, _) = await _communeService.CreateCommuneAsync(DialogCommune);
                     if (success)
                     {
-                        MessageBox.Show(message, "Succès",
-                            MessageBoxButton.OK, MessageBoxImage.Information);
+                        NotificationService.ShowSuccess(message);
                         IsDialogOpen = false;
                         await LoadCommuneAsync();
                     }
                     else
                     {
-                        MessageBox.Show(message, "Erreur",
-                            MessageBoxButton.OK, MessageBoxImage.Error);
+                        NotificationService.ShowError(message);
                     }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de l'enregistrement de la commune : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors de l'enregistrement de la commune : {ex.Message}");
             }
             finally
             {
@@ -483,11 +439,7 @@ namespace Collectivite.ViewModels
 
             if (!CanDeleteCommune)
             {
-                MessageBox.Show(
-                    _accessDeniedMessage + "\nPermission requise : Commune.Delete",
-                    "Accès refusé",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                NotificationService.ShowWarning(_accessDeniedMessage + "\nPermission requise : Commune.Delete");
                 return;
             }
 
@@ -505,14 +457,12 @@ namespace Collectivite.ViewModels
 
                 if (success)
                 {
-                    MessageBox.Show(message, "Succès",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    NotificationService.ShowSuccess(message);
                     await LoadCommuneAsync();
                 }
                 else
                 {
-                    MessageBox.Show(message, "Erreur",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    NotificationService.ShowError(message);
                 }
 
                 IsLoading = false;

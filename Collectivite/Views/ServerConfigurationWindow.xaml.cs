@@ -15,18 +15,29 @@ namespace Collectivite.Views
             DataContext = new ServerConfigurationViewModel();
         }
 
-        private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
-        {
-            if (DataContext is ServerConfigurationViewModel viewModel)
-            {
-                viewModel.Password = PasswordBox.Password;
-            }
-        }
-
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
+            if (HasUnsavedInput() &&
+                MessageBox.Show(
+                    "Des informations ont été saisies et seront perdues. Voulez-vous vraiment fermer ?",
+                    "Confirmation",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question) != MessageBoxResult.Yes)
+            {
+                return;
+            }
+
             DialogResult = false;
             Close();
+        }
+
+        private bool HasUnsavedInput()
+        {
+            return DataContext is ServerConfigurationViewModel viewModel &&
+                   (!string.IsNullOrWhiteSpace(viewModel.Server) ||
+                    !string.IsNullOrWhiteSpace(viewModel.Database) ||
+                    !string.IsNullOrWhiteSpace(viewModel.User) ||
+                    !string.IsNullOrWhiteSpace(viewModel.Password));
         }
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)

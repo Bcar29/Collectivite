@@ -300,22 +300,14 @@ namespace Collectivite.ViewModels
                 if (!CanViewBudgetPrimitif)
                 {
                     BudgetPrimitifs.Clear();
-                    MessageBox.Show(
-                        "Accès refusé : vous n'avez pas la permission de consulter les budgets primitifs.",
-                        "Accès refusé",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning);
+                    NotificationService.ShowWarning("Accès refusé : vous n'avez pas la permission de consulter les budgets primitifs.");
                     return;
                 }
                 // Vérifier qu'un exercice est sélectionné
                 if (_exerciceService.CurrentExercice == null)
                 {
                     BudgetPrimitifs.Clear();
-                    MessageBox.Show(
-                        "Aucun exercice n'est sélectionné.",
-                        "Information",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
+                    NotificationService.ShowInfo("Aucun exercice n'est sélectionné.");
                     return;
                 }
 
@@ -333,11 +325,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
-                    $"Erreur lors du chargement des budgets : {ex.Message}",
-                    "Erreur",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors du chargement des budgets : {ex.Message}");
             }
             finally
             {
@@ -369,8 +357,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement de la vue d'ensemble : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors du chargement de la vue d'ensemble : {ex.Message}");
             }
             finally
             {
@@ -439,6 +426,8 @@ namespace Collectivite.ViewModels
         {
             try
             {
+                IsLoading = true;
+
                 // Charger les infos de la commune avec relations
                 var communeService = new CommuneService();
                 var commune = await communeService.GetCommuneByIdWithRelationsAsync(
@@ -455,11 +444,7 @@ namespace Collectivite.ViewModels
                     Commune = commune;
                     await Task.Run(() => GeneratePdf(saveFileDialog.FileName,Commune));
 
-                    MessageBox.Show(
-                        "Export PDF réalisé avec succès !",
-                        "Succès",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
+                    NotificationService.ShowSuccess("Export PDF réalisé avec succès !");
 
                     // Ouvrir le fichier
                     System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
@@ -471,8 +456,11 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de l'export PDF : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors de l'export PDF : {ex.Message}");
+            }
+            finally
+            {
+                IsLoading = false;
             }
         }
 
@@ -679,15 +667,13 @@ namespace Collectivite.ViewModels
         {
             if (_exerciceService.CurrentExercice == null)
             {
-                MessageBox.Show("Aucun exercice n'est sélectionné.",
-                    "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.ShowInfo("Aucun exercice n'est sélectionné.");
                 return;
             }
 
             if (!_allVueEnsembleLines.Any())
             {
-                MessageBox.Show("Aucune donnée à imprimer.",
-                    "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.ShowInfo("Aucune donnée à imprimer.");
                 return;
             }
 
@@ -718,17 +704,13 @@ namespace Collectivite.ViewModels
                     UseShellExecute = true
                 });
 
-                MessageBox.Show(
+                NotificationService.ShowInfo(
                     "Le document s'ouvre dans votre lecteur PDF.\n\n" +
-                    "Utilisez Ctrl+P ou le menu Fichier → Imprimer pour lancer l'impression.",
-                    "Impression",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                    "Utilisez Ctrl+P ou le menu Fichier → Imprimer pour lancer l'impression.");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de l'impression : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors de l'impression : {ex.Message}");
             }
             finally
             {
@@ -888,33 +870,23 @@ namespace Collectivite.ViewModels
 
             if (!CanApproveBudget)
             {
-                MessageBox.Show(
+                NotificationService.ShowWarning(
                     "Vous n'avez pas la permission d'approuver le budget primitif.\n" +
-                    "Veuillez contacter l'administrateur de votre commune (Maire).",
-                    "Accès refusé",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                    "Veuillez contacter l'administrateur de votre commune (Maire).");
                 return;
             }
 
             if (budget.Status == BudgetPrimitif.Statusbudget.APPROVED || budget.Status == BudgetPrimitif.Statusbudget.VALIDATED)
             {
-                MessageBox.Show(
+                NotificationService.ShowInfo(
                     $"Ce budget est déjà approuvé.\n\n" +
-                    $"Date d'approbation : {budget.DateApprobation?.ToString("dd/MM/yyyy") ?? "N/A"}",
-                    "Information",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                    $"Date d'approbation : {budget.DateApprobation?.ToString("dd/MM/yyyy") ?? "N/A"}");
                 return;
             }
 
             if (budget.Status != BudgetPrimitif.Statusbudget.DRAFT)
             {
-                MessageBox.Show(
-                    "Ce budget ne peut pas être approuvé. Il doit être en mode DRAFT.",
-                    "Erreur",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Ce budget ne peut pas être approuvé. Il doit être en mode DRAFT.");
                 return;
             }
 
@@ -929,33 +901,23 @@ namespace Collectivite.ViewModels
 
             if (!CanValidateBudget)
             {
-                MessageBox.Show(
+                NotificationService.ShowWarning(
                     "Vous n'avez pas la permission de valider le budget primitif.\n" +
-                    "Veuillez contacter l'administrateur de votre commune (Maire).",
-                    "Accès refusé",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                    "Veuillez contacter l'administrateur de votre commune (Maire).");
                 return;
             }
 
             if (budget.Status == BudgetPrimitif.Statusbudget.VALIDATED)
             {
-                MessageBox.Show(
+                NotificationService.ShowInfo(
                     $"Ce budget est déjà validé.\n\n" +
-                    $"Date de validation : {budget.DateValidation?.ToString("dd/MM/yyyy") ?? "N/A"}",
-                    "Information",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                    $"Date de validation : {budget.DateValidation?.ToString("dd/MM/yyyy") ?? "N/A"}");
                 return;
             }
 
             if (budget.Status != BudgetPrimitif.Statusbudget.APPROVED)
             {
-                MessageBox.Show(
-                    "Ce budget doit être approuvé avant d'être validé.",
-                    "Erreur",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Ce budget doit être approuvé avant d'être validé.");
                 return;
             }
 
@@ -974,7 +936,7 @@ namespace Collectivite.ViewModels
 
         private bool CanConfirmValidation()
         {
-            return _budgetToValidate != null && CanValidateBudget;
+            return _budgetToValidate != null && CanValidateBudget && FichierValidation != null;
         }
 
         private bool CanConfirmApproval()
@@ -995,20 +957,19 @@ namespace Collectivite.ViewModels
                     _budgetToApprove.Id,
                     DateApprobation);
 
-                MessageBox.Show(message,
-                    success ? "Succès" : "Erreur",
-                    MessageBoxButton.OK,
-                    success ? MessageBoxImage.Information : MessageBoxImage.Warning);
-
                 if (success)
                 {
+                    NotificationService.ShowSuccess(message);
                     await LoadBudgetPrimitifAsync();
+                }
+                else
+                {
+                    NotificationService.ShowWarning(message);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
             finally
             {
@@ -1038,26 +999,21 @@ namespace Collectivite.ViewModels
                     FichierValidation,
                     FileNameValidation);
 
-                MessageBox.Show(
-                    message,
-                    success ? "Succès" : "Erreur",
-                    MessageBoxButton.OK,
-                    success ? MessageBoxImage.Information : MessageBoxImage.Warning);
-
                 if (success)
                 {
+                    NotificationService.ShowSuccess(message);
                     await LoadBudgetPrimitifAsync();
                     FichierValidation = null;
                     FileNameValidation = null;
                 }
+                else
+                {
+                    NotificationService.ShowWarning(message);
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
-                    $"Erreur : {ex.Message}",
-                    "Erreur",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
             finally
             {
@@ -1084,8 +1040,7 @@ namespace Collectivite.ViewModels
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Erreur lors de la lecture du fichier : {ex.Message}",
-                        "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                    NotificationService.ShowError($"Erreur lors de la lecture du fichier : {ex.Message}");
                 }
             }
         }

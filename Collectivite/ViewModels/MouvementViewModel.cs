@@ -318,7 +318,7 @@ namespace Collectivite.ViewModels
                                               $"Veuillez vérifier votre trésorerie avant de procéder au paiement.";
 
                         MessageErreurSolde = messageErreur;
-                        MessageBox.Show(messageErreur, "Solde insuffisant", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        NotificationService.ShowWarning(messageErreur);
                         IsLoading = false;
                         return;
                     }
@@ -327,7 +327,7 @@ namespace Collectivite.ViewModels
                 {
                     string messageErreur = $"Erreur lors de la vérification du solde : {exSolde.Message}";
                     MessageErreurSolde = messageErreur;
-                    MessageBox.Show(messageErreur, "Erreur de vérification", MessageBoxButton.OK, MessageBoxImage.Error);
+                    NotificationService.ShowError(messageErreur);
                     IsLoading = false;
                     return;
                 }
@@ -354,18 +354,18 @@ namespace Collectivite.ViewModels
                     IsDialogOpen = false;
                     await ChargerDonneesAsync();
 
-                    MessageBox.Show(message, "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+                    NotificationService.ShowSuccess(message);
                 }
                 else
                 {
                     MessageErreur = message;
-                    MessageBox.Show(message, "Erreur", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    NotificationService.ShowWarning(message);
                 }
             }
             catch (Exception ex)
             {
                 MessageErreur = $"Erreur : {ex.Message}";
-                MessageBox.Show(MessageErreur, "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError(MessageErreur);
             }
             finally
             {
@@ -471,18 +471,18 @@ namespace Collectivite.ViewModels
                     IsDialogOpen = false;
                     await ChargerDonneesAsync();
 
-                    MessageBox.Show(message, "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+                    NotificationService.ShowSuccess(message);
                 }
                 else
                 {
                     MessageErreur = message;
-                    MessageBox.Show(message, "Erreur", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    NotificationService.ShowWarning(message);
                 }
             }
             catch (Exception ex)
             {
                 MessageErreur = $"Erreur : {ex.Message}";
-                MessageBox.Show(MessageErreur, "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError(MessageErreur);
             }
             finally
             {
@@ -601,14 +601,14 @@ namespace Collectivite.ViewModels
             if (DialogMontant <= 0)
             {
                 MessageErreur = "Le montant doit être supérieur à zéro.";
-                MessageBox.Show(MessageErreur, "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning(MessageErreur);
                 return false;
             }
 
             if (DialogMontant > DialogMontantRestant)
             {
                 MessageErreur = $"Le montant ne peut pas dépasser le montant restant ({DialogMontantRestant:N0} GNF).";
-                MessageBox.Show(MessageErreur, "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning(MessageErreur);
                 return false;
             }
 
@@ -619,7 +619,7 @@ namespace Collectivite.ViewModels
                     if (string.IsNullOrWhiteSpace(DialogRefVirement))
                     {
                         MessageErreur = "La référence du virement est obligatoire.";
-                        MessageBox.Show(MessageErreur, "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        NotificationService.ShowWarning(MessageErreur);
                         return false;
                     }
                     break;
@@ -628,7 +628,7 @@ namespace Collectivite.ViewModels
                     if (string.IsNullOrWhiteSpace(DialogRefCheque))
                     {
                         MessageErreur = "La référence du chèque est obligatoire.";
-                        MessageBox.Show(MessageErreur, "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        NotificationService.ShowWarning(MessageErreur);
                         return false;
                     }
                     break;

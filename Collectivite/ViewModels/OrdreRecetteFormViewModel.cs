@@ -188,8 +188,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors du chargement : {ex.Message}");
             }
             finally
             {
@@ -225,15 +224,13 @@ namespace Collectivite.ViewModels
                 }
                 else
                 {
-                    MessageBox.Show("Ordre de recette introuvable.", "Erreur",
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    NotificationService.ShowWarning("Ordre de recette introuvable.");
                     NavigateBack();
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
             finally
             {
@@ -268,10 +265,10 @@ namespace Collectivite.ViewModels
                     // ========== MODE MODIFICATION ==========
                     var (success, message) = await ordreRecetteService.UpdateOrdreRecetteAsync(OrdreRecette);
 
-                    MessageBox.Show(message,
-                        success ? "Succès" : "Erreur",
-                        MessageBoxButton.OK,
-                        success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                    if (success)
+                        NotificationService.ShowSuccess(message);
+                    else
+                        NotificationService.ShowWarning(message);
 
                     if (success)
                     {
@@ -321,10 +318,10 @@ namespace Collectivite.ViewModels
                     }
 
                     // 3️⃣ Afficher le message final
-                    MessageBox.Show(message,
-                        success ? "Succès" : "Erreur",
-                        MessageBoxButton.OK,
-                        success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                    if (success)
+                        NotificationService.ShowSuccess(message);
+                    else
+                        NotificationService.ShowWarning(message);
 
                     if (success)
                     {
@@ -334,8 +331,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
             finally
             {

@@ -33,7 +33,6 @@ namespace Collectivite.Services
                 .Where(f => f.ExerciceId == exerciceService.CurrentExercice.Id)
                 .Include(f => f.Tiers)
                 .Include(f => f.Exercice)
-                .Include(f => f.Contrats)
                 .Include(f => f.Details)
                 .AsNoTracking()
                 .OrderByDescending(f => f.DateFacture)
@@ -50,7 +49,6 @@ namespace Collectivite.Services
             return await context.Factures
                 .Include(f => f.Tiers)
                 .Include(f => f.Exercice)
-                .Include(f => f.Contrats)
                 .Include(f => f.Details)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(f => f.Id == id);
@@ -157,7 +155,6 @@ namespace Collectivite.Services
                 existing.Description = facture.Description;
                 existing.TiersId = facture.TiersId;
                 existing.ExerciceId = facture.ExerciceId;
-                existing.ContratId = facture.ContratId;
                 existing.Status = facture.Status;
                 existing.FichierJoin = facture.FichierJoin;
 

@@ -22,6 +22,11 @@ namespace Collectivite.Services
         Task<GrandLivreStatsDTO> GetStatistiquesAsync(GrandLivreFiltreDTO? filtre = null);
 
         /// <summary>
+        /// Calcule les statistiques à partir d'un Grand Livre déjà chargé, sans nouvelle requête.
+        /// </summary>
+        GrandLivreStatsDTO CalculerStatistiques(List<GrandLivreCompteDTO> grandLivre);
+
+        /// <summary>
         /// Récupère la liste des années disponibles
         /// </summary>
         Task<List<int>> GetAnneesDisponiblesAsync();

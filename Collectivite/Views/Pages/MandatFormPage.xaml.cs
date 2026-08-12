@@ -27,5 +27,13 @@ namespace Collectivite.Views.Pages
             InitializeComponent();
             DataContext = new MandatFormViewModel(mandatId);
         }
+
+        private void PrecomptesField_LostFocus(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is MandatFormViewModel viewModel && viewModel.CalculerMontantNetCommand.CanExecute(null))
+            {
+                viewModel.CalculerMontantNetCommand.Execute(null);
+            }
+        }
     }
 }

@@ -110,11 +110,8 @@ namespace Collectivite.ViewModels
         {
             if (!CanViewNommenclature)
             {
-                MessageBox.Show(
-                    "Accès refusé : vous n'avez pas la permission de consulter les nomenclatures.",
-                    "Accès refusé",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                NotificationService.ShowWarning(
+                    "Accès refusé : vous n'avez pas la permission de consulter les nomenclatures.");
 
                 Nommenclatures.Clear();
                 RecetteFonctionnementTree.Clear();
@@ -141,8 +138,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement des nomenclatures : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors du chargement des nomenclatures : {ex.Message}");
             }
             finally
             {
@@ -230,11 +226,8 @@ namespace Collectivite.ViewModels
         {
             if (!CanCreateNommenclature)
             {
-                MessageBox.Show(
-                    _accessDeniedMessage + "\nPermission requise : Nommenclature.Create",
-                    "Accès refusé",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                NotificationService.ShowWarning(
+                    _accessDeniedMessage + "\nPermission requise : Nommenclature.Create");
                 return;
             }
 
@@ -251,11 +244,8 @@ namespace Collectivite.ViewModels
 
             if (!CanEditNommenclature)
             {
-                MessageBox.Show(
-                    _accessDeniedMessage + "\nPermission requise : Nommenclature.Edit",
-                    "Accès refusé",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                NotificationService.ShowWarning(
+                    _accessDeniedMessage + "\nPermission requise : Nommenclature.Edit");
                 return;
             }
 
@@ -284,21 +274,15 @@ namespace Collectivite.ViewModels
         {
             if (IsEditMode && !CanEditNommenclature)
             {
-                MessageBox.Show(
-                    _accessDeniedMessage + "\nPermission requise : Nommenclature.Edit",
-                    "Accès refusé",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                NotificationService.ShowWarning(
+                    _accessDeniedMessage + "\nPermission requise : Nommenclature.Edit");
                 return;
             }
 
             if (!IsEditMode && !CanCreateNommenclature)
             {
-                MessageBox.Show(
-                    _accessDeniedMessage + "\nPermission requise : Nommenclature.Create",
-                    "Accès refusé",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                NotificationService.ShowWarning(
+                    _accessDeniedMessage + "\nPermission requise : Nommenclature.Create");
                 return;
             }
 
@@ -310,15 +294,13 @@ namespace Collectivite.ViewModels
                     var (success, message) = await _nommenclatureService.UpdateNommenclatureAsync(DialogNommenclature);
                     if (success)
                     {
-                        MessageBox.Show("Nomenclature mise à jour avec succès",
-                            "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+                        NotificationService.ShowSuccess("Nomenclature mise à jour avec succès");
                         IsDialogOpen = false;
                         await LoadNommenclatureAsync();
                     }
                     else
                     {
-                        MessageBox.Show(message, "Erreur",
-                            MessageBoxButton.OK, MessageBoxImage.Error);
+                        NotificationService.ShowError(message);
                     }
                 }
                 else
@@ -326,22 +308,19 @@ namespace Collectivite.ViewModels
                     var (success, message, _) = await _nommenclatureService.CreateNommenclatureAsync(DialogNommenclature);
                     if (success)
                     {
-                        MessageBox.Show(message, "Succès",
-                            MessageBoxButton.OK, MessageBoxImage.Information);
+                        NotificationService.ShowSuccess(message);
                         IsDialogOpen = false;
                         await LoadNommenclatureAsync();
                     }
                     else
                     {
-                        MessageBox.Show(message, "Erreur",
-                            MessageBoxButton.OK, MessageBoxImage.Error);
+                        NotificationService.ShowError(message);
                     }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de l'enregistrement de la nomenclature : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors de l'enregistrement de la nomenclature : {ex.Message}");
             }
             finally
             {
@@ -361,11 +340,8 @@ namespace Collectivite.ViewModels
 
             if (!CanDeleteNommenclature)
             {
-                MessageBox.Show(
-                    _accessDeniedMessage + "\nPermission requise : Nommenclature.Delete",
-                    "Accès refusé",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                NotificationService.ShowWarning(
+                    _accessDeniedMessage + "\nPermission requise : Nommenclature.Delete");
                 return;
             }
 
@@ -382,14 +358,12 @@ namespace Collectivite.ViewModels
                 var (success, message) = await _nommenclatureService.DeleteNommenclatureAsync(nommenclature.Id);
                 if (success)
                 {
-                    MessageBox.Show("Nomenclature supprimée avec succès",
-                        "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+                    NotificationService.ShowSuccess("Nomenclature supprimée avec succès");
                     await LoadNommenclatureAsync();
                 }
                 else
                 {
-                    MessageBox.Show(message, "Erreur",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    NotificationService.ShowError(message);
                 }
                 IsLoading = false;
             }

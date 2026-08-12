@@ -20,7 +20,6 @@ namespace Collectivite.Services
 
         public DbSet<Remaniement> Remaniements { get; set; }
 
-        public DbSet<Contrats> Contrats { get; set; }
         public DbSet<Engagement> Engagements { get; set; }
         public DbSet<Facture> Factures { get; set; }
         public DbSet<DetailsFacture> DetailsFactures { get; set; }
@@ -30,7 +29,6 @@ namespace Collectivite.Services
         public DbSet<BonCommande> BonCommandes { get; set; }
         public DbSet<DetailBonCommande> DetailsBonCommandes { get; set; }
         public DbSet<Mandat> Mandats { get; set; }
-        public DbSet<Recensement>  Recensements { get; set; }
         public DbSet<OrdreRecette> OrdreRecettes { get; set; }
         public DbSet<CompteComptable> CompteComptables { get; set; }
         public DbSet<EcritureComptable> EcritureComptables { get; set; }
@@ -39,14 +37,6 @@ namespace Collectivite.Services
         public DbSet<DetailExpressionBesoin> DetailExpressionBesoins { get; set; }
 
 
-        public DbSet<ProgrammePDL> ProgrammesPDL { get; set; }
-        public DbSet<SecteurPDL> SecteursPDL { get; set; }
-        public DbSet<ActivitePDL> ActivitesPDL { get; set; }
-        public DbSet<CompetenceCollectivite> CompetencesCollectivite { get; set; }
-        public DbSet<BeneficiairePDL> BeneficiairesPDL { get; set; }
-        public DbSet<ActeurPDL> ActeursPDL { get; set; }
-        public DbSet<StructureExecutionPDL> StructureExecutionsPDL { get; set; }
-        public DbSet<ODD> ODDs { get; set; }
 
 
         public DbSet<AuditLog> AuditLogs { get; set; }
@@ -214,8 +204,8 @@ namespace Collectivite.Services
                 .HasForeignKey(bl => bl.IdBudgetLine);
 
             // ════════════════════════════════════════════════════════
-            // 8️⃣ Tiers ↔ CompteBancaire / Contrats / Factures (1 → N)
-            // Un Tiers peut avoir plusieurs comptes, contrats et factures.
+            // 8️⃣ Tiers ↔ CompteBancaire / Factures (1 → N)
+            // Un Tiers peut avoir plusieurs comptes et factures.
             // ════════════════════════════════════════════════════════
             // Configuration Tiers
             modelBuilder.Entity<Tiers>(entity =>
@@ -243,18 +233,6 @@ namespace Collectivite.Services
             });
         
 
-        modelBuilder.Entity<Contrats>()
-                .HasOne(c => c.Tiers)
-                .WithMany(t => t.Contrats)
-                .HasForeignKey(c => c.TiersId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<Contrats>()
-                .HasOne(c => c.Exercice)
-                .WithMany(e => e.Contrats)
-                .HasForeignKey(c => c.ExerciceId)
-                .OnDelete(DeleteBehavior.Restrict);
-
             // ════════════════════════════════════════════════════════
             // 9️⃣ Facture ↔ DetailsFacture (1 → N)
             // Une facture contient plusieurs lignes de détails.
@@ -265,12 +243,6 @@ namespace Collectivite.Services
                 .HasForeignKey(df => df.FactureId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<Facture>()
-                .HasOne(f => f.Contrats)
-                .WithMany(c => c.Factures)
-                .HasForeignKey(f => f.ContratId)
-                .OnDelete(DeleteBehavior.Cascade);
-            
             // ════════════════════════════════════════════════════════
             // 🔟 Engagements : multiples relations
             // ════════════════════════════════════════════════════════
@@ -314,33 +286,6 @@ namespace Collectivite.Services
                 .HasOne(m => m.Engagement)
                 .WithOne(e => e.Mandat)
                 .HasForeignKey<Mandat>(m => m.EngagementId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // ════════════════════════════════════════════════════════
-            // 13️⃣ Recensement ↔ (BudgetLine, Exercice, Commune, Tiers)
-            // ════════════════════════════════════════════════════════
-            modelBuilder.Entity<Recensement>()
-                .HasOne(r => r.BudgetLine)
-                .WithMany(bl => bl.Recensements)
-                .HasForeignKey(r => r.BudgetLineId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<Recensement>()
-                .HasOne(r => r.Exercice)
-                .WithMany(e => e.Recensements)
-                .HasForeignKey(r => r.ExerciceId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<Recensement>()
-                .HasOne(r => r.Commune)
-                .WithMany(c => c.Recensements)
-                .HasForeignKey(r => r.CommuneId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<Recensement>()
-                .HasOne(r => r.Tiers)
-                .WithMany(t => t.Recensements)
-                .HasForeignKey(r => r.TiersId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // ════════════════════════════════════════════════════════
@@ -524,75 +469,6 @@ namespace Collectivite.Services
             modelBuilder.Entity<DetailBonCommande>()
                 .Ignore(d => d.Total);
 
-
-            //  ActivitePDL ↔ PDL
-            modelBuilder.Entity<ActivitePDL>()
-                .HasOne(a => a.PDL)
-                .WithMany(p => p.Activites)
-                .HasForeignKey(a => a.PDLId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            //  Exercice ↔ PDL
-            modelBuilder.Entity<Exercice>()
-                .HasOne(e => e.PDL)
-                .WithMany(p => p.Exercices)
-                .HasForeignKey(e => e.PDLId)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            // ════════════════════════════════════════════════════════
-            // Relations Many-to-One (N ↔ 1)
-            // ════════════════════════════════════════════════════════
-
-            // ActivitePDL ↔ SecteurPDL
-            modelBuilder.Entity<ActivitePDL>()
-                .HasOne(a => a.SecteurPDL)
-                .WithMany(s => s.Activites)
-                .HasForeignKey(a => a.SecteurPDLId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // ActivitePDL ↔ CompetenceCollectivite
-            modelBuilder.Entity<ActivitePDL>()
-                .HasOne(a => a.CompetenceCollectivite)
-                .WithMany(c => c.Activites)
-                .HasForeignKey(a => a.CompetenceCollectiviteId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // ActivitePDL ↔ ODD
-            modelBuilder.Entity<ActivitePDL>()
-                .HasOne(a => a.ODD)
-                .WithMany(o => o.Activites)
-                .HasForeignKey(a => a.ODDId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // SecteurPDL ↔ ProgrammePDL
-            modelBuilder.Entity<SecteurPDL>()
-                .HasOne(s => s.ProgrammePDL)
-                .WithMany(p => p.SecteursPDL)
-                .HasForeignKey(s => s.ProgrammePDLId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // ════════════════════════════════════════════════════════
-            // Relations Many-to-Many (N ↔ N) - APPROCHE AUTOMATIQUE
-            // EF Core crée automatiquement les tables de liaison
-            // ════════════════════════════════════════════════════════
-
-            // ActivitePDL ↔ BeneficiairePDL
-            modelBuilder.Entity<ActivitePDL>()
-                .HasMany(a => a.Beneficiaires)
-                .WithMany(b => b.Activites)
-                .UsingEntity(j => j.ToTable("ActiviteBeneficiaires"));
-
-            // ActivitePDL ↔ ActeurPDL
-            modelBuilder.Entity<ActivitePDL>()
-                .HasMany(a => a.Acteurs)
-                .WithMany(ac => ac.Activites)
-                .UsingEntity(j => j.ToTable("ActiviteActeurs"));
-
-            // ActivitePDL ↔ StructureExecutionPDL
-            modelBuilder.Entity<ActivitePDL>()
-                .HasMany(a => a.StructureExecutions)
-                .WithMany(s => s.Activites)
-                .UsingEntity(j => j.ToTable("ActiviteStructureExecutions"));
 
         }
 

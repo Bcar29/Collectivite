@@ -3,6 +3,7 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
       xmlns:utils="clr-namespace:Collectivite.Utils"
+      xmlns:controls="clr-namespace:Collectivite.Views.Controls"
       Language="fr-FR"
       Background="#F5F5F5"
       Title="Gestion des Ordres de Recette">
@@ -13,6 +14,7 @@
         <utils:StatutOrdreToColorConverter x:Key="StatutOrdreToColor"/>
         <utils:StatutOrdreToBackgroundConverter x:Key="StatutOrdreToBackground"/>
         <utils:StatutOrdreCanEditConverter x:Key="StatutOrdreCanEdit"/>
+        <utils:OrdreEditButtonVisibilityConverter x:Key="OrdreEditButtonVisibilityConverter"/>
     </Page.Resources>
 
     <Grid>
@@ -277,7 +279,13 @@
             <!-- DataGrid -->
             <!-- DataGrid avec scroll horizontal -->
             <materialDesign:Card Grid.Row="3" Padding="0">
-                <ScrollViewer HorizontalScrollBarVisibility="Auto" 
+              <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <ScrollViewer Grid.Row="0"
+                  HorizontalScrollBarVisibility="Auto"
                   VerticalScrollBarVisibility="Disabled">
                     <DataGrid ItemsSource="{Binding OrdresRecette}"
                   SelectedItem="{Binding SelectedOrdreRecette}"
@@ -378,39 +386,78 @@
                             </DataGridTemplateColumn>
 
                             <!-- Actions -->
-                            <DataGridTemplateColumn Header="Actions" Width="140">
+                            <DataGridTemplateColumn Header="Actions" Width="60">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                            <Button Style="{StaticResource MaterialDesignIconButton}"
-                                        Visibility="{Binding DataContext.CanViewOrdreRecette, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}"
-                                        Command="{Binding DataContext.NavigateToDetailCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                        CommandParameter="{Binding}"
-                                        ToolTip="Voir détails">
-                                                <materialDesign:PackIcon Kind="Eye" Foreground="#4CAF50"/>
-                                            </Button>
-                                            <!-- Modifier -->
-                                            <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                Visibility="{Binding Statut, Converter={StaticResource StatutOrdreCanEdit}}"
-                                                Command="{Binding DataContext.NavigateToEditCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                CommandParameter="{Binding}"
-                                                ToolTip="Modifier">
-                                                <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2"/>
-                                            </Button>
-                                            <Button Style="{StaticResource MaterialDesignIconButton}"
-                                        Visibility="{Binding DataContext.CanDeleteOrdreRecette, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}"
-                                        Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                        CommandParameter="{Binding}"
-                                        ToolTip="Supprimer">
-                                                <materialDesign:PackIcon Kind="Delete" Foreground="#F44336"/>
-                                            </Button>
-                                        </StackPanel>
+                                        <materialDesign:PopupBox Style="{StaticResource RowActionsPopupBoxStyle}">
+                                            <StackPanel>
+                                                <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                        Visibility="{Binding DataContext.CanViewOrdreRecette, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}"
+                                                        Command="{Binding DataContext.NavigateToDetailCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                        CommandParameter="{Binding}">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <materialDesign:PackIcon Kind="Eye" Foreground="#4CAF50" Margin="0,0,10,0"/>
+                                                        <TextBlock Text="Voir détails"/>
+                                                    </StackPanel>
+                                                </Button>
+                                                <!-- Modifier : visible seulement si la permission ET le statut le permettent -->
+                                                <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                        Command="{Binding DataContext.NavigateToEditCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                        CommandParameter="{Binding}">
+                                                    <Button.Visibility>
+                                                        <MultiBinding Converter="{StaticResource OrdreEditButtonVisibilityConverter}">
+                                                            <Binding Path="DataContext.CanEditOrdreRecette" RelativeSource="{RelativeSource AncestorType=Page}"/>
+                                                            <Binding Path="Statut"/>
+                                                        </MultiBinding>
+                                                    </Button.Visibility>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2" Margin="0,0,10,0"/>
+                                                        <TextBlock Text="Modifier"/>
+                                                    </StackPanel>
+                                                </Button>
+                                                <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                        Visibility="{Binding DataContext.CanDeleteOrdreRecette, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}"
+                                                        Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                        CommandParameter="{Binding}">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <materialDesign:PackIcon Kind="Delete" Foreground="#F44336" Margin="0,0,10,0"/>
+                                                        <TextBlock Text="Supprimer"/>
+                                                    </StackPanel>
+                                                </Button>
+                                            </StackPanel>
+                                        </materialDesign:PopupBox>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
                         </DataGrid.Columns>
                     </DataGrid>
                 </ScrollViewer>
+
+                <!-- Message si vide -->
+                <Border Background="#F5F5F5" CornerRadius="8" Padding="40">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding OrdresRecette.Count}" Value="0">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <materialDesign:PackIcon Kind="CashPlus" Width="64" Height="64" Foreground="#BDBDBD" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Aucun ordre de recette" FontSize="16" Foreground="#757575" Margin="0,20,0,0" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+
+                <controls:PaginationBar Grid.Row="1"
+                                        PageNumber="{Binding PageNumber}"
+                                        TotalPages="{Binding TotalPages}"
+                                        TotalCount="{Binding TotalCount}"
+                                        PreviousCommand="{Binding PreviousPageCommand}"
+                                        NextCommand="{Binding NextPageCommand}"/>
+              </Grid>
             </materialDesign:Card>
         </Grid>
     </Grid>

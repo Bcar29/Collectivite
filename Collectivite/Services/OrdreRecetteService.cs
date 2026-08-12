@@ -21,7 +21,7 @@ namespace Collectivite.Services
         /// <summary>
         /// Récupère tous les ordres de recette avec leurs relations
         /// </summary>
-        public async Task<List<OrdreRecette>> GetAllOrdresRecetteAsync()
+        public async Task<(List<OrdreRecette> Items, int TotalCount)> GetAllOrdresRecetteAsync(int pageNumber = 1, int pageSize = 20)
         {
             if (!SessionManager.HasPermission("OrdreRecette.View"))
                 throw new UnauthorizedAccessException("Permission OrdreRecette.View requise pour consulter les ordres de recette.");
@@ -34,16 +34,25 @@ namespace Collectivite.Services
                 throw new InvalidOperationException("Aucun exercice n'est sélectionné.");
             }
 
-            return await context.OrdreRecettes
+            var query = context.OrdreRecettes
                 .Where(o => o.ExerciceId == exerciceService.CurrentExercice.Id)
+                .AsNoTracking();
+
+            var totalCount = await query.CountAsync();
+
+            var items = await query
                 .Include(o => o.BudgetLine)
                 .ThenInclude(bl => bl.Nommenclature)
                 .Include(o => o.Exercice)
                 .Include(o => o.Commune)
                 .Include(o => o.Tiers)
-                .AsNoTracking()
                 .OrderByDescending(o => o.DateOrdre)
+                .ThenByDescending(o => o.Id)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
+
+            return (items, totalCount);
         }
 
         /// <summary>
@@ -69,7 +78,7 @@ namespace Collectivite.Services
         /// <summary>
         /// Recherche avec filtres multiples
         /// </summary>
-        public async Task<List<OrdreRecette>> SearchOrdresRecetteAsync(
+        public async Task<(List<OrdreRecette> Items, int TotalCount)> SearchOrdresRecetteAsync(
             string? numeroOrdre = null,
             int? exerciceId = null,
             int? communeId = null,
@@ -77,7 +86,9 @@ namespace Collectivite.Services
             DateTime? dateDebut = null,
             DateTime? dateFin = null,
             decimal? montantMin = null,
-            decimal? montantMax = null)
+            decimal? montantMax = null,
+            int pageNumber = 1,
+            int pageSize = 20)
         {
             if (!SessionManager.HasPermission("OrdreRecette.View"))
                 throw new UnauthorizedAccessException("Permission OrdreRecette.View requise pour consulter les ordres de recette.");
@@ -85,11 +96,6 @@ namespace Collectivite.Services
             using var context = CreateContext();
 
             var query = context.OrdreRecettes
-                .Include(o => o.BudgetLine)
-                    .ThenInclude(bl => bl.Nommenclature)
-                .Include(o => o.Exercice)
-                .Include(o => o.Commune)
-                .Include(o => o.Tiers)
                 .AsNoTracking()
                 .AsQueryable();
 
@@ -99,10 +105,19 @@ namespace Collectivite.Services
                 query = query.Where(o => o.NumeroOrdre.Contains(numeroOrdre));
             }
 
-            // Filtre par exercice
+            // Filtre par exercice : si aucun exercice n'est explicitement choisi, on borne
+            // par défaut à l'exercice courant pour éviter de remonter tout l'historique.
             if (exerciceId.HasValue && exerciceId.Value > 0)
             {
                 query = query.Where(o => o.ExerciceId == exerciceId.Value);
+            }
+            else
+            {
+                var currentExerciceId = ExerciceService.Instance.CurrentExercice?.Id;
+                if (currentExerciceId.HasValue)
+                {
+                    query = query.Where(o => o.ExerciceId == currentExerciceId.Value);
+                }
             }
 
             // Filtre par commune
@@ -139,7 +154,21 @@ namespace Collectivite.Services
                 query = query.Where(o => o.MontantOrdre <= montantMax.Value);
             }
 
-            return await query.OrderByDescending(o => o.DateOrdre).ToListAsync();
+            var totalCount = await query.CountAsync();
+
+            var items = await query
+                .Include(o => o.BudgetLine)
+                    .ThenInclude(bl => bl.Nommenclature)
+                .Include(o => o.Exercice)
+                .Include(o => o.Commune)
+                .Include(o => o.Tiers)
+                .OrderByDescending(o => o.DateOrdre)
+                .ThenByDescending(o => o.Id)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (items, totalCount);
         }
 
         /// <summary>

@@ -52,6 +52,7 @@
                     <Button Style="{StaticResource MaterialDesignRaisedButton}"
                             Height="40"
                             Command="{Binding OpenAddDialogCommand}"
+                            Visibility="{Binding CanCreateExercice, Converter={StaticResource BoolToVis}}"
                             HorizontalAlignment="Right">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="Plus" 
@@ -64,8 +65,9 @@
                 </Grid>
 
                 <!-- DataGrid -->
-                <materialDesign:Card Padding="0" 
+                <materialDesign:Card Padding="0"
                                    UniformCornerRadius="8">
+                  <Grid>
                     <DataGrid ItemsSource="{Binding Exercices}"
                               SelectedItem="{Binding SelectedExercice}"
                               AutoGenerateColumns="False"
@@ -177,79 +179,103 @@
                             </DataGridTemplateColumn>
 
                             <!-- Actions -->
-                            <DataGridTemplateColumn Header="Actions" Width="200">
+                            <DataGridTemplateColumn Header="Actions" Width="60">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <StackPanel Orientation="Horizontal" 
-                                                  HorizontalAlignment="Center">
+                                        <materialDesign:PopupBox Style="{StaticResource RowActionsPopupBoxStyle}">
+                                            <StackPanel>
+                                                <!-- Modifier : masqué si clôturé ou sans permission -->
+                                                <Button Command="{Binding DataContext.OpenEditDialogCommand,
+                                                                RelativeSource={RelativeSource AncestorType=Page}}"
+                                                        CommandParameter="{Binding}">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button" BasedOn="{StaticResource PopupMenuItemButtonStyle}">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding EstCloture}" Value="True">
+                                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding DataContext.CanEditExercice, RelativeSource={RelativeSource AncestorType=Page}}" Value="False">
+                                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Style>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2" Margin="0,0,10,0"/>
+                                                        <TextBlock Text="Modifier"/>
+                                                    </StackPanel>
+                                                </Button>
 
-                                            <!-- Bouton Modifier -->
-                                            <Button ToolTip="Modifier"
-                                                  Command="{Binding DataContext.OpenEditDialogCommand, 
-                                                          RelativeSource={RelativeSource AncestorType=Page}}"
-                                                  CommandParameter="{Binding}"
-                                                  Margin="4,0">
-                                                <Button.Style>
-                                                    <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignIconButton}">
-                                                        <Style.Triggers>
-                                                            <!-- Si l'exercice est clôturé, on masque complètement le bouton -->
-                                                            <DataTrigger Binding="{Binding EstCloture}" Value="True">
-                                                                <Setter Property="Visibility" Value="Collapsed"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </Button.Style>
-                                                <materialDesign:PackIcon Kind="Pencil" 
-                                                                       Foreground="#1976D2"/>
-                                            </Button>
+                                                <!-- Clôturer : masqué si déjà clôturé ou sans permission -->
+                                                <Button Command="{Binding DataContext.CloturerCommand,
+                                                                RelativeSource={RelativeSource AncestorType=Page}}"
+                                                        CommandParameter="{Binding}">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button" BasedOn="{StaticResource PopupMenuItemButtonStyle}">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding EstCloture}" Value="True">
+                                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding DataContext.CanEditExercice, RelativeSource={RelativeSource AncestorType=Page}}" Value="False">
+                                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Style>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <materialDesign:PackIcon Kind="Lock" Foreground="#FF9800" Margin="0,0,10,0"/>
+                                                        <TextBlock Text="Clôturer l'exercice"/>
+                                                    </StackPanel>
+                                                </Button>
 
-                                            <!-- Bouton Clôturer -->
-                                            <Button ToolTip="Clôturer l'exercice"
-                                                  Command="{Binding DataContext.CloturerCommand, 
-                                                          RelativeSource={RelativeSource AncestorType=Page}}"
-                                                  CommandParameter="{Binding}"
-                                                  Margin="4,0">
-                                                <Button.Style>
-                                                    <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignIconButton}">
-                                                        <!-- Visible uniquement tant que l'exercice n'est pas clôturé -->
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding EstCloture}" Value="True">
-                                                                <Setter Property="Visibility" Value="Collapsed"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </Button.Style>
-                                                <materialDesign:PackIcon Kind="Lock" 
-                                                                       Foreground="#FF9800"/>
-                                            </Button>
-
-                                            <!-- Bouton Supprimer -->
-                                            <Button ToolTip="Supprimer"
-                                                  Command="{Binding DataContext.DeleteCommand, 
-                                                          RelativeSource={RelativeSource AncestorType=Page}}"
-                                                  CommandParameter="{Binding}"
-                                                  Margin="4,0">
-                                                <Button.Style>
-                                                    <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignIconButton}">
-                                                        <Style.Triggers>
-                                                            <!-- Si l'exercice est clôturé, on masque complètement le bouton -->
-                                                            <DataTrigger Binding="{Binding EstCloture}" Value="True">
-                                                                <Setter Property="Visibility" Value="Collapsed"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </Button.Style>
-                                                <materialDesign:PackIcon Kind="Delete" 
-                                                                       Foreground="#F44336"/>
-                                            </Button>
-
-                                        </StackPanel>
+                                                <!-- Supprimer : masqué si clôturé ou sans permission -->
+                                                <Button Command="{Binding DataContext.DeleteCommand,
+                                                                RelativeSource={RelativeSource AncestorType=Page}}"
+                                                        CommandParameter="{Binding}">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button" BasedOn="{StaticResource PopupMenuItemButtonStyle}">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding EstCloture}" Value="True">
+                                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding DataContext.CanDeleteExercice, RelativeSource={RelativeSource AncestorType=Page}}" Value="False">
+                                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Style>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <materialDesign:PackIcon Kind="Delete" Foreground="#F44336" Margin="0,0,10,0"/>
+                                                        <TextBlock Text="Supprimer"/>
+                                                    </StackPanel>
+                                                </Button>
+                                            </StackPanel>
+                                        </materialDesign:PopupBox>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
                         </DataGrid.Columns>
                     </DataGrid>
+
+                    <!-- Message si vide -->
+                    <Border Background="#F5F5F5" CornerRadius="8" Padding="40">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Exercices.Count}" Value="0">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <materialDesign:PackIcon Kind="CalendarRange" Width="64" Height="64" Foreground="#BDBDBD" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Aucun exercice" FontSize="16" Foreground="#757575" Margin="0,20,0,0" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                  </Grid>
                 </materialDesign:Card>
 
             </StackPanel>

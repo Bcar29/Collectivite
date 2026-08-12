@@ -185,7 +185,14 @@ namespace Collectivite.Services
         public async Task<GrandLivreStatsDTO> GetStatistiquesAsync(GrandLivreFiltreDTO? filtre = null)
         {
             var grandLivre = await GetGrandLivreAsync(filtre);
+            return CalculerStatistiques(grandLivre);
+        }
 
+        /// <summary>
+        /// Calcule les statistiques à partir d'un Grand Livre déjà chargé, sans nouvelle requête.
+        /// </summary>
+        public GrandLivreStatsDTO CalculerStatistiques(List<GrandLivreCompteDTO> grandLivre)
+        {
             return new GrandLivreStatsDTO
             {
                 NombreComptes = grandLivre.Count(c => c.Mouvements.Any()),

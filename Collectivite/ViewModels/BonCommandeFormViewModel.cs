@@ -230,8 +230,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors du chargement : {ex.Message}");
             }
             finally
             {
@@ -316,8 +315,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement des détails : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors du chargement des détails : {ex.Message}");
             }
             finally
             {
@@ -343,8 +341,7 @@ namespace Collectivite.ViewModels
                 // Validation supplémentaire
                 if (Details.Any(d => d.PrixUnitaire <= 0))
                 {
-                    MessageBox.Show("Veuillez saisir un prix unitaire pour chaque ligne.",
-                        "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    NotificationService.ShowWarning("Veuillez saisir un prix unitaire pour chaque ligne.");
                     IsLoading = false;
                     return;
                 }
@@ -358,10 +355,10 @@ namespace Collectivite.ViewModels
                     var (success, message) = await bonCommandeService.UpdateBonCommandeAsync(
                         BonCommande, detailsList, engagementIds);
 
-                    MessageBox.Show(message,
-                        success ? "Succès" : "Erreur",
-                        MessageBoxButton.OK,
-                        success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                    if (success)
+                        NotificationService.ShowSuccess(message);
+                    else
+                        NotificationService.ShowWarning(message);
 
                     if (success)
                     {
@@ -373,10 +370,10 @@ namespace Collectivite.ViewModels
                     var (success, message, bonCommande) = await bonCommandeService.CreateBonCommandeAsync(
                         BonCommande, detailsList, engagementIds);
 
-                    MessageBox.Show(message,
-                        success ? "Succès" : "Erreur",
-                        MessageBoxButton.OK,
-                        success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                    if (success)
+                        NotificationService.ShowSuccess(message);
+                    else
+                        NotificationService.ShowWarning(message);
 
                     if (success)
                     {
@@ -386,8 +383,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
             finally
             {

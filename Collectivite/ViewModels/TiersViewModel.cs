@@ -92,8 +92,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"❌ ERREUR D'INITIALISATION :\n\n{ex.Message}\n\n{ex.InnerException?.Message}",
-                    "Erreur Critique", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"❌ ERREUR D'INITIALISATION :\n\n{ex.Message}\n\n{ex.InnerException?.Message}");
             }
         }
 
@@ -228,7 +227,7 @@ namespace Collectivite.ViewModels
         public bool CanEditDocumentTiers => SessionManager.HasPermission("DocumentTiers.Edit");
         public bool CanDeleteDocumentTiers => SessionManager.HasPermission("DocumentTiers.Delete");
 
-        private readonly string _accessDeniedMessage = "Vous n'avez pas la permission pour cette action.";
+        private readonly string _accessDeniedMessage = "Vous n'avez pas la permission nécessaire pour cette action.";
 
         #endregion
 
@@ -393,11 +392,7 @@ namespace Collectivite.ViewModels
             // ✅ VÉRIFICATION PERMISSION
             if (!CanViewTiers)
             {
-                MessageBox.Show(
-                    "Accès refusé : vous n'avez pas la permission de consulter les tiers.",
-                    "Accès refusé",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
                 Tiers.Clear();
                 return;
             }
@@ -419,17 +414,12 @@ namespace Collectivite.ViewModels
             }
             catch (UnauthorizedAccessException)
             {
-                MessageBox.Show(
-                    "Accès refusé : vous n'avez pas la permission de consulter les tiers.",
-                    "Accès refusé",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
                 Tiers.Clear();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"❌ Erreur lors du chargement :\n\n{ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"❌ Erreur lors du chargement :\n\n{ex.Message}");
             }
             finally
             {
@@ -479,17 +469,12 @@ namespace Collectivite.ViewModels
             }
             catch (UnauthorizedAccessException)
             {
-                MessageBox.Show(
-                    "Accès refusé : vous n'avez pas la permission de consulter les tiers.",
-                    "Accès refusé",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
                 Tiers.Clear();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de la recherche : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors de la recherche : {ex.Message}");
             }
             finally
             {
@@ -501,8 +486,7 @@ namespace Collectivite.ViewModels
         {
             if (DialogCompte == null || string.IsNullOrWhiteSpace(DialogCompte.IBAN))
             {
-                MessageBox.Show("Veuillez saisir un IBAN.", "Information",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.ShowInfo("Veuillez saisir un IBAN.");
                 return;
             }
 
@@ -512,17 +496,14 @@ namespace Collectivite.ViewModels
             if (iban.Length >= 15 && iban.Length <= 34 &&
                 System.Text.RegularExpressions.Regex.IsMatch(iban, @"^[A-Z]{2}[0-9]{2}[A-Z0-9]+$"))
             {
-                MessageBox.Show("✓ Format d'IBAN valide", "Validation",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.ShowSuccess("✓ Format d'IBAN valide");
             }
             else
             {
-                MessageBox.Show(
+                NotificationService.ShowWarning(
                     "✗ Format d'IBAN invalide\n\n" +
                     "Format attendu : 2 lettres (pays) + 2 chiffres + code banque et compte\n" +
-                    "Longueur : 15-34 caractères",
-                    "Validation",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                    "Longueur : 15-34 caractères");
             }
         }
 
@@ -531,11 +512,7 @@ namespace Collectivite.ViewModels
             // ✅ VÉRIFICATION PERMISSION
             if (!CanCreateTiers)
             {
-                MessageBox.Show(
-                    _accessDeniedMessage + "\nPermission requise : Tiers.Create",
-                    "Accès refusé",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                NotificationService.ShowWarning(_accessDeniedMessage + "\nPermission requise : Tiers.Create");
                 return;
             }
 
@@ -556,8 +533,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de l'ouverture du dialog :\n\n{ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors de l'ouverture du dialog :\n\n{ex.Message}");
             }
         }
 
@@ -568,11 +544,7 @@ namespace Collectivite.ViewModels
             // ✅ VÉRIFICATION PERMISSION
             if (!CanEditTiers)
             {
-                MessageBox.Show(
-                    _accessDeniedMessage + "\nPermission requise : Tiers.Edit",
-                    "Accès refusé",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                NotificationService.ShowWarning(_accessDeniedMessage + "\nPermission requise : Tiers.Edit");
                 return;
             }
 
@@ -606,8 +578,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
         }
 
@@ -635,21 +606,13 @@ namespace Collectivite.ViewModels
             // ✅ VÉRIFICATION PERMISSION
             if (IsEditMode && !CanEditTiers)
             {
-                MessageBox.Show(
-                    _accessDeniedMessage + "\nPermission requise : Tiers.Edit",
-                    "Accès refusé",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                NotificationService.ShowWarning(_accessDeniedMessage + "\nPermission requise : Tiers.Edit");
                 return;
             }
 
             if (!IsEditMode && !CanCreateTiers)
             {
-                MessageBox.Show(
-                    _accessDeniedMessage + "\nPermission requise : Tiers.Create",
-                    "Accès refusé",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                NotificationService.ShowWarning(_accessDeniedMessage + "\nPermission requise : Tiers.Create");
                 return;
             }
 
@@ -665,15 +628,13 @@ namespace Collectivite.ViewModels
 
                     if (success)
                     {
-                        MessageBox.Show(message, "Succès",
-                            MessageBoxButton.OK, MessageBoxImage.Information);
+                        NotificationService.ShowSuccess(message);
                         IsTiersDialogOpen = false;
                         await LoadDataAsync();
                     }
                     else
                     {
-                        MessageBox.Show(message, "Erreur",
-                            MessageBoxButton.OK, MessageBoxImage.Warning);
+                        NotificationService.ShowWarning(message);
                     }
                 }
                 else
@@ -682,22 +643,19 @@ namespace Collectivite.ViewModels
 
                     if (success)
                     {
-                        MessageBox.Show(message, "Succès",
-                            MessageBoxButton.OK, MessageBoxImage.Information);
+                        NotificationService.ShowSuccess(message);
                         IsTiersDialogOpen = false;
                         await LoadDataAsync();
                     }
                     else
                     {
-                        MessageBox.Show(message, "Erreur",
-                            MessageBoxButton.OK, MessageBoxImage.Warning);
+                        NotificationService.ShowWarning(message);
                     }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}\n\n{ex.InnerException?.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}\n\n{ex.InnerException?.Message}");
             }
             finally
             {
@@ -717,11 +675,7 @@ namespace Collectivite.ViewModels
             // ✅ VÉRIFICATION PERMISSION
             if (!CanDeleteTiers)
             {
-                MessageBox.Show(
-                    _accessDeniedMessage + "\nPermission requise : Tiers.Delete",
-                    "Accès refusé",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                NotificationService.ShowWarning(_accessDeniedMessage + "\nPermission requise : Tiers.Delete");
                 return;
             }
 
@@ -739,10 +693,14 @@ namespace Collectivite.ViewModels
                 var tiersService = new TiersService();
                 var (success, message) = await tiersService.DeleteTiersAsync(tiers.Id);
 
-                MessageBox.Show(message,
-                    success ? "Succès" : "Erreur",
-                    MessageBoxButton.OK,
-                    success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                if (success)
+                {
+                    NotificationService.ShowSuccess(message);
+                }
+                else
+                {
+                    NotificationService.ShowWarning(message);
+                }
 
                 if (success)
                 {
@@ -760,11 +718,7 @@ namespace Collectivite.ViewModels
             // ✅ VÉRIFICATION PERMISSION
             if (!CanEditTiers)
             {
-                MessageBox.Show(
-                    _accessDeniedMessage + "\nPermission requise : Tiers.Edit",
-                    "Accès refusé",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                NotificationService.ShowWarning(_accessDeniedMessage + "\nPermission requise : Tiers.Edit");
                 return;
             }
 
@@ -788,8 +742,7 @@ namespace Collectivite.ViewModels
                 }
                 else
                 {
-                    MessageBox.Show(message, "Erreur",
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    NotificationService.ShowWarning(message);
                 }
 
                 IsLoading = false;
@@ -807,8 +760,7 @@ namespace Collectivite.ViewModels
 
             if (!CanViewCompteBancaire)
             {
-                // Option: keep the list empty and show a notice
-                MessageBox.Show("Accès refusé : vous n'avez pas la permission de consulter les comptes bancaires.", "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                // Pas de permission : la liste reste vide, sans popup répétitive à chaque sélection.
                 return;
             }
 
@@ -824,8 +776,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement des comptes : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors du chargement des comptes : {ex.Message}");
             }
         }
 
@@ -833,14 +784,13 @@ namespace Collectivite.ViewModels
         {
             if (SelectedTiers == null)
             {
-                MessageBox.Show("Veuillez sélectionner un tiers d'abord.",
-                    "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.ShowInfo("Veuillez sélectionner un tiers d'abord.");
                 return;
             }
 
             if (!CanCreateCompteBancaire)
             {
-                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning(_accessDeniedMessage);
                 return;
             }
 
@@ -861,7 +811,7 @@ namespace Collectivite.ViewModels
 
             if (!CanEditCompteBancaire)
             {
-                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning(_accessDeniedMessage);
                 return;
             }
 
@@ -901,7 +851,7 @@ namespace Collectivite.ViewModels
             {
                 if (!CanEditCompteBancaire)
                 {
-                    MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    NotificationService.ShowWarning(_accessDeniedMessage);
                     return;
                 }
             }
@@ -909,7 +859,7 @@ namespace Collectivite.ViewModels
             {
                 if (!CanCreateCompteBancaire)
                 {
-                    MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    NotificationService.ShowWarning(_accessDeniedMessage);
                     return;
                 }
             }
@@ -928,19 +878,16 @@ namespace Collectivite.ViewModels
                 string iban = DialogCompte.IBAN;
                 if (iban.Length < 15 || iban.Length > 34)
                 {
-                    MessageBox.Show("L'IBAN doit contenir entre 15 et 34 caractères.", "Validation",
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    NotificationService.ShowWarning("L'IBAN doit contenir entre 15 et 34 caractères.");
                     IsLoading = false;
                     return;
                 }
 
                 if (!System.Text.RegularExpressions.Regex.IsMatch(iban, @"^[A-Z]{2}[0-9]{2}[A-Z0-9]+$"))
                 {
-                    MessageBox.Show(
+                    NotificationService.ShowWarning(
                         "Format d'IBAN invalide.\n\n" +
-                        "Le format doit être : 2 lettres (pays) + 2 chiffres + code banque et compte.",
-                        "Validation",
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                        "Le format doit être : 2 lettres (pays) + 2 chiffres + code banque et compte.");
                     IsLoading = false;
                     return;
                 }
@@ -953,15 +900,13 @@ namespace Collectivite.ViewModels
 
                     if (success)
                     {
-                        MessageBox.Show(message, "Succès",
-                            MessageBoxButton.OK, MessageBoxImage.Information);
+                        NotificationService.ShowSuccess(message);
                         IsCompteDialogOpen = false;
                         LoadComptesOfSelectedTiers();
                     }
                     else
                     {
-                        MessageBox.Show(message, "Erreur",
-                            MessageBoxButton.OK, MessageBoxImage.Warning);
+                        NotificationService.ShowWarning(message);
                     }
                 }
                 else
@@ -970,22 +915,19 @@ namespace Collectivite.ViewModels
 
                     if (success)
                     {
-                        MessageBox.Show(message, "Succès",
-                            MessageBoxButton.OK, MessageBoxImage.Information);
+                        NotificationService.ShowSuccess(message);
                         IsCompteDialogOpen = false;
                         LoadComptesOfSelectedTiers();
                     }
                     else
                     {
-                        MessageBox.Show(message, "Erreur",
-                            MessageBoxButton.OK, MessageBoxImage.Warning);
+                        NotificationService.ShowWarning(message);
                     }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
             finally
             {
@@ -1004,7 +946,7 @@ namespace Collectivite.ViewModels
 
             if (!CanDeleteCompteBancaire)
             {
-                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning(_accessDeniedMessage);
                 return;
             }
 
@@ -1023,10 +965,14 @@ namespace Collectivite.ViewModels
                 var compteService = new CompteBancaireService();
                 var (success, message) = await compteService.DeleteCompteAsync(compte.Id);
 
-                MessageBox.Show(message,
-                    success ? "Succès" : "Erreur",
-                    MessageBoxButton.OK,
-                    success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                if (success)
+                {
+                    NotificationService.ShowSuccess(message);
+                }
+                else
+                {
+                    NotificationService.ShowWarning(message);
+                }
 
                 if (success)
                 {
@@ -1049,8 +995,7 @@ namespace Collectivite.ViewModels
 
             if (!CanViewDocumentTiers)
             {
-                // Do not attempt to load documents if user has no view permission
-                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                // Pas de permission : la liste reste vide, sans popup répétitive à chaque sélection.
                 return;
             }
 
@@ -1069,8 +1014,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement des documents : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors du chargement des documents : {ex.Message}");
             }
         }
 
@@ -1078,14 +1022,13 @@ namespace Collectivite.ViewModels
         {
             if (SelectedTiers == null)
             {
-                MessageBox.Show("Veuillez sélectionner un tiers d'abord.",
-                    "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.ShowInfo("Veuillez sélectionner un tiers d'abord.");
                 return;
             }
 
             if (!CanCreateDocumentTiers)
             {
-                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning(_accessDeniedMessage);
                 return;
             }
 
@@ -1098,7 +1041,7 @@ namespace Collectivite.ViewModels
 
             if (!CanCreateDocumentTiers)
             {
-                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning(_accessDeniedMessage);
                 return;
             }
 
@@ -1114,20 +1057,17 @@ namespace Collectivite.ViewModels
 
                 if (success)
                 {
-                    MessageBox.Show(message, "Succès",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    NotificationService.ShowSuccess(message);
                     LoadDocumentsOfSelectedTiers();
                 }
                 else
                 {
-                    MessageBox.Show(message, "Information",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    NotificationService.ShowInfo(message);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
             finally
             {
@@ -1161,7 +1101,7 @@ namespace Collectivite.ViewModels
 
             if (!CanEditDocumentTiers)
             {
-                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning(_accessDeniedMessage);
                 return;
             }
 
@@ -1179,21 +1119,18 @@ namespace Collectivite.ViewModels
 
                 if (success)
                 {
-                    MessageBox.Show(message, "Succès",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    NotificationService.ShowSuccess(message);
                     IsDocumentEditDialogOpen = false;
                     LoadDocumentsOfSelectedTiers();
                 }
                 else
                 {
-                    MessageBox.Show(message, "Erreur",
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    NotificationService.ShowWarning(message);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
             finally
             {
@@ -1216,7 +1153,7 @@ namespace Collectivite.ViewModels
             if (document == null) return;
             if (!CanEditDocumentTiers)
             {
-                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning(_accessDeniedMessage);
                 return;
             }
 
@@ -1233,10 +1170,14 @@ namespace Collectivite.ViewModels
                 var documentService = new DocumentTiersService();
                 var (success, message) = await documentService.ReplaceDocumentAsync(document.Id);
 
-                MessageBox.Show(message,
-                    success ? "Succès" : "Information",
-                    MessageBoxButton.OK,
-                    success ? MessageBoxImage.Information : MessageBoxImage.Information);
+                if (success)
+                {
+                    NotificationService.ShowSuccess(message);
+                }
+                else
+                {
+                    NotificationService.ShowInfo(message);
+                }
 
                 if (success)
                 {
@@ -1253,7 +1194,7 @@ namespace Collectivite.ViewModels
 
             if (!CanViewDocumentTiers)
             {
-                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning(_accessDeniedMessage);
                 return;
             }
 
@@ -1266,11 +1207,7 @@ namespace Collectivite.ViewModels
 
                 if (allPresent)
                 {
-                    MessageBox.Show(
-                        "✅ Tous les documents obligatoires sont présents !",
-                        "Documents complets",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
+                    NotificationService.ShowSuccess("✅ Tous les documents obligatoires sont présents !");
                 }
                 else
                 {
@@ -1280,14 +1217,12 @@ namespace Collectivite.ViewModels
                         message += $"• {GetDocumentTypeDisplay(docType)}\n";
                     }
 
-                    MessageBox.Show(message, "Documents manquants",
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    NotificationService.ShowWarning(message);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
             finally
             {
@@ -1301,7 +1236,7 @@ namespace Collectivite.ViewModels
 
             if (!CanViewDocumentTiers)
             {
-                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning(_accessDeniedMessage);
                 return;
             }
 
@@ -1339,13 +1274,11 @@ namespace Collectivite.ViewModels
                     message = "✅ Aucun document expiré ou proche de l'expiration.";
                 }
 
-                MessageBox.Show(message, "État des documents",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.ShowInfo(message);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
             finally
             {
@@ -1358,7 +1291,7 @@ namespace Collectivite.ViewModels
             if (document == null) return;
             if (!CanDeleteDocumentTiers)
             {
-                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning(_accessDeniedMessage);
                 return;
             }
 
@@ -1377,10 +1310,14 @@ namespace Collectivite.ViewModels
                 var documentService = new DocumentTiersService();
                 var (success, message) = await documentService.DeleteDocumentAsync(document.Id);
 
-                MessageBox.Show(message,
-                    success ? "Succès" : "Erreur",
-                    MessageBoxButton.OK,
-                    success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                if (success)
+                {
+                    NotificationService.ShowSuccess(message);
+                }
+                else
+                {
+                    NotificationService.ShowWarning(message);
+                }
 
                 if (success)
                 {
@@ -1397,7 +1334,7 @@ namespace Collectivite.ViewModels
 
             if (!CanViewDocumentTiers)
             {
-                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning(_accessDeniedMessage);
                 return;
             }
 
@@ -1406,8 +1343,7 @@ namespace Collectivite.ViewModels
 
             if (!success)
             {
-                MessageBox.Show(message, "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning(message);
             }
         }
 
@@ -1417,7 +1353,7 @@ namespace Collectivite.ViewModels
 
             if (!CanEditDocumentTiers)
             {
-                MessageBox.Show(_accessDeniedMessage, "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning(_accessDeniedMessage);
                 return;
             }
 
@@ -1432,8 +1368,7 @@ namespace Collectivite.ViewModels
             }
             else
             {
-                MessageBox.Show(message, "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning(message);
             }
 
             IsLoading = false;

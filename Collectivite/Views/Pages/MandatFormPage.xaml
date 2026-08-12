@@ -2,12 +2,14 @@
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+      xmlns:utils="clr-namespace:Collectivite.Utils"
       Language="fr-FR"
       Background="#F5F5F5"
       Title="Formulaire Mandat">
 
     <Page.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <utils:InverseBooleanConverter x:Key="InverseBool"/>
     </Page.Resources>
 
     <Grid>
@@ -264,6 +266,7 @@
                                  materialDesign:HintAssist.Hint="RTS (Retenue à la Source)"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                  Text="{Binding Mandat.Rts, UpdateSourceTrigger=PropertyChanged, StringFormat=N0}"
+                                 LostFocus="PrecomptesField_LostFocus"
                                  Margin="0,0,0,15">
                             <TextBox.InputBindings>
                                 <KeyBinding Key="Return" Command="{Binding CalculerMontantNetCommand}"/>
@@ -276,6 +279,7 @@
                                  materialDesign:HintAssist.Hint="Autres précomptes"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                  Text="{Binding Mandat.AutresPrecomptes, UpdateSourceTrigger=PropertyChanged, StringFormat=N0}"
+                                 LostFocus="PrecomptesField_LostFocus"
                                  Margin="0,0,0,15">
                             <TextBox.InputBindings>
                                 <KeyBinding Key="Return" Command="{Binding CalculerMontantNetCommand}"/>
@@ -401,6 +405,7 @@
                             Margin="0,0,15,0"/>
                     <Button Style="{StaticResource MaterialDesignRaisedButton}"
                             Command="{Binding SaveCommand}"
+                            IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBool}}"
                             Width="180"
                             Height="45"
                             Background="#4CAF50"

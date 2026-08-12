@@ -67,8 +67,7 @@ namespace Collectivite.ViewModels
 
                 if (facture == null)
                 {
-                    MessageBox.Show("Facture introuvable.", "Erreur",
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    NotificationService.ShowWarning("Facture introuvable.");
                     GoBack();
                     return;
                 }
@@ -88,8 +87,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors du chargement : {ex.Message}");
             }
             finally
             {

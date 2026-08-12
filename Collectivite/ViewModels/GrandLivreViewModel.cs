@@ -200,7 +200,7 @@ namespace Collectivite.ViewModels
                         Libelle = mvt.Libelle,
                         MontantDebit = mvt.MontantDebit,
                         MontantCredit = mvt.MontantCredit,
-                        
+                        SoldeFormate = $"{mvt.SoldeCumulé:N0}",
                     });
                 }
 
@@ -282,8 +282,8 @@ namespace Collectivite.ViewModels
                 var comptes = await _grandLivreService.GetGrandLivreAsync(filtre);
                 Comptes = new ObservableCollection<GrandLivreCompteDTO>(comptes);
 
-                // Charger les statistiques
-                Statistiques = await _grandLivreService.GetStatistiquesAsync(filtre);
+                // Calculer les statistiques à partir des comptes déjà chargés (pas de nouvelle requête)
+                Statistiques = _grandLivreService.CalculerStatistiques(comptes);
 
                 // Mettre à jour le titre
                 MettreAJourTitre();
@@ -345,17 +345,16 @@ namespace Collectivite.ViewModels
                 if (dialog.ShowDialog() == true)
                 {
                     await System.IO.File.WriteAllBytesAsync(dialog.FileName, bytes);
-                    MessageBox.Show("Export réussi !", "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+                    NotificationService.ShowSuccess("Export réussi !");
                 }
             }
             catch (NotImplementedException)
             {
-                MessageBox.Show("La fonctionnalité d'export Excel sera bientôt disponible.",
-                    "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.ShowInfo("La fonctionnalité d'export Excel sera bientôt disponible.");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur d'export : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur d'export : {ex.Message}");
             }
             finally
             {
@@ -387,17 +386,16 @@ namespace Collectivite.ViewModels
                 if (dialog.ShowDialog() == true)
                 {
                     await System.IO.File.WriteAllBytesAsync(dialog.FileName, bytes);
-                    MessageBox.Show("Export réussi !", "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+                    NotificationService.ShowSuccess("Export réussi !");
                 }
             }
             catch (NotImplementedException)
             {
-                MessageBox.Show("La fonctionnalité d'export PDF sera bientôt disponible.",
-                    "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.ShowInfo("La fonctionnalité d'export PDF sera bientôt disponible.");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur d'export : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur d'export : {ex.Message}");
             }
             finally
             {
@@ -432,16 +430,13 @@ namespace Collectivite.ViewModels
                     UseShellExecute = true
                 });
 
-                MessageBox.Show(
+                NotificationService.ShowInfo(
                     "Le document s'ouvre dans votre lecteur PDF.\n\n" +
-                    "Utilisez Ctrl+P ou le menu Fichier → Imprimer pour lancer l'impression.",
-                    "Impression",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                    "Utilisez Ctrl+P ou le menu Fichier → Imprimer pour lancer l'impression.");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur d'impression : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur d'impression : {ex.Message}");
             }
             finally
             {

@@ -1,4 +1,5 @@
 using Collectivite.Models;
+using Collectivite.ViewModels;
 using System.Windows;
 
 namespace Collectivite.Views
@@ -8,13 +9,16 @@ namespace Collectivite.Views
         public ProfileWindow(User user)
         {
             InitializeComponent();
-            DataContext = user;
-        }
 
-        private void CloseButton_Click(object sender, RoutedEventArgs e)
-        {
-            Close();
+            var viewModel = new ProfileViewModel(user)
+            {
+                RequestClose = saved =>
+                {
+                    DialogResult = saved;
+                    Close();
+                }
+            };
+            DataContext = viewModel;
         }
     }
 }
-

@@ -306,6 +306,21 @@ namespace Collectivite.ViewModels
 
         private void Cancel()
         {
+            bool hasUnsavedInput = !string.IsNullOrWhiteSpace(Server) ||
+                                    !string.IsNullOrWhiteSpace(Database) ||
+                                    !string.IsNullOrWhiteSpace(User) ||
+                                    !string.IsNullOrWhiteSpace(Password);
+
+            if (hasUnsavedInput &&
+                MessageBox.Show(
+                    "Des informations ont été saisies et seront perdues. Voulez-vous vraiment annuler ?",
+                    "Confirmation",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question) != MessageBoxResult.Yes)
+            {
+                return;
+            }
+
             Application.Current.Dispatcher.Invoke(() =>
             {
                 var window = Application.Current.Windows.OfType<Views.ServerConfigurationWindow>()

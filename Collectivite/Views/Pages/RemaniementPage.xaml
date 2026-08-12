@@ -191,43 +191,46 @@
 
                                 <DataGridTextColumn Header="Montant définitif" Binding="{Binding BudgetLine.MontantDefinitif, StringFormat={}{0:N0} GNF}" Width="150"/>
 
-                                <DataGridTemplateColumn Header="Actions" Width="140">
+                                <DataGridTemplateColumn Header="Actions" Width="60">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                <StackPanel.Visibility>
+                                            <materialDesign:PopupBox Style="{StaticResource RowActionsPopupBoxStyle}">
+                                                <materialDesign:PopupBox.Visibility>
                                                     <MultiBinding Converter="{StaticResource ShowActionsConverter}">
                                                         <Binding Path="BudgetLine.Nommenclature.Enfants"/>
                                                         <Binding Path="IsTotalRow"/>
                                                     </MultiBinding>
-                                                </StackPanel.Visibility>
+                                                </materialDesign:PopupBox.Visibility>
+                                                <StackPanel>
+                                                    <Button Command="{Binding DataContext.OpenAddDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                            CommandParameter="{Binding BudgetLine}">
+                                                        <Button.Style>
+                                                            <Style TargetType="Button" BasedOn="{StaticResource PopupMenuItemButtonStyle}">
+                                                                <Style.Triggers>
+                                                                    <!-- Masquer le bouton si on n'a pas le droit de créer un remaniement
+                                                                         (exercice clôturé ou permission manquante) -->
+                                                                    <DataTrigger Binding="{Binding DataContext.CanCreateRemaniement, RelativeSource={RelativeSource AncestorType=Page}}" Value="False">
+                                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Button.Style>
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <materialDesign:PackIcon Kind="PlusCircle" Foreground="#4CAF50" Margin="0,0,10,0"/>
+                                                            <TextBlock Text="Ajouter un remaniement"/>
+                                                        </StackPanel>
+                                                    </Button>
 
-                                                <Button ToolTip="Ajouter un remaniement"
-                                                        Command="{Binding DataContext.OpenAddDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                        CommandParameter="{Binding BudgetLine}"
-                                                        Margin="4,0">
-                                                    <Button.Style>
-                                                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignIconButton}">
-                                                            <Style.Triggers>
-                                                                <!-- Masquer le bouton si on n'a pas le droit de créer un remaniement
-                                                                     (exercice clôturé ou permission manquante) -->
-                                                                <DataTrigger Binding="{Binding DataContext.CanCreateRemaniement, RelativeSource={RelativeSource AncestorType=Page}}" Value="False">
-                                                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </Button.Style>
-                                                    <materialDesign:PackIcon Kind="PlusCircle" Foreground="#4CAF50"/>
-                                                </Button>
-
-                                                <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                        ToolTip="Voir détail"
-                                                        Command="{Binding DataContext.OpenDetailsCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                        CommandParameter="{Binding BudgetLine}"
-                                                        Margin="4,0">
-                                                    <materialDesign:PackIcon Kind="Eye" Foreground="#1976D2"/>
-                                                </Button>
-                                            </StackPanel>
+                                                    <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                            Command="{Binding DataContext.OpenDetailsCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                            CommandParameter="{Binding BudgetLine}">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <materialDesign:PackIcon Kind="Eye" Foreground="#1976D2" Margin="0,0,10,0"/>
+                                                            <TextBlock Text="Voir détail"/>
+                                                        </StackPanel>
+                                                    </Button>
+                                                </StackPanel>
+                                            </materialDesign:PopupBox>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
@@ -334,36 +337,44 @@
 
                                 <DataGridTextColumn Header="Montant définitif" Binding="{Binding BudgetLine.MontantDefinitif, StringFormat={}{0:N0} GNF}" Width="150"/>
 
-                                <DataGridTemplateColumn Header="Actions" Width="140">
+                                <DataGridTemplateColumn Header="Actions" Width="60">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <StackPanel Orientation="Horizontal"
-                                                        HorizontalAlignment="Center"
-                                                        Visibility="{Binding BudgetLine.Nommenclature.Enfants, Converter={StaticResource CollectionHasItemsToVisibilityConverter}}">
-                                                <Button ToolTip="Ajouter un remaniement"
-                                                        Command="{Binding DataContext.OpenAddDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                        CommandParameter="{Binding BudgetLine}"
-                                                        Margin="4,0">
-                                                    <Button.Style>
-                                                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignIconButton}">
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding DataContext.CanCreateRemaniement, RelativeSource={RelativeSource AncestorType=Page}}" Value="False">
-                                                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </Button.Style>
-                                                    <materialDesign:PackIcon Kind="PlusCircle" Foreground="#4CAF50"/>
-                                                </Button>
+                                            <materialDesign:PopupBox Style="{StaticResource RowActionsPopupBoxStyle}">
+                                                <materialDesign:PopupBox.Visibility>
+                                                    <MultiBinding Converter="{StaticResource ShowActionsConverter}">
+                                                        <Binding Path="BudgetLine.Nommenclature.Enfants"/>
+                                                        <Binding Path="IsTotalRow"/>
+                                                    </MultiBinding>
+                                                </materialDesign:PopupBox.Visibility>
+                                                <StackPanel>
+                                                    <Button Command="{Binding DataContext.OpenAddDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                            CommandParameter="{Binding BudgetLine}">
+                                                        <Button.Style>
+                                                            <Style TargetType="Button" BasedOn="{StaticResource PopupMenuItemButtonStyle}">
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding DataContext.CanCreateRemaniement, RelativeSource={RelativeSource AncestorType=Page}}" Value="False">
+                                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Button.Style>
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <materialDesign:PackIcon Kind="PlusCircle" Foreground="#4CAF50" Margin="0,0,10,0"/>
+                                                            <TextBlock Text="Ajouter un remaniement"/>
+                                                        </StackPanel>
+                                                    </Button>
 
-                                                <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                        ToolTip="Voir détail"
-                                                        Command="{Binding DataContext.OpenDetailsCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                        CommandParameter="{Binding BudgetLine}"
-                                                        Margin="4,0">
-                                                    <materialDesign:PackIcon Kind="Eye" Foreground="#1976D2"/>
-                                                </Button>
-                                            </StackPanel>
+                                                    <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                            Command="{Binding DataContext.OpenDetailsCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                            CommandParameter="{Binding BudgetLine}">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <materialDesign:PackIcon Kind="Eye" Foreground="#1976D2" Margin="0,0,10,0"/>
+                                                            <TextBlock Text="Voir détail"/>
+                                                        </StackPanel>
+                                                    </Button>
+                                                </StackPanel>
+                                            </materialDesign:PopupBox>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
@@ -470,42 +481,44 @@
 
                                 <DataGridTextColumn Header="Montant définitif" Binding="{Binding BudgetLine.MontantDefinitif, StringFormat={}{0:N0} GNF}" Width="150"/>
 
-                                <DataGridTemplateColumn Header="Actions" Width="140">
+                                <DataGridTemplateColumn Header="Actions" Width="60">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                <StackPanel.Visibility>
+                                            <materialDesign:PopupBox Style="{StaticResource RowActionsPopupBoxStyle}">
+                                                <materialDesign:PopupBox.Visibility>
                                                     <MultiBinding Converter="{StaticResource ShowActionsConverter}">
                                                         <Binding Path="BudgetLine.Nommenclature.Enfants"/>
                                                         <Binding Path="IsTotalRow"/>
                                                     </MultiBinding>
-                                                </StackPanel.Visibility>
+                                                </materialDesign:PopupBox.Visibility>
+                                                <StackPanel>
+                                                    <Button Command="{Binding DataContext.OpenAddDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                            CommandParameter="{Binding BudgetLine}">
+                                                        <Button.Style>
+                                                            <Style TargetType="Button" BasedOn="{StaticResource PopupMenuItemButtonStyle}">
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding DataContext.CanCreateRemaniement, RelativeSource={RelativeSource AncestorType=Page}}" Value="False">
+                                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Button.Style>
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <materialDesign:PackIcon Kind="PlusCircle" Foreground="#4CAF50" Margin="0,0,10,0"/>
+                                                            <TextBlock Text="Ajouter un remaniement"/>
+                                                        </StackPanel>
+                                                    </Button>
 
-                                                <Button 
-                                                        ToolTip="Ajouter un remaniement"
-                                                        Command="{Binding DataContext.OpenAddDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                        CommandParameter="{Binding BudgetLine}"
-                                                        Margin="4,0">
-                                                    <Button.Style>
-                                                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignIconButton}">
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding DataContext.CanCreateRemaniement, RelativeSource={RelativeSource AncestorType=Page}}" Value="False">
-                                                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </Button.Style>
-                                                    <materialDesign:PackIcon Kind="PlusCircle" Foreground="#4CAF50"/>
-                                                </Button>
-
-                                                <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                        ToolTip="Voir détail"
-                                                        Command="{Binding DataContext.OpenDetailsCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                        CommandParameter="{Binding BudgetLine}"
-                                                        Margin="4,0">
-                                                    <materialDesign:PackIcon Kind="Eye" Foreground="#1976D2"/>
-                                                </Button>
-                                            </StackPanel>
+                                                    <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                            Command="{Binding DataContext.OpenDetailsCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                            CommandParameter="{Binding BudgetLine}">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <materialDesign:PackIcon Kind="Eye" Foreground="#1976D2" Margin="0,0,10,0"/>
+                                                            <TextBlock Text="Voir détail"/>
+                                                        </StackPanel>
+                                                    </Button>
+                                                </StackPanel>
+                                            </materialDesign:PopupBox>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
@@ -612,42 +625,44 @@
 
                                 <DataGridTextColumn Header="Montant définitif" Binding="{Binding BudgetLine.MontantDefinitif, StringFormat={}{0:N0} GNF}" Width="150"/>
 
-                                <DataGridTemplateColumn Header="Actions" Width="140">
+                                <DataGridTemplateColumn Header="Actions" Width="60">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                <StackPanel.Visibility>
+                                            <materialDesign:PopupBox Style="{StaticResource RowActionsPopupBoxStyle}">
+                                                <materialDesign:PopupBox.Visibility>
                                                     <MultiBinding Converter="{StaticResource ShowActionsConverter}">
                                                         <Binding Path="BudgetLine.Nommenclature.Enfants"/>
                                                         <Binding Path="IsTotalRow"/>
                                                     </MultiBinding>
-                                                </StackPanel.Visibility>
+                                                </materialDesign:PopupBox.Visibility>
+                                                <StackPanel>
+                                                    <Button Command="{Binding DataContext.OpenAddDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                            CommandParameter="{Binding BudgetLine}">
+                                                        <Button.Style>
+                                                            <Style TargetType="Button" BasedOn="{StaticResource PopupMenuItemButtonStyle}">
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding DataContext.CanCreateRemaniement, RelativeSource={RelativeSource AncestorType=Page}}" Value="False">
+                                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Button.Style>
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <materialDesign:PackIcon Kind="PlusCircle" Foreground="#4CAF50" Margin="0,0,10,0"/>
+                                                            <TextBlock Text="Ajouter un remaniement"/>
+                                                        </StackPanel>
+                                                    </Button>
 
-                                                <Button
-                                                        ToolTip="Ajouter un remaniement"
-                                                        Command="{Binding DataContext.OpenAddDialogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                        CommandParameter="{Binding BudgetLine}"
-                                                        Margin="4,0">
-                                                    <Button.Style>
-                                                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignIconButton}">
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding DataContext.CanCreateRemaniement, RelativeSource={RelativeSource AncestorType=Page}}" Value="False">
-                                                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </Button.Style>
-                                                    <materialDesign:PackIcon Kind="PlusCircle" Foreground="#4CAF50"/>
-                                                </Button>
-
-                                                <Button Style="{StaticResource MaterialDesignIconButton}"
-                                                        ToolTip="Voir détail"
-                                                        Command="{Binding DataContext.OpenDetailsCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                        CommandParameter="{Binding BudgetLine}"
-                                                        Margin="4,0">
-                                                    <materialDesign:PackIcon Kind="Eye" Foreground="#1976D2"/>
-                                                </Button>
-                                            </StackPanel>
+                                                    <Button Style="{StaticResource PopupMenuItemButtonStyle}"
+                                                            Command="{Binding DataContext.OpenDetailsCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                            CommandParameter="{Binding BudgetLine}">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <materialDesign:PackIcon Kind="Eye" Foreground="#1976D2" Margin="0,0,10,0"/>
+                                                            <TextBlock Text="Voir détail"/>
+                                                        </StackPanel>
+                                                    </Button>
+                                                </StackPanel>
+                                            </materialDesign:PopupBox>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>

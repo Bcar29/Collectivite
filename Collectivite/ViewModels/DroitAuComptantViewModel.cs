@@ -95,21 +95,39 @@ namespace Collectivite.ViewModels
         public DateTime? FiltreDateDebut
         {
             get => _filtreDateDebut;
-            set => SetProperty(ref _filtreDateDebut, value);
+            set
+            {
+                if (SetProperty(ref _filtreDateDebut, value))
+                {
+                    AppliquerFiltres();
+                }
+            }
         }
 
         private DateTime? _filtreDateFin;
         public DateTime? FiltreDateFin
         {
             get => _filtreDateFin;
-            set => SetProperty(ref _filtreDateFin, value);
+            set
+            {
+                if (SetProperty(ref _filtreDateFin, value))
+                {
+                    AppliquerFiltres();
+                }
+            }
         }
 
         private string? _filtreModeReglement;
         public string? FiltreModeReglement
         {
             get => _filtreModeReglement;
-            set => SetProperty(ref _filtreModeReglement, value);
+            set
+            {
+                if (SetProperty(ref _filtreModeReglement, value))
+                {
+                    AppliquerFiltres();
+                }
+            }
         }
 
         public List<string> ModesReglementFiltre { get; } = new List<string>
@@ -430,8 +448,7 @@ namespace Collectivite.ViewModels
             catch (Exception ex)
             {
                 MessageErreur = ex.Message;
-                MessageBox.Show($"Erreur de chargement:\n{ex.Message}", "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur de chargement:\n{ex.Message}");
             }
             finally
             {
@@ -581,29 +598,25 @@ namespace Collectivite.ViewModels
                 // Validation commune
                 if (DialogMontant <= 0)
                 {
-                    MessageBox.Show("Le montant doit être supérieur à zéro.", "Validation",
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    NotificationService.ShowWarning("Le montant doit être supérieur à zéro.");
                     return;
                 }
 
                 if (string.IsNullOrWhiteSpace(DialogComptable))
                 {
-                    MessageBox.Show("Le nom du comptable est obligatoire.", "Validation",
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    NotificationService.ShowWarning("Le nom du comptable est obligatoire.");
                     return;
                 }
 
                 if (DialogModeReglement == ModeReglement.Virement && string.IsNullOrWhiteSpace(DialogRefVirement))
                 {
-                    MessageBox.Show("La référence du virement est obligatoire.", "Validation",
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    NotificationService.ShowWarning("La référence du virement est obligatoire.");
                     return;
                 }
 
                 if (DialogModeReglement == ModeReglement.Cheque && string.IsNullOrWhiteSpace(DialogRefCheque))
                 {
-                    MessageBox.Show("La référence du chèque est obligatoire.", "Validation",
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    NotificationService.ShowWarning("La référence du chèque est obligatoire.");
                     return;
                 }
 
@@ -618,8 +631,7 @@ namespace Collectivite.ViewModels
                     if (SelectedImputation == null)
                     {
                         IsLoading = false;
-                        MessageBox.Show("Veuillez sélectionner une imputation.", "Validation",
-                            MessageBoxButton.OK, MessageBoxImage.Warning);
+                        NotificationService.ShowWarning("Veuillez sélectionner une imputation.");
                         return;
                     }
 
@@ -663,18 +675,18 @@ namespace Collectivite.ViewModels
 
                 if (success)
                 {
-                    MessageBox.Show(message, "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+                    NotificationService.ShowSuccess(message);
                     IsDialogOpen = false;
                     await ChargerDonneesAsync();
                 }
                 else
                 {
-                    MessageBox.Show(message, "Erreur", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    NotificationService.ShowWarning(message);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur: {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur: {ex.Message}");
             }
             finally
             {
@@ -713,7 +725,7 @@ namespace Collectivite.ViewModels
                       $"ID Ordre Recette: {droit.OrdreRecetteId}\n" +
                       $"ID Mouvement: {droit.MouvementId}";
 
-            MessageBox.Show(details, "Détails de l'opération", MessageBoxButton.OK, MessageBoxImage.Information);
+            NotificationService.ShowInfo(details);
         }
 
         public async Task SupprimerAsync(DroitAuComptantDTO? droit)
@@ -739,17 +751,17 @@ namespace Collectivite.ViewModels
 
                     if (success)
                     {
-                        MessageBox.Show(message, "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+                        NotificationService.ShowSuccess(message);
                         await ChargerDonneesAsync();
                     }
                     else
                     {
-                        MessageBox.Show(message, "Erreur", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        NotificationService.ShowWarning(message);
                     }
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Erreur: {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                    NotificationService.ShowError($"Erreur: {ex.Message}");
                 }
                 finally
                 {

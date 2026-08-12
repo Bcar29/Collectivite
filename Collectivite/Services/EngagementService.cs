@@ -45,7 +45,6 @@ namespace Collectivite.Services
                 .Include(e => e.BudgetLine)
                     .ThenInclude(bl => bl.Nommenclature)
                 .Include(e => e.Tiers)
-                .Include(e => e.Contrat)
                 .Include(e => e.Facture)
                 .Include(e => e.BonCommande)
                 .AsNoTracking()
@@ -86,7 +85,6 @@ namespace Collectivite.Services
                 .Include(e => e.BudgetLine)
                     .ThenInclude(bl => bl.Nommenclature)
                 .Include(e => e.Tiers)
-                .Include(e => e.Contrat)
                 .Include(e => e.Facture)
                 .Include(e => e.BonCommande)
                     .ThenInclude(bc => bc.ExpressionBesoin)
@@ -189,9 +187,16 @@ namespace Collectivite.Services
             if (string.IsNullOrWhiteSpace(searchTerm))
                 return await GetAllEngagementsAsync();
 
+            var exerciceService = ExerciceService.Instance;
+            if (exerciceService.CurrentExercice == null)
+            {
+                return new List<Engagement>();
+            }
+
             searchTerm = searchTerm.ToLower();
 
             return await context.Engagements
+                .Where(e => e.ExerciceId == exerciceService.CurrentExercice.Id)
                 .Include(e => e.Exercice)
                 .Include(e => e.Commune)
                 .Include(e => e.BudgetLine)
@@ -269,7 +274,6 @@ namespace Collectivite.Services
                     MontantEngagement = engagement.MontantEngagement,
                     FichierJoin = engagement.FichierJoin,
                     FichierName = engagement.FichierName,
-                    ContratId = engagement.ContratId,
                     FactureId = engagement.FactureId,
                     MontantLettre = engagement.MontantLettre,
                     BonCommandeId = engagement.BonCommandeId,
@@ -345,7 +349,6 @@ namespace Collectivite.Services
                 existingEngagement.MontantEngagement = engagement.MontantEngagement;
                 existingEngagement.FichierJoin = engagement.FichierJoin;
                 existingEngagement.FichierName = engagement.FichierName;
-                existingEngagement.ContratId = engagement.ContratId;
                 existingEngagement.FactureId = engagement.FactureId;
                 existingEngagement.MontantLettre = engagement.MontantLettre;
                 existingEngagement.BonCommandeId = engagement.BonCommandeId;

@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:local="clr-namespace:Collectivite.Utils"
+        xmlns:services="clr-namespace:Collectivite.Services"
         TextElement.Foreground="{DynamicResource MaterialDesignBody}"
         TextElement.FontWeight="Regular"
         TextElement.FontSize="13"
@@ -61,6 +62,7 @@
 
     </Window.Resources>
 
+    <Grid>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
@@ -449,17 +451,6 @@
                         </Button> -->
 
 
-                        <Button Style="{StaticResource MenuButtonStyle}" Click="RecensementButton_Click">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="CashMultiple" 
-                                VerticalAlignment="Center"
-                                Width="22"
-                                Height="22"
-                                Margin="0,0,15,0"/>
-                                <TextBlock Text="Gestion des Recensements" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
-
                         <!-- Section Saisie des Pièces debut -->
                         <Expander Style="{StaticResource MaterialDesignExpander}" 
                               HorizontalAlignment="Left"
@@ -514,17 +505,6 @@
                                            Height="22"
                                            Margin="0,0,15,0"/>
                                         <TextBlock Text="Facture et Détails" FontSize="12" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Button>
-
-                                <Button Style="{StaticResource MenuButtonStyle}" Click="Contrat_Click">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="FileSign" 
-                                            VerticalAlignment="Center"
-                                            Width="22"
-                                            Height="22"
-                                            Margin="0,0,15,0"/>
-                                        <TextBlock Text="Contrat" FontSize="12" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
 
@@ -587,7 +567,6 @@
                                     <MenuItem Header="Expression Besoin" Click="ExpressionBesoin_Click"/>
                                     <MenuItem Header="Bon de Commande" Click="BonCommande_Click"/>
                                     <MenuItem Header="Facture et Détails" Click="FactureButton_Click"/>
-                                    <MenuItem Header="Contrat" Click="Contrat_Click"/>
                                     <MenuItem Header="Fiche d'Engagement" Click="FicheEngagement_Click"/>
                                     <MenuItem Header="Mandat" Click="Mandat_Click"/>
                                     <MenuItem Header="Ordre de Recette" Click="OrdreRecette_Click"/>
@@ -772,160 +751,6 @@
                         </Button>
                         </StackPanel>
                         <!-- Section Gestion Comptable Fin  -->
-                        
-                        <!-- Section PDL
-                        <Expander Style="{StaticResource MaterialDesignExpander}" 
-                                   HorizontalAlignment="Left"
-                                   Width="250"
-                                   Margin="10,10,0,10"
-                                   Visibility="{Binding IsMenuExpanded, Converter={StaticResource BoolToVisibility}}">
-                            <Expander.Header>
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="ChartTimelineVariant" 
-                                        VerticalAlignment="Center"
-                                        Width="22"
-                                        Height="22"
-                                        Margin="0,0,10,0"
-                                        Foreground="Black"/>
-                                    <TextBlock Text="P-D-L" FontSize="13" FontWeight="Bold" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Expander.Header>
-
-                            <StackPanel Orientation="Vertical" Margin="30,0,0,0">
-                                <StackPanel.Resources>
-                                    <Style TargetType="Button" BasedOn="{StaticResource MenuButtonStyle}">
-                                        <Setter Property="Foreground" Value="#424242"/>
-                                    </Style>
-                                </StackPanel.Resources>
-
-                                <Button  Style="{StaticResource MenuButtonStyle}" Click="PDLPage_Click">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="CalendarMultiple" 
-                                            VerticalAlignment="Center"
-                                            Width="22"
-                                            Height="22"
-                                            Margin="0,0,15,0"/>
-                                        <TextBlock Text="PDL" FontSize="12" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Button>
-
-                                <Button  Style="{StaticResource MenuButtonStyle}" Click="PROGRAMMES_Click">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="FileTree" 
-                                            VerticalAlignment="Center"
-                                            Width="22"
-                                            Height="22"
-                                            Margin="0,0,15,0"/>
-                                        <TextBlock Text="Programmes" FontSize="12" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Button>
-
-                                <Button  Style="{StaticResource MenuButtonStyle}" Click="SECTEUR_Click">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="ViewGrid" 
-                                            VerticalAlignment="Center"
-                                            Width="22"
-                                            Height="22"
-                                            Margin="0,0,15,0"/>
-                                        <TextBlock Text="Secteurs" FontSize="12" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Button>
-
-                                <Button  Style="{StaticResource MenuButtonStyle}" Click="BENEFICIAIRE_Click">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="AccountGroup" 
-                                            VerticalAlignment="Center"
-                                            Width="22"
-                                            Height="22"
-                                            Margin="0,0,15,0"/>
-                                        <TextBlock Text="Bénéficiaires" FontSize="12" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Button>
-
-                                <Button  Style="{StaticResource MenuButtonStyle}" Click="ACTEURS_Click">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="AccountSupervisor" 
-                                            VerticalAlignment="Center"
-                                            Width="22"
-                                            Height="22"
-                                            Margin="0,0,15,0"/>
-                                        <TextBlock Text="Acteurs" FontSize="12" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Button>
-
-                                <Button  Style="{StaticResource MenuButtonStyle}" Click="STRUCTURES_Click">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="OfficeBuilding" 
-                                            VerticalAlignment="Center"
-                                            Width="22"
-                                            Height="22"
-                                            Margin="0,0,15,0"/>
-                                        <TextBlock Text="Structures" FontSize="12" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Button>
-
-                                <Button  Style="{StaticResource MenuButtonStyle}" Click="ODD_Click">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="Target" 
-                                            VerticalAlignment="Center"
-                                            Width="22"
-                                            Height="22"
-                                            Margin="0,0,15,0"/>
-                                        <TextBlock Text="O-D-D" FontSize="12" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Button>
-
-                                <Button  Style="{StaticResource MenuButtonStyle}" Click="COMPETENCE_COLLECTIVITE_Click">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="School" 
-                                            VerticalAlignment="Center"
-                                            Width="22"
-                                            Height="22"
-                                            Margin="0,0,15,0"/>
-                                        <TextBlock Text="Compétences" FontSize="12" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Button>
-                                
-                                <Button  Style="{StaticResource MenuButtonStyle}" Click="ACTIVITE_Click">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="CheckboxMarkedCircle" 
-                                            VerticalAlignment="Center"
-                                            Width="22"
-                                            Height="22"
-                                            Margin="0,0,15,0"/>
-                                        <TextBlock Text="Activités" FontSize="12" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Button>
-
-                      
-
-                            </StackPanel>
-
-                        </Expander>
-                            Bouton PDL en mode réduit avec ContextMenu 
-                            <Button Style="{StaticResource MenuButtonCollapsedStyle}"
-                                    ToolTip="P-D-L"
-                                    Visibility="{Binding IsMenuCollapsed, Converter={StaticResource BoolToVisibility}}"
-                                    Margin="10,5"
-                                    Click="OpenContextMenu_Click">
-                                <Button.ContextMenu>
-                                    <ContextMenu>
-                                        <MenuItem Header="PDL" Click="PDLPage_Click"/>
-                                        <MenuItem Header="Programmes" Click="PROGRAMMES_Click"/>
-                                        <MenuItem Header="Secteurs" Click="SECTEUR_Click"/>
-                                        <MenuItem Header="Bénéficiaires" Click="BENEFICIAIRE_Click"/>
-                                        <MenuItem Header="Acteurs" Click="ACTEURS_Click"/>
-                                        <MenuItem Header="Structures" Click="STRUCTURES_Click"/>
-                                        <MenuItem Header="O-D-D" Click="ODD_Click"/>
-                                        <MenuItem Header="Compétences" Click="COMPETENCE_COLLECTIVITE_Click"/>
-                                        <MenuItem Header="Activités" Click="ACTIVITE_Click"/>
-                                    </ContextMenu>
-                                </Button.ContextMenu>
-                                <materialDesign:PackIcon Kind="ChartTimelineVariant" Width="22" Height="22"/>
-                            </Button>
-                        </Expander>-->
-
-                        <!-- PDL fin-->
 
                         <!-- Section Administration -->
                         <StackPanel Visibility="{Binding Converter={StaticResource PermissionToVisibilityConverter}, ConverterParameter=Administration.Access}">
@@ -1238,5 +1063,13 @@
                        NavigationUIVisibility="Hidden"/>
             </Border>
         </DockPanel>
+    </Grid>
+
+        <materialDesign:Snackbar MessageQueue="{x:Static services:NotificationService.MessageQueue}"
+                                  Background="Transparent"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Top"
+                                  Margin="0,30,0,0"
+                                  Panel.ZIndex="999"/>
     </Grid>
 </Window>

@@ -31,6 +31,8 @@ namespace Collectivite.ViewModels
             // Commandes
             LoadDataCommand = new RelayCommand(async _ => await LoadDataAsync());
             SearchCommand = new RelayCommand(async _ => await SearchAsync());
+            OpenDetailsCommand = new RelayCommand<Engagement>(engagement => OpenDetails(engagement));
+            OpenEditCommand = new RelayCommand<Engagement>(engagement => OpenEdit(engagement));
             DeleteCommand = new RelayCommand<Engagement>(async engagement => await DeleteAsync(engagement));
             //ShowStatistiquesCommand = new RelayCommand(async _ => await ShowStatistiquesAsync());
 
@@ -89,6 +91,8 @@ namespace Collectivite.ViewModels
 
         public ICommand LoadDataCommand { get; }
         public ICommand SearchCommand { get; }
+        public ICommand OpenDetailsCommand { get; }
+        public ICommand OpenEditCommand { get; }
         public ICommand DeleteCommand { get; }
         //public ICommand ShowStatistiquesCommand { get; }
 
@@ -110,8 +114,7 @@ namespace Collectivite.ViewModels
             {
                 if (!CanViewEngagement)
                 {
-                    MessageBox.Show("Accès refusé : vous n'avez pas la permission de consulter les engagements.",
-                        "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    NotificationService.ShowWarning("Accès refusé : vous n'avez pas la permission de consulter les engagements.");
                     Engagements.Clear();
                     IsLoading = false;
                     return;
@@ -139,8 +142,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors du chargement : {ex.Message}");
             }
             finally
             {
@@ -156,8 +158,7 @@ namespace Collectivite.ViewModels
             {
                 if (!CanViewEngagement)
                 {
-                    MessageBox.Show("Accès refusé : vous n'avez pas la permission de consulter les engagements.",
-                        "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    NotificationService.ShowWarning("Accès refusé : vous n'avez pas la permission de consulter les engagements.");
                     Engagements.Clear();
                     IsLoading = false;
                     return;
@@ -176,13 +177,38 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de la recherche : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors de la recherche : {ex.Message}");
             }
             finally
             {
                 IsLoading = false;
             }
+        }
+
+        private void OpenDetails(Engagement? engagement)
+        {
+            if (engagement == null) return;
+
+            if (!CanViewEngagement)
+            {
+                NotificationService.ShowWarning("Accès refusé : vous n'avez pas la permission de consulter les engagements.");
+                return;
+            }
+
+            NavigationService.Instance.NavigateTo(new Views.Pages.EngagementDetailPage(engagement.Id));
+        }
+
+        private void OpenEdit(Engagement? engagement)
+        {
+            if (engagement == null) return;
+
+            if (!CanEditEngagement)
+            {
+                NotificationService.ShowWarning("Accès refusé : vous n'avez pas la permission de modifier les engagements.");
+                return;
+            }
+
+            NavigationService.Instance.NavigateTo(new Views.Pages.EngagementFormPage(engagement.Id));
         }
 
         private async System.Threading.Tasks.Task DeleteAsync(Engagement? engagement)
@@ -191,8 +217,7 @@ namespace Collectivite.ViewModels
 
             if (!CanDeleteEngagement)
             {
-                MessageBox.Show("Accès refusé : vous n'avez pas la permission de supprimer les engagements.",
-                    "Accès refusé", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Accès refusé : vous n'avez pas la permission de supprimer les engagements.");
                 return;
             }
 
@@ -213,10 +238,14 @@ namespace Collectivite.ViewModels
                 var service = new EngagementService();
                 var (success, message) = await service.DeleteEngagementAsync(engagement.Id);
 
-                MessageBox.Show(message,
-                    success ? "Succès" : "Erreur",
-                    MessageBoxButton.OK,
-                    success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                if (success)
+                {
+                    NotificationService.ShowSuccess(message);
+                }
+                else
+                {
+                    NotificationService.ShowWarning(message);
+                }
 
                 if (success)
                 {

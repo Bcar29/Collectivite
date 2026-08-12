@@ -291,10 +291,8 @@ namespace Collectivite.Models
 
         public ICollection<DocumentTiers>? Documents { get; set; }
         public ICollection<CompteBancaire>? CompteBancaires { get; set; }
-        public ICollection<Contrats>? Contrats { get; set; }
         public ICollection<Engagement>? Engagements { get; set; }
         public ICollection<Facture>? Factures { get; set; }
-        public ICollection<Recensement>? Recensements { get; set; }
 
         // ═══════════════════════════════════════════════════════════
         // PROPRIÉTÉS CALCULÉES

@@ -225,15 +225,13 @@ namespace Collectivite.ViewModels
                 }
                 else
                 {
-                    MessageBox.Show("Ordre de recette introuvable.", "Erreur",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    NotificationService.ShowError("Ordre de recette introuvable.");
                     NavigateBack();
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement : {ex.Message}\n\nStack trace:\n{ex.StackTrace}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors du chargement : {ex.Message}\n\nStack trace:\n{ex.StackTrace}");
             }
             finally
             {
@@ -248,8 +246,7 @@ namespace Collectivite.ViewModels
         {
             if (OrdreRecette == null)
             {
-                MessageBox.Show("Aucun ordre de recette à exporter.", "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Aucun ordre de recette à exporter.");
                 return;
             }
 
@@ -290,8 +287,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de l'export PDF : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors de l'export PDF : {ex.Message}");
             }
             finally
             {
@@ -306,8 +302,7 @@ namespace Collectivite.ViewModels
         {
             if (OrdreRecette == null)
             {
-                MessageBox.Show("Aucun ordre de recette à imprimer.", "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning("Aucun ordre de recette à imprimer.");
                 return;
             }
 
@@ -338,8 +333,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de l'impression : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors de l'impression : {ex.Message}");
             }
             finally
             {

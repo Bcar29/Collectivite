@@ -18,6 +18,11 @@ namespace Collectivite.Services
         private readonly HashSet<string> _currentPermissions =
             new(StringComparer.OrdinalIgnoreCase);
 
+        private const int MaxFailedAttempts = 5;
+        private static readonly TimeSpan LockoutDuration = TimeSpan.FromMinutes(5);
+        private readonly Dictionary<string, (int FailedAttempts, DateTime? LockedUntil)> _loginAttempts =
+            new(StringComparer.OrdinalIgnoreCase);
+
         public AuthService()
         {
             _passwordHasher = new PasswordHasher();
@@ -43,6 +48,19 @@ namespace Collectivite.Services
         {
             try
             {
+                if (_loginAttempts.TryGetValue(username, out var attempt) &&
+                    attempt.LockedUntil.HasValue)
+                {
+                    var remaining = attempt.LockedUntil.Value - DateTime.Now;
+                    if (remaining > TimeSpan.Zero)
+                    {
+                        return (false,
+                            $"Trop de tentatives échouées. Réessayez dans {Math.Ceiling(remaining.TotalMinutes)} minute(s).",
+                            null);
+                    }
+                    _loginAttempts.Remove(username);
+                }
+
                 using var context = CreateContext();
 
                 var user = await context.Users
@@ -52,12 +70,13 @@ namespace Collectivite.Services
                             .ThenInclude(rp => rp.Permission)
                     .FirstOrDefaultAsync(u => u.Username == username);
 
-                if (user == null)
+                if (user == null || !_passwordHasher.VerifyPassword(password, user.PasswordHash))
+                {
+                    RegisterFailedAttempt(username);
                     return (false, "Nom d'utilisateur ou mot de passe incorrect.", null);
+                }
 
-                if (!_passwordHasher.VerifyPassword(password, user.PasswordHash))
-                    return (false, "Nom d'utilisateur ou mot de passe incorrect.", null);
-
+                _loginAttempts.Remove(username);
                 _currentUser = user;
                 HydratePermissions(user);
 
@@ -67,6 +86,21 @@ namespace Collectivite.Services
             {
                 return (false, $"Erreur de connexion : {ex.Message}", null);
             }
+        }
+
+        private void RegisterFailedAttempt(string username)
+        {
+            var (failedAttempts, _) = _loginAttempts.TryGetValue(username, out var existing)
+                ? existing
+                : (0, null);
+
+            failedAttempts++;
+
+            DateTime? lockedUntil = failedAttempts >= MaxFailedAttempts
+                ? DateTime.Now.Add(LockoutDuration)
+                : null;
+
+            _loginAttempts[username] = (failedAttempts, lockedUntil);
         }
 
         public void Logout()

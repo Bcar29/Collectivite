@@ -46,6 +46,11 @@ namespace Collectivite.ViewModels
 
         public ObservableCollection<Exercice> Exercices { get; } = new();
 
+        public bool CanViewExercice => SessionManager.HasPermission("Exercice.View");
+        public bool CanCreateExercice => SessionManager.HasPermission("Exercice.Create");
+        public bool CanEditExercice => SessionManager.HasPermission("Exercice.Edit");
+        public bool CanDeleteExercice => SessionManager.HasPermission("Exercice.Delete");
+
         public bool IsLoading
         {
             get => _isLoading;
@@ -126,8 +131,7 @@ namespace Collectivite.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du chargement : {ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur lors du chargement : {ex.Message}");
             }
             finally
             {
@@ -137,6 +141,12 @@ namespace Collectivite.ViewModels
 
         private void OpenAddDialog()
         {
+            if (!CanCreateExercice)
+            {
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
+                return;
+            }
+
             IsEditMode = false;
 
             DialogExercice = new Exercice
@@ -156,6 +166,12 @@ namespace Collectivite.ViewModels
         private void OpenEditDialog(Exercice? exercice)
         {
             if (exercice == null) return;
+
+            if (!CanEditExercice)
+            {
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
+                return;
+            }
 
             IsEditMode = true;
 
@@ -183,10 +199,15 @@ namespace Collectivite.ViewModels
 
         private async System.Threading.Tasks.Task SaveAsync()
         {
+            if (!(IsEditMode ? CanEditExercice : CanCreateExercice))
+            {
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
+                return;
+            }
+
             if (DialogExercice.DateDebut >= DialogExercice.DateFin)
             {
-                MessageBox.Show("La date de début doit être antérieure à la date de fin.",
-                    "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationService.ShowWarning("La date de début doit être antérieure à la date de fin.");
                 return;
             }
 
@@ -200,8 +221,7 @@ namespace Collectivite.ViewModels
 
                     if (success)
                     {
-                        MessageBox.Show(message, "Succès",
-                            MessageBoxButton.OK, MessageBoxImage.Information);
+                        NotificationService.ShowSuccess(message);
 
                         IsDialogOpen = false;
                         await LoadDataAsync();
@@ -210,8 +230,7 @@ namespace Collectivite.ViewModels
                     }
                     else
                     {
-                        MessageBox.Show(message, "Erreur",
-                            MessageBoxButton.OK, MessageBoxImage.Warning);
+                        NotificationService.ShowWarning(message);
                     }
                 }
                 else
@@ -220,8 +239,7 @@ namespace Collectivite.ViewModels
 
                     if (success)
                     {
-                        MessageBox.Show(message, "Succès",
-                            MessageBoxButton.OK, MessageBoxImage.Information);
+                        NotificationService.ShowSuccess(message);
 
                         IsDialogOpen = false;
                         await LoadDataAsync();
@@ -230,15 +248,13 @@ namespace Collectivite.ViewModels
                     }
                     else
                     {
-                        MessageBox.Show(message, "Erreur",
-                            MessageBoxButton.OK, MessageBoxImage.Warning);
+                        NotificationService.ShowWarning(message);
                     }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                NotificationService.ShowError($"Erreur : {ex.Message}");
             }
             finally
             {
@@ -255,6 +271,12 @@ namespace Collectivite.ViewModels
         {
             if (exercice == null) return;
 
+            if (!CanDeleteExercice)
+            {
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
+                return;
+            }
+
             var result = MessageBox.Show(
                 $"Êtes-vous sûr de vouloir supprimer l'exercice '{exercice.Libelle}' ?\n\n" +
                 "⚠️ Tous les budgets liés seront également supprimés !",
@@ -268,10 +290,10 @@ namespace Collectivite.ViewModels
 
             var (success, message) = await _exerciceService.DeleteAsync(exercice.Id);
 
-            MessageBox.Show(message,
-                success ? "Succès" : "Erreur",
-                MessageBoxButton.OK,
-                success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+            if (success)
+                NotificationService.ShowSuccess(message);
+            else
+                NotificationService.ShowWarning(message);
 
             if (success)
             {
@@ -287,10 +309,15 @@ namespace Collectivite.ViewModels
         {
             if (exercice == null) return;
 
+            if (!CanEditExercice)
+            {
+                NotificationService.ShowWarning("Vous n'avez pas la permission nécessaire pour cette action.");
+                return;
+            }
+
             if (exercice.EstCloture)
             {
-                MessageBox.Show("Cet exercice est déjà clôturé.",
-                    "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                NotificationService.ShowInfo("Cet exercice est déjà clôturé.");
                 return;
             }
 
@@ -307,10 +334,10 @@ namespace Collectivite.ViewModels
 
             var (success, message) = await _exerciceService.CloturerAsync(exercice.Id);
 
-            MessageBox.Show(message,
-                success ? "Succès" : "Erreur",
-                MessageBoxButton.OK,
-                success ? MessageBoxImage.Information : MessageBoxImage.Warning);
+            if (success)
+                NotificationService.ShowSuccess(message);
+            else
+                NotificationService.ShowWarning(message);
 
             if (success)
             {
