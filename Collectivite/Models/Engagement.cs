@@ -72,6 +72,10 @@ namespace Collectivite.Models
         [NotMapped]
         public decimal CumulEngagement => EngagementsAnterieurs + MontantEngagement;
 
+        [NotMapped]
+        public string DisplayLabel =>
+            $"{BudgetLine?.Nommenclature?.CodeNomenclature} - {Tiers?.NomComplet} - {Objet}".Trim(' ', '-');
+
         // Constructeur par défaut
         public Engagement()
         {

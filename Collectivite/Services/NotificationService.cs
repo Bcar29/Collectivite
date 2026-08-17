@@ -57,10 +57,24 @@ namespace Collectivite.Services
                 {
                     Background = new SolidColorBrush(background),
                     CornerRadius = new CornerRadius(8),
-                    Padding = new Thickness(20, 16, 20, 16),
-                    MinHeight = 56,
+                    Padding = new Thickness(20, 14, 20, 14),
+                    MinHeight = 52,
+                    Margin = new Thickness(0, 0, 0, 8),
                     Child = stack
                 };
+
+                // Le template MaterialDesign de SnackbarMessage plafonne son ContentPresenter
+                // interne à 36px, ce qui rogne notre contenu (icône + texte ~54px). On lève
+                // ce plafond dès que notre Border est chargé dans l'arbre visuel.
+                content.Loaded += ContentLoaded;
+                void ContentLoaded(object sender, RoutedEventArgs e)
+                {
+                    content.Loaded -= ContentLoaded;
+                    if (VisualTreeHelper.GetParent(content) is ContentPresenter presenter)
+                    {
+                        presenter.MaxHeight = double.PositiveInfinity;
+                    }
+                }
 
                 MessageQueue.Enqueue(content, null, null, null, false, false, duration);
             }

@@ -2,6 +2,7 @@
 using Collectivite.Services;
 using Collectivite.Utils;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
@@ -107,6 +108,12 @@ namespace Collectivite.ViewModels
 
         public ObservableCollection<CompteBancaire> ComptesOfSelectedTiers { get; } = new();
         public ObservableCollection<DocumentTiers> DocumentsOfSelectedTiers { get; } = new();
+
+        public List<string> PaysDisponibles { get; } = new()
+        {
+            "Guinée", "France", "Sénégal", "Mali", "Côte d'Ivoire", "Burkina Faso",
+            "Niger", "Bénin", "Togo", "Ghana", "Cameroun", "Belgique", "Suisse", "Canada"
+        };
 
         private async void OnExerciceChanged(object? sender, Exercice exercice)
         {

@@ -1,3 +1,4 @@
+using Collectivite.Models;
 using Collectivite.Services;
 using Collectivite.Views.Pages ;
 using System;
@@ -583,6 +584,66 @@ namespace Collectivite.Utils
             throw new NotImplementedException();
         }
     }
+    /// <summary>
+    /// Vrai si le statut du budget primitif a atteint ou dépassé le statut passé en paramètre
+    /// (DRAFT &lt; APPROVED &lt; VALIDATED). Utilisé par le stepper de progression
+    /// Brouillon → Approuvé → Validé de la page Synthèse.
+    /// </summary>
+    public class StatusAtLeastConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is not BudgetPrimitif.Statusbudget status || parameter == null)
+                return false;
+
+            if (!Enum.TryParse<BudgetPrimitif.Statusbudget>(parameter.ToString(), out var target))
+                return false;
+
+            return status >= target;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+            => throw new NotImplementedException();
+    }
+
+    /// <summary>
+    /// Calcule le solde budgétaire (Recettes - Dépenses) d'un budget primitif et le formate en GNF.
+    /// </summary>
+    public class RecetteDepenseToSoldeConverter : IMultiValueConverter
+    {
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (values.Length != 2) return "0 GNF";
+            var recette = values[0] is decimal r ? r : 0m;
+            var depense = values[1] is decimal d ? d : 0m;
+            return $"{recette - depense:N0} GNF";
+        }
+
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+            => throw new NotImplementedException();
+    }
+
+    /// <summary>
+    /// Couleur du solde budgétaire (Recettes - Dépenses) : vert si excédentaire, rouge si déficitaire, gris si équilibré.
+    /// </summary>
+    public class RecetteDepenseToSoldeBrushConverter : IMultiValueConverter
+    {
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (values.Length != 2) return new SolidColorBrush(Color.FromRgb(84, 110, 122));
+            var recette = values[0] is decimal r ? r : 0m;
+            var depense = values[1] is decimal d ? d : 0m;
+            var solde = recette - depense;
+
+            if (solde > 0) return new SolidColorBrush((Color)ColorConverter.ConvertFromString("#388E3C"));
+            if (solde < 0) return new SolidColorBrush((Color)ColorConverter.ConvertFromString("#D32F2F"));
+            return new SolidColorBrush((Color)ColorConverter.ConvertFromString("#546E7A"));
+        }
+
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+            => throw new NotImplementedException();
+    }
+
     /// <summary>
     /// Convertisseur pour afficher les boutons d'action uniquement sur les lignes sans enfants et qui ne sont pas des totaux
     /// </summary>

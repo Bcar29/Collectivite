@@ -53,27 +53,11 @@
                                                Height="32"
                                                Foreground="#1976D2"
                                                VerticalAlignment="Center"/>
-                        <TextBlock Text="{Binding PageTitle}" 
+                        <TextBlock Text="{Binding PageTitle}"
                                  FontSize="24"
                                  FontWeight="SemiBold"
                                  Margin="15,0,0,0"
                                  VerticalAlignment="Center"/>
-                    </StackPanel>
-
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button Style="{StaticResource MaterialDesignOutlinedButton}"
-                              Content="Annuler"
-                              Command="{Binding CancelCommand}"
-                              Height="40"
-                              Margin="0,0,10,0"
-                              Width="100"/>
-
-                        <Button Style="{StaticResource MaterialDesignRaisedButton}"
-                              Content="Enregistrer"
-                              Command="{Binding SaveCommand}"
-                              IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBool}}"
-                              Height="40"
-                              Width="130"/>
                     </StackPanel>
                 </Grid>
 
@@ -126,7 +110,8 @@
                                 ItemsSource="{Binding Exercices}"
                                 SelectedValue="{Binding Engagement.ExerciceId}"
                                 SelectedValuePath="Id"
-                                DisplayMemberPath="Libelle"/>
+                                DisplayMemberPath="Libelle"
+                                utils:ComboBoxAutoCompleteBehavior.IsEnabled="True"/>
 
                         <!-- Date d'engagement -->
                         <DatePicker Grid.Row="2" Grid.Column="2"
@@ -142,7 +127,8 @@
                                 ItemsSource="{Binding Communes}"
                                 SelectedValue="{Binding Engagement.CommuneId}"
                                 SelectedValuePath="Id"
-                                DisplayMemberPath="Nom"/>
+                                DisplayMemberPath="Nom"
+                                utils:ComboBoxAutoCompleteBehavior.IsEnabled="True"/>
 
                         <!-- Tiers -->
                         <ComboBox Grid.Row="4" Grid.Column="2"
@@ -151,7 +137,8 @@
                                 ItemsSource="{Binding TiersList}"
                                 SelectedValue="{Binding Engagement.TiersId}"
                                 SelectedValuePath="Id"
-                                DisplayMemberPath="NomComplet"/>
+                                DisplayMemberPath="NomComplet"
+                                utils:ComboBoxAutoCompleteBehavior.IsEnabled="True"/>
                         <!-- Facture -->
                         <ComboBox Grid.Row="6" Grid.Column="0"
                             materialDesign:HintAssist.Hint="Facture (optionnel)"
@@ -159,7 +146,8 @@
                             ItemsSource="{Binding Factures}"
                             SelectedValue="{Binding Engagement.FactureId}"
                             SelectedValuePath="Id"
-                            DisplayMemberPath="NumeroFacture"/>
+                            DisplayMemberPath="NumeroFacture"
+                            utils:ComboBoxAutoCompleteBehavior.IsEnabled="True"/>
 
                         <!-- Bon de Commande -->
                         <ComboBox Grid.Row="6" Grid.Column="2"
@@ -168,7 +156,8 @@
                             ItemsSource="{Binding BonCommandes}"
                             SelectedValue="{Binding Engagement.BonCommandeId}"
                             SelectedValuePath="Id"
-                            DisplayMemberPath="Numero"/>
+                            DisplayMemberPath="Numero"
+                            utils:ComboBoxAutoCompleteBehavior.IsEnabled="True"/>
 
                         <!-- Ligne budgétaire (déplacer à la ligne 8) -->
                         <ComboBox Grid.Row="8"
@@ -346,6 +335,29 @@
 
                     </Grid>
                 </materialDesign:Card>
+
+                <!-- Boutons d'action -->
+                <StackPanel Orientation="Horizontal"
+                           HorizontalAlignment="Right"
+                           Margin="0,20,0,0">
+                    <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                          Content="Annuler"
+                          Command="{Binding CancelCommand}"
+                          Width="120"
+                          Height="42"
+                          Margin="0,0,15,0"/>
+
+                    <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                          Command="{Binding SaveCommand}"
+                          IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBool}}"
+                          Width="160"
+                          Height="42">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ContentSave" Margin="0,0,8,0"/>
+                            <TextBlock Text="Enregistrer"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
 
                 <!-- Note -->
                 <Border Background="#FFF3E0"

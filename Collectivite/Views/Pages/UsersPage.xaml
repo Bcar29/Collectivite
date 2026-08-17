@@ -97,6 +97,7 @@
                                               DisplayMemberPath="Name"
                                               SelectedValue="{Binding RoleId, Mode=TwoWay}"
                                               SelectionChanged="ComboBox_SelectionChanged"
+                                              utils:ComboBoxAutoCompleteBehavior.IsEnabled="True"
                                               Width="180"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
@@ -184,6 +185,7 @@
                               SelectedValue="{Binding DialogUser.CommuneId, Mode=TwoWay}"
                               SelectedValuePath="Id"
                               DisplayMemberPath="Nom"
+                              utils:ComboBoxAutoCompleteBehavior.IsEnabled="True"
                               Margin="0,0,0,15"/>
 
                     <ComboBox materialDesign:HintAssist.Hint="Rôle *"
@@ -192,6 +194,7 @@
                               SelectedValue="{Binding DialogUser.RoleId, Mode=TwoWay}"
                               SelectedValuePath="Id"
                               DisplayMemberPath="Name"
+                              utils:ComboBoxAutoCompleteBehavior.IsEnabled="True"
                               Margin="0,0,0,15"/>
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">

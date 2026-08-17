@@ -1,0 +1,65 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
+
+    <!--
+        Palette de couleurs partagée de l'application.
+        Objectif : que toutes les pages (en particulier le module Paramétrages)
+        réutilisent les mêmes teintes que le module Gestion Comptable au lieu
+        de littéraux hex arbitraires par page.
+    -->
+
+    <!-- Couleurs de base -->
+    <SolidColorBrush x:Key="AppPrimaryBrush" Color="#1976D2"/>
+    <SolidColorBrush x:Key="AppPrimaryDarkBrush" Color="#0D47A1"/>
+    <SolidColorBrush x:Key="AppPrimaryLightBrush" Color="#E3F2FD"/>
+
+    <SolidColorBrush x:Key="AppSuccessBrush" Color="#43A047"/>
+    <SolidColorBrush x:Key="AppSuccessLightBrush" Color="#E8F5E9"/>
+    <SolidColorBrush x:Key="AppDangerBrush" Color="#D32F2F"/>
+    <SolidColorBrush x:Key="AppWarningBrush" Color="#F57C00"/>
+    <SolidColorBrush x:Key="AppWarningLightBrush" Color="#FFF3E0"/>
+
+    <SolidColorBrush x:Key="AppMutedTextBrush" Color="#757575"/>
+    <SolidColorBrush x:Key="AppBorderBrush" Color="#E0E0E0"/>
+    <SolidColorBrush x:Key="AppPageBackgroundBrush" Color="#F5F5F5"/>
+
+    <!-- Champs calculés automatiquement : fond distinct du fond de page pour rester repérable -->
+    <SolidColorBrush x:Key="AppComputedFieldBackgroundBrush" Color="#ECEFF1"/>
+    <SolidColorBrush x:Key="AppComputedFieldBorderBrush" Color="#90A4AE"/>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         En-tête de page (icône + titre), pattern réutilisé sur
+         Commune / DétailCommune / Nomenclature / etc.
+         ═══════════════════════════════════════════════════════════ -->
+
+    <Style x:Key="PageHeaderIconStyle" TargetType="materialDesign:PackIcon">
+        <Setter Property="Width" Value="32"/>
+        <Setter Property="Height" Value="32"/>
+        <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style x:Key="PageTitleTextStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="24"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Margin" Value="15,0,0,0"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style x:Key="SectionSubtitleTextStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Foreground" Value="{StaticResource AppMutedTextBrush}"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+
+    <!-- Champ en lecture seule dont la valeur est calculée automatiquement -->
+    <Style x:Key="ComputedFieldTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource MaterialDesignOutlinedTextBox}">
+        <Setter Property="IsReadOnly" Value="True"/>
+        <Setter Property="Focusable" Value="False"/>
+        <Setter Property="Background" Value="{StaticResource AppComputedFieldBackgroundBrush}"/>
+        <Setter Property="materialDesign:TextFieldAssist.HasClearButton" Value="False"/>
+        <Setter Property="BorderBrush" Value="{StaticResource AppComputedFieldBorderBrush}"/>
+    </Style>
+
+</ResourceDictionary>

@@ -162,6 +162,8 @@
                               Style="{StaticResource MaterialDesignOutlinedComboBox}"
                               ItemsSource="{Binding ComptesDisponibles}"
                               SelectedItem="{Binding CompteFiltre, Mode=TwoWay}"
+                              utils:ComboBoxAutoCompleteBehavior.IsEnabled="True"
+                              utils:ComboBoxAutoCompleteBehavior.FilterMemberPath="DisplayLabel"
                               Margin="0,0,10,0">
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
@@ -464,6 +466,8 @@
                                       ItemsSource="{Binding ComptesDisponibles}"
                                       SelectedValue="{Binding DialogEcriture.CompteDebitId, Mode=TwoWay}"
                                       SelectedValuePath="Id"
+                                      utils:ComboBoxAutoCompleteBehavior.IsEnabled="True"
+                                      utils:ComboBoxAutoCompleteBehavior.FilterMemberPath="DisplayLabel"
                                       Margin="0,0,0,15">
                                 <ComboBox.ItemTemplate>
                                     <DataTemplate>
@@ -482,6 +486,8 @@
                                       ItemsSource="{Binding ComptesDisponibles}"
                                       SelectedValue="{Binding DialogEcriture.CompteCreditId, Mode=TwoWay}"
                                       SelectedValuePath="Id"
+                                      utils:ComboBoxAutoCompleteBehavior.IsEnabled="True"
+                                      utils:ComboBoxAutoCompleteBehavior.FilterMemberPath="DisplayLabel"
                                       Margin="0,0,0,15">
                                 <ComboBox.ItemTemplate>
                                     <DataTemplate>

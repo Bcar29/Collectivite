@@ -234,7 +234,17 @@ namespace Collectivite.Services
         // MÉTHODES EXISTANTES (Inchangées)
         // ═══════════════════════════════════════════════════════════
 
-        public async Task<List<BudgetLine>> GetBudgetLinesForBudgetPrimitifAsync(int budgetPrimitifId)
+        /// <summary>
+        /// Charge les lignes budgétaires d'un budget primitif.
+        /// </summary>
+        /// <param name="includeRemaniementOnlyLines">
+        /// Si faux (défaut), exclut les lignes créées uniquement via un remaniement "ex nihilo"
+        /// (nomenclature jamais présente dans le Budget Primitif d'origine) - c'est le
+        /// comportement attendu pour les pages Budget Primitif (Formulaire/Tableau). Les pages
+        /// Compte Administratif / Compte Gestion passent `true` pour les inclure, puisque ces
+        /// lignes doivent y apparaître normalement une fois le remaniement effectué.
+        /// </param>
+        public async Task<List<BudgetLine>> GetBudgetLinesForBudgetPrimitifAsync(int budgetPrimitifId, bool includeRemaniementOnlyLines = false)
         {
             using var context = CreateContext();
 
@@ -244,7 +254,8 @@ namespace Collectivite.Services
                 .Include(b => b.Nommenclature)
                 .ThenInclude(n => n.Enfants)
                 .Include(b => b.Remaniements)
-                .Where(b => b.BudgetPrimitifId == budgetPrimitifId)
+                .Where(b => b.BudgetPrimitifId == budgetPrimitifId &&
+                            (includeRemaniementOnlyLines || !b.EstAjouteParRemaniement))
                 .ToListAsync();
         }
 
@@ -270,6 +281,59 @@ namespace Collectivite.Services
             }
 
             return await GetBudgetLinesForBudgetPrimitifAsync(budgetPrimitif.Id);
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // 🆕 MODE TABLEAU (EXCEL-LIKE) : ARBRE COMPLET DES NOMENCLATURES
+        // ═══════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Retourne toutes les nomenclatures d'un couple Nature/Section, chacune associée
+        /// à sa BudgetLine réelle si elle existe, sinon à une BudgetLine "virtuelle"
+        /// (Id = 0, montants à 0) non persistée. Permet d'afficher en mode Tableau
+        /// l'intégralité de l'arborescence, y compris les feuilles jamais saisies.
+        /// </summary>
+        public async Task<List<BudgetLine>> GetFullBudgetLinesAsync(
+            int budgetPrimitifId,
+            NatureType nature,
+            SectionType section)
+        {
+            using var context = CreateContext();
+
+            var nomenclatures = await context.Nommenclatures
+                .Where(n => n.Nature == nature && n.Section == section)
+                .ToListAsync();
+
+            var existing = await context.BudgetLines
+                .Include(b => b.Remaniements)
+                .Where(b => b.BudgetPrimitifId == budgetPrimitifId)
+                .ToListAsync();
+
+            var byNomenclatureId = existing.ToDictionary(b => b.NommenclatureId);
+
+            var result = new List<BudgetLine>(nomenclatures.Count);
+            foreach (var n in nomenclatures)
+            {
+                if (byNomenclatureId.TryGetValue(n.Id, out var bl))
+                {
+                    bl.Nommenclature = n;
+                    result.Add(bl);
+                }
+                else
+                {
+                    result.Add(new BudgetLine
+                    {
+                        Id = 0,
+                        BudgetPrimitifId = budgetPrimitifId,
+                        NommenclatureId = n.Id,
+                        Nommenclature = n,
+                        MontantPrevu = 0,
+                        MontantActu = 0
+                    });
+                }
+            }
+
+            return result;
         }
 
         public async Task<List<BudgetLine>> GetDepenseForEngagement()

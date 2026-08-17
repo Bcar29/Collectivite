@@ -107,6 +107,8 @@
                                       Style="{StaticResource MaterialDesignOutlinedComboBox}"
                                       ItemsSource="{Binding ExpressionBesoins}"
                                       SelectedItem="{Binding SelectedExpressionBesoin, Mode=TwoWay}"
+                                      utils:ComboBoxAutoCompleteBehavior.IsEnabled="True"
+                                      utils:ComboBoxAutoCompleteBehavior.FilterMemberPath="DisplayLabel"
                                       Margin="0,0,0,15">
                                 <ComboBox.ItemTemplate>
                                     <DataTemplate>
@@ -385,20 +387,15 @@
                             Command="{Binding CancelCommand}"
                             Margin="0,0,15,0"
                             Width="120"
-                            Height="45"/>
+                            Height="42"/>
                     <Button Style="{StaticResource MaterialDesignRaisedButton}"
                             Command="{Binding SaveCommand}"
                             IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBool}}"
-                            Width="180"
-                            Height="45"
-                            Background="#4CAF50"
-                            BorderBrush="#4CAF50">
+                            Width="160"
+                            Height="42">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="ContentSave" 
-                                                     Width="20" 
-                                                     Height="20"
-                                                     Margin="0,0,8,0"/>
-                            <TextBlock Text="Enregistrer" FontSize="14"/>
+                            <materialDesign:PackIcon Kind="ContentSave" Margin="0,0,8,0"/>
+                            <TextBlock Text="Enregistrer"/>
                         </StackPanel>
                     </Button>
                 </StackPanel>

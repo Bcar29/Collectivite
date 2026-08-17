@@ -66,6 +66,28 @@ namespace Collectivite.ViewModels
 
         public bool CanDeleteRemaniement => SessionManager.HasPermission("Remaniement.Delete");
 
+        /// <summary>
+        /// Explique pourquoi la création de remaniement est indisponible (permission manquante ou
+        /// exercice clôturé), afin que l'utilisateur comprenne pourquoi le bouton "Ajouter un
+        /// remaniement" est masqué au lieu de le laisser deviner. Null si la création est autorisée.
+        /// </summary>
+        public string? CreateRemaniementBlockedReason
+        {
+            get
+            {
+                if (CanCreateRemaniement)
+                    return null;
+
+                if (!SessionManager.HasPermission("Remaniement.Create"))
+                    return "Vous n'avez pas la permission de créer un remaniement (permission « Remaniement.Create » requise). Demandez à un administrateur de vous l'attribuer via Administration > Rôles.";
+
+                if (_exerciceService.CurrentExercice?.EstCloture == true)
+                    return $"L'exercice {_exerciceService.CurrentExercice.Libelle} est clôturé : aucun remaniement ne peut y être créé.";
+
+                return "La création de remaniement n'est pas disponible actuellement.";
+            }
+        }
+
         #region Collections exposées
 
         public ObservableCollection<BudgetLineHierarchyViewModel> BudgetLines { get; } = new();
@@ -105,6 +127,7 @@ namespace Collectivite.ViewModels
                     OnPropertyChanged(nameof(DialogRemaniement));
                 }
                 OnPropertyChanged(nameof(DialogTitle));
+                OnPropertyChanged(nameof(IsAddingNewLine));
             }
         }
 
@@ -119,6 +142,12 @@ namespace Collectivite.ViewModels
                 return "Nouveau remaniement";
             }
         }
+
+        /// <summary>
+        /// Vrai si la ligne sélectionnée n'a jamais été budgétée dans le Budget Primitif
+        /// d'origine (ligne virtuelle Id = 0) : le remaniement va la créer "ex nihilo".
+        /// </summary>
+        public bool IsAddingNewLine => SelectedBudgetLine != null && SelectedBudgetLine.Id <= 0;
 
         public int SelectedTabIndex
         {
@@ -518,7 +547,9 @@ namespace Collectivite.ViewModels
 
             OnPropertyChanged(nameof(TotalRemaniements));
             OnPropertyChanged(nameof(TotalVariation));
-        }        
+            OnPropertyChanged(nameof(CanCreateRemaniement));
+            OnPropertyChanged(nameof(CreateRemaniementBlockedReason));
+        }
         #endregion
 
         #region Gestion des totaux
@@ -753,7 +784,8 @@ namespace Collectivite.ViewModels
 
                 var (success, message, _) = await service.CreateRemaniementAsync(
                     DialogRemaniement,
-                    DialogRemaniement.TypeRemaniement);
+                    DialogRemaniement.TypeRemaniement,
+                    SelectedBudgetLine);
 
                 if (success)
                 {

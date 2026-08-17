@@ -4,7 +4,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-             mc:Ignorable="d" 
+             xmlns:utils="clr-namespace:Collectivite.Utils"
+             mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="1200"
              Loaded="UserControl_Loaded"
              Background="White">
@@ -174,16 +175,18 @@
                     <ComboBox Width="120"
                               ItemsSource="{Binding AnneesDisponibles}"
                               SelectedItem="{Binding AnneeSelectionnee}"
+                              utils:ComboBoxAutoCompleteBehavior.IsEnabled="True"
                               Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
                 </StackPanel>
 
                 <!-- Filtre Classe -->
                 <StackPanel Grid.Column="1" Margin="0,0,20,0">
                     <TextBlock Text="Classe de compte" FontSize="12" Foreground="#64748B" FontWeight="Medium" Margin="0,0,0,6"/>
-                    <ComboBox Width="170" 
+                    <ComboBox Width="170"
                               ItemsSource="{Binding ClassesComptes}"
                               SelectedItem="{Binding ClasseSelectionnee}"
                               DisplayMemberPath="Libelle"
+                              utils:ComboBoxAutoCompleteBehavior.IsEnabled="True"
                               Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
                 </StackPanel>
 

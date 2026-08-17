@@ -76,7 +76,8 @@ namespace Collectivite.Services
                         Motifs = ordre.Motifs,
                         RefVirement = mouvement?.RefVirement,
                         NumBanqueBenef = mouvement?.NumBanqueBenef,
-                        RefCheque = mouvement?.RefChèque
+                        RefCheque = mouvement?.RefChèque,
+                        EstValide = ordre.Etat == OrdreRecette.EtatOdre.Validé
                     };
                 })
                 .OrderByDescending(d => d.DateOrdre)
@@ -278,6 +279,13 @@ namespace Collectivite.Services
                         context,
                         budgetLine.NommenclatureId,
                         budgetLine.BudgetPrimitifId);
+
+                    // 6️⃣ Prélèvement de 60% sur le montant réellement encaissé
+                    await OrdreRecetteService.AppliquerPrelevementEntreSortieAsync(
+                        context,
+                        budgetLine,
+                        dto.Montant);
+
                     await context.SaveChangesAsync();
 
 
@@ -331,6 +339,10 @@ namespace Collectivite.Services
                 var exercice = await context.Exercices.FindAsync(ordreRecette.ExerciceId);
                 if (exercice != null && exercice.EstCloture)
                     return (false, "Impossible de modifier une opération sur un exercice clôturé.");
+
+                // Un ordre déjà validé ne peut plus être modifié
+                if (ordreRecette.Etat == OrdreRecette.EtatOdre.Validé)
+                    return (false, "Impossible de modifier cette opération : l'ordre de recette est déjà validé.");
 
                 // Mémoriser l'ancien montant pour la mise à jour du MontantRealise
                 decimal ancienMontant = ordreRecette.MontantOrdre;
@@ -433,6 +445,10 @@ namespace Collectivite.Services
                 var exercice = await context.Exercices.FindAsync(ordreRecette.ExerciceId);
                 if (exercice != null && exercice.EstCloture)
                     return (false, "Impossible de supprimer une opération sur un exercice clôturé.");
+
+                // Un ordre déjà validé ne peut plus être supprimé
+                if (ordreRecette.Etat == OrdreRecette.EtatOdre.Validé)
+                    return (false, "Impossible de supprimer cette opération : l'ordre de recette est déjà validé.");
 
                 // Mémoriser les infos pour le recalcul
                 int? nomenclatureId = ordreRecette.BudgetLine?.NommenclatureId;

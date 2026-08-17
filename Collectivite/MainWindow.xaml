@@ -62,7 +62,7 @@
 
     </Window.Resources>
 
-    <Grid>
+    <Grid x:Name="RootLayoutGrid">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
@@ -111,7 +111,7 @@
             
             <DockPanel>
                 <!-- Header de la sidebar avec bouton toggle -->
-                <Border DockPanel.Dock="Top" 
+                <Border DockPanel.Dock="Top"
                        Background="{DynamicResource PrimaryHueMidBrush}"
                        Padding="10">
                     <Border.Style>
@@ -119,15 +119,21 @@
                             <Setter Property="Height" Value="180"/>
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsMenuCollapsed}" Value="True">
-                                    <Setter Property="Height" Value="70"/>
+                                    <Setter Property="Height" Value="100"/>
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
                     </Border.Style>
-                    
+
                     <Grid>
-                        <!-- Bouton Toggle en haut -->
-                        <Button Command="{Binding ToggleMenuCommand}"
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Bouton Toggle en haut : ligne dédiée, jamais recouverte par le logo -->
+                        <Button Grid.Row="0"
+                                Command="{Binding ToggleMenuCommand}"
                                 Style="{StaticResource MaterialDesignIconButton}"
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Top"
@@ -147,35 +153,35 @@
                                 </materialDesign:PackIcon.Style>
                             </materialDesign:PackIcon>
                         </Button>
-                        
+
                         <!-- Contenu du header (visible en mode étendu) -->
-                        <StackPanel VerticalAlignment="Center"
+                        <StackPanel Grid.Row="1" VerticalAlignment="Center"
                                     Visibility="{Binding IsMenuExpanded, Converter={StaticResource BoolToVisibility}}">
-                            <materialDesign:PackIcon Kind="CityVariant" 
-                                                   Width="50" 
-                                                   Height="50"
-                                                   Foreground="Green"
-                                                   HorizontalAlignment="Center"/>
-                            <TextBlock Text="Gestion Budgetaire"
-                                     FontSize="13"
+                            <Image Source="pack://application:,,,/Assets/mairie-illustration.png"
+                                 Width="56" Height="56"
+                                 Stretch="Uniform"
+                                 HorizontalAlignment="Center"/>
+                            <TextBlock Text="GESTION BUDGÉTAIRE"
+                                     FontSize="10"
+                                     FontWeight="SemiBold"
+                                     Foreground="#8A94A6"
+                                     TextAlignment="Center"
+                                     Margin="0,14,0,3"/>
+                            <TextBlock Text="ET COMPTABLE"
+                                     FontSize="15"
                                      FontWeight="Bold"
-                                     Foreground="Black"
-                                     TextAlignment="Center"
-                                     Margin="0,10,0,0"/>
-                            <TextBlock Text="et Comptable"
-                                     FontSize="12"
-                                     Foreground="Black"
-                                     TextAlignment="Center"
-                                     Opacity="0.9"/>
+                                     Foreground="#1E293B"
+                                     TextAlignment="Center"/>
                         </StackPanel>
-                        
+
                         <!-- Icône seule (visible en mode réduit) -->
-                        <materialDesign:PackIcon Kind="CityVariant" 
-                                               Width="40" Height="40"
-                                               Foreground="Green"
-                                               HorizontalAlignment="Center"
-                                               VerticalAlignment="Center"
-                                               Visibility="{Binding IsMenuCollapsed, Converter={StaticResource BoolToVisibility}}"/>
+                        <Image Grid.Row="1"
+                             Source="pack://application:,,,/Assets/mairie-illustration.png"
+                             Width="36" Height="36"
+                             Stretch="Uniform"
+                             HorizontalAlignment="Center"
+                             VerticalAlignment="Center"
+                             Visibility="{Binding IsMenuCollapsed, Converter={StaticResource BoolToVisibility}}"/>
                     </Grid>
                 </Border>
 
@@ -1065,11 +1071,25 @@
         </DockPanel>
     </Grid>
 
-        <materialDesign:Snackbar MessageQueue="{x:Static services:NotificationService.MessageQueue}"
-                                  Background="Transparent"
-                                  HorizontalAlignment="Center"
-                                  VerticalAlignment="Top"
-                                  Margin="0,30,0,0"
-                                  Panel.ZIndex="999"/>
+        <Popup IsOpen="True"
+               StaysOpen="True"
+               AllowsTransparency="True"
+               Focusable="False"
+               Placement="Relative"
+               PlacementTarget="{Binding ElementName=RootLayoutGrid}"
+               HorizontalOffset="0"
+               VerticalOffset="30">
+            <Grid Width="{Binding ActualWidth, ElementName=RootLayoutGrid}"
+                  Background="{x:Null}"
+                  IsHitTestVisible="False">
+                <materialDesign:Snackbar MessageQueue="{x:Static services:NotificationService.MessageQueue}"
+                                          Background="Transparent"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Top"
+                                          MinHeight="76"
+                                          Padding="0"
+                                          ClipToBounds="False"/>
+            </Grid>
+        </Popup>
     </Grid>
 </Window>

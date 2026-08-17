@@ -2,6 +2,7 @@ using Collectivite.Models;
 using Collectivite.Services;
 using Collectivite.Utils;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
@@ -43,9 +44,11 @@ namespace Collectivite.ViewModels
             SaveDetailCommuneCommand = new RelayCommand(async _ => await SaveDetailCommuneAsync(), _ => CanSaveDetailCommune());
             CancelDetailCommuneCommand = new RelayCommand(_ => CancelDetailCommune());
             DeleteDetailCommuneCommand = new RelayCommand<DetailCommune>(async detail => await DeleteDetailCommuneAsync(detail));
-            CalculerDensiteCommand = new RelayCommand(_ => CalculerDensite());
-            CalculerTotalEcolesCommand = new RelayCommand(_ => CalculerTotalEcoles());
             OpenDetailCommuneCommand = new RelayCommand<Commune>(commune => OpenDetailCommune(commune));
+
+            // Assistant par étapes (wizard)
+            GoToNextStepCommand = new RelayCommand(_ => GoToNextStep(), _ => !IsLastStep);
+            GoToPreviousStepCommand = new RelayCommand(_ => GoToPreviousStep(), _ => !IsFirstStep);
 
             InitializeAsync();
         }
@@ -109,6 +112,132 @@ namespace Collectivite.ViewModels
             }
         }
 
+        // ═══════════════════════════════════════════════════════════
+        // ASSISTANT PAR ÉTAPES (WIZARD)
+        // ═══════════════════════════════════════════════════════════
+
+        public IReadOnlyList<string> StepTitles { get; } = new[]
+        {
+            "Démographie",
+            "Administration & Personnel",
+            "Éducation",
+            "Santé & Infrastructures",
+            "ONG & Organisations",
+            "Économie & Sécurité"
+        };
+
+        private int _currentStepIndex;
+        public int CurrentStepIndex
+        {
+            get => _currentStepIndex;
+            set
+            {
+                if (SetProperty(ref _currentStepIndex, value))
+                {
+                    OnPropertyChanged(nameof(IsFirstStep));
+                    OnPropertyChanged(nameof(IsLastStep));
+                    OnPropertyChanged(nameof(CurrentStepNumberLabel));
+                }
+            }
+        }
+
+        public bool IsFirstStep => CurrentStepIndex == 0;
+        public bool IsLastStep => CurrentStepIndex == StepTitles.Count - 1;
+        public string CurrentStepNumberLabel => $"Étape {CurrentStepIndex + 1} sur {StepTitles.Count} : {StepTitles[CurrentStepIndex]}";
+
+        // ═══════════════════════════════════════════════════════════
+        // CHAMPS SAISISSABLES QUI ALIMENTENT UN CALCUL AUTOMATIQUE
+        // (DetailCommune n'implémente pas INotifyPropertyChanged : on
+        // passe par ces propriétés du ViewModel pour recalculer et
+        // notifier la vue à chaque frappe, sans bouton "Calculer")
+        // ═══════════════════════════════════════════════════════════
+
+        public int PopulationHommes
+        {
+            get => DialogDetailCommune.PopulationHommes;
+            set
+            {
+                DialogDetailCommune.PopulationHommes = value;
+                OnPropertyChanged();
+                CalculerDensite();
+            }
+        }
+
+        public int PopulationFemmes
+        {
+            get => DialogDetailCommune.PopulationFemmes;
+            set
+            {
+                DialogDetailCommune.PopulationFemmes = value;
+                OnPropertyChanged();
+                CalculerDensite();
+            }
+        }
+
+        public double Superficie
+        {
+            get => DialogDetailCommune.Superficie;
+            set
+            {
+                DialogDetailCommune.Superficie = value;
+                OnPropertyChanged();
+                CalculerDensite();
+            }
+        }
+
+        public int NombreEcolesPrescolaire
+        {
+            get => DialogDetailCommune.NombreEcolesPrescolaire;
+            set
+            {
+                DialogDetailCommune.NombreEcolesPrescolaire = value;
+                OnPropertyChanged();
+                CalculerTotalEcoles();
+            }
+        }
+
+        public int NombreEcolesPrimaire
+        {
+            get => DialogDetailCommune.NombreEcolesPrimaire;
+            set
+            {
+                DialogDetailCommune.NombreEcolesPrimaire = value;
+                OnPropertyChanged();
+                CalculerTotalEcoles();
+            }
+        }
+
+        public int NombreEcolesCollege
+        {
+            get => DialogDetailCommune.NombreEcolesCollege;
+            set
+            {
+                DialogDetailCommune.NombreEcolesCollege = value;
+                OnPropertyChanged();
+                CalculerTotalEcoles();
+            }
+        }
+
+        public int NombreEcolesLycee
+        {
+            get => DialogDetailCommune.NombreEcolesLycee;
+            set
+            {
+                DialogDetailCommune.NombreEcolesLycee = value;
+                OnPropertyChanged();
+                CalculerTotalEcoles();
+            }
+        }
+
+        /// <summary>Population totale, recalculée automatiquement (lecture seule).</summary>
+        public int PopulationTotale => DialogDetailCommune.PopulationTotale;
+
+        /// <summary>Densité (hab/km²), recalculée automatiquement (lecture seule).</summary>
+        public double Densite => DialogDetailCommune.Densite;
+
+        /// <summary>Nombre total d'écoles, recalculé automatiquement (lecture seule).</summary>
+        public int NombreEcoles => DialogDetailCommune.NombreEcoles;
+
         #endregion
 
         #region Commands
@@ -119,9 +248,9 @@ namespace Collectivite.ViewModels
         public ICommand SaveDetailCommuneCommand { get; }
         public ICommand CancelDetailCommuneCommand { get; }
         public ICommand DeleteDetailCommuneCommand { get; }
-        public ICommand CalculerDensiteCommand { get; }
-        public ICommand CalculerTotalEcolesCommand { get; }
         public ICommand OpenDetailCommuneCommand { get; }
+        public ICommand GoToNextStepCommand { get; }
+        public ICommand GoToPreviousStepCommand { get; }
 
         #endregion
 
@@ -240,6 +369,8 @@ namespace Collectivite.ViewModels
                 SelectedExercice = Exercices.FirstOrDefault(e => e.Id == exerciceService.CurrentExercice.Id);
             }
 
+            CurrentStepIndex = 0;
+            NotifyDialogFieldsChanged();
             IsDialogOpen = true;
         }
 
@@ -308,7 +439,45 @@ namespace Collectivite.ViewModels
                 SelectedExercice = Exercices.FirstOrDefault(e => e.Id == detail.ExerciceId.Value);
             }
 
+            CurrentStepIndex = 0;
+            NotifyDialogFieldsChanged();
             IsDialogOpen = true;
+        }
+
+        /// <summary>
+        /// Notifie la vue que tous les champs saisissables/calculés doivent être relus
+        /// (nécessaire car DialogDetailCommune est remplacé par une nouvelle instance
+        /// à chaque ouverture du dialog, et DetailCommune n'implémente pas
+        /// INotifyPropertyChanged).
+        /// </summary>
+        private void NotifyDialogFieldsChanged()
+        {
+            OnPropertyChanged(nameof(PopulationHommes));
+            OnPropertyChanged(nameof(PopulationFemmes));
+            OnPropertyChanged(nameof(Superficie));
+            OnPropertyChanged(nameof(NombreEcolesPrescolaire));
+            OnPropertyChanged(nameof(NombreEcolesPrimaire));
+            OnPropertyChanged(nameof(NombreEcolesCollege));
+            OnPropertyChanged(nameof(NombreEcolesLycee));
+            OnPropertyChanged(nameof(PopulationTotale));
+            OnPropertyChanged(nameof(Densite));
+            OnPropertyChanged(nameof(NombreEcoles));
+        }
+
+        private void GoToNextStep()
+        {
+            if (!IsLastStep)
+            {
+                CurrentStepIndex++;
+            }
+        }
+
+        private void GoToPreviousStep()
+        {
+            if (!IsFirstStep)
+            {
+                CurrentStepIndex--;
+            }
         }
 
         private bool CanSaveDetailCommune()
@@ -472,27 +641,33 @@ namespace Collectivite.ViewModels
             }
         }
 
+        /// <summary>
+        /// Recalcule automatiquement la population totale et la densité. Appelée à
+        /// chaque frappe sur un champ dont dépend le calcul (population, superficie) -
+        /// aucun bouton "Calculer" n'est nécessaire.
+        /// </summary>
         private void CalculerDensite()
         {
-            if (DialogDetailCommune.Superficie > 0)
-            {
-                DialogDetailCommune.PopulationTotale = DialogDetailCommune.PopulationHommes + DialogDetailCommune.PopulationFemmes;
-                DialogDetailCommune.Densite = Math.Round(DialogDetailCommune.PopulationTotale / DialogDetailCommune.Superficie, 2);
-                OnPropertyChanged(nameof(DialogDetailCommune));
-            }
-            else
-            {
-                NotificationService.ShowWarning("La superficie doit être supérieure à 0 pour calculer la densité.");
-            }
+            DialogDetailCommune.PopulationTotale = DialogDetailCommune.PopulationHommes + DialogDetailCommune.PopulationFemmes;
+            DialogDetailCommune.Densite = DialogDetailCommune.Superficie > 0
+                ? Math.Round(DialogDetailCommune.PopulationTotale / DialogDetailCommune.Superficie, 2)
+                : 0;
+
+            OnPropertyChanged(nameof(PopulationTotale));
+            OnPropertyChanged(nameof(Densite));
         }
 
+        /// <summary>
+        /// Recalcule automatiquement le nombre total d'écoles à chaque frappe sur un
+        /// champ "écoles par niveau" - aucun bouton "Calculer" n'est nécessaire.
+        /// </summary>
         private void CalculerTotalEcoles()
         {
             DialogDetailCommune.NombreEcoles = DialogDetailCommune.NombreEcolesPrescolaire +
                                                 DialogDetailCommune.NombreEcolesPrimaire +
                                                 DialogDetailCommune.NombreEcolesCollege +
                                                 DialogDetailCommune.NombreEcolesLycee;
-            OnPropertyChanged(nameof(DialogDetailCommune));
+            OnPropertyChanged(nameof(NombreEcoles));
         }
 
         #endregion

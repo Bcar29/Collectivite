@@ -2,7 +2,6 @@ using Collectivite.Models;
 using Collectivite.Services;
 using System;
 using Collectivite.Utils;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
@@ -10,67 +9,64 @@ using System.Collections.Generic;
 
 namespace Collectivite.ViewModels
 {
+    /// <summary>
+    /// Une seule commune existe par instance de l'application : cette page est donc
+    /// un formulaire de profil unique (chargement/édition/sauvegarde), pas une liste CRUD.
+    /// </summary>
     public class CommuneViewModel : ViewModelBase
     {
         private readonly CommuneService _communeService;
         private readonly CommunePdfService _communePdfService;
         private bool _isLoading;
-        private Commune? _selectedCommune;
-        private bool _isDialogOpen;
-        private Commune _dialogCommune;
-        private bool _isEditMode;
-        private string _accessDeniedMessage = "Vous n'avez pas la permission pour cette action.";
-
-        // ✅ NOUVEAU : Pour gérer le TypeCommune
+        private Commune _currentCommune;
         private TypeCommuneItem? _selectedTypeCommuneItem;
+        private string _accessDeniedMessage = "Vous n'avez pas la permission pour cette action.";
 
         public CommuneViewModel(CommuneService commune)
         {
             _communeService = commune;
             _communePdfService = new CommunePdfService();
-            _dialogCommune = new Commune
+            _currentCommune = new Commune
             {
                 Nom = "",
-                DateCreation = DateOnly.FromDateTime(DateTime.Now)
+                DateCreation = DateOnly.FromDateTime(DateTime.Now),
+                CommuneType = Commune.TypeCommune.URBAINE
             };
 
-            // ✅ NOUVEAU : Initialiser la liste des types de commune
             TypesCommuneDisponibles = new List<TypeCommuneItem>
             {
                 new TypeCommuneItem(Commune.TypeCommune.URBAINE, "Commune Urbaine"),
                 new TypeCommuneItem(Commune.TypeCommune.RURALE, "Commune Rurale")
             };
-
-            // ✅ NOUVEAU : Sélectionner URBAINE par défaut
             _selectedTypeCommuneItem = TypesCommuneDisponibles.First();
 
-            //commandes
             LoadCommuneCommand = new RelayCommand(async _ => await LoadCommuneAsync());
-            OppenAddCommuneCommand = new RelayCommand(_ => OpenAddCommune());
-            OppenEditCommuneCommand = new RelayCommand<Commune>(commune => OpenEditCommune(commune));
             SaveCommuneCommand = new RelayCommand(async _ => await SaveCommuneAsync(), _ => CanSaveCommune());
-            CancelCommuneCommand = new RelayCommand(_ => CancelCommune());
-            DeleteCommuneCommand = new RelayCommand<Commune>(async commune => await DeleteCommuneAsync(commune));
+            CancelCommuneCommand = new RelayCommand(async _ => await LoadCommuneAsync());
+            OpenDetailCommuneCommand = new RelayCommand(_ => OpenDetailCommune());
+            ExportPdfCommand = new RelayCommand(async _ => await ExportCommuneToPdfAsync());
+            ExportPdfWithPrintCommand = new RelayCommand(async _ => await ExportAndPrintCommuneAsync());
 
-            // ✅ NOUVELLE COMMANDE : Ouvrir les détails
-            OpenDetailCommuneCommand = new RelayCommand<Commune>(commune => OpenDetailCommune(commune));
-
-            // ✅ NOUVELLES COMMANDES : Export PDF
-            ExportPdfCommand = new RelayCommand<Commune>(async commune => await ExportCommuneToPdfAsync(commune));
-            ExportPdfWithPrintCommand = new RelayCommand<Commune>(async commune => await ExportAndPrintCommuneAsync(commune));
-
-            //charger les données au démarrage
             LoadCommuneCommand.Execute(null);
         }
 
-        #region Properties 
-        public ObservableCollection<Commune> Communes { get; } = new ObservableCollection<Commune>();
+        #region Properties
 
-        // Permissions dynamiques
         public bool CanViewCommune => SessionManager.HasPermission("Commune.View");
         public bool CanCreateCommune => SessionManager.HasPermission("Commune.Create");
         public bool CanEditCommune => SessionManager.HasPermission("Commune.Edit");
-        public bool CanDeleteCommune => SessionManager.HasPermission("Commune.Delete");
+
+        /// <summary>
+        /// L'utilisateur peut modifier le formulaire : création si aucune commune n'existe
+        /// encore, édition sinon.
+        /// </summary>
+        public bool CanEditForm => IsNewCommune ? CanCreateCommune : CanEditCommune;
+
+        public bool IsNewCommune => CurrentCommune.Id == 0;
+
+        public string PageSubtitle => IsNewCommune
+            ? "Aucune commune enregistrée : renseignez le profil ci-dessous."
+            : "Profil de la commune gérée par cette application.";
 
         public bool IsLoading
         {
@@ -78,67 +74,42 @@ namespace Collectivite.ViewModels
             set => SetProperty(ref _isLoading, value);
         }
 
-        public Commune? SelectedCommune
+        public Commune CurrentCommune
         {
-            get => _selectedCommune;
-            set => SetProperty(ref _selectedCommune, value);
-        }
-
-        public bool IsDialogOpen
-        {
-            get => _isDialogOpen;
-            set => SetProperty(ref _isDialogOpen, value);
-        }
-
-        public Commune DialogCommune
-        {
-            get => _dialogCommune;
-            set => SetProperty(ref _dialogCommune, value);
-        }
-
-        public bool IsEditMode
-        {
-            get => _isEditMode;
-            set => SetProperty(ref _isEditMode, value);
-        }
-
-        public string DialogTitle => IsEditMode ? "Modifier la commune" : "Ajouter une commune";
-
-        public DateTime DialogCommuneDateCreation
-        {
-            get => DialogCommune.DateCreation.ToDateTime(TimeOnly.MinValue);
+            get => _currentCommune;
             set
             {
-                DialogCommune.DateCreation = DateOnly.FromDateTime(value);
+                if (SetProperty(ref _currentCommune, value))
+                {
+                    OnPropertyChanged(nameof(IsNewCommune));
+                    OnPropertyChanged(nameof(PageSubtitle));
+                    OnPropertyChanged(nameof(CanEditForm));
+                    OnPropertyChanged(nameof(CurrentCommuneDateCreation));
+                }
+            }
+        }
+
+        public DateTime CurrentCommuneDateCreation
+        {
+            get => CurrentCommune.DateCreation.ToDateTime(TimeOnly.MinValue);
+            set
+            {
+                CurrentCommune.DateCreation = DateOnly.FromDateTime(value);
                 OnPropertyChanged();
             }
         }
 
-        // ══════════════════════════════════════════════════════════
-        // ✅ NOUVELLES PROPRIÉTÉS : GESTION DU TYPE DE COMMUNE
-        // ══════════════════════════════════════════════════════════
-
-        /// <summary>
-        /// Liste de tous les types de commune disponibles avec libellés
-        /// </summary>
         public List<TypeCommuneItem> TypesCommuneDisponibles { get; }
 
-        /// <summary>
-        /// Type de commune sélectionné dans le ComboBox
-        /// </summary>
         public TypeCommuneItem? SelectedTypeCommuneItem
         {
             get => _selectedTypeCommuneItem;
             set
             {
-                if (SetProperty(ref _selectedTypeCommuneItem, value))
+                if (SetProperty(ref _selectedTypeCommuneItem, value) && value != null)
                 {
-                    // Mettre à jour automatiquement le DialogCommune
-                    if (DialogCommune != null && value != null)
-                    {
-                        DialogCommune.CommuneType = value.Valeur;
-                        OnPropertyChanged(nameof(DialogCommune));
-                    }
+                    CurrentCommune.CommuneType = value.Valeur;
+                    OnPropertyChanged(nameof(CurrentCommune));
                 }
             }
         }
@@ -146,19 +117,14 @@ namespace Collectivite.ViewModels
         #endregion
 
         #region Commands
+
         public ICommand LoadCommuneCommand { get; }
-        public ICommand OppenAddCommuneCommand { get; }
-        public ICommand OppenEditCommuneCommand { get; }
         public ICommand SaveCommuneCommand { get; }
         public ICommand CancelCommuneCommand { get; }
-        public ICommand DeleteCommuneCommand { get; }
-
-        // ✅ NOUVELLE COMMANDE
         public ICommand OpenDetailCommuneCommand { get; }
-
-        // ✅ NOUVELLES COMMANDES : Export PDF
         public ICommand ExportPdfCommand { get; }
         public ICommand ExportPdfWithPrintCommand { get; }
+
         #endregion
 
         #region Methods
@@ -167,8 +133,7 @@ namespace Collectivite.ViewModels
         {
             if (!CanViewCommune)
             {
-                NotificationService.ShowWarning("Accès refusé : vous n'avez pas la permission de consulter les communes.");
-                Communes.Clear();
+                NotificationService.ShowWarning("Accès refusé : vous n'avez pas la permission de consulter la commune.");
                 return;
             }
 
@@ -176,18 +141,21 @@ namespace Collectivite.ViewModels
             try
             {
                 var communes = await _communeService.GetAllCommuneAsync();
+                var existing = communes.FirstOrDefault();
 
-                Communes.Clear();
-
-                foreach (var commune in communes)
+                CurrentCommune = existing ?? new Commune
                 {
-                    Communes.Add(commune);
-                }
+                    Nom = "",
+                    DateCreation = DateOnly.FromDateTime(DateTime.Now),
+                    CommuneType = Commune.TypeCommune.URBAINE
+                };
 
+                SelectedTypeCommuneItem = TypesCommuneDisponibles
+                    .FirstOrDefault(t => t.Valeur == CurrentCommune.CommuneType) ?? TypesCommuneDisponibles.First();
             }
             catch (Exception ex)
             {
-                NotificationService.ShowError($"Erreur lors du chargement des communes dans viewmodèle: {ex.Message}");
+                NotificationService.ShowError($"Erreur lors du chargement de la commune : {ex.Message}");
             }
             finally
             {
@@ -195,81 +163,17 @@ namespace Collectivite.ViewModels
             }
         }
 
-        private void OpenAddCommune()
+        private void OpenDetailCommune()
         {
-            if (!CanCreateCommune)
+            if (IsNewCommune)
             {
-                NotificationService.ShowWarning(_accessDeniedMessage + "\nPermission requise : Commune.Create");
+                NotificationService.ShowWarning("Veuillez d'abord enregistrer le profil de la commune.");
                 return;
             }
-
-            IsEditMode = false;
-            DialogCommune = new Commune
-            {
-                Nom = "",
-                DateCreation = DateOnly.FromDateTime(DateTime.Now),
-                DistanceCapitale = 0,
-                DistanceChefLieuProvince = 0,
-                DistanceChefLieuRegion = 0,
-                CommuneType = Commune.TypeCommune.URBAINE // ✅ Valeur par défaut
-            };
-
-            // ✅ NOUVEAU : Sélectionner URBAINE par défaut dans le ComboBox
-            SelectedTypeCommuneItem = TypesCommuneDisponibles
-                .FirstOrDefault(t => t.Valeur == Commune.TypeCommune.URBAINE);
-
-            OnPropertyChanged(nameof(DialogCommuneDateCreation));
-
-            IsDialogOpen = true;
-        }
-
-        private void OpenEditCommune(Commune? commune)
-        {
-            if (commune == null)
-                return;
-
-            if (!CanEditCommune)
-            {
-                NotificationService.ShowWarning(_accessDeniedMessage + "\nPermission requise : Commune.Edit");
-                return;
-            }
-
-            IsEditMode = true;
-            DialogCommune = new Commune
-            {
-                Id = commune.Id,
-                Nom = commune.Nom,
-                Region = commune.Region,
-                Prefecture = commune.Prefecture,
-                DateCreation = commune.DateCreation,
-                DistanceCapitale = commune.DistanceCapitale,
-                DistanceChefLieuProvince = commune.DistanceChefLieuProvince,
-                DistanceChefLieuRegion = commune.DistanceChefLieuRegion,
-                CommuneType = commune.CommuneType // ✅ Récupérer le type existant
-            };
-
-            // ✅ NOUVEAU : Sélectionner le type correspondant dans le ComboBox
-            SelectedTypeCommuneItem = TypesCommuneDisponibles
-                .FirstOrDefault(t => t.Valeur == commune.CommuneType);
-
-            OnPropertyChanged(nameof(DialogCommuneDateCreation));
-
-            IsDialogOpen = true;
-        }
-
-        // ══════════════════════════════════════════════════════════
-        // ✅ NOUVELLE MÉTHODE : OUVRIR LES DÉTAILS D'UNE COMMUNE
-        // ══════════════════════════════════════════════════════════
-        private static void OpenDetailCommune(Commune? commune)
-        {
-            if (commune == null) return;
 
             try
             {
-                // Créer la page de détails avec le filtre de commune
-                var detailPage = new Views.Pages.DetailCommunePage(commune.Id);
-
-                // Naviguer vers la page
+                var detailPage = new Views.Pages.DetailCommunePage(CurrentCommune.Id);
                 var mainWindow = Application.Current.Windows.OfType<MainWindow>().FirstOrDefault();
                 if (mainWindow?.MainContentFrame != null)
                 {
@@ -286,31 +190,21 @@ namespace Collectivite.ViewModels
             }
         }
 
-        // ══════════════════════════════════════════════════════════
-        // ✅ NOUVELLES MÉTHODES : EXPORT PDF
-        // ══════════════════════════════════════════════════════════
-
-        /// <summary>
-        /// Exporte une commune en PDF (enregistrement uniquement)
-        /// </summary>
-        private async System.Threading.Tasks.Task ExportCommuneToPdfAsync(Commune? commune)
+        private async System.Threading.Tasks.Task ExportCommuneToPdfAsync()
         {
-            if (commune == null) return;
+            if (IsNewCommune) return;
 
             IsLoading = true;
             try
             {
-                // Charger les détails de la commune
                 var context = new AppDbContext();
                 var detailCommuneService = new DetailCommuneService(context);
-                var detailCommune = await detailCommuneService.GetDetailCommuneByIdAsync(commune.Id);
+                var detailCommune = await detailCommuneService.GetDetailCommuneByIdAsync(CurrentCommune.Id);
 
-                // Générer le PDF
-                string pdfPath = _communePdfService.GenerateRapportCommune(commune, detailCommune);
+                string pdfPath = _communePdfService.GenerateRapportCommune(CurrentCommune, detailCommune);
 
                 NotificationService.ShowSuccess($"Le rapport PDF a été généré avec succès !\n\nEmplacement : {pdfPath}");
 
-                // Demander si l'utilisateur veut ouvrir le fichier
                 var result = MessageBox.Show(
                     "Voulez-vous ouvrir le fichier PDF maintenant ?",
                     "Ouvrir le PDF",
@@ -332,25 +226,19 @@ namespace Collectivite.ViewModels
             }
         }
 
-        /// <summary>
-        /// Exporte une commune en PDF et ouvre directement pour impression
-        /// </summary>
-        private async System.Threading.Tasks.Task ExportAndPrintCommuneAsync(Commune? commune)
+        private async System.Threading.Tasks.Task ExportAndPrintCommuneAsync()
         {
-            if (commune == null) return;
+            if (IsNewCommune) return;
 
             IsLoading = true;
             try
             {
-                // Charger les détails de la commune
                 var context = new AppDbContext();
                 var detailCommuneService = new DetailCommuneService(context);
-                var detailCommune = await detailCommuneService.GetDetailCommuneByIdAsync(commune.Id);
+                var detailCommune = await detailCommuneService.GetDetailCommuneByIdAsync(CurrentCommune.Id);
 
-                // Générer le PDF
-                string pdfPath = _communePdfService.GenerateRapportCommune(commune, detailCommune);
+                string pdfPath = _communePdfService.GenerateRapportCommune(CurrentCommune, detailCommune);
 
-                // Ouvrir automatiquement le PDF pour impression
                 _communePdfService.OpenPdf(pdfPath);
 
                 NotificationService.ShowSuccess("Le rapport PDF a été généré et ouvert pour impression.");
@@ -367,20 +255,22 @@ namespace Collectivite.ViewModels
 
         private bool CanSaveCommune()
         {
-            return !string.IsNullOrWhiteSpace(DialogCommune.Nom) && !string.IsNullOrWhiteSpace(DialogCommune.Region);
+            return CanEditForm
+                && !string.IsNullOrWhiteSpace(CurrentCommune.Nom)
+                && !string.IsNullOrWhiteSpace(CurrentCommune.Region);
         }
 
         private async System.Threading.Tasks.Task SaveCommuneAsync()
         {
-            if (IsEditMode && !CanEditCommune)
+            if (IsNewCommune && !CanCreateCommune)
             {
-                NotificationService.ShowWarning(_accessDeniedMessage + "\nPermission requise : Commune.Edit");
+                NotificationService.ShowWarning(_accessDeniedMessage + "\nPermission requise : Commune.Create");
                 return;
             }
 
-            if (!IsEditMode && !CanCreateCommune)
+            if (!IsNewCommune && !CanEditCommune)
             {
-                NotificationService.ShowWarning(_accessDeniedMessage + "\nPermission requise : Commune.Create");
+                NotificationService.ShowWarning(_accessDeniedMessage + "\nPermission requise : Commune.Edit");
                 return;
             }
 
@@ -388,13 +278,12 @@ namespace Collectivite.ViewModels
 
             try
             {
-                if (IsEditMode)
+                if (IsNewCommune)
                 {
-                    var (success, message) = await _communeService.UpdateCommuneAsync(DialogCommune);
+                    var (success, message, _) = await _communeService.CreateCommuneAsync(CurrentCommune);
                     if (success)
                     {
-                        NotificationService.ShowSuccess("Commune mise à jour avec succès");
-                        IsDialogOpen = false;
+                        NotificationService.ShowSuccess(message);
                         await LoadCommuneAsync();
                     }
                     else
@@ -404,11 +293,10 @@ namespace Collectivite.ViewModels
                 }
                 else
                 {
-                    var (success, message, _) = await _communeService.CreateCommuneAsync(DialogCommune);
+                    var (success, message) = await _communeService.UpdateCommuneAsync(CurrentCommune);
                     if (success)
                     {
-                        NotificationService.ShowSuccess(message);
-                        IsDialogOpen = false;
+                        NotificationService.ShowSuccess("Commune mise à jour avec succès");
                         await LoadCommuneAsync();
                     }
                     else
@@ -427,53 +315,9 @@ namespace Collectivite.ViewModels
             }
         }
 
-        private void CancelCommune()
-        {
-            IsDialogOpen = false;
-        }
-
-        private async System.Threading.Tasks.Task DeleteCommuneAsync(Commune? commune)
-        {
-            if (commune == null)
-                return;
-
-            if (!CanDeleteCommune)
-            {
-                NotificationService.ShowWarning(_accessDeniedMessage + "\nPermission requise : Commune.Delete");
-                return;
-            }
-
-            var result = MessageBox.Show(
-                $"Êtes-vous sûr de vouloir supprimer la commune {commune.Nom} ?",
-                "Confirmation de suppression",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
-
-            if (result == MessageBoxResult.Yes)
-            {
-                IsLoading = true;
-
-                var (success, message) = await _communeService.DeleteCommuneAsync(commune.Id);
-
-                if (success)
-                {
-                    NotificationService.ShowSuccess(message);
-                    await LoadCommuneAsync();
-                }
-                else
-                {
-                    NotificationService.ShowError(message);
-                }
-
-                IsLoading = false;
-            }
-        }
         #endregion
     }
 
-    // ══════════════════════════════════════════════════════════
-    // ✅ NOUVELLE CLASSE : ITEM POUR LE COMBOBOX
-    // ══════════════════════════════════════════════════════════
     /// <summary>
     /// Classe pour afficher les types de commune avec un libellé personnalisé
     /// </summary>

@@ -26,7 +26,9 @@ namespace Collectivite.Views.Pages
         {
             InitializeComponent();
             var auditService = new AuditService();
-            DataContext = new BudgetLinesViewModel(new BudgetLineService(), authService, auditService);
+            DataContext = new BudgetLinesViewModel(
+                new BudgetLineService(), authService, auditService,
+                BudgetLinesViewModel.BudgetLinesPageContext.CompteGestion);
         }
 
         private void Page_Unloaded(object sender, RoutedEventArgs e)

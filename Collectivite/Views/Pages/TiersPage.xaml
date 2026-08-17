@@ -1218,14 +1218,16 @@
                                             materialDesign:HintAssist.Hint="Type de tiers *"
                                             Style="{StaticResource MaterialDesignOutlinedComboBox}"
                                             ItemsSource="{Binding Source={StaticResource TiersTypeValues}}"
-                                            SelectedItem="{Binding DialogTiers.Type, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                            SelectedItem="{Binding DialogTiers.Type, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                            utils:ComboBoxAutoCompleteBehavior.IsEnabled="True"/>
 
                                             <!-- Catégorie Juridique -->
                                             <ComboBox Grid.Row="0" Grid.Column="2"
                                             materialDesign:HintAssist.Hint="Catégorie juridique *"
                                             Style="{StaticResource MaterialDesignOutlinedComboBox}"
                                             ItemsSource="{Binding Source={StaticResource CategorieJuridiqueValues}}"
-                                            SelectedItem="{Binding DialogTiers.Categorie, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                            SelectedItem="{Binding DialogTiers.Categorie, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                            utils:ComboBoxAutoCompleteBehavior.IsEnabled="True"/>
 
                                             <!-- Email -->
                                             <TextBox Grid.Row="2" Grid.Column="0"
@@ -1716,27 +1718,12 @@
                                 <ComboBox materialDesign:HintAssist.Hint="Pays *"
                                 materialDesign:HintAssist.IsFloating="True"
                                 Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                ItemsSource="{Binding PaysDisponibles}"
                                 Text="{Binding DialogCompte.Pays, UpdateSourceTrigger=PropertyChanged}"
-                                IsEditable="True"
-                                IsTextSearchEnabled="True"
+                                utils:ComboBoxAutoCompleteBehavior.IsEnabled="True"
                                 FontSize="14"
                                 Height="56"
-                                Margin="0,0,0,20">
-                                    <ComboBoxItem Content="Guinée"/>
-                                    <ComboBoxItem Content="France"/>
-                                    <ComboBoxItem Content="Sénégal"/>
-                                    <ComboBoxItem Content="Mali"/>
-                                    <ComboBoxItem Content="Côte d'Ivoire"/>
-                                    <ComboBoxItem Content="Burkina Faso"/>
-                                    <ComboBoxItem Content="Niger"/>
-                                    <ComboBoxItem Content="Bénin"/>
-                                    <ComboBoxItem Content="Togo"/>
-                                    <ComboBoxItem Content="Ghana"/>
-                                    <ComboBoxItem Content="Cameroun"/>
-                                    <ComboBoxItem Content="Belgique"/>
-                                    <ComboBoxItem Content="Suisse"/>
-                                    <ComboBoxItem Content="Canada"/>
-                                </ComboBox>
+                                Margin="0,0,0,20"/>
 
                                 <!-- Information IBAN -->
                                 <Border Background="#FFF8E1"

@@ -226,6 +226,7 @@
                                   Style="{StaticResource MaterialDesignOutlinedComboBox}"
                                   ItemsSource="{Binding MoisList}"
                                   SelectedItem="{Binding FiltreMois}"
+                                  utils:ComboBoxAutoCompleteBehavior.IsEnabled="True"
                                   Margin="0,0,0,15">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
@@ -243,6 +244,7 @@
                                   SelectedValue="{Binding FiltreEngagementId}"
                                   SelectedValuePath="Id"
                                   DisplayMemberPath="Objet"
+                                  utils:ComboBoxAutoCompleteBehavior.IsEnabled="True"
                                   Margin="0,0,0,15"/>
 
                         <!-- Montant minimum -->
@@ -316,7 +318,27 @@
                           CanUserAddRows="False"
                           IsReadOnly="True"
                           SelectionMode="Single"
+                          RowHeight="52"
+                          GridLinesVisibility="Horizontal"
+                          HorizontalGridLinesBrush="{StaticResource AppBorderBrush}"
+                          AlternationCount="2"
                           materialDesign:DataGridAssist.CellPadding="13 8 8 8">
+
+                    <DataGrid.RowStyle>
+                        <Style TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
+                            <Style.Triggers>
+                                <Trigger Property="ItemsControl.AlternationIndex" Value="1">
+                                    <Setter Property="Background" Value="{StaticResource AppPageBackgroundBrush}"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGrid.RowStyle>
+                    <DataGrid.ColumnHeaderStyle>
+                        <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                            <Setter Property="Foreground" Value="{StaticResource AppMutedTextBrush}"/>
+                        </Style>
+                    </DataGrid.ColumnHeaderStyle>
 
                     <DataGrid.Columns>
                         <!-- Numéro de mandat -->

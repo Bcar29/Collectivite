@@ -46,6 +46,11 @@ namespace Collectivite.Services
         public string? RefCheque { get; set; }
 
         /// <summary>
+        /// Indique si l'ordre de recette associé est déjà validé (modification/suppression bloquées dans ce cas)
+        /// </summary>
+        public bool EstValide { get; set; }
+
+        /// <summary>
         /// Date formatée pour l'affichage
         /// </summary>
         public string DateOrdreFormatee => DateOrdre.ToString("dd/MM/yyyy");

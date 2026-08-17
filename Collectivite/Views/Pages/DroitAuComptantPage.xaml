@@ -17,6 +17,7 @@
         <local:ChequeToBoolConverter x:Key="ChequeConverter"/>
         <local:ZeroToVisibleConverter x:Key="ZeroToVisibleConverter"/>
         <local:ModeReglementToBadgeColorConverter x:Key="ModeReglementToBadgeColorConverter"/>
+        <local:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVis"/>
     </Page.Resources>
 
     <materialDesign:DialogHost Identifier="DroitAuComptantDialog" 
@@ -74,6 +75,7 @@
                                       SelectedItem="{Binding SelectedImputation}"
                                       DisplayMemberPath="DisplayText"
                                       IsEnabled="{Binding IsCreationMode}"
+                                      local:ComboBoxAutoCompleteBehavior.IsEnabled="True"
                                       Margin="0,0,0,20"/>
 
                             <!-- Section Informations -->
@@ -111,6 +113,7 @@
                                       ItemsSource="{Binding TiersList}"
                                       SelectedItem="{Binding SelectedTiers}"
                                       DisplayMemberPath="NomComplet"
+                                      local:ComboBoxAutoCompleteBehavior.IsEnabled="True"
                                       Margin="0,0,0,15"/>
 
                             <!-- Motifs -->
@@ -435,6 +438,7 @@
                                       Style="{StaticResource MaterialDesignOutlinedComboBox}"
                                       ItemsSource="{Binding ModesReglementFiltre}"
                                       SelectedItem="{Binding FiltreModeReglement}"
+                                      local:ComboBoxAutoCompleteBehavior.IsEnabled="True"
                                       Height="45"/>
 
                             <!-- Boutons -->
@@ -592,25 +596,27 @@
                                                                              Foreground="#1976D2"/>
                                                 </Button>
 
-                                                <!-- Bouton Modifier -->
+                                                <!-- Bouton Modifier (masqué si l'ordre est déjà validé) -->
                                                 <Button Style="{StaticResource MaterialDesignIconButton}"
                                                         Width="36" Height="36"
                                                         ToolTip="Modifier"
+                                                        Visibility="{Binding EstValide, Converter={StaticResource InverseBoolToVis}}"
                                                         Command="{Binding DataContext.ModifierCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                         CommandParameter="{Binding}">
-                                                    <materialDesign:PackIcon Kind="Pencil" 
-                                                                             Width="20" Height="20" 
+                                                    <materialDesign:PackIcon Kind="Pencil"
+                                                                             Width="20" Height="20"
                                                                              Foreground="#FF9800"/>
                                                 </Button>
 
-                                                <!-- Bouton Supprimer -->
+                                                <!-- Bouton Supprimer (masqué si l'ordre est déjà validé) -->
                                                 <Button Style="{StaticResource MaterialDesignIconButton}"
                                                         Width="36" Height="36"
                                                         ToolTip="Supprimer"
+                                                        Visibility="{Binding EstValide, Converter={StaticResource InverseBoolToVis}}"
                                                         Command="{Binding DataContext.SupprimerCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                         CommandParameter="{Binding}">
-                                                    <materialDesign:PackIcon Kind="Delete" 
-                                                                             Width="20" Height="20" 
+                                                    <materialDesign:PackIcon Kind="Delete"
+                                                                             Width="20" Height="20"
                                                                              Foreground="#F44336"/>
                                                 </Button>
                                             </StackPanel>

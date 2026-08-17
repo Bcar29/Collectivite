@@ -5,7 +5,7 @@
       xmlns:models="clr-namespace:Collectivite.Models"
       xmlns:utils="clr-namespace:Collectivite.Utils"
       xmlns:controls="clr-namespace:Collectivite.Views.Controls"
-      Background="#F5F5F5"
+      Background="{StaticResource AppPageBackgroundBrush}"
       Title="Gestion des Comptes comptable">
 
     <Page.Resources>
@@ -58,7 +58,7 @@
                         <materialDesign:PackIcon Kind="Calculator" 
                                        Width="32" 
                                        Height="32"
-                                       Foreground="#1976D2"
+                                       Foreground="{StaticResource AppPrimaryBrush}"
                                        VerticalAlignment="Center"/>
                         <TextBlock Text="Gestion des Comptes Comptables" 
                          FontSize="24"
@@ -238,7 +238,7 @@
                                                         CommandParameter="{Binding}"
                                                         IsEnabled="{Binding DataContext.CanEditCompteComptable, RelativeSource={RelativeSource AncestorType=Page}}">
                                                     <StackPanel Orientation="Horizontal">
-                                                        <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2" Margin="0,0,10,0"/>
+                                                        <materialDesign:PackIcon Kind="Pencil" Foreground="{StaticResource AppPrimaryBrush}" Margin="0,0,10,0"/>
                                                         <TextBlock Text="Modifier"/>
                                                     </StackPanel>
                                                 </Button>
@@ -249,7 +249,7 @@
                                                         CommandParameter="{Binding}"
                                                         IsEnabled="{Binding DataContext.CanDeleteCompteComptable, RelativeSource={RelativeSource AncestorType=Page}}">
                                                     <StackPanel Orientation="Horizontal">
-                                                        <materialDesign:PackIcon Kind="Delete" Foreground="#F44336" Margin="0,0,10,0"/>
+                                                        <materialDesign:PackIcon Kind="Delete" Foreground="{StaticResource AppDangerBrush}" Margin="0,0,10,0"/>
                                                         <TextBlock Text="Supprimer"/>
                                                     </StackPanel>
                                                 </Button>
@@ -288,7 +288,7 @@
                         <materialDesign:PackIcon Kind="Calculator" 
                                         Width="24" 
                                         Height="24"
-                                        Foreground="#1976D2"
+                                        Foreground="{StaticResource AppPrimaryBrush}"
                                         VerticalAlignment="Center"
                                         Margin="0,0,10,0"/>
                         <TextBlock Text="{Binding DialogTitle}"
@@ -393,15 +393,14 @@
                                    FontWeight="SemiBold"
                                    Margin="0,0,0,5"/>
 
-                        <ComboBox 
+                        <ComboBox
                                     materialDesign:HintAssist.Hint="Rechercher ou saisir un code"
                                     Style="{StaticResource MaterialDesignOutlinedComboBox}"
 
                                     ItemsSource="{Binding NomenclaturesDisponibles}"
                                     SelectedItem="{Binding NommenclatureSelectionnee}"
-                                    IsEditable="True"
-                                    IsTextSearchEnabled="True"
-                                    TextSearch.TextPath="CodeNomenclature"
+                                    utils:ComboBoxAutoCompleteBehavior.IsEnabled="True"
+                                    utils:ComboBoxAutoCompleteBehavior.FilterMemberPath="CodeNomenclature"
                                     Margin="0,0,0,5"
                                     FontSize="13">
 
@@ -413,7 +412,7 @@
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
 
-                                        <Border Background="#E3F2FD"
+                                        <Border Background="{StaticResource AppPrimaryLightBrush}"
                                             CornerRadius="3"
                                             Padding="8,4"
                                             Margin="0,0,10,0"
@@ -421,7 +420,7 @@
                                             <TextBlock Text="{Binding CodeNomenclature}" 
                                                FontWeight="Bold"
                                                FontSize="12"
-                                               Foreground="#1976D2"/>
+                                               Foreground="{StaticResource AppPrimaryBrush}"/>
                                         </Border>
 
                                         <TextBlock Text="{Binding Intitule}" 
@@ -436,7 +435,7 @@
 
 
                         <!-- Info sur la nomenclature sélectionnée -->
-                        <Border Background="#E8F5E9" 
+                        <Border Background="{StaticResource AppSuccessLightBrush}"
                                 CornerRadius="4"
                                 Padding="10"
                                 Margin="0,5,0,15"
@@ -446,15 +445,15 @@
                                     <materialDesign:PackIcon Kind="CheckCircle" 
                                                              Width="16" 
                                                              Height="16"
-                                                             Foreground="#4CAF50"
+                                                             Foreground="{StaticResource AppSuccessBrush}"
                                                              VerticalAlignment="Center"
                                                              Margin="0,0,8,0"/>
                                     <TextBlock Text="Nomenclature sélectionnée" 
                                                FontWeight="SemiBold"
                                                FontSize="11"
-                                               Foreground="#2E7D32"/>
+                                               Foreground="{StaticResource AppSuccessBrush}"/>
                                 </StackPanel>
-                                <TextBlock FontSize="10" Foreground="#2E7D32">
+                                <TextBlock FontSize="10" Foreground="{StaticResource AppSuccessBrush}">
                                     <Run Text="Code:"/>
                                     <Run Text="{Binding NommenclatureSelectionnee.code, Mode=OneWay}" 
                                          FontWeight="Bold"/>
@@ -502,6 +501,8 @@
                               ItemsSource="{Binding ComptesParentDisponibles}"
                               SelectedValue="{Binding DialogCompte.ContrePartieId}"
                               SelectedValuePath="Id"
+                              utils:ComboBoxAutoCompleteBehavior.IsEnabled="True"
+                              utils:ComboBoxAutoCompleteBehavior.FilterMemberPath="DisplayLabel"
                               Margin="0,0,0,15">
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
@@ -520,7 +521,7 @@
                     </ComboBox>
 
                     <!-- Info sur la hiérarchie -->
-                    <Border Background="#FFF3E0" 
+                    <Border Background="{StaticResource AppWarningLightBrush}"
                             CornerRadius="4"
                             Padding="10"
                             Margin="0,0,0,15">
@@ -529,17 +530,17 @@
                                 <materialDesign:PackIcon Kind="InformationOutline" 
                                                          Width="18" 
                                                          Height="18"
-                                                         Foreground="#F57C00"
+                                                         Foreground="{StaticResource AppWarningBrush}"
                                                          VerticalAlignment="Top"
                                                          Margin="0,0,8,0"/>
                                 <TextBlock Text="À propos des modes de saisie" 
                                            FontWeight="SemiBold"
                                            FontSize="11"
-                                           Foreground="#E65100"/>
+                                           Foreground="{StaticResource AppWarningBrush}"/>
                             </StackPanel>
                             <TextBlock TextWrapping="Wrap"
                                        FontSize="10"
-                                       Foreground="#E65100"
+                                       Foreground="{StaticResource AppWarningBrush}"
                                        LineHeight="14">
                                 <Run Text="• Mode nomenclature:"/>
                                 <Run Text="Le compte sera lié à une nomenclature budgétaire. L'intitulé se remplit automatiquement."/>

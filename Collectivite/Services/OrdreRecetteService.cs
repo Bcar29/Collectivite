@@ -488,6 +488,39 @@ namespace Collectivite.Services
             await context.SaveChangesAsync();
         }
 
+        /// <summary>
+        /// Applique le prélèvement de 60% sur le MontantEntreSortie des lignes de prélèvement
+        /// (662 en dépense fonctionnement, 110 en recette investissement) lorsqu'un encaissement
+        /// est réalisé sur une ligne de recette de fonctionnement. Le montant à prendre en compte
+        /// est le montant réellement encaissé, pas le montant total de l'ordre.
+        /// </summary>
+        public static async Task AppliquerPrelevementEntreSortieAsync(AppDbContext context, BudgetLine budgetLine, decimal montantEncaisse)
+        {
+            if (budgetLine.Nommenclature == null)
+                await context.Entry(budgetLine).Reference(b => b.Nommenclature).LoadAsync();
+
+            if (budgetLine.Nommenclature?.Nature != NatureType.Recette || budgetLine.Nommenclature?.Section != SectionType.Fonctionnement)
+                return;
+
+            var n110 = await context.BudgetLines
+                .FirstOrDefaultAsync(n => n.Nommenclature.Article == "110" && n.BudgetPrimitifId == budgetLine.BudgetPrimitifId);
+
+            var n662 = await context.BudgetLines
+                .FirstOrDefaultAsync(n => n.Nommenclature.Article == "662" && n.BudgetPrimitifId == budgetLine.BudgetPrimitifId);
+
+            if (n110 != null)
+            {
+                n110.MontantEntreSortie += montantEncaisse * 0.6m;
+                await RecalculateEntreSortie(context, n110.NommenclatureId, n110.BudgetPrimitifId);
+            }
+
+            if (n662 != null)
+            {
+                n662.MontantEntreSortie += montantEncaisse * 0.6m;
+                await RecalculateEntreSortie(context, n662.NommenclatureId, n662.BudgetPrimitifId);
+            }
+        }
+
 
         #endregion
 

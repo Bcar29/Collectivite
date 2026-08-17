@@ -521,11 +521,10 @@ namespace Collectivite.ViewModels
 
                 if (sectionLines.Any())
                 {
-                    // Titre de section
-                    Paragraph sectionTitle = new Paragraph(sections[i], headerFont);
-                    sectionTitle.SpacingBefore = 15;
-                    sectionTitle.SpacingAfter = 10;
-                    document.Add(sectionTitle);
+                    if (i > 0) document.NewPage();
+
+                    // Bannière de section (cohérente avec les autres exports du module)
+                    PdfHeaderHelper.AjouterBanniereSection(document, sections[i]);
 
                     // Table
                     PdfPTable table = new PdfPTable(3) { WidthPercentage = 100 };

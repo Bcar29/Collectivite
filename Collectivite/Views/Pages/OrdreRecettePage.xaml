@@ -217,7 +217,8 @@
                                       ItemsSource="{Binding Exercices}"
                                       SelectedValue="{Binding FilterExerciceId}"
                                       SelectedValuePath="Id"
-                                      DisplayMemberPath="Libelle"/>
+                                      DisplayMemberPath="Libelle"
+                                      utils:ComboBoxAutoCompleteBehavior.IsEnabled="True"/>
 
                             <!-- Commune -->
                             <ComboBox Grid.Row="0" Grid.Column="2"
@@ -226,7 +227,8 @@
                                       ItemsSource="{Binding Communes}"
                                       SelectedValue="{Binding FilterCommuneId}"
                                       SelectedValuePath="Id"
-                                      DisplayMemberPath="Nom"/>
+                                      DisplayMemberPath="Nom"
+                                      utils:ComboBoxAutoCompleteBehavior.IsEnabled="True"/>
 
                             <!-- Tiers -->
                             <ComboBox Grid.Row="0" Grid.Column="4"
@@ -235,7 +237,8 @@
                                       ItemsSource="{Binding TiersList}"
                                       SelectedValue="{Binding FilterTiersId}"
                                       SelectedValuePath="Id"
-                                      DisplayMemberPath="NomComplet"/>
+                                      DisplayMemberPath="NomComplet"
+                                      utils:ComboBoxAutoCompleteBehavior.IsEnabled="True"/>
 
                             <!-- Date début -->
                             <DatePicker Grid.Row="2" Grid.Column="0"
@@ -295,8 +298,28 @@
                   SelectionMode="Single"
                   HorizontalScrollBarVisibility="Disabled"
                   VerticalScrollBarVisibility="Auto"
+                  RowHeight="52"
+                  GridLinesVisibility="Horizontal"
+                  HorizontalGridLinesBrush="{StaticResource AppBorderBrush}"
+                  AlternationCount="2"
                   materialDesign:DataGridAssist.CellPadding="13 8 8 8"
                   MinWidth="1400">
+
+                        <DataGrid.RowStyle>
+                            <Style TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
+                                <Style.Triggers>
+                                    <Trigger Property="ItemsControl.AlternationIndex" Value="1">
+                                        <Setter Property="Background" Value="{StaticResource AppPageBackgroundBrush}"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.RowStyle>
+                        <DataGrid.ColumnHeaderStyle>
+                            <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                <Setter Property="Foreground" Value="{StaticResource AppMutedTextBrush}"/>
+                            </Style>
+                        </DataGrid.ColumnHeaderStyle>
 
                         <DataGrid.Columns>
                             <!-- Numéro -->

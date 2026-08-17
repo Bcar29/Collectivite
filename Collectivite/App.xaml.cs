@@ -3,7 +3,9 @@ using Collectivite.Services;
 using Collectivite.Utils;
 using Collectivite.Views;
 using System;
+using System.IO;
 using System.Windows;
+using System.Windows.Threading;
 
 namespace Collectivite
 {
@@ -12,8 +14,40 @@ namespace Collectivite
     /// </summary>
     public partial class App : Application
     {
+        private static readonly string CrashLogPath = Path.Combine(Path.GetTempPath(), "collectivite_crash.log");
+
+        private static void LogCrash(string source, Exception ex)
+        {
+            try
+            {
+                File.AppendAllText(CrashLogPath,
+                    $"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff} | {source}{Environment.NewLine}{ex}{Environment.NewLine}{new string('=', 80)}{Environment.NewLine}");
+            }
+            catch
+            {
+                // ignorer les erreurs d'écriture de log
+            }
+        }
+
         protected override async void OnStartup(StartupEventArgs e)
         {
+            DispatcherUnhandledException += (s, args) =>
+            {
+                LogCrash("DispatcherUnhandledException", args.Exception);
+                MessageBox.Show(
+                    $"Une erreur inattendue est survenue :\n\n{args.Exception.Message}\n\nDétails enregistrés dans :\n{CrashLogPath}",
+                    "Erreur",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                args.Handled = true;
+            };
+
+            AppDomain.CurrentDomain.UnhandledException += (s, args) =>
+            {
+                if (args.ExceptionObject is Exception ex)
+                    LogCrash("AppDomain.UnhandledException", ex);
+            };
+
             base.OnStartup(e);
 
             // Vérification de la configuration du serveur de base de données

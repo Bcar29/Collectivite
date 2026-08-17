@@ -194,6 +194,17 @@ namespace Collectivite.ViewModels
             2 => "#1E88E5",
             _ => "#FFFFFF"
         };
+
+        /// <summary>
+        /// Force la relecture du binding "BudgetLine.MontantPrevu" (mode Tableau) après
+        /// une mise à jour en mémoire, sans reconstruire toute la hiérarchie affichée.
+        /// Appelle explicitement la notification héritée de ViewModelBase, car cette
+        /// classe masque localement OnPropertyChanged/PropertyChanged.
+        /// </summary>
+        public void NotifyMontantChanged()
+        {
+            base.OnPropertyChanged(nameof(BudgetLine));
+        }
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -243,6 +254,24 @@ namespace Collectivite.ViewModels
         {
             get => _isLoading;
             set => SetProperty(ref _isLoading, value);
+        }
+
+        // 🆕 Mode de saisie tabulaire (Excel-like) : les cellules "Montant prévu" des
+        // lignes-feuilles deviennent éditables directement dans la grille.
+        private bool _isGridEditMode;
+        public bool IsGridEditMode
+        {
+            get => _isGridEditMode;
+            set
+            {
+                if (SetProperty(ref _isGridEditMode, value))
+                {
+                    // Recharge l'onglet courant pour rebasculer la source de la hiérarchie
+                    // (arbre complet des nomenclatures en mode Tableau, lignes déjà liées
+                    // uniquement en mode Formulaire).
+                    _ = LoadForSelectedTabAsync();
+                }
+            }
         }
 
         public bool IsBudgetValidated => _budgetPrimitif?.Status == BudgetPrimitif.Statusbudget.VALIDATED;
@@ -591,12 +620,28 @@ namespace Collectivite.ViewModels
         // CONSTRUCTEUR
         // ═══════════════════════════════════════════════════════════
 
-        public BudgetLinesViewModel(BudgetLineService service, AuthService authService, AuditService auditService)
+        /// <summary>
+        /// Distingue la page qui héberge ce ViewModel (les 3 pages Budget Primitif / Compte
+        /// Administratif / Compte Gestion réutilisent exactement le même ViewModel/Service).
+        /// Seule différence de comportement : les lignes créées uniquement via un remaniement
+        /// "ex nihilo" (jamais présentes dans le Budget Primitif d'origine) sont exclues en mode
+        /// BudgetPrimitif, mais incluses pour Compte Administratif / Compte Gestion.
+        /// </summary>
+        public enum BudgetLinesPageContext { BudgetPrimitif, CompteAdministratif, CompteGestion }
+
+        private readonly BudgetLinesPageContext _context;
+
+        public BudgetLinesViewModel(
+            BudgetLineService service,
+            AuthService authService,
+            AuditService auditService,
+            BudgetLinesPageContext context = BudgetLinesPageContext.BudgetPrimitif)
         {
             _service = service;
             _exerciceService = ExerciceService.Instance;
             _authService = authService;
             _auditService = auditService;
+            _context = context;
 
 
             // S'abonner aux changements d'exercice
@@ -933,6 +978,179 @@ namespace Collectivite.ViewModels
                 DisplayedLines.Add(totalRow);
             }
         }
+
+        /// <summary>
+        /// Retire puis reconstruit les lignes de totaux affichées en bas de la grille,
+        /// sans toucher aux lignes de données (pas de perte de scroll/expand).
+        /// </summary>
+        private void RefreshTotalRows()
+        {
+            var existingTotalRows = DisplayedLines.Where(l => l.IsTotalRow).ToList();
+            foreach (var row in existingTotalRows)
+            {
+                DisplayedLines.Remove(row);
+            }
+            AddTotalRowToDisplayedLines();
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // 🆕 MODE TABLEAU (EXCEL-LIKE) : ÉDITION EN PLACE DU MONTANT PRÉVU
+        // ═══════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Enregistre le nouveau montant prévu d'une ligne-feuille saisie directement
+        /// dans la grille (mode Tableau), puis rafraîchit les montants affichés (ligne
+        /// éditée, ancêtres, totaux) sans recharger toute la hiérarchie - ce qui
+        /// préserve le défilement et l'état plié/déplié en cours de saisie.
+        /// </summary>
+        public async Task CommitLeafMontantAsync(BudgetLineHierarchyViewModel line, decimal newMontant)
+        {
+            if (line.HasChildren || line.IsTotalRow) return;
+
+            if (!CanModifyBudget)
+            {
+                NotificationService.ShowWarning("Ce budget est validé et ne peut plus être modifié.");
+                line.NotifyMontantChanged();
+                return;
+            }
+
+            if (line.BudgetLine.MontantPrevu == newMontant) return;
+
+            try
+            {
+                int persistedId;
+
+                if (line.BudgetLine.Id == 0)
+                {
+                    // Ligne encore virtuelle (nomenclature jamais saisie) : on la crée.
+                    // CreateBudgetLineAsync gère déjà le transfert 60% (N110/N662) et le
+                    // recalcul des ancêtres, exactement comme pour l'ajout via formulaire.
+                    var created = await _service.CreateBudgetLineAsync(
+                        _budgetPrimitifId,
+                        line.BudgetLine.NommenclatureId,
+                        newMontant);
+                    persistedId = created.Id;
+                }
+                else
+                {
+                    var (success, message, _) = await _service.UpdateBudgetLineAsync(line.BudgetLine.Id, newMontant);
+
+                    if (!success)
+                    {
+                        NotificationService.ShowWarning(message);
+                        line.NotifyMontantChanged();
+                        return;
+                    }
+
+                    persistedId = line.BudgetLine.Id;
+                }
+
+                // Promeut la ligne virtuelle en ligne réelle pour que les saisies
+                // suivantes sur la même cellule passent par la voie Update.
+                line.BudgetLine.Id = persistedId;
+
+                var username = _authService.CurrentUser?.Username ?? "Utilisateur inconnu";
+                await _auditService.LogAsync(
+                    "Prevision modifiée (mode tableau)",
+                    $"{line.BudgetLine.Nommenclature.code()} montant : {newMontant} {username} le {DateTime.Now:dd/MM/yyyy HH:mm}",
+                    username);
+
+                await RefreshAmountsInPlaceAsync();
+
+                // Confirmation visuelle explicite : en mode Tableau, contrairement au
+                // dialogue du mode Formulaire, rien d'autre ne signale la réussite de
+                // l'enregistrement (pas de fermeture de dialog, juste des chiffres qui
+                // changent) - sans ce toast, une saisie réussie et une saisie ignorée
+                // sont indiscernables à l'œil.
+                NotificationService.ShowSuccess(
+                    $"{line.BudgetLine.Nommenclature.code()} enregistré : {newMontant:N2} GNF");
+            }
+            catch (Exception ex)
+            {
+                NotificationService.ShowError($"Erreur lors de la mise à jour : {ex.Message}");
+                line.NotifyMontantChanged();
+            }
+        }
+
+        /// <summary>
+        /// Recharge les montants à jour depuis le serveur (une seule requête plate) et
+        /// les répercute sur les nœuds déjà affichés (montants des lignes-feuilles,
+        /// des chapitres/articles/paragraphes ancêtres, et totaux de la page) - sans
+        /// reconstruire l'arbre ni la collection affichée.
+        /// </summary>
+        private async Task RefreshAmountsInPlaceAsync()
+        {
+            var all = await _service.GetBudgetLinesForBudgetPrimitifAsync(
+                _budgetPrimitifId, includeRemaniementOnlyLines: _context != BudgetLinesPageContext.BudgetPrimitif);
+            // Indexé par NommenclatureId (clé stable) plutôt que par Id : une ligne encore
+            // virtuelle en mode Tableau (Id = 0) vient d'être promue en ligne réelle par
+            // CommitLeafMontantAsync, seul NommenclatureId permet de la retrouver ici.
+            var freshByNomenclatureId = all.ToDictionary(bl => bl.NommenclatureId);
+
+            void PatchNode(BudgetLineHierarchyViewModel node)
+            {
+                if (freshByNomenclatureId.TryGetValue(node.BudgetLine.NommenclatureId, out var fresh))
+                {
+                    node.BudgetLine.Id = fresh.Id;
+                    node.BudgetLine.MontantPrevu = fresh.MontantPrevu;
+                    node.BudgetLine.MontantActu = fresh.MontantActu;
+                    node.NotifyMontantChanged();
+                }
+
+                foreach (var child in node.Children)
+                {
+                    PatchNode(child);
+                }
+            }
+
+            foreach (var root in _fullHierarchy)
+            {
+                PatchNode(root);
+            }
+
+            TotalRecetteFonctionnement = _service.RecetteFonctionnementPrevu(all);
+            TotalRecetteFonctionnementDefinitif = _service.RecetteFonctionnementDefinitif(all);
+            TotalRecetteFonctionnementRealise = _service.RecetteFonctionnementRealise(all);
+            TotalRecetteFonctionnementRecouvre = _service.RecetteFonctionnementEntreSortie(all);
+
+            TotalRecetteInvestissement = _service.RecetteInvestissementPrevu(all);
+            TotalRecetteInvestissementDefinitif = _service.RecetteInvestissementDefinitif(all);
+            TotalRecetteInvestissementRealise = _service.RecetteInvestissementRealise(all);
+            TotalRecetteInvestissementRecouvre = _service.RecetteInvestissementEntreSortie(all);
+
+            TotalRecetteReelsInvestissement = _service.TotalRecetteReelInvestissementPrevu(all);
+            TotalRecetteReelInvestissementDefinitif = _service.TotalRecetteReelInvestissementDefinitif(all);
+            TotalRecetteReelInvestissementRealise = _service.TotalRecetteReelInvestissementRealise(all);
+            TotalRecetteReelInvestissementRecouvre = _service.TotalRecetteReelInvestissementEntreSortie(all);
+
+            TotalGeneralRecettesReels = _service.TotalGeneralRecetteReelPrevu(all);
+            TotalGeneralRecetteReelDefinitif = _service.TotalGeneralRecetteReelDefinitif(all);
+            TotalGeneralRecetteReelsRealise = _service.TotalGeneralRecetteReelRealise(all);
+            TotalGeneralRecetteReelRecouvre = _service.TotalGeneralRecetteReelEntreSortie(all);
+
+            TotalDepenseFonctionnement = _service.DepenseFonctionnementPrevu(all);
+            TotalDepenseFonctionnementDefinitif = _service.DepenseFonctionnementDefinitif(all);
+            TotalDepenseFonctionnementRealise = _service.DepenseFonctionnementRealise(all);
+            TotalDepenseFonctionnementPaye = _service.DepenseFonctionnementEntreSortie(all);
+
+            TotalDepenseReelsFonctionnement = _service.TotalDepenseReelFonctionnementPrevu(all);
+            TotalDepenseReelFonctionnementDefinitif = _service.TotalDepenseReelFonctionnementDefinitif(all);
+            TotalDepenseReelFonctionnementRealise = _service.TotalDepenseReelFonctionnementRealise(all);
+            TotalDepenseReelFonctionnementPaye = _service.TotalDepenseReelFonctionnementEntreSortie(all);
+
+            TotalDepenseInvestissement = _service.DepenseInvestissementPrevu(all);
+            TotalDepenseInvestissementDefinitif = _service.DepenseInvestissementDefinitif(all);
+            TotalDepenseInvestissementRealise = _service.DepenseInvestissementRealise(all);
+            TotalDepenseInvestissementPaye = _service.DepenseInvestissementEntreSortie(all);
+
+            TotalGeneralDepensesReels = _service.TotalGeneralDepenseReelPrevu(all);
+            TotalGeneralDepenseReelDefinitif = _service.TotalGeneralDepenseReelDefinitif(all);
+            TotalGeneralDepenseReelRealise = _service.TotalGeneralDepenseReelRealise(all);
+            TotalGeneralDepenseReelPaye = _service.TotalGeneralDepenseReelEntreSortie(all);
+
+            RefreshTotalRows();
+        }
+
         // ═══════════════════════════════════════════════════════════
         // GESTION DU CHANGEMENT D'EXERCICE
         // ═══════════════════════════════════════════════════════════
@@ -1005,6 +1223,20 @@ namespace Collectivite.ViewModels
 
                 OnPropertyChanged(nameof(IsBudgetValidated));
                 OnPropertyChanged(nameof(CanModifyBudget));
+
+                // Le budget vient de devenir non modifiable (validé, ou plus de budget du
+                // tout pour l'exercice) : on repasse en mode Formulaire pour ne pas laisser
+                // l'utilisateur face à une grille en lecture seule affichant des centaines
+                // de lignes vides issues de l'arbre complet des nomenclatures.
+                // On modifie le champ directement (sans passer par le setter de la
+                // propriété) pour éviter un rechargement en double : l'appelant
+                // (InitializeAsync / OnExerciceChanged) appelle déjà LoadForSelectedTabAsync
+                // juste après, qui prendra en compte ce mode corrigé.
+                if (!CanModifyBudget && _isGridEditMode)
+                {
+                    _isGridEditMode = false;
+                    OnPropertyChanged(nameof(IsGridEditMode));
+                }
             }
             catch (Exception ex)
             {
@@ -1041,7 +1273,8 @@ namespace Collectivite.ViewModels
                 }
 
                 var filter = TabToFilter(SelectedTabIndex);
-                var all = await _service.GetBudgetLinesForBudgetPrimitifAsync(_budgetPrimitifId);
+                var all = await _service.GetBudgetLinesForBudgetPrimitifAsync(
+                    _budgetPrimitifId, includeRemaniementOnlyLines: _context != BudgetLinesPageContext.BudgetPrimitif);
 
                 // ═══════════════════════════════════════════════════════════
                 // CALCUL DES TOTAUX (4 valeurs par catégorie: Prévu, Définitif, Réalisé, EntreSortie)
@@ -1095,8 +1328,14 @@ namespace Collectivite.ViewModels
                 TotalGeneralDepenseReelRealise = _service.TotalGeneralDepenseReelRealise(all);
                 TotalGeneralDepenseReelPaye = _service.TotalGeneralDepenseReelEntreSortie(all);
 
-                // Construction de la hiérarchie
-                _fullHierarchy = BuildHierarchy(all, filter.nature, filter.section);
+                // Construction de la hiérarchie : en mode Tableau, on charge l'arbre complet
+                // des nomenclatures (y compris les feuilles jamais saisies) ; en mode
+                // Formulaire, on garde le comportement historique (lignes déjà liées uniquement).
+                var hierarchySource = IsGridEditMode
+                    ? await _service.GetFullBudgetLinesAsync(_budgetPrimitifId, filter.nature, filter.section)
+                    : all;
+
+                _fullHierarchy = BuildHierarchy(hierarchySource, filter.nature, filter.section);
                 RefreshDisplayedLines();
                 AddTotalRowToDisplayedLines();
             }
@@ -1446,13 +1685,13 @@ namespace Collectivite.ViewModels
                 var saveFileDialog = new SaveFileDialog
                 {
                     Filter = "Fichiers PDF|*.pdf",
-                    FileName = $"LignesBudgetaires_{GetTabName(SelectedTabIndex)}_{_exerciceService.CurrentExercice?.Libelle}_{DateTime.Now:yyyyMMdd}.pdf"
+                    FileName = $"BudgetPrimitif_{_exerciceService.CurrentExercice?.Libelle}_{DateTime.Now:yyyyMMdd}.pdf"
                 };
 
                 if (saveFileDialog.ShowDialog() == true)
                 {
                     Commune = commune;
-                    await Task.Run(() => GeneratePdfBudgetPrimitif(saveFileDialog.FileName,Commune));
+                    await GeneratePdfBudgetPrimitifAsync(saveFileDialog.FileName, Commune);
 
                     NotificationService.ShowSuccess("Export PDF réalisé avec succès !");
 
@@ -1487,13 +1726,13 @@ namespace Collectivite.ViewModels
                 var saveFileDialog = new SaveFileDialog
                 {
                     Filter = "Fichiers PDF|*.pdf",
-                    FileName = $"Compte Administratif_{GetTabName(SelectedTabIndex)}_{_exerciceService.CurrentExercice?.Libelle}_{DateTime.Now:yyyyMMdd}.pdf"
+                    FileName = $"CompteAdministratif_{_exerciceService.CurrentExercice?.Libelle}_{DateTime.Now:yyyyMMdd}.pdf"
                 };
 
                 if (saveFileDialog.ShowDialog() == true)
                 {
                     Commune = commune;
-                    await Task.Run(() => GeneratePdfCompteAdmin(saveFileDialog.FileName,Commune));
+                    await GeneratePdfCompteAdminAsync(saveFileDialog.FileName, Commune);
 
                     NotificationService.ShowSuccess("Export PDF réalisé avec succès !");
 
@@ -1528,13 +1767,13 @@ namespace Collectivite.ViewModels
                 var saveFileDialog = new SaveFileDialog
                 {
                     Filter = "Fichiers PDF|*.pdf",
-                    FileName = $"Compte Gestion{GetTabName(SelectedTabIndex)}_{_exerciceService.CurrentExercice?.Libelle}_{DateTime.Now:yyyyMMdd}.pdf"
+                    FileName = $"CompteGestion_{_exerciceService.CurrentExercice?.Libelle}_{DateTime.Now:yyyyMMdd}.pdf"
                 };
 
                 if (saveFileDialog.ShowDialog() == true)
                 {
                     Commune = commune;
-                    await Task.Run(() => GeneratePdfCompteGestion(saveFileDialog.FileName,Commune));
+                    await GeneratePdfCompteGestionAsync(saveFileDialog.FileName, Commune);
 
                     NotificationService.ShowSuccess("Export PDF réalisé avec succès !");
 
@@ -1556,18 +1795,6 @@ namespace Collectivite.ViewModels
             }
         }
 
-        private string GetTabName(int tabIndex)
-        {
-            return tabIndex switch
-            {
-                0 => "Recette_Fonctionnement",
-                1 => "Recette_Investissement",
-                2 => "Depense_Fonctionnement",
-                3 => "Depense_Investissement",
-                _ => "Budget"
-            };
-        }
-
         private string GetTabFullName(int tabIndex)
         {
             return tabIndex switch
@@ -1580,112 +1807,113 @@ namespace Collectivite.ViewModels
             };
         }
 
-        private void GeneratePdfBudgetPrimitif(string filePath,Commune _commune)
+        private async Task GeneratePdfBudgetPrimitifAsync(string filePath, Commune _commune)
         {
-
             // ✅ Format paysage déjà présent : PageSize.A4.Rotate()
             Document document = new Document(PageSize.A4.Rotate(), 25, 25, 30, 30);
             PdfWriter writer = PdfWriter.GetInstance(document, new FileStream(filePath, FileMode.Create));
 
             document.Open();
 
-            // ✅  l'en-tête  !
+            // ✅  l'en-tête officiel (une seule fois pour tout le document)
             PdfHeaderHelper.AjouterEnTeteOfficiel(
                 document,
                 _commune,
                 titre: "BUDGET PRIMITIF",
-                sousTitre: GetTabFullName(SelectedTabIndex),
+                sousTitre: "Toutes les sections",
                 exercice: _exerciceService.CurrentExercice?.Libelle
             );
 
             // Polices
-            var titleFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 18);
             var headerFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12);
             var normalFont = FontFactory.GetFont(FontFactory.HELVETICA, 10);
             var boldFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 10);
 
-            // Titre
-            Paragraph title = new Paragraph($"Lignes Budgétaires - {GetTabFullName(SelectedTabIndex)}", titleFont);
-            title.Alignment = Element.ALIGN_CENTER;
-            title.SpacingAfter = 10;
-            document.Add(title);
-
-            // Sous-titre avec exercice
-            Paragraph subtitle = new Paragraph($"Exercice : {_exerciceService.CurrentExercice?.Libelle ?? "N/A"}", headerFont);
-            subtitle.Alignment = Element.ALIGN_CENTER;
-            subtitle.SpacingAfter = 20;
-            document.Add(subtitle);
-
             // Date d'export
             Paragraph dateExport = new Paragraph($"Généré le {DateTime.Now:dd/MM/yyyy à HH:mm}", normalFont);
             dateExport.Alignment = Element.ALIGN_RIGHT;
-            dateExport.SpacingAfter = 20;
+            dateExport.SpacingAfter = 15;
             document.Add(dateExport);
 
-            // Tableau principal
-            PdfPTable table = new PdfPTable(6) { WidthPercentage = 100 };
-            table.SetWidths(new float[] { 12f, 10f, 10f, 12f, 40f, 16f });
+            // Toutes les lignes budgétaires du budget primitif (non filtrées par onglet)
+            var all = await _service.GetBudgetLinesForBudgetPrimitifAsync(
+                _budgetPrimitifId, includeRemaniementOnlyLines: _context != BudgetLinesPageContext.BudgetPrimitif);
 
-            // En-têtes
-            AddCellWithColor(table, "Chapitre", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
-            AddCellWithColor(table, "Article", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
-            AddCellWithColor(table, "Paragraphe", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
-            AddCellWithColor(table, "Sous-Paragraphe", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
-            AddCellWithColor(table, "Intitulé", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
-            AddCellWithColor(table, "Montant Prévu", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
-
-            // Données hiérarchiques
-            var flatList = FlattenHierarchy(_fullHierarchy);
-            foreach (var item in flatList)
+            // ═══ Une section par onglet : Recette Fonct./Invest., Dépense Fonct./Invest. ═══
+            for (int tabIndex = 0; tabIndex <= 3; tabIndex++)
             {
-                // Déterminer la couleur de fond selon le niveau
-                BaseColor bgColor = item.Level switch
+                if (tabIndex > 0) document.NewPage();
+
+                PdfHeaderHelper.AjouterBanniereSection(document, GetTabFullName(tabIndex));
+
+                var filter = TabToFilter(tabIndex);
+                var hierarchy = BuildHierarchy(all, filter.nature, filter.section);
+                var flatList = FlattenHierarchy(hierarchy);
+
+                // Tableau principal
+                PdfPTable table = new PdfPTable(6) { WidthPercentage = 100 };
+                table.SetWidths(new float[] { 12f, 10f, 10f, 12f, 40f, 16f });
+
+                // En-têtes
+                AddCellWithColor(table, "Chapitre", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
+                AddCellWithColor(table, "Article", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
+                AddCellWithColor(table, "Paragraphe", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
+                AddCellWithColor(table, "Sous-Paragraphe", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
+                AddCellWithColor(table, "Intitulé", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
+                AddCellWithColor(table, "Montant Prévu", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
+
+                // Données hiérarchiques
+                foreach (var item in flatList)
                 {
-                    0 => new BaseColor(255, 205, 210), // Rouge clair #FFCDD2
-                    1 => new BaseColor(255, 249, 196), // Jaune clair #FFF9C4
-                    2 => new BaseColor(200, 230, 201), // Vert clair #C8E6C9
-                    _ => BaseColor.WHITE
-                };
+                    // Déterminer la couleur de fond selon le niveau
+                    BaseColor bgColor = item.Level switch
+                    {
+                        0 => new BaseColor(255, 205, 210), // Rouge clair #FFCDD2
+                        1 => new BaseColor(255, 249, 196), // Jaune clair #FFF9C4
+                        2 => new BaseColor(200, 230, 201), // Vert clair #C8E6C9
+                        _ => BaseColor.WHITE
+                    };
 
-                // Police selon le niveau
-                var cellFont = item.Level switch
-                {
-                    0 => boldFont,
-                    1 => boldFont,
-                    2 => normalFont,
-                    _ => normalFont
-                };
+                    // Police selon le niveau
+                    var cellFont = item.Level switch
+                    {
+                        0 => boldFont,
+                        1 => boldFont,
+                        2 => normalFont,
+                        _ => normalFont
+                    };
 
-                // Indentation pour le chapitre
-                string indentation = new string(' ', item.Level * 2);
+                    // Indentation pour le chapitre
+                    string indentation = new string(' ', item.Level * 2);
 
-                AddCellWithColor(table, indentation + (item.BudgetLine.Nommenclature.Chapitre ?? ""), cellFont, bgColor, Element.ALIGN_LEFT);
-                AddCellWithColor(table, item.BudgetLine.Nommenclature.Article ?? "", cellFont, bgColor, Element.ALIGN_LEFT);
-                AddCellWithColor(table, item.BudgetLine.Nommenclature.Paragraphe ?? "", cellFont, bgColor, Element.ALIGN_LEFT);
-                AddCellWithColor(table, item.BudgetLine.Nommenclature.SousParagraphe ?? "", cellFont, bgColor, Element.ALIGN_LEFT);
-                AddCellWithColor(table, item.BudgetLine.Nommenclature.Intitule ?? "", cellFont, bgColor, Element.ALIGN_LEFT);
-                AddCellWithColor(table, $"{item.BudgetLine.MontantPrevu:N0} GNF", cellFont, bgColor, Element.ALIGN_RIGHT);
+                    AddCellWithColor(table, indentation + (item.BudgetLine.Nommenclature.Chapitre ?? ""), cellFont, bgColor, Element.ALIGN_LEFT);
+                    AddCellWithColor(table, item.BudgetLine.Nommenclature.Article ?? "", cellFont, bgColor, Element.ALIGN_LEFT);
+                    AddCellWithColor(table, item.BudgetLine.Nommenclature.Paragraphe ?? "", cellFont, bgColor, Element.ALIGN_LEFT);
+                    AddCellWithColor(table, item.BudgetLine.Nommenclature.SousParagraphe ?? "", cellFont, bgColor, Element.ALIGN_LEFT);
+                    AddCellWithColor(table, item.BudgetLine.Nommenclature.Intitule ?? "", cellFont, bgColor, Element.ALIGN_LEFT);
+                    AddCellWithColor(table, $"{item.BudgetLine.MontantPrevu:N0} GNF", cellFont, bgColor, Element.ALIGN_RIGHT);
+                }
+
+                document.Add(table);
+
+                // Espace avant les totaux
+                document.Add(new Paragraph(" "));
+
+                // Totaux de cette section
+                AddTotalsSection(document, headerFont, boldFont, normalFont, tabIndex);
             }
 
-            document.Add(table);
-
-            // Espace avant les totaux
-            document.Add(new Paragraph(" "));
-
-            // Totaux selon l'onglet
-            AddTotalsSection(document, headerFont, boldFont, normalFont);
-            // ✅ Signatures en une ligne
+            // ✅ Signatures en une ligne (une seule fois, en fin de document)
             PdfHeaderHelper.AjouterSignatures(document, _commune?.NomCommune);
 
             var exerciceCourant = ExerciceService.Instance.CurrentExercice;
             // ✅ Pied de page en une ligne
-            PdfHeaderHelper.AjouterPiedDePage(document, $"Édité le : {DateTime.Now:dd/MM/yyyy à HH:mm}", "Budget Primitif",exerciceCourant.Libelle);
-
+            PdfHeaderHelper.AjouterPiedDePage(document, $"Édité le : {DateTime.Now:dd/MM/yyyy à HH:mm}", "Budget Primitif", exerciceCourant.Libelle);
 
             document.Close();
             writer.Close();
         }
-        private void GeneratePdfCompteAdmin(string filePath, Commune _commune)
+        private async Task GeneratePdfCompteAdminAsync(string filePath, Commune _commune)
         {
             // ✅ Format paysage déjà présent : PageSize.A4.Rotate()
             Document document = new Document(PageSize.A4.Rotate(), 25, 25, 30, 30);
@@ -1693,96 +1921,98 @@ namespace Collectivite.ViewModels
 
             document.Open();
 
-            // ✅  l'en-tête  !
+            // ✅  l'en-tête officiel (une seule fois pour tout le document)
             PdfHeaderHelper.AjouterEnTeteOfficiel(
                 document,
                 _commune,
                 titre: "COMPTE ADMINISTRATIF",
-                sousTitre: GetTabFullName(SelectedTabIndex),
+                sousTitre: "Toutes les sections",
                 exercice: _exerciceService.CurrentExercice?.Libelle
             );
             // Polices
-            var titleFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 18);
             var headerFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12);
             var normalFont = FontFactory.GetFont(FontFactory.HELVETICA, 10);
             var boldFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 10);
 
-            // Titre
-            Paragraph title = new Paragraph($"Compte Administratif - {GetTabFullName(SelectedTabIndex)}", titleFont);
-            title.Alignment = Element.ALIGN_CENTER;
-            title.SpacingAfter = 10;
-            document.Add(title);
-
-            // Sous-titre avec exercice
-            Paragraph subtitle = new Paragraph($"Exercice : {_exerciceService.CurrentExercice?.Libelle ?? "N/A"}", headerFont);
-            subtitle.Alignment = Element.ALIGN_CENTER;
-            subtitle.SpacingAfter = 20;
-            document.Add(subtitle);
-
             // Date d'export
             Paragraph dateExport = new Paragraph($"Généré le {DateTime.Now:dd/MM/yyyy à HH:mm}", normalFont);
             dateExport.Alignment = Element.ALIGN_RIGHT;
-            dateExport.SpacingAfter = 20;
+            dateExport.SpacingAfter = 15;
             document.Add(dateExport);
 
-            // Tableau principal
-            PdfPTable table = new PdfPTable(9) { WidthPercentage = 100 };
-            table.SetWidths(new float[] { 10f, 8f, 8f, 10f, 30f, 12f, 12f, 10f, 12f });
+            // Toutes les lignes budgétaires du budget primitif (non filtrées par onglet)
+            var all = await _service.GetBudgetLinesForBudgetPrimitifAsync(
+                _budgetPrimitifId, includeRemaniementOnlyLines: _context != BudgetLinesPageContext.BudgetPrimitif);
 
-            // En-têtes
-            AddCellWithColor(table, "Chapitre", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
-            AddCellWithColor(table, "Article", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
-            AddCellWithColor(table, "Paragraphe", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
-            AddCellWithColor(table, "Sous-Paragraphe", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
-            AddCellWithColor(table, "Intitulé", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
-            AddCellWithColor(table, "Montant Prévu", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
-            AddCellWithColor(table, "Montant Réalisé", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
-            AddCellWithColor(table, "Taux Réalisation", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
-            AddCellWithColor(table, "Reste Réalisé", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
-
-            // Données hiérarchiques
-            var flatList = FlattenHierarchy(_fullHierarchy);
-            foreach (var item in flatList)
+            // ═══ Une section par onglet : Recette Fonct./Invest., Dépense Fonct./Invest. ═══
+            for (int tabIndex = 0; tabIndex <= 3; tabIndex++)
             {
-                // Déterminer la couleur de fond selon le niveau
-                BaseColor bgColor = item.Level switch
+                if (tabIndex > 0) document.NewPage();
+
+                PdfHeaderHelper.AjouterBanniereSection(document, GetTabFullName(tabIndex));
+
+                var filter = TabToFilter(tabIndex);
+                var hierarchy = BuildHierarchy(all, filter.nature, filter.section);
+                var flatList = FlattenHierarchy(hierarchy);
+
+                // Tableau principal
+                PdfPTable table = new PdfPTable(9) { WidthPercentage = 100 };
+                table.SetWidths(new float[] { 10f, 8f, 8f, 10f, 30f, 12f, 12f, 10f, 12f });
+
+                // En-têtes
+                AddCellWithColor(table, "Chapitre", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
+                AddCellWithColor(table, "Article", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
+                AddCellWithColor(table, "Paragraphe", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
+                AddCellWithColor(table, "Sous-Paragraphe", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
+                AddCellWithColor(table, "Intitulé", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
+                AddCellWithColor(table, "Montant Prévu", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
+                AddCellWithColor(table, "Montant Réalisé", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
+                AddCellWithColor(table, "Taux Réalisation", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
+                AddCellWithColor(table, "Reste Réalisé", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
+
+                // Données hiérarchiques
+                foreach (var item in flatList)
                 {
-                    0 => new BaseColor(255, 205, 210), // Rouge clair #FFCDD2
-                    1 => new BaseColor(255, 249, 196), // Jaune clair #FFF9C4
-                    2 => new BaseColor(200, 230, 201), // Vert clair #C8E6C9
-                    _ => BaseColor.WHITE
-                };
+                    // Déterminer la couleur de fond selon le niveau
+                    BaseColor bgColor = item.Level switch
+                    {
+                        0 => new BaseColor(255, 205, 210), // Rouge clair #FFCDD2
+                        1 => new BaseColor(255, 249, 196), // Jaune clair #FFF9C4
+                        2 => new BaseColor(200, 230, 201), // Vert clair #C8E6C9
+                        _ => BaseColor.WHITE
+                    };
 
-                // Police selon le niveau
-                var cellFont = item.Level switch
-                {
-                    0 => boldFont,
-                    1 => boldFont,
-                    2 => normalFont,
-                    _ => normalFont
-                };
+                    // Police selon le niveau
+                    var cellFont = item.Level switch
+                    {
+                        0 => boldFont,
+                        1 => boldFont,
+                        2 => normalFont,
+                        _ => normalFont
+                    };
 
-                // Indentation pour le chapitre
-                string indentation = new string(' ', item.Level * 2);
+                    // Indentation pour le chapitre
+                    string indentation = new string(' ', item.Level * 2);
 
-                AddCellWithColor(table, indentation + (item.BudgetLine.Nommenclature.Chapitre ?? ""), cellFont, bgColor, Element.ALIGN_LEFT);
-                AddCellWithColor(table, item.BudgetLine.Nommenclature.Article ?? "", cellFont, bgColor, Element.ALIGN_LEFT);
-                AddCellWithColor(table, item.BudgetLine.Nommenclature.Paragraphe ?? "", cellFont, bgColor, Element.ALIGN_LEFT);
-                AddCellWithColor(table, item.BudgetLine.Nommenclature.SousParagraphe ?? "", cellFont, bgColor, Element.ALIGN_LEFT);
-                AddCellWithColor(table, item.BudgetLine.Nommenclature.Intitule ?? "", cellFont, bgColor, Element.ALIGN_LEFT);
-                AddCellWithColor(table, $"{item.BudgetLine.MontantDefinitif:N2} GNF", cellFont, bgColor, Element.ALIGN_RIGHT);
-                AddCellWithColor(table, $"{item.BudgetLine.MontantRealise:N2} GNF", cellFont, bgColor, Element.ALIGN_RIGHT);
-                AddCellWithColor(table, $"{item.BudgetLine.TauxRealisation:N2} %", cellFont, bgColor, Element.ALIGN_RIGHT);
-                AddCellWithColor(table, $"{item.BudgetLine.ResteRealise:N2} GNF", cellFont, bgColor, Element.ALIGN_RIGHT);
+                    AddCellWithColor(table, indentation + (item.BudgetLine.Nommenclature.Chapitre ?? ""), cellFont, bgColor, Element.ALIGN_LEFT);
+                    AddCellWithColor(table, item.BudgetLine.Nommenclature.Article ?? "", cellFont, bgColor, Element.ALIGN_LEFT);
+                    AddCellWithColor(table, item.BudgetLine.Nommenclature.Paragraphe ?? "", cellFont, bgColor, Element.ALIGN_LEFT);
+                    AddCellWithColor(table, item.BudgetLine.Nommenclature.SousParagraphe ?? "", cellFont, bgColor, Element.ALIGN_LEFT);
+                    AddCellWithColor(table, item.BudgetLine.Nommenclature.Intitule ?? "", cellFont, bgColor, Element.ALIGN_LEFT);
+                    AddCellWithColor(table, $"{item.BudgetLine.MontantDefinitif:N2} GNF", cellFont, bgColor, Element.ALIGN_RIGHT);
+                    AddCellWithColor(table, $"{item.BudgetLine.MontantRealise:N2} GNF", cellFont, bgColor, Element.ALIGN_RIGHT);
+                    AddCellWithColor(table, $"{item.BudgetLine.TauxRealisation:N2} %", cellFont, bgColor, Element.ALIGN_RIGHT);
+                    AddCellWithColor(table, $"{item.BudgetLine.ResteRealise:N2} GNF", cellFont, bgColor, Element.ALIGN_RIGHT);
+                }
+
+                document.Add(table);
+
+                // Espace avant les totaux
+                document.Add(new Paragraph(" "));
+
+                // Totaux de cette section
+                AddTotalsSectionCompteAdmin(document, headerFont, boldFont, normalFont, tabIndex);
             }
-
-            document.Add(table);
-
-            // Espace avant les totaux
-            document.Add(new Paragraph(" "));
-
-            // Totaux selon l'onglet
-            AddTotalsSectionCompteAdmin(document, headerFont, boldFont, normalFont);
 
             var exerciceCourant = ExerciceService.Instance.CurrentExercice;
             // ✅ Pied de page en une ligne
@@ -1791,7 +2021,7 @@ namespace Collectivite.ViewModels
             document.Close();
             writer.Close();
         }
-        private void GeneratePdfCompteGestion(string filePath, Commune _commune)
+        private async Task GeneratePdfCompteGestionAsync(string filePath, Commune _commune)
         {
             // ✅ Format paysage déjà présent : PageSize.A4.Rotate()
             Document document = new Document(PageSize.A4.Rotate(), 25, 25, 30, 30);
@@ -1799,110 +2029,112 @@ namespace Collectivite.ViewModels
 
             document.Open();
 
-            // ✅  l'en-tête  !
+            // ✅  l'en-tête officiel (une seule fois pour tout le document)
             PdfHeaderHelper.AjouterEnTeteOfficiel(
                 document,
                 _commune,
                 titre: "COMPTE GESTION",
-                sousTitre: GetTabFullName(SelectedTabIndex),
+                sousTitre: "Toutes les sections",
                 exercice: _exerciceService.CurrentExercice?.Libelle
             );
             // Polices
-            var titleFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 18);
             var headerFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12);
             var normalFont = FontFactory.GetFont(FontFactory.HELVETICA, 10);
             var boldFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 10);
 
-            // Titre
-            Paragraph title = new Paragraph($"Compte de Gestion - {GetTabFullName(SelectedTabIndex)}", titleFont);
-            title.Alignment = Element.ALIGN_CENTER;
-            title.SpacingAfter = 10;
-            document.Add(title);
-
-            // Sous-titre avec exercice
-            Paragraph subtitle = new Paragraph($"Exercice : {_exerciceService.CurrentExercice?.Libelle ?? "N/A"}", headerFont);
-            subtitle.Alignment = Element.ALIGN_CENTER;
-            subtitle.SpacingAfter = 20;
-            document.Add(subtitle);
-
             // Date d'export
             Paragraph dateExport = new Paragraph($"Généré le {DateTime.Now:dd/MM/yyyy à HH:mm}", normalFont);
             dateExport.Alignment = Element.ALIGN_RIGHT;
-            dateExport.SpacingAfter = 20;
+            dateExport.SpacingAfter = 15;
             document.Add(dateExport);
 
-            // 🆕 Déterminer si on est en Recette ou Dépense selon l'onglet
-            bool isRecette = SelectedTabIndex == 0 || SelectedTabIndex == 1; // 0=Recette Fonct, 1=Recette Invest
+            // Toutes les lignes budgétaires du budget primitif (non filtrées par onglet)
+            var all = await _service.GetBudgetLinesForBudgetPrimitifAsync(
+                _budgetPrimitifId, includeRemaniementOnlyLines: _context != BudgetLinesPageContext.BudgetPrimitif);
 
-            // Tableau principal
-            PdfPTable table = new PdfPTable(10) { WidthPercentage = 100 };
-            table.SetWidths(new float[] { 10f, 8f, 8f, 10f, 28f, 11f, 11f, 11f, 10f, 11f });
-
-            // 🆕 En-têtes adaptés selon Recette/Dépense
-            AddCellWithColor(table, "Chapitre", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
-            AddCellWithColor(table, "Article", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
-            AddCellWithColor(table, "Paragraphe", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
-            AddCellWithColor(table, "Sous-Paragraphe", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
-            AddCellWithColor(table, "Intitulé", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
-            AddCellWithColor(table, "Montant Prévu", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
-            AddCellWithColor(table, "Montant Émis", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
-
-            // 🆕 Colonne adaptée : "Montant Recouvré" pour Recette, "Montant Payé" pour Dépense
-            AddCellWithColor(table, isRecette ? "Montant Recouvré" : "Montant Payé",
-                headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
-
-            // 🆕 Colonne adaptée : "Taux Recouvrement" pour Recette, "Taux Paiement" pour Dépense
-            AddCellWithColor(table, isRecette ? "Taux Recouvrement" : "Taux Paiement",
-                headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
-
-            // 🆕 Colonne adaptée : "Reste à Recouvrer" pour Recette, "Reste à Payer" pour Dépense
-            AddCellWithColor(table, isRecette ? "Reste à Recouvrer" : "Reste à Payer",
-                headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
-
-            // Données hiérarchiques
-            var flatList = FlattenHierarchy(_fullHierarchy);
-            foreach (var item in flatList)
+            // ═══ Une section par onglet : Recette Fonct./Invest., Dépense Fonct./Invest. ═══
+            for (int tabIndex = 0; tabIndex <= 3; tabIndex++)
             {
-                // Déterminer la couleur de fond selon le niveau
-                BaseColor bgColor = item.Level switch
+                if (tabIndex > 0) document.NewPage();
+
+                PdfHeaderHelper.AjouterBanniereSection(document, GetTabFullName(tabIndex));
+
+                // 🆕 Déterminer si on est en Recette ou Dépense selon l'onglet
+                bool isRecette = tabIndex == 0 || tabIndex == 1; // 0=Recette Fonct, 1=Recette Invest
+
+                var filter = TabToFilter(tabIndex);
+                var hierarchy = BuildHierarchy(all, filter.nature, filter.section);
+                var flatList = FlattenHierarchy(hierarchy);
+
+                // Tableau principal
+                PdfPTable table = new PdfPTable(10) { WidthPercentage = 100 };
+                table.SetWidths(new float[] { 10f, 8f, 8f, 10f, 28f, 11f, 11f, 11f, 10f, 11f });
+
+                // 🆕 En-têtes adaptés selon Recette/Dépense
+                AddCellWithColor(table, "Chapitre", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
+                AddCellWithColor(table, "Article", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
+                AddCellWithColor(table, "Paragraphe", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
+                AddCellWithColor(table, "Sous-Paragraphe", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
+                AddCellWithColor(table, "Intitulé", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER);
+                AddCellWithColor(table, "Montant Prévu", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
+                AddCellWithColor(table, "Montant Émis", headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
+
+                // 🆕 Colonne adaptée : "Montant Recouvré" pour Recette, "Montant Payé" pour Dépense
+                AddCellWithColor(table, isRecette ? "Montant Recouvré" : "Montant Payé",
+                    headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
+
+                // 🆕 Colonne adaptée : "Taux Recouvrement" pour Recette, "Taux Paiement" pour Dépense
+                AddCellWithColor(table, isRecette ? "Taux Recouvrement" : "Taux Paiement",
+                    headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
+
+                // 🆕 Colonne adaptée : "Reste à Recouvrer" pour Recette, "Reste à Payer" pour Dépense
+                AddCellWithColor(table, isRecette ? "Reste à Recouvrer" : "Reste à Payer",
+                    headerFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
+
+                // Données hiérarchiques
+                foreach (var item in flatList)
                 {
-                    0 => new BaseColor(255, 205, 210), // Rouge clair #FFCDD2
-                    1 => new BaseColor(255, 249, 196), // Jaune clair #FFF9C4
-                    2 => new BaseColor(200, 230, 201), // Vert clair #C8E6C9
-                    _ => BaseColor.WHITE
-                };
+                    // Déterminer la couleur de fond selon le niveau
+                    BaseColor bgColor = item.Level switch
+                    {
+                        0 => new BaseColor(255, 205, 210), // Rouge clair #FFCDD2
+                        1 => new BaseColor(255, 249, 196), // Jaune clair #FFF9C4
+                        2 => new BaseColor(200, 230, 201), // Vert clair #C8E6C9
+                        _ => BaseColor.WHITE
+                    };
 
-                // Police selon le niveau
-                var cellFont = item.Level switch
-                {
-                    0 => boldFont,
-                    1 => boldFont,
-                    2 => normalFont,
-                    _ => normalFont
-                };
+                    // Police selon le niveau
+                    var cellFont = item.Level switch
+                    {
+                        0 => boldFont,
+                        1 => boldFont,
+                        2 => normalFont,
+                        _ => normalFont
+                    };
 
-                // Indentation pour le chapitre
-                string indentation = new string(' ', item.Level * 2);
+                    // Indentation pour le chapitre
+                    string indentation = new string(' ', item.Level * 2);
 
-                AddCellWithColor(table, indentation + (item.BudgetLine.Nommenclature.Chapitre ?? ""), cellFont, bgColor, Element.ALIGN_LEFT);
-                AddCellWithColor(table, item.BudgetLine.Nommenclature.Article ?? "", cellFont, bgColor, Element.ALIGN_LEFT);
-                AddCellWithColor(table, item.BudgetLine.Nommenclature.Paragraphe ?? "", cellFont, bgColor, Element.ALIGN_LEFT);
-                AddCellWithColor(table, item.BudgetLine.Nommenclature.SousParagraphe ?? "", cellFont, bgColor, Element.ALIGN_LEFT);
-                AddCellWithColor(table, item.BudgetLine.Nommenclature.Intitule ?? "", cellFont, bgColor, Element.ALIGN_LEFT);
-                AddCellWithColor(table, $"{item.BudgetLine.MontantDefinitif:N2} GNF", cellFont, bgColor, Element.ALIGN_RIGHT);
-                AddCellWithColor(table, $"{item.BudgetLine.MontantRealise:N2} GNF", cellFont, bgColor, Element.ALIGN_RIGHT);
-                AddCellWithColor(table, $"{item.BudgetLine.MontantEntreSortie:N2} GNF", cellFont, bgColor, Element.ALIGN_RIGHT);
-                AddCellWithColor(table, $"{item.BudgetLine.TauxEntreSortie:N2} %", cellFont, bgColor, Element.ALIGN_RIGHT);
-                AddCellWithColor(table, $"{item.BudgetLine.ResteEntreSortie:N2} GNF", cellFont, bgColor, Element.ALIGN_RIGHT);
+                    AddCellWithColor(table, indentation + (item.BudgetLine.Nommenclature.Chapitre ?? ""), cellFont, bgColor, Element.ALIGN_LEFT);
+                    AddCellWithColor(table, item.BudgetLine.Nommenclature.Article ?? "", cellFont, bgColor, Element.ALIGN_LEFT);
+                    AddCellWithColor(table, item.BudgetLine.Nommenclature.Paragraphe ?? "", cellFont, bgColor, Element.ALIGN_LEFT);
+                    AddCellWithColor(table, item.BudgetLine.Nommenclature.SousParagraphe ?? "", cellFont, bgColor, Element.ALIGN_LEFT);
+                    AddCellWithColor(table, item.BudgetLine.Nommenclature.Intitule ?? "", cellFont, bgColor, Element.ALIGN_LEFT);
+                    AddCellWithColor(table, $"{item.BudgetLine.MontantDefinitif:N2} GNF", cellFont, bgColor, Element.ALIGN_RIGHT);
+                    AddCellWithColor(table, $"{item.BudgetLine.MontantRealise:N2} GNF", cellFont, bgColor, Element.ALIGN_RIGHT);
+                    AddCellWithColor(table, $"{item.BudgetLine.MontantEntreSortie:N2} GNF", cellFont, bgColor, Element.ALIGN_RIGHT);
+                    AddCellWithColor(table, $"{item.BudgetLine.TauxEntreSortie:N2} %", cellFont, bgColor, Element.ALIGN_RIGHT);
+                    AddCellWithColor(table, $"{item.BudgetLine.ResteEntreSortie:N2} GNF", cellFont, bgColor, Element.ALIGN_RIGHT);
+                }
+
+                document.Add(table);
+
+                // Espace avant les totaux
+                document.Add(new Paragraph(" "));
+
+                // Totaux de cette section
+                AddTotalsSectionCompteGestion(document, headerFont, boldFont, normalFont, tabIndex);
             }
-
-            document.Add(table);
-
-            // Espace avant les totaux
-            document.Add(new Paragraph(" "));
-
-            // Totaux selon l'onglet
-            AddTotalsSectionCompteGestion(document, headerFont, boldFont, normalFont);
 
             var exerciceCourant = ExerciceService.Instance.CurrentExercice;
             // ✅ Pied de page en une ligne
@@ -1923,7 +2155,7 @@ namespace Collectivite.ViewModels
             table.AddCell(cell);
         }
 
-        private void AddTotalsSection(Document document, iTextSharp.text.Font headerFont, iTextSharp.text.Font boldFont, iTextSharp.text.Font normalFont)
+        private void AddTotalsSection(Document document, iTextSharp.text.Font headerFont, iTextSharp.text.Font boldFont, iTextSharp.text.Font normalFont, int tabIndex)
         {
             Paragraph totalsTitle = new Paragraph("Totaux", headerFont);
             totalsTitle.SpacingBefore = 15;
@@ -1933,7 +2165,7 @@ namespace Collectivite.ViewModels
             PdfPTable totalsTable = new PdfPTable(2) { WidthPercentage = 60 };
             totalsTable.SetWidths(new float[] { 70f, 30f });
 
-            switch (SelectedTabIndex)
+            switch (tabIndex)
             {
                 case 0: // Recette - Fonctionnement
                     AddCellWithColor(totalsTable, "Total Recettes de Fonctionnement", boldFont, BaseColor.LIGHT_GRAY, Element.ALIGN_LEFT);
@@ -1971,7 +2203,7 @@ namespace Collectivite.ViewModels
             document.Add(totalsTable);
         }
 
-        private void AddTotalsSectionCompteAdmin(Document document, iTextSharp.text.Font headerFont, iTextSharp.text.Font boldFont, iTextSharp.text.Font normalFont)
+        private void AddTotalsSectionCompteAdmin(Document document, iTextSharp.text.Font headerFont, iTextSharp.text.Font boldFont, iTextSharp.text.Font normalFont, int tabIndex)
         {
             Paragraph totalsTitle = new Paragraph("Totaux - Compte Administratif", headerFont);
             totalsTitle.SpacingBefore = 15;
@@ -1988,7 +2220,7 @@ namespace Collectivite.ViewModels
             AddCellWithColor(totalsTable, "Taux (%)", boldFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
             AddCellWithColor(totalsTable, "Reste à Réaliser", boldFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
 
-            switch (SelectedTabIndex)
+            switch (tabIndex)
             {
                 case 0: // Recette - Fonctionnement
                     AddCellWithColor(totalsTable, "Total Recettes de Fonctionnement", boldFont, new BaseColor(200, 230, 201), Element.ALIGN_LEFT);
@@ -2107,7 +2339,7 @@ namespace Collectivite.ViewModels
             document.Add(totalsTable);
         }
 
-        private void AddTotalsSectionCompteGestion(Document document, iTextSharp.text.Font headerFont, iTextSharp.text.Font boldFont, iTextSharp.text.Font normalFont)
+        private void AddTotalsSectionCompteGestion(Document document, iTextSharp.text.Font headerFont, iTextSharp.text.Font boldFont, iTextSharp.text.Font normalFont, int tabIndex)
         {
             Paragraph totalsTitle = new Paragraph("Totaux - Compte de Gestion", headerFont);
             totalsTitle.SpacingBefore = 15;
@@ -2117,7 +2349,7 @@ namespace Collectivite.ViewModels
             PdfPTable totalsTable = new PdfPTable(5) { WidthPercentage = 100 };
             totalsTable.SetWidths(new float[] { 35f, 17f, 17f, 14f, 17f });
 
-            bool isRecette = SelectedTabIndex == 0 || SelectedTabIndex == 1;
+            bool isRecette = tabIndex == 0 || tabIndex == 1;
 
             // En-têtes
             AddCellWithColor(totalsTable, "Description", boldFont, BaseColor.LIGHT_GRAY, Element.ALIGN_LEFT);
@@ -2126,7 +2358,7 @@ namespace Collectivite.ViewModels
             AddCellWithColor(totalsTable, isRecette ? "Taux Recouvrement (%)" : "Taux Paiement (%)", boldFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
             AddCellWithColor(totalsTable, isRecette ? "Reste à Recouvrer" : "Reste à Payer", boldFont, BaseColor.LIGHT_GRAY, Element.ALIGN_RIGHT);
 
-            switch (SelectedTabIndex)
+            switch (tabIndex)
             {
                 case 0: // Recette - Fonctionnement
                     AddCellWithColor(totalsTable, "Total Recettes de Fonctionnement", boldFont, new BaseColor(200, 230, 201), Element.ALIGN_LEFT);
@@ -2269,11 +2501,11 @@ namespace Collectivite.ViewModels
                 }
 
                 // Créer un fichier temporaire
-                string tempFileName = $"BudgetPrimitif_{GetTabName(SelectedTabIndex)}_{_exerciceService.CurrentExercice?.Libelle}_{Guid.NewGuid():N}.pdf";
+                string tempFileName = $"BudgetPrimitif_{_exerciceService.CurrentExercice?.Libelle}_{Guid.NewGuid():N}.pdf";
                 string tempPath = Path.Combine(Path.GetTempPath(), tempFileName);
 
-                // Générer le PDF (utilise Task.Run pour éviter le deadlock WPF)
-                await Task.Run(() => GeneratePdfBudgetPrimitif(tempPath, Commune));
+                // Générer le PDF
+                await GeneratePdfBudgetPrimitifAsync(tempPath, Commune);
 
                 // Ouvrir le PDF avec l'application par défaut
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
@@ -2322,11 +2554,11 @@ namespace Collectivite.ViewModels
                 }
 
                 // Créer un fichier temporaire
-                string tempFileName = $"CompteAdmin_{GetTabName(SelectedTabIndex)}_{_exerciceService.CurrentExercice?.Libelle}_{Guid.NewGuid():N}.pdf";
+                string tempFileName = $"CompteAdmin_{_exerciceService.CurrentExercice?.Libelle}_{Guid.NewGuid():N}.pdf";
                 string tempPath = Path.Combine(Path.GetTempPath(), tempFileName);
 
                 // Générer le PDF
-                await Task.Run(() => GeneratePdfCompteAdmin(tempPath, Commune));
+                await GeneratePdfCompteAdminAsync(tempPath, Commune);
 
                 // Ouvrir le PDF avec l'application par défaut
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
@@ -2374,11 +2606,11 @@ namespace Collectivite.ViewModels
                 }
 
                 // Créer un fichier temporaire
-                string tempFileName = $"CompteGestion_{GetTabName(SelectedTabIndex)}_{_exerciceService.CurrentExercice?.Libelle}_{Guid.NewGuid():N}.pdf";
+                string tempFileName = $"CompteGestion_{_exerciceService.CurrentExercice?.Libelle}_{Guid.NewGuid():N}.pdf";
                 string tempPath = Path.Combine(Path.GetTempPath(), tempFileName);
 
                 // Générer le PDF
-                await Task.Run(() => GeneratePdfCompteGestion(tempPath, Commune));
+                await GeneratePdfCompteGestionAsync(tempPath, Commune);
 
                 // Ouvrir le PDF avec l'application par défaut
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo

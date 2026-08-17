@@ -53,18 +53,67 @@ namespace Collectivite.Services
                 return new List<BudgetLine>();
             }
 
-            return await context.BudgetLines
-                .Where(bl => bl.BudgetPrimitif.Status == BudgetPrimitif.Statusbudget.VALIDATED && bl.BudgetPrimitif.ExerciceId == exerciceService.CurrentExercice.Id)
+            var budgetPrimitif = await context.BudgetsPrimitifs
+                .AsNoTracking()
+                .FirstOrDefaultAsync(bp => bp.Status == BudgetPrimitif.Statusbudget.VALIDATED &&
+                                           bp.ExerciceId == exerciceService.CurrentExercice.Id);
+
+            if (budgetPrimitif == null)
+            {
+                return new List<BudgetLine>();
+            }
+
+            var existing = await context.BudgetLines
+                .Where(bl => bl.BudgetPrimitifId == budgetPrimitif.Id)
                 .Include(bl => bl.Nommenclature)
                 .ThenInclude(n => n.Enfants)
                 .Include(bl => bl.Remaniements)
                 .Include(bl => bl.BudgetPrimitif)
                 .AsNoTracking()
+                .ToListAsync();
+
+            var existingByNomenclatureId = existing.ToDictionary(bl => bl.NommenclatureId);
+
+            var allNomenclatures = await context.Nommenclatures
+                .Include(n => n.Enfants)
+                .AsNoTracking()
+                .ToListAsync();
+
+            // 🆕 Fabriquer une BudgetLine virtuelle (Id = 0) pour toute nomenclature (chapitre,
+            // article, paragraphe ou feuille) qui n'a pas encore de ligne dans ce budget - même
+            // pattern que BudgetLineService.GetFullBudgetLinesAsync (mode Tableau du Budget
+            // Primitif). Nécessaire pour : (1) afficher la hiérarchie complète même si une
+            // feuille n'a jamais été budgétée, (2) permettre de sélectionner cette feuille pour
+            // créer un remaniement "ex nihilo" (ligne totalement nouvelle).
+            var result = new List<BudgetLine>(allNomenclatures.Count);
+            foreach (var n in allNomenclatures)
+            {
+                if (existingByNomenclatureId.TryGetValue(n.Id, out var bl))
+                {
+                    bl.Nommenclature = n;
+                    result.Add(bl);
+                }
+                else
+                {
+                    result.Add(new BudgetLine
+                    {
+                        Id = 0,
+                        BudgetPrimitifId = budgetPrimitif.Id,
+                        NommenclatureId = n.Id,
+                        Nommenclature = n,
+                        BudgetPrimitif = budgetPrimitif,
+                        MontantPrevu = 0,
+                        MontantActu = 0
+                    });
+                }
+            }
+
+            return result
                 .OrderBy(bl => bl.Nommenclature.Chapitre)
                 .ThenBy(bl => bl.Nommenclature.Article)
                 .ThenBy(bl => bl.Nommenclature.Paragraphe)
                 .ThenBy(bl => bl.Nommenclature.SousParagraphe)
-                .ToListAsync();
+                .ToList();
         }
 
         /// <summary>
@@ -184,11 +233,52 @@ namespace Collectivite.Services
             return parentLines;
         }
 
+        /// <summary>
+        /// Crée toute BudgetLine ancêtre manquante (chapitre/article/paragraphe) pour la
+        /// nomenclature donnée, sans modifier le MontantPrevu des ancêtres déjà existants - un
+        /// remaniement ne doit jamais toucher au MontantPrevu, seulement aux Remaniements.
+        /// Nécessaire pour qu'un remaniement "ex nihilo" (nomenclature jamais budgétée) trouve
+        /// bien une ligne parente à chaque niveau lors de la propagation, même si toute la
+        /// branche (chapitre y compris) n'a jamais été budgétée.
+        /// </summary>
+        private async Task EnsureBudgetLineAncestorChainAsync(AppDbContext context, int nommenclatureId, int budgetPrimitifId)
+        {
+            var currentNommenclature = await context.Nommenclatures
+                .Include(n => n.Parent)
+                .FirstOrDefaultAsync(n => n.Id == nommenclatureId);
+
+            while (currentNommenclature?.Parent != null)
+            {
+                var parentId = currentNommenclature.Parent.Id;
+
+                var parentBudgetLine = await context.BudgetLines
+                    .FirstOrDefaultAsync(bl => bl.NommenclatureId == parentId && bl.BudgetPrimitifId == budgetPrimitifId);
+
+                if (parentBudgetLine == null)
+                {
+                    context.BudgetLines.Add(new BudgetLine
+                    {
+                        BudgetPrimitifId = budgetPrimitifId,
+                        NommenclatureId = parentId,
+                        MontantPrevu = 0,
+                        MontantActu = 0,
+                        EstAjouteParRemaniement = true
+                    });
+                    await context.SaveChangesAsync();
+                }
+
+                currentNommenclature = await context.Nommenclatures
+                    .Include(n => n.Parent)
+                    .FirstOrDefaultAsync(n => n.Id == parentId);
+            }
+        }
+
         #endregion
 
         #region Création
 
-        public async Task<(bool Success, string Message, Remaniement? Remaniement)> CreateRemaniementAsync(Remaniement remaniement, TypeRemaniement type)
+        public async Task<(bool Success, string Message, Remaniement? Remaniement)> CreateRemaniementAsync(
+            Remaniement remaniement, TypeRemaniement type, BudgetLine? selectedBudgetLine = null)
         {
             if (!SessionManager.HasPermission("Remaniement.Create"))
                 return (false,
@@ -207,6 +297,36 @@ namespace Collectivite.Services
 
                 try
                 {
+                    // 🔹 Ligne "ex nihilo" : nomenclature jamais budgétée dans le Budget Primitif
+                    // d'origine (ligne virtuelle Id = 0 affichée dans la grille de remaniement).
+                    // On crée la BudgetLine réelle (et ses ancêtres manquants) uniquement
+                    // maintenant, à l'intérieur de la transaction du remaniement, pour qu'un
+                    // échec plus loin annule aussi cette création.
+                    if (remaniement.IdBudgetLine <= 0)
+                    {
+                        if (selectedBudgetLine == null ||
+                            selectedBudgetLine.NommenclatureId <= 0 ||
+                            selectedBudgetLine.BudgetPrimitifId <= 0)
+                            return (false, "La ligne budgétaire est obligatoire.", null);
+
+                        await EnsureBudgetLineAncestorChainAsync(
+                            context, selectedBudgetLine.NommenclatureId, selectedBudgetLine.BudgetPrimitifId);
+
+                        var newLeafLine = new BudgetLine
+                        {
+                            BudgetPrimitifId = selectedBudgetLine.BudgetPrimitifId,
+                            NommenclatureId = selectedBudgetLine.NommenclatureId,
+                            MontantPrevu = 0,
+                            MontantActu = 0,
+                            EstAjouteParRemaniement = true
+                        };
+
+                        context.BudgetLines.Add(newLeafLine);
+                        await context.SaveChangesAsync();
+
+                        remaniement.IdBudgetLine = newLeafLine.Id;
+                    }
+
                     // 🔹 Validations
                     if (remaniement.IdBudgetLine <= 0)
                         return (false, "La ligne budgétaire est obligatoire.", null);
@@ -319,43 +439,59 @@ namespace Collectivite.Services
                                 .FirstOrDefaultAsync(bl => bl.BudgetPrimitifId == budgetLine.BudgetPrimitifId &&
                                                            bl.NommenclatureId == m662.Id);
 
-                            if (budgetLine662 != null)
+                            if (budgetLine662 == null)
                             {
-                                // Remaniement sur la ligne 662
-                                var remaniement662 = new Remaniement
+                                // La ligne 662 n'a jamais été budgétée pour ce budget - on la
+                                // fabrique (même logique que pour une ligne ex nihilo) afin que
+                                // le transfert 60% s'applique aussi dans ce cas.
+                                await EnsureBudgetLineAncestorChainAsync(context, m662.Id, budgetLine.BudgetPrimitifId);
+
+                                budgetLine662 = new BudgetLine
                                 {
-                                    IdBudgetLine = budgetLine662.Id,
+                                    BudgetPrimitifId = budgetLine.BudgetPrimitifId,
+                                    NommenclatureId = m662.Id,
+                                    MontantPrevu = 0,
+                                    MontantActu = 0,
+                                    EstAjouteParRemaniement = true
+                                };
+                                context.BudgetLines.Add(budgetLine662);
+                                await context.SaveChangesAsync();
+                            }
+
+                            // Remaniement sur la ligne 662
+                            var remaniement662 = new Remaniement
+                            {
+                                IdBudgetLine = budgetLine662.Id,
+                                Date = remaniement.Date,
+                                Montant = montant60Pourcent,
+                                Motif = $"[Auto - 60%] {remaniement.Motif.Trim()}",
+                                TypeRemaniement = type
+                            };
+
+                            context.Remaniements.Add(remaniement662);
+                            remaniementsCreated.Add(
+                                $"✅ Ligne 662 (auto) : {m662.Intitule} ({montant60Pourcent:N0} GNF)");
+
+                            // Récupérer les parents de 662 et créer des remaniements
+                            var parents662 = await GetParentBudgetLinesAsync(
+                                context,
+                                m662.Id,
+                                budgetLine.BudgetPrimitifId);
+
+                            foreach (var parent662 in parents662)
+                            {
+                                var parentRemaniement662 = new Remaniement
+                                {
+                                    IdBudgetLine = parent662.Id,
                                     Date = remaniement.Date,
                                     Montant = montant60Pourcent,
-                                    Motif = $"[Auto - 60%] {remaniement.Motif.Trim()}",
+                                    Motif = $"[Auto - 60% - Propagation] {remaniement.Motif.Trim()}",
                                     TypeRemaniement = type
                                 };
 
-                                context.Remaniements.Add(remaniement662);
+                                context.Remaniements.Add(parentRemaniement662);
                                 remaniementsCreated.Add(
-                                    $"✅ Ligne 662 (auto) : {m662.Intitule} ({montant60Pourcent:N0} GNF)");
-
-                                // Récupérer les parents de 662 et créer des remaniements
-                                var parents662 = await GetParentBudgetLinesAsync(
-                                    context,
-                                    m662.Id,
-                                    budgetLine.BudgetPrimitifId);
-
-                                foreach (var parent662 in parents662)
-                                {
-                                    var parentRemaniement662 = new Remaniement
-                                    {
-                                        IdBudgetLine = parent662.Id,
-                                        Date = remaniement.Date,
-                                        Montant = montant60Pourcent,
-                                        Motif = $"[Auto - 60% - Propagation] {remaniement.Motif.Trim()}",
-                                        TypeRemaniement = type
-                                    };
-
-                                    context.Remaniements.Add(parentRemaniement662);
-                                    remaniementsCreated.Add(
-                                        $"✅ Ligne parente 662 (auto) : {parent662.Nommenclature.Intitule} ({montant60Pourcent:N0} GNF)");
-                                }
+                                    $"✅ Ligne parente 662 (auto) : {parent662.Nommenclature.Intitule} ({montant60Pourcent:N0} GNF)");
                             }
                         }
 
@@ -366,43 +502,59 @@ namespace Collectivite.Services
                                 .FirstOrDefaultAsync(bl => bl.BudgetPrimitifId == budgetLine.BudgetPrimitifId &&
                                                            bl.NommenclatureId == m110.Id);
 
-                            if (budgetLine110 != null)
+                            if (budgetLine110 == null)
                             {
-                                // Remaniement sur la ligne 110
-                                var remaniement110 = new Remaniement
+                                // La ligne 110 n'a jamais été budgétée pour ce budget - on la
+                                // fabrique (même logique que pour une ligne ex nihilo) afin que
+                                // le transfert 60% s'applique aussi dans ce cas.
+                                await EnsureBudgetLineAncestorChainAsync(context, m110.Id, budgetLine.BudgetPrimitifId);
+
+                                budgetLine110 = new BudgetLine
                                 {
-                                    IdBudgetLine = budgetLine110.Id,
+                                    BudgetPrimitifId = budgetLine.BudgetPrimitifId,
+                                    NommenclatureId = m110.Id,
+                                    MontantPrevu = 0,
+                                    MontantActu = 0,
+                                    EstAjouteParRemaniement = true
+                                };
+                                context.BudgetLines.Add(budgetLine110);
+                                await context.SaveChangesAsync();
+                            }
+
+                            // Remaniement sur la ligne 110
+                            var remaniement110 = new Remaniement
+                            {
+                                IdBudgetLine = budgetLine110.Id,
+                                Date = remaniement.Date,
+                                Montant = montant60Pourcent,
+                                Motif = $"[Auto - 60%] {remaniement.Motif.Trim()}",
+                                TypeRemaniement = type
+                            };
+
+                            context.Remaniements.Add(remaniement110);
+                            remaniementsCreated.Add(
+                                $"✅ Ligne 110 (auto) : {m110.Intitule} ({montant60Pourcent:N0} GNF)");
+
+                            // Récupérer les parents de 110 et créer des remaniements
+                            var parents110 = await GetParentBudgetLinesAsync(
+                                context,
+                                m110.Id,
+                                budgetLine.BudgetPrimitifId);
+
+                            foreach (var parent110 in parents110)
+                            {
+                                var parentRemaniement110 = new Remaniement
+                                {
+                                    IdBudgetLine = parent110.Id,
                                     Date = remaniement.Date,
                                     Montant = montant60Pourcent,
-                                    Motif = $"[Auto - 60%] {remaniement.Motif.Trim()}",
+                                    Motif = $"[Auto - 60% - Propagation] {remaniement.Motif.Trim()}",
                                     TypeRemaniement = type
                                 };
 
-                                context.Remaniements.Add(remaniement110);
+                                context.Remaniements.Add(parentRemaniement110);
                                 remaniementsCreated.Add(
-                                    $"✅ Ligne 110 (auto) : {m110.Intitule} ({montant60Pourcent:N0} GNF)");
-
-                                // Récupérer les parents de 110 et créer des remaniements
-                                var parents110 = await GetParentBudgetLinesAsync(
-                                    context,
-                                    m110.Id,
-                                    budgetLine.BudgetPrimitifId);
-
-                                foreach (var parent110 in parents110)
-                                {
-                                    var parentRemaniement110 = new Remaniement
-                                    {
-                                        IdBudgetLine = parent110.Id,
-                                        Date = remaniement.Date,
-                                        Montant = montant60Pourcent,
-                                        Motif = $"[Auto - 60% - Propagation] {remaniement.Motif.Trim()}",
-                                        TypeRemaniement = type
-                                    };
-
-                                    context.Remaniements.Add(parentRemaniement110);
-                                    remaniementsCreated.Add(
-                                        $"✅ Ligne parente 110 (auto) : {parent110.Nommenclature.Intitule} ({montant60Pourcent:N0} GNF)");
-                                }
+                                    $"✅ Ligne parente 110 (auto) : {parent110.Nommenclature.Intitule} ({montant60Pourcent:N0} GNF)");
                             }
                         }
 

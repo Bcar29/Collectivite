@@ -1,20 +1,20 @@
-﻿<Page x:Class="Collectivite.Views.Pages.CommunePage"
+<Page x:Class="Collectivite.Views.Pages.CommunePage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-      Background="#F5F5F5"
-      Title="Gestion des Communes">
+      xmlns:utils="clr-namespace:Collectivite.Utils"
+      Language="fr-FR"
+      Background="{StaticResource AppPageBackgroundBrush}"
+      Title="Profil de la Commune">
 
     <Page.Resources>
-        <!-- Converters -->
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <utils:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
     </Page.Resources>
 
     <Grid>
-        <!-- ═══════════════════════════════════════════════════════════
-             OVERLAY DE CHARGEMENT
-             ═══════════════════════════════════════════════════════════ -->
-        <Grid Background="#80000000" 
+        <!-- OVERLAY DE CHARGEMENT -->
+        <Grid Background="#80000000"
               Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"
               Panel.ZIndex="999">
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
@@ -23,7 +23,7 @@
                            IsIndeterminate="True"
                            Width="60"
                            Height="60"/>
-                <TextBlock Text="Chargement..." 
+                <TextBlock Text="Chargement..."
                          Foreground="White"
                          FontSize="16"
                          Margin="0,20,0,0"
@@ -31,427 +31,155 @@
             </StackPanel>
         </Grid>
 
-        <!-- ═══════════════════════════════════════════════════════════
-             CONTENU PRINCIPAL
-             ═══════════════════════════════════════════════════════════ -->
         <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20">
-            <StackPanel>
+            <StackPanel MaxWidth="900" HorizontalAlignment="Stretch">
 
-                <!-- ───────────────────────────────────────────────────
-                     HEADER AVEC BOUTON D'AJOUT
-                     ─────────────────────────────────────────────────── -->
+                <!-- EN-TÊTE -->
                 <Grid Margin="0,0,0,20">
-                    <!-- Titre -->
                     <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="City" 
-                                               Width="32" 
-                                               Height="32"
-                                               Foreground="#1976D2"
-                                               VerticalAlignment="Center"/>
-                        <TextBlock Text="Gestion des Communes" 
-                                 FontSize="24"
-                                 FontWeight="SemiBold"
-                                 Margin="15,0,0,0"
-                                 VerticalAlignment="Center"/>
+                        <materialDesign:PackIcon Kind="City" Style="{StaticResource PageHeaderIconStyle}"/>
+                        <StackPanel Margin="15,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="Profil de la Commune" Style="{StaticResource PageTitleTextStyle}" Margin="0"/>
+                            <TextBlock Text="{Binding PageSubtitle}" Style="{StaticResource SectionSubtitleTextStyle}"/>
+                        </StackPanel>
                     </StackPanel>
 
-                    <!-- Bouton Ajouter -->
-                    <Button Style="{StaticResource MaterialDesignRaisedButton}"
-                            Height="40"
-                            Command="{Binding OppenAddCommuneCommand}"
-                            HorizontalAlignment="Right"
-                            Visibility="{Binding CanCreateCommune, Converter={StaticResource BoolToVis}}">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="Plus" 
-                                                   VerticalAlignment="Center"
-                                                   Margin="0,0,8,0"/>
-                            <TextBlock Text="Nouvelle Commune" 
-                                     VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Height="40"
+                                Margin="0,0,10,0"
+                                Command="{Binding OpenDetailCommuneCommand}"
+                                Visibility="{Binding IsNewCommune, Converter={StaticResource InverseBooleanConverter}}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="InformationOutline" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBlock Text="Détails démographiques" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Height="40"
+                                Margin="0,0,10,0"
+                                Command="{Binding ExportPdfCommand}"
+                                Visibility="{Binding IsNewCommune, Converter={StaticResource InverseBooleanConverter}}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="FilePdfBox" Foreground="{StaticResource AppDangerBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBlock Text="Exporter PDF" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
                 </Grid>
 
-                <!-- ───────────────────────────────────────────────────
-                     DATAGRID DES COMMUNES
-                     ─────────────────────────────────────────────────── -->
-                <materialDesign:Card Padding="0"
-                                   UniformCornerRadius="8">
-                  <Grid>
-                    <DataGrid ItemsSource="{Binding Communes}"
-                              SelectedItem="{Binding SelectedCommune}"
-                              AutoGenerateColumns="False"
-                              CanUserAddRows="False"
-                              CanUserDeleteRows="False"
-                              IsReadOnly="True"
-                              Visibility="{Binding CanViewCommune, Converter={StaticResource BoolToVis}}"
-                              SelectionMode="Single"
-                              materialDesign:DataGridAssist.CellPadding="13 8 8 8"
-                              materialDesign:DataGridAssist.ColumnHeaderPadding="8">
+                <!-- FORMULAIRE PROFIL -->
+                <materialDesign:Card Padding="20" Margin="0,0,0,15" IsEnabled="{Binding CanEditForm}">
+                    <StackPanel>
+                        <TextBlock Text="Identité" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource AppPrimaryBrush}" Margin="0,0,0,15"/>
 
-                        <DataGrid.Columns>
+                        <TextBox materialDesign:HintAssist.Hint="Nom de la commune *"
+                               Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                               Text="{Binding CurrentCommune.Nom, UpdateSourceTrigger=PropertyChanged}"
+                               Margin="0,0,0,15"
+                               MaxLength="200"/>
 
-                            <!-- Nom de la commune -->
-                            <DataGridTextColumn Header="Nom de la Commune" 
-                                              Binding="{Binding Nom}"
-                                              Width="200"
-                                              FontWeight="Medium"/>
+                        <Grid Margin="0,0,0,15">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="15"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
 
-                            <!-- Type de la commune -->
-                            <DataGridTextColumn Header="Type Commune" 
-                                              Binding="{Binding TypCommune}"
-                                              Width="120"
-                                              FontWeight="Medium"/>
+                            <ComboBox Grid.Column="0"
+                                    materialDesign:HintAssist.Hint="Type de commune *"
+                                    Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                    ItemsSource="{Binding TypesCommuneDisponibles}"
+                                    SelectedItem="{Binding SelectedTypeCommuneItem}"
+                                    DisplayMemberPath="Libelle"
+                                    utils:ComboBoxAutoCompleteBehavior.IsEnabled="True"/>
 
-                            <!-- Région de la commune -->
-                            <DataGridTextColumn Header="Région Administrative" 
-                                              Binding="{Binding Region}"
-                                              Width="180"
-                                              FontWeight="Medium"/>
+                            <DatePicker Grid.Column="2"
+                                    materialDesign:HintAssist.Hint="Date de création"
+                                    Style="{StaticResource MaterialDesignOutlinedDatePicker}"
+                                    SelectedDate="{Binding CurrentCommuneDateCreation}"
+                                    Language="fr-FR"
+                                    IsEnabled="{Binding IsNewCommune}"/>
+                        </Grid>
 
-                            <!-- Préfecture de la commune -->
-                            <DataGridTextColumn Header="Préfecture" 
-                                              Binding="{Binding Prefecture}"
-                                              Width="150"
-                                              FontWeight="Medium"/>
+                        <TextBox materialDesign:HintAssist.Hint="Région Administrative *"
+                               Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                               Text="{Binding CurrentCommune.Region, UpdateSourceTrigger=PropertyChanged}"
+                               Margin="0,0,0,15"
+                               MaxLength="200"/>
 
-                            <!-- Distance Chef-Lieu Province -->
-                            <DataGridTemplateColumn Header="Dist. Chef-Lieu Prov." Width="150">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Horizontal">
-                                            <materialDesign:PackIcon Kind="MapMarkerDistance" 
-                                                                   Width="16" 
-                                                                   Height="16"
-                                                                   Foreground="#1976D2"
-                                                                   VerticalAlignment="Center"
-                                                                   Margin="0,0,8,0"/>
-                                            <TextBlock VerticalAlignment="Center">
-                                                <TextBlock.Text>
-                                                    <MultiBinding StringFormat="{}{0:N2} km">
-                                                        <Binding Path="DistanceChefLieuProvince"/>
-                                                    </MultiBinding>
-                                                </TextBlock.Text>
-                                            </TextBlock>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-
-                            <!-- Distance Capitale -->
-                            <DataGridTemplateColumn Header="Dist. Capitale" Width="120">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Horizontal">
-                                            <materialDesign:PackIcon Kind="MapMarkerDistance" 
-                                                                   Width="16" 
-                                                                   Height="16"
-                                                                   Foreground="#F57C00"
-                                                                   VerticalAlignment="Center"
-                                                                   Margin="0,0,8,0"/>
-                                            <TextBlock VerticalAlignment="Center">
-                                                <TextBlock.Text>
-                                                    <MultiBinding StringFormat="{}{0:N2} km">
-                                                        <Binding Path="DistanceCapitale"/>
-                                                    </MultiBinding>
-                                                </TextBlock.Text>
-                                            </TextBlock>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-
-                            <!-- Date de création -->
-                            <DataGridTemplateColumn Header="Date Création" Width="120">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Horizontal">
-                                            <materialDesign:PackIcon Kind="CalendarClock" 
-                                                                   Width="16" 
-                                                                   Height="16"
-                                                                   Foreground="#757575"
-                                                                   VerticalAlignment="Center"
-                                                                   Margin="0,0,8,0"/>
-                                            <TextBlock Text="{Binding DateCreation, StringFormat='dd/MM/yyyy'}"
-                                                     VerticalAlignment="Center"/>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-
-                            <!-- Actions -->
-                            <DataGridTemplateColumn Header="Actions" Width="60">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <materialDesign:PopupBox Style="{StaticResource RowActionsPopupBoxStyle}">
-                                            <StackPanel>
-                                                <!-- Modifier -->
-                                                <Button Style="{StaticResource PopupMenuItemButtonStyle}"
-                                                        Command="{Binding DataContext.OppenEditCommuneCommand,
-                                                                RelativeSource={RelativeSource AncestorType=Page}}"
-                                                        CommandParameter="{Binding}"
-                                                        Visibility="{Binding DataContext.CanEditCommune, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
-                                                    <StackPanel Orientation="Horizontal">
-                                                        <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2" Margin="0,0,10,0"/>
-                                                        <TextBlock Text="Modifier"/>
-                                                    </StackPanel>
-                                                </Button>
-
-                                                <!-- Supprimer -->
-                                                <Button Style="{StaticResource PopupMenuItemButtonStyle}"
-                                                        Command="{Binding DataContext.DeleteCommuneCommand,
-                                                                RelativeSource={RelativeSource AncestorType=Page}}"
-                                                        CommandParameter="{Binding}"
-                                                        Visibility="{Binding DataContext.CanDeleteCommune, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource BoolToVis}}">
-                                                    <StackPanel Orientation="Horizontal">
-                                                        <materialDesign:PackIcon Kind="Delete" Foreground="#F44336" Margin="0,0,10,0"/>
-                                                        <TextBlock Text="Supprimer"/>
-                                                    </StackPanel>
-                                                </Button>
-
-                                                <!-- Détail -->
-                                                <Button Style="{StaticResource PopupMenuItemButtonStyle}"
-                                                        Command="{Binding DataContext.OpenDetailCommuneCommand,
-                                                                RelativeSource={RelativeSource AncestorType=Page}}"
-                                                        CommandParameter="{Binding}">
-                                                    <StackPanel Orientation="Horizontal">
-                                                        <materialDesign:PackIcon Kind="InformationOutline" Foreground="#009688" Margin="0,0,10,0"/>
-                                                        <TextBlock Text="Voir les détails"/>
-                                                    </StackPanel>
-                                                </Button>
-
-                                                <!-- Export PDF -->
-                                                <Button Style="{StaticResource PopupMenuItemButtonStyle}"
-                                                        Command="{Binding DataContext.ExportPdfCommand,
-                                                                RelativeSource={RelativeSource AncestorType=Page}}"
-                                                        CommandParameter="{Binding}">
-                                                    <StackPanel Orientation="Horizontal">
-                                                        <materialDesign:PackIcon Kind="FilePdfBox" Foreground="#D32F2F" Margin="0,0,10,0"/>
-                                                        <TextBlock Text="Exporter en PDF"/>
-                                                    </StackPanel>
-                                                </Button>
-
-                                                <!-- Imprimer -->
-                                                <Button Style="{StaticResource PopupMenuItemButtonStyle}"
-                                                        Command="{Binding DataContext.ExportPdfWithPrintCommand,
-                                                                RelativeSource={RelativeSource AncestorType=Page}}"
-                                                        CommandParameter="{Binding}">
-                                                    <StackPanel Orientation="Horizontal">
-                                                        <materialDesign:PackIcon Kind="Printer" Foreground="#FF6F00" Margin="0,0,10,0"/>
-                                                        <TextBlock Text="Exporter et imprimer"/>
-                                                    </StackPanel>
-                                                </Button>
-                                            </StackPanel>
-                                        </materialDesign:PopupBox>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-
-                        </DataGrid.Columns>
-                    </DataGrid>
-
-                    <!-- Message si vide -->
-                    <Border Background="#F5F5F5" CornerRadius="8" Padding="40">
-                        <Border.Style>
-                            <Style TargetType="Border">
-                                <Setter Property="Visibility" Value="Collapsed"/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding Communes.Count}" Value="0">
-                                        <Setter Property="Visibility" Value="Visible"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Border.Style>
-                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <materialDesign:PackIcon Kind="City" Width="64" Height="64" Foreground="#BDBDBD" HorizontalAlignment="Center"/>
-                            <TextBlock Text="Aucune commune" FontSize="16" Foreground="#757575" Margin="0,20,0,0" HorizontalAlignment="Center"/>
-                        </StackPanel>
-                    </Border>
-                  </Grid>
+                        <TextBox materialDesign:HintAssist.Hint="Préfecture"
+                               Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                               Text="{Binding CurrentCommune.Prefecture, UpdateSourceTrigger=PropertyChanged}"
+                               MaxLength="200"/>
+                    </StackPanel>
                 </materialDesign:Card>
+
+                <materialDesign:Card Padding="20" Margin="0,0,0,15" IsEnabled="{Binding CanEditForm}">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <materialDesign:PackIcon Kind="MapMarkerDistance" Width="20" Height="20" Foreground="{StaticResource AppPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="Distances géographiques" FontWeight="SemiBold" FontSize="14" Foreground="{StaticResource AppPrimaryBrush}" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <TextBlock Text="Distances en kilomètres depuis les différents centres administratifs."
+                                 Style="{StaticResource SectionSubtitleTextStyle}"
+                                 Margin="0,0,0,15"/>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="15"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="15"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBox Grid.Column="0"
+                                   materialDesign:HintAssist.Hint="Dist. Chef-Lieu Province (km)"
+                                   Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                   Text="{Binding CurrentCommune.DistanceChefLieuProvince, UpdateSourceTrigger=PropertyChanged}"/>
+
+                            <TextBox Grid.Column="2"
+                                   materialDesign:HintAssist.Hint="Dist. Chef-Lieu Région (km)"
+                                   Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                   Text="{Binding CurrentCommune.DistanceChefLieuRegion, UpdateSourceTrigger=PropertyChanged}"/>
+
+                            <TextBox Grid.Column="4"
+                                   materialDesign:HintAssist.Hint="Dist. Capitale (km)"
+                                   Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                   Text="{Binding CurrentCommune.DistanceCapitale, UpdateSourceTrigger=PropertyChanged}"/>
+                        </Grid>
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <TextBlock Text="* Champs obligatoires"
+                         FontSize="11"
+                         Foreground="{StaticResource AppMutedTextBrush}"
+                         FontStyle="Italic"
+                         Margin="0,0,0,15"/>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Style="{StaticResource MaterialDesignFlatButton}"
+                          Content="Annuler les modifications"
+                          Command="{Binding CancelCommuneCommand}"
+                          Margin="0,0,10,0"
+                          Height="40"/>
+
+                    <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                          Command="{Binding SaveCommuneCommand}"
+                          Width="140"
+                          Height="40"
+                          Visibility="{Binding CanEditForm, Converter={StaticResource BoolToVis}}">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ContentSave" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="Enregistrer" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
 
             </StackPanel>
         </ScrollViewer>
-
-        <!-- ═══════════════════════════════════════════════════════════
-             DIALOG MODAL AJOUT/MODIFICATION
-             ═══════════════════════════════════════════════════════════ -->
-        <materialDesign:DialogHost IsOpen="{Binding IsDialogOpen}"
-                                 CloseOnClickAway="False"
-                                 Panel.ZIndex="1000">
-            <materialDesign:DialogHost.DialogContent>
-                <StackPanel Width="550" Margin="20">
-
-                    <!-- Titre du dialog -->
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
-                        <materialDesign:PackIcon Kind="City" 
-                                               Width="24" 
-                                               Height="24"
-                                               Foreground="#1976D2"
-                                               VerticalAlignment="Center"
-                                               Margin="0,0,10,0"/>
-                        <TextBlock Text="{Binding DialogTitle}"
-                                 FontSize="20"
-                                 FontWeight="SemiBold"
-                                 VerticalAlignment="Center"/>
-                    </StackPanel>
-
-                    <!-- Nom de la commune -->
-                    <TextBox materialDesign:HintAssist.Hint="Nom de la commune *"
-                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                           Text="{Binding DialogCommune.Nom, UpdateSourceTrigger=PropertyChanged}"
-                           Margin="0,0,0,15"
-                           MaxLength="200"/>
-
-                    <!-- Type  de la commune -->
-                    <ComboBox 
-                            materialDesign:HintAssist.Hint="Type de commune *"
-                            Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                            ItemsSource="{Binding TypesCommuneDisponibles}"
-                            SelectedItem="{Binding SelectedTypeCommuneItem}"
-                            DisplayMemberPath="Libelle"
-                            Margin="0,0,0,15"
-                            FontSize="13"/>
-
-                    <!-- Region de la commune -->
-                    <TextBox materialDesign:HintAssist.Hint="Région Administrative *"
-                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                           Text="{Binding DialogCommune.Region, UpdateSourceTrigger=PropertyChanged}"
-                           Margin="0,0,0,15"
-                           MaxLength="200"/>
-
-                    <!-- Prefecture de la commune -->
-                    <TextBox materialDesign:HintAssist.Hint="Préfecture "
-                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                           Text="{Binding DialogCommune.Prefecture, UpdateSourceTrigger=PropertyChanged}"
-                           Margin="0,0,0,15"
-                           MaxLength="200"/>
-
-                    <!-- Section Distances -->
-                    <Border 
-                          CornerRadius="8"
-                          
-                          Margin="0,0,0,15">
-                        <StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                <materialDesign:PackIcon Kind="Information" 
-                                                       Width="20" 
-                                                       Height="20"
-                                                       Foreground="#1976D2"
-                                                       VerticalAlignment="Center"
-                                                       Margin="0,0,8,0"/>
-                                <TextBlock Text="Distances géographiques" 
-                                         FontWeight="SemiBold"
-                                         FontSize="14"
-                                         Foreground="#1976D2"
-                                         VerticalAlignment="Center"/>
-                            </StackPanel>
-
-                            <TextBlock Text="Indiquez les distances en kilomètres depuis les différents centres administratifs"
-                                     FontSize="12"
-                                     Foreground="#424242"
-                                     TextWrapping="Wrap"
-                                     Margin="0,0,0,15"/>
-
-                            <!-- Grid pour les distances -->
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="15"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="15"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
-
-                                <!-- Distance Chef-Lieu Province -->
-                                <TextBox Grid.Row="0" Grid.Column="0"
-                                       materialDesign:HintAssist.Hint="Dist. Chef-Lieu Province (km)"
-                                       Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                       Text="{Binding DialogCommune.DistanceChefLieuProvince, UpdateSourceTrigger=PropertyChanged}">
-                                    <TextBox.InputBindings>
-                                        <KeyBinding Key="Enter" Command="{Binding SaveCommuneCommand}"/>
-                                    </TextBox.InputBindings>
-                                </TextBox>
-
-                                <!-- Distance Chef-Lieu Région -->
-                                <TextBox Grid.Row="0" Grid.Column="2"
-                                       materialDesign:HintAssist.Hint="Dist. Chef-Lieu Région (km)"
-                                       Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                       Text="{Binding DialogCommune.DistanceChefLieuRegion, UpdateSourceTrigger=PropertyChanged}">
-                                    <TextBox.InputBindings>
-                                        <KeyBinding Key="Enter" Command="{Binding SaveCommuneCommand}"/>
-                                    </TextBox.InputBindings>
-                                </TextBox>
-
-                                <!-- Distance Capitale -->
-                                <TextBox Grid.Row="2" Grid.Column="0"
-                                       materialDesign:HintAssist.Hint="Dist. Capitale (km)"
-                                       Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                       Margin="0,0,0,15"
-                                       Text="{Binding DialogCommune.DistanceCapitale, UpdateSourceTrigger=PropertyChanged}">
-                                    <TextBox.InputBindings>
-                                        <KeyBinding Key="Enter" Command="{Binding SaveCommuneCommand}"/>
-                                    </TextBox.InputBindings>
-                                </TextBox>
-
-                                <!-- Date de création -->
-                                <DatePicker materialDesign:HintAssist.Hint="Date de création"
-                                      Grid.Row="2" Grid.Column="2"
-                                      SelectedDate="{Binding DialogCommuneDateCreation}"
-                                      Language="fr-FR"
-                                      Margin="0,0,0,15">
-                                    <DatePicker.Style>
-                                        <Style TargetType="DatePicker" BasedOn="{StaticResource MaterialDesignOutlinedDatePicker}">
-                                            <Style.Triggers>
-                                                <!-- En mode édition, désactiver le DatePicker -->
-                                                <DataTrigger Binding="{Binding IsEditMode}" Value="True">
-                                                    <Setter Property="IsEnabled" Value="False"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </DatePicker.Style>
-                                </DatePicker>
-
-
-                                <!-- Espace vide pour alignement -->
-                                <Border Grid.Row="2" Grid.Column="2"/>
-
-                            </Grid>
-                        </StackPanel>
-                    </Border>
-
-
-                    <!-- Note explicative -->
-                    <TextBlock Text="* Champs obligatoires"
-                             FontSize="11"
-                             Foreground="#666"
-                             FontStyle="Italic"
-                             Margin="0,0,0,15"/>
-
-                    <!-- Boutons -->
-                    <StackPanel Orientation="Horizontal" 
-                              HorizontalAlignment="Right">
-                        <Button Style="{StaticResource MaterialDesignFlatButton}"
-                              Content="Annuler"
-                              Command="{Binding CancelCommuneCommand}"
-                              Margin="0,0,10,0"
-                              Width="100"/>
-
-                        <Button Style="{StaticResource MaterialDesignRaisedButton}"
-                              Content="Enregistrer"
-                              Command="{Binding SaveCommuneCommand}"
-                              Width="120">
-                            <Button.CommandParameter>
-                                <Binding RelativeSource="{RelativeSource Self}"/>
-                            </Button.CommandParameter>
-                        </Button>
-                    </StackPanel>
-
-                </StackPanel>
-            </materialDesign:DialogHost.DialogContent>
-        </materialDesign:DialogHost>
-
     </Grid>
 </Page>

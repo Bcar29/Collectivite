@@ -16,6 +16,7 @@
         <utils:BackgroundColorConverter x:Key="BackgroundColorConverter"/>
         <utils:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
         <utils:BooleanAndToVisibilityConverter x:Key="BooleanAndToVisibilityConverter"/>
+        <utils:StringNullOrEmptyToVisibilityConverter x:Key="StringNullOrEmptyToVisibilityConverter"/>
 
         <!-- 🆕 Converter pour afficher les actions uniquement sur les feuilles (pas parent, pas totaux) -->
         <utils:ShowActionsConverter x:Key="ShowActionsConverter"/>
@@ -60,6 +61,7 @@
         <Grid Margin="20">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
@@ -90,8 +92,28 @@
                 </StackPanel>
             </DockPanel>
 
+            <!-- Bandeau explicatif : pourquoi la création de remaniement est indisponible -->
+            <Border Grid.Row="1"
+                    Background="{StaticResource AppWarningLightBrush}"
+                    CornerRadius="8"
+                    Padding="14,10"
+                    Margin="0,0,0,10"
+                    Visibility="{Binding CreateRemaniementBlockedReason, Converter={StaticResource StringNullOrEmptyToVisibilityConverter}}">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="AlertCircleOutline"
+                                              Width="20" Height="20"
+                                              Foreground="{StaticResource AppWarningBrush}"
+                                              VerticalAlignment="Center"
+                                              Margin="0,0,10,0"/>
+                    <TextBlock Text="{Binding CreateRemaniementBlockedReason}"
+                               Foreground="{StaticResource AppWarningBrush}"
+                               VerticalAlignment="Center"
+                               TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+
             <!-- TabControl avec 4 onglets -->
-            <TabControl Grid.Row="1" SelectedIndex="{Binding SelectedTabIndex}">
+            <TabControl Grid.Row="2" SelectedIndex="{Binding SelectedTabIndex}">
 
                 <!-- ═══════════════════════════════════════════════════════════ -->
                 <!-- ONGLET 1 : RECETTE - FONCTIONNEMENT -->
@@ -725,11 +747,31 @@
                         </StackPanel>
                     </Border>
 
+                    <!-- Info : ligne jamais budgétée, sera créée uniquement pour ce remaniement -->
+                    <Border Background="#FFF3E0"
+                            CornerRadius="8"
+                            Padding="12,10"
+                            Margin="0,0,0,15"
+                            Visibility="{Binding IsAddingNewLine, Converter={StaticResource BoolToVis}}">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="InformationOutline"
+                                                      Width="18" Height="18"
+                                                      Foreground="#F57C00"
+                                                      VerticalAlignment="Center"
+                                                      Margin="0,0,10,0"/>
+                            <TextBlock Text="Cette ligne n'existe pas encore dans le budget primitif - elle sera créée uniquement pour ce remaniement."
+                                       Foreground="#F57C00"
+                                       TextWrapping="Wrap"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
                     <!-- Type de remaniement -->
                     <ComboBox materialDesign:HintAssist.Hint="Type de remaniement *"
                               Style="{StaticResource MaterialDesignOutlinedComboBox}"
                               ItemsSource="{Binding Source={StaticResource TypeRemaniementValues}}"
                               SelectedItem="{Binding DialogRemaniement.TypeRemaniement}"
+                              utils:ComboBoxAutoCompleteBehavior.IsEnabled="True"
                               Margin="0,0,0,15"/>
 
                     <!-- Montant -->

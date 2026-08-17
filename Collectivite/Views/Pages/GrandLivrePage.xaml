@@ -5,7 +5,8 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:vm="clr-namespace:Collectivite.ViewModels"
-             mc:Ignorable="d" 
+             xmlns:utils="clr-namespace:Collectivite.Utils"
+             mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="1200"
              Loaded="UserControl_Loaded">
 
@@ -159,27 +160,30 @@
                     <ComboBox Width="110"
                               ItemsSource="{Binding AnneesDisponibles}"
                               SelectedItem="{Binding AnneeSelectionnee}"
+                              utils:ComboBoxAutoCompleteBehavior.IsEnabled="True"
                               Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
                 </StackPanel>
 
                 <!-- Filtre Mois -->
                 <StackPanel Grid.Column="1" Margin="0,0,16,0">
                     <TextBlock Text="Mois" FontSize="11" Foreground="#666666" Margin="0,0,0,4"/>
-                    <ComboBox Width="140" 
+                    <ComboBox Width="140"
                               ItemsSource="{Binding Mois}"
                               SelectedValue="{Binding MoisSelectionne}"
                               SelectedValuePath="Numero"
                               DisplayMemberPath="Nom"
+                              utils:ComboBoxAutoCompleteBehavior.IsEnabled="True"
                               Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
                 </StackPanel>
 
                 <!-- Filtre Compte -->
                 <StackPanel Grid.Column="2" Margin="0,0,16,0">
                     <TextBlock Text="Compte" FontSize="11" Foreground="#666666" Margin="0,0,0,4"/>
-                    <ComboBox Width="280" 
+                    <ComboBox Width="280"
                               ItemsSource="{Binding ComptesDisponibles}"
                               SelectedItem="{Binding CompteFiltreSelectionne}"
                               DisplayMemberPath="Libelle"
+                              utils:ComboBoxAutoCompleteBehavior.IsEnabled="True"
                               Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
                 </StackPanel>
 

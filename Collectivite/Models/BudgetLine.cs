@@ -49,9 +49,17 @@ namespace Collectivite.Models
         [Range(0, int.MaxValue, ErrorMessage = "Le montant actuel doit être un nombre positif")]
         public decimal MontantActu { get; set; }
         public decimal MontantRealise { get; set; }
-        public decimal MontantEntreSortie { get; set; }// montant recouvrement ou paiement 
+        public decimal MontantEntreSortie { get; set; }// montant recouvrement ou paiement
 
-        #endregion 
+        /// <summary>
+        /// Vrai si cette ligne a été créée uniquement via un remaniement (nomenclature jamais
+        /// budgétée dans le Budget Primitif d'origine). Une telle ligne est exclue des vues
+        /// Budget Primitif (Formulaire/Tableau) mais apparaît normalement dans Compte
+        /// Administratif / Compte Gestion et dans la Synthèse.
+        /// </summary>
+        public bool EstAjouteParRemaniement { get; set; } = false;
+
+        #endregion
 
         #region Navigation
 

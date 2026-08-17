@@ -3,7 +3,7 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
       Language="fr-FR"
-      Background="#F5F5F5"
+      Background="{StaticResource AppPageBackgroundBrush}"
       Title="Gestion des Exercices">
 
     <Page.Resources>
@@ -37,16 +37,18 @@
                 <!-- Header avec bouton d'ajout -->
                 <Grid Margin="0,0,0,20">
                     <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="CalendarRange" 
-                                               Width="32" 
+                        <materialDesign:PackIcon Kind="CalendarRange"
+                                               Width="32"
                                                Height="32"
-                                               Foreground="#1976D2"
+                                               Foreground="{StaticResource AppPrimaryBrush}"
                                                VerticalAlignment="Center"/>
-                        <TextBlock Text="Gestion des Exercices" 
-                                 FontSize="24"
-                                 FontWeight="SemiBold"
-                                 Margin="15,0,0,0"
-                                 VerticalAlignment="Center"/>
+                        <StackPanel VerticalAlignment="Center" Margin="15,0,0,0">
+                            <TextBlock Text="Gestion des Exercices"
+                                     FontSize="24"
+                                     FontWeight="SemiBold"/>
+                            <TextBlock Text="Périodes budgétaires et comptables de la collectivité"
+                                     Style="{StaticResource SectionSubtitleTextStyle}"/>
+                        </StackPanel>
                     </StackPanel>
 
                     <Button Style="{StaticResource MaterialDesignRaisedButton}"
@@ -75,16 +77,46 @@
                               CanUserDeleteRows="False"
                               IsReadOnly="True"
                               SelectionMode="Single"
+                              RowHeight="52"
+                              GridLinesVisibility="Horizontal"
+                              HorizontalGridLinesBrush="{StaticResource AppBorderBrush}"
+                              AlternationCount="2"
                               materialDesign:DataGridAssist.CellPadding="13 8 8 8"
-                              materialDesign:DataGridAssist.ColumnHeaderPadding="8">
+                              materialDesign:DataGridAssist.ColumnHeaderPadding="12 14">
+
+                        <DataGrid.RowStyle>
+                            <Style TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
+                                <Style.Triggers>
+                                    <Trigger Property="ItemsControl.AlternationIndex" Value="1">
+                                        <Setter Property="Background" Value="{StaticResource AppPageBackgroundBrush}"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.RowStyle>
+                        <DataGrid.ColumnHeaderStyle>
+                            <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                <Setter Property="Foreground" Value="{StaticResource AppMutedTextBrush}"/>
+                            </Style>
+                        </DataGrid.ColumnHeaderStyle>
 
                         <DataGrid.Columns>
 
                             <!-- Libelle -->
-                            <DataGridTextColumn Header="Libellé" 
-                                              Binding="{Binding Libelle}"
-                                              Width="250"
-                                              FontWeight="Medium"/>
+                            <DataGridTemplateColumn Header="Libellé" Width="250">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <materialDesign:PackIcon Kind="CalendarRange"
+                                                                   Width="18" Height="18"
+                                                                   Foreground="{StaticResource AppPrimaryBrush}"
+                                                                   VerticalAlignment="Center"
+                                                                   Margin="0,0,8,0"/>
+                                            <TextBlock Text="{Binding Libelle}" FontWeight="Medium" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
 
                             <!-- Date de début -->
                             <DataGridTemplateColumn Header="Début de l'exercice" Width="200">
@@ -94,7 +126,7 @@
                                             <materialDesign:PackIcon Kind="CalendarStart" 
                                                                    Width="16" 
                                                                    Height="16"
-                                                                   Foreground="#388E3C"
+                                                                   Foreground="{StaticResource AppSuccessBrush}"
                                                                    VerticalAlignment="Center"
                                                                    Margin="0,0,8,0"/>
                                             <TextBlock Text="{Binding DateDebut, StringFormat='dd/MM/yyyy'}"
@@ -112,7 +144,7 @@
                                             <materialDesign:PackIcon Kind="CalendarEnd" 
                                                                    Width="16" 
                                                                    Height="16"
-                                                                   Foreground="#F57C00"
+                                                                   Foreground="{StaticResource AppWarningBrush}"
                                                                    VerticalAlignment="Center"
                                                                    Margin="0,0,8,0"/>
                                             <TextBlock Text="{Binding DateFin, StringFormat='dd/MM/yyyy'}"
@@ -131,10 +163,10 @@
                                               HorizontalAlignment="Left">
                                             <Border.Style>
                                                 <Style TargetType="Border">
-                                                    <Setter Property="Background" Value="#E8F5E9"/>
+                                                    <Setter Property="Background" Value="{StaticResource AppSuccessLightBrush}"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding EstCloture}" Value="True">
-                                                            <Setter Property="Background" Value="#FFF3E0"/>
+                                                            <Setter Property="Background" Value="{StaticResource AppWarningLightBrush}"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
@@ -147,11 +179,11 @@
                                                     <materialDesign:PackIcon.Style>
                                                         <Style TargetType="materialDesign:PackIcon">
                                                             <Setter Property="Kind" Value="CheckCircle"/>
-                                                            <Setter Property="Foreground" Value="#388E3C"/>
+                                                            <Setter Property="Foreground" Value="{StaticResource AppSuccessBrush}"/>
                                                             <Style.Triggers>
                                                                 <DataTrigger Binding="{Binding EstCloture}" Value="True">
                                                                     <Setter Property="Kind" Value="Lock"/>
-                                                                    <Setter Property="Foreground" Value="#F57C00"/>
+                                                                    <Setter Property="Foreground" Value="{StaticResource AppWarningBrush}"/>
                                                                 </DataTrigger>
                                                             </Style.Triggers>
                                                         </Style>
@@ -162,11 +194,11 @@
                                                     <TextBlock.Style>
                                                         <Style TargetType="TextBlock">
                                                             <Setter Property="Text" Value="En cours"/>
-                                                            <Setter Property="Foreground" Value="#388E3C"/>
+                                                            <Setter Property="Foreground" Value="{StaticResource AppSuccessBrush}"/>
                                                             <Style.Triggers>
                                                                 <DataTrigger Binding="{Binding EstCloture}" Value="True">
                                                                     <Setter Property="Text" Value="Clôturé"/>
-                                                                    <Setter Property="Foreground" Value="#F57C00"/>
+                                                                    <Setter Property="Foreground" Value="{StaticResource AppWarningBrush}"/>
                                                                 </DataTrigger>
                                                             </Style.Triggers>
                                                         </Style>
@@ -201,7 +233,7 @@
                                                         </Style>
                                                     </Button.Style>
                                                     <StackPanel Orientation="Horizontal">
-                                                        <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2" Margin="0,0,10,0"/>
+                                                        <materialDesign:PackIcon Kind="Pencil" Foreground="{StaticResource AppPrimaryBrush}" Margin="0,0,10,0"/>
                                                         <TextBlock Text="Modifier"/>
                                                     </StackPanel>
                                                 </Button>
@@ -223,7 +255,7 @@
                                                         </Style>
                                                     </Button.Style>
                                                     <StackPanel Orientation="Horizontal">
-                                                        <materialDesign:PackIcon Kind="Lock" Foreground="#FF9800" Margin="0,0,10,0"/>
+                                                        <materialDesign:PackIcon Kind="Lock" Foreground="{StaticResource AppWarningBrush}" Margin="0,0,10,0"/>
                                                         <TextBlock Text="Clôturer l'exercice"/>
                                                     </StackPanel>
                                                 </Button>
@@ -245,7 +277,7 @@
                                                         </Style>
                                                     </Button.Style>
                                                     <StackPanel Orientation="Horizontal">
-                                                        <materialDesign:PackIcon Kind="Delete" Foreground="#F44336" Margin="0,0,10,0"/>
+                                                        <materialDesign:PackIcon Kind="Delete" Foreground="{StaticResource AppDangerBrush}" Margin="0,0,10,0"/>
                                                         <TextBlock Text="Supprimer"/>
                                                     </StackPanel>
                                                 </Button>
@@ -259,7 +291,7 @@
                     </DataGrid>
 
                     <!-- Message si vide -->
-                    <Border Background="#F5F5F5" CornerRadius="8" Padding="40">
+                    <Border Background="{StaticResource AppPageBackgroundBrush}" CornerRadius="8" Padding="40">
                         <Border.Style>
                             <Style TargetType="Border">
                                 <Setter Property="Visibility" Value="Collapsed"/>
@@ -272,7 +304,7 @@
                         </Border.Style>
                         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                             <materialDesign:PackIcon Kind="CalendarRange" Width="64" Height="64" Foreground="#BDBDBD" HorizontalAlignment="Center"/>
-                            <TextBlock Text="Aucun exercice" FontSize="16" Foreground="#757575" Margin="0,20,0,0" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Aucun exercice" FontSize="16" Foreground="{StaticResource AppMutedTextBrush}" Margin="0,20,0,0" HorizontalAlignment="Center"/>
                         </StackPanel>
                     </Border>
                   </Grid>
@@ -293,7 +325,7 @@
                         <materialDesign:PackIcon Kind="CalendarRange" 
                                                Width="24" 
                                                Height="24"
-                                               Foreground="#1976D2"
+                                               Foreground="{StaticResource AppPrimaryBrush}"
                                                VerticalAlignment="Center"
                                                Margin="0,0,10,0"/>
                         <TextBlock Text="{Binding DialogTitle}"
@@ -324,7 +356,7 @@
                               Margin="0,0,0,15"/>
 
                     <!-- Information sur les dates -->
-                    <Border Background="#E3F2FD"
+                    <Border Background="{StaticResource AppPrimaryLightBrush}"
                           CornerRadius="8"
                           Padding="12"
                           Margin="0,0,0,15">
@@ -332,12 +364,12 @@
                             <materialDesign:PackIcon Kind="InformationOutline" 
                                                    Width="20" 
                                                    Height="20"
-                                                   Foreground="#1976D2"
+                                                   Foreground="{StaticResource AppPrimaryBrush}"
                                                    VerticalAlignment="Center"
                                                    Margin="0,0,10,0"/>
                             <TextBlock Text="La date de début doit être antérieure à la date de fin"
                                      FontSize="12"
-                                     Foreground="#1976D2"
+                                     Foreground="{StaticResource AppPrimaryBrush}"
                                      TextWrapping="Wrap"
                                      VerticalAlignment="Center"/>
                         </StackPanel>

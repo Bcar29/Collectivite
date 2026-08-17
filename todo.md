@@ -1,0 +1,4 @@
+tous les champs select en auto-complete, 
+les 60% ne sont pas auto-matiquement frappé lors de l'encaissement et le decaissement
+
+Question pour vous : voulez-vous que je corrige aussi la cohérence sur la modification/suppression (droit au comptant) et sur SupprimerMouvementAsync (droit constaté), pour que les 60% soient bien décrémentés quand un encaissement est modifié ou annulé ? Sinon je me limite strictement à l'ajout des 60% à la création/encaissement, comme demandé, et les cas de modification/suppression resteront un point ouvert (avec le risque de désynchronisation déjà présent aujourd'hui pour MontantRealise).

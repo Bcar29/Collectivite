@@ -8,7 +8,16 @@
         d'une rangée de boutons icône dans les colonnes "Actions" des DataGrid.
     -->
 
-    <Style x:Key="RowActionsPopupBoxStyle" TargetType="{x:Type materialDesign:PopupBox}"
+    <!--
+        x:Shared="False" est indispensable ici : ce Style est fusionné au niveau App.xaml
+        (donc partagé par toute l'application) et définit son ToggleContent via une
+        instance de PackIcon directement dans le Setter.Value. Sans x:Shared="False",
+        WPF ne renvoie qu'une seule instance de ce Style (et donc du PackIcon) pour
+        tous les lookups StaticResource : un même UIElement ne pouvant être parenté
+        qu'à un seul endroit à la fois, un seul PopupBox dans toute l'appli affichait
+        réellement son icône "3 points" - tous les autres semblaient vides/inactifs.
+    -->
+    <Style x:Key="RowActionsPopupBoxStyle" x:Shared="False" TargetType="{x:Type materialDesign:PopupBox}"
            BasedOn="{StaticResource {x:Type materialDesign:PopupBox}}">
         <Setter Property="PlacementMode" Value="BottomAndAlignRightEdges"/>
         <Setter Property="StaysOpen" Value="False"/>

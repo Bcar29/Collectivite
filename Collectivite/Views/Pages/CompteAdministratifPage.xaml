@@ -162,7 +162,28 @@
                             <DataGridTextColumn Header="Article" Binding="{Binding BudgetLine.Nommenclature.Article}" Width="100"/>
                             <DataGridTextColumn Header="Paragraphe" Binding="{Binding BudgetLine.Nommenclature.Paragraphe}" Width="100"/>
                             <DataGridTextColumn Header="Sous-Paragraphe" Binding="{Binding BudgetLine.Nommenclature.SousParagraphe}" Width="150"/>
-                            <DataGridTextColumn Header="Intitulé" Binding="{Binding BudgetLine.Nommenclature.Intitule}" Width="*"/>
+                            <DataGridTemplateColumn Header="Intitulé" Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding BudgetLine.Nommenclature.Intitule}"
+                                                       VerticalAlignment="Center"
+                                                       TextWrapping="Wrap"/>
+                                            <Border Background="#FFF3E0"
+                                                    CornerRadius="8"
+                                                    Padding="6,2"
+                                                    Margin="8,0,0,0"
+                                                    VerticalAlignment="Center"
+                                                    Visibility="{Binding BudgetLine.EstAjouteParRemaniement, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                <TextBlock Text="Ajoutée par remaniement"
+                                                           FontSize="10"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="#F57C00"/>
+                                            </Border>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                             <DataGridTextColumn Header="Montant Prévu" Binding="{Binding BudgetLine.MontantDefinitif, StringFormat={}{0:N2} GNF}" Width="150"/>
                             <DataGridTextColumn Header="Montant Réalisé" Binding="{Binding BudgetLine.MontantRealise, StringFormat={}{0:N2} GNF}" Width="150"/>
                             <DataGridTextColumn Header="Taux Réalisation" Binding="{Binding BudgetLine.TauxRealisation, StringFormat={}{0:N2} %}" Width="120"/>
@@ -245,7 +266,28 @@
                             <DataGridTextColumn Header="Article" Binding="{Binding BudgetLine.Nommenclature.Article}" Width="100"/>
                             <DataGridTextColumn Header="Paragraphe" Binding="{Binding BudgetLine.Nommenclature.Paragraphe}" Width="100"/>
                             <DataGridTextColumn Header="Sous-Paragraphe" Binding="{Binding BudgetLine.Nommenclature.SousParagraphe}" Width="150"/>
-                            <DataGridTextColumn Header="Intitulé" Binding="{Binding BudgetLine.Nommenclature.Intitule}" Width="*"/>
+                            <DataGridTemplateColumn Header="Intitulé" Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding BudgetLine.Nommenclature.Intitule}"
+                                                       VerticalAlignment="Center"
+                                                       TextWrapping="Wrap"/>
+                                            <Border Background="#FFF3E0"
+                                                    CornerRadius="8"
+                                                    Padding="6,2"
+                                                    Margin="8,0,0,0"
+                                                    VerticalAlignment="Center"
+                                                    Visibility="{Binding BudgetLine.EstAjouteParRemaniement, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                <TextBlock Text="Ajoutée par remaniement"
+                                                           FontSize="10"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="#F57C00"/>
+                                            </Border>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                             <DataGridTextColumn Header="Montant Définitif" Binding="{Binding BudgetLine.MontantDefinitif, StringFormat={}{0:N2} GNF}" Width="150"/>
                             <DataGridTextColumn Header="Montant Réalisé" Binding="{Binding BudgetLine.MontantRealise, StringFormat={}{0:N2} GNF}" Width="150"/>
                             <DataGridTextColumn Header="Taux Réalisation" Binding="{Binding BudgetLine.TauxRealisation, StringFormat={}{0:N2} %}" Width="120"/>
@@ -328,7 +370,28 @@
                             <DataGridTextColumn Header="Article" Binding="{Binding BudgetLine.Nommenclature.Article}" Width="100"/>
                             <DataGridTextColumn Header="Paragraphe" Binding="{Binding BudgetLine.Nommenclature.Paragraphe}" Width="100"/>
                             <DataGridTextColumn Header="Sous-Paragraphe" Binding="{Binding BudgetLine.Nommenclature.SousParagraphe}" Width="150"/>
-                            <DataGridTextColumn Header="Intitulé" Binding="{Binding BudgetLine.Nommenclature.Intitule}" Width="*"/>
+                            <DataGridTemplateColumn Header="Intitulé" Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding BudgetLine.Nommenclature.Intitule}"
+                                                       VerticalAlignment="Center"
+                                                       TextWrapping="Wrap"/>
+                                            <Border Background="#FFF3E0"
+                                                    CornerRadius="8"
+                                                    Padding="6,2"
+                                                    Margin="8,0,0,0"
+                                                    VerticalAlignment="Center"
+                                                    Visibility="{Binding BudgetLine.EstAjouteParRemaniement, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                <TextBlock Text="Ajoutée par remaniement"
+                                                           FontSize="10"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="#F57C00"/>
+                                            </Border>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                             <DataGridTextColumn Header="Montant Prévu" Binding="{Binding BudgetLine.MontantDefinitif, StringFormat={}{0:N2} GNF}" Width="150"/>
                             <DataGridTextColumn Header="Montant Réalisé" Binding="{Binding BudgetLine.MontantRealise, StringFormat={}{0:N2} GNF}" Width="150"/>
                             <DataGridTextColumn Header="Taux Réalisation" Binding="{Binding BudgetLine.TauxRealisation, StringFormat={}{0:N2} %}" Width="120"/>
@@ -411,7 +474,28 @@
                             <DataGridTextColumn Header="Article" Binding="{Binding BudgetLine.Nommenclature.Article}" Width="100"/>
                             <DataGridTextColumn Header="Paragraphe" Binding="{Binding BudgetLine.Nommenclature.Paragraphe}" Width="100"/>
                             <DataGridTextColumn Header="Sous-Paragraphe" Binding="{Binding BudgetLine.Nommenclature.SousParagraphe}" Width="150"/>
-                            <DataGridTextColumn Header="Intitulé" Binding="{Binding BudgetLine.Nommenclature.Intitule}" Width="*"/>
+                            <DataGridTemplateColumn Header="Intitulé" Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding BudgetLine.Nommenclature.Intitule}"
+                                                       VerticalAlignment="Center"
+                                                       TextWrapping="Wrap"/>
+                                            <Border Background="#FFF3E0"
+                                                    CornerRadius="8"
+                                                    Padding="6,2"
+                                                    Margin="8,0,0,0"
+                                                    VerticalAlignment="Center"
+                                                    Visibility="{Binding BudgetLine.EstAjouteParRemaniement, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                <TextBlock Text="Ajoutée par remaniement"
+                                                           FontSize="10"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="#F57C00"/>
+                                            </Border>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                             <DataGridTextColumn Header="Montant Définitif" Binding="{Binding BudgetLine.MontantDefinitif, StringFormat={}{0:N2} GNF}" Width="150"/>
                             <DataGridTextColumn Header="Montant Réalisé" Binding="{Binding BudgetLine.MontantRealise, StringFormat={}{0:N2} GNF}" Width="150"/>
                             <DataGridTextColumn Header="Taux Réalisation" Binding="{Binding BudgetLine.TauxRealisation, StringFormat={}{0:N2} %}" Width="120"/>

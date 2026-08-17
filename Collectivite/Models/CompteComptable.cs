@@ -30,5 +30,8 @@ namespace Collectivite.Models
         public virtual CompteComptable? ContrePartie { get; set; }
 
         public virtual ICollection<CompteComptable> SousComptes { get; set; } = new List<CompteComptable>();
+
+        [NotMapped]
+        public string DisplayLabel => $"{NumeroCompte} - {IntituleCompte}";
     }
 }

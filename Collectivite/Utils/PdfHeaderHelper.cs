@@ -248,6 +248,26 @@ namespace Collectivite.Utils
         }
 
         /// <summary>
+        /// Ajoute une bannière de section colorée (ex: nom d'un onglet/d'une catégorie), pour bien
+        /// séparer visuellement les sections d'un export PDF regroupant plusieurs tableaux.
+        /// </summary>
+        public static void AjouterBanniereSection(Document document, string sectionName, BaseColor? backgroundColor = null)
+        {
+            var sectionFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 14, BaseColor.WHITE);
+
+            PdfPTable bannerTable = new PdfPTable(1) { WidthPercentage = 100, SpacingAfter = 15 };
+            PdfPCell bannerCell = new PdfPCell(new Phrase(sectionName.ToUpper(), sectionFont))
+            {
+                BackgroundColor = backgroundColor ?? new BaseColor(25, 118, 210),
+                HorizontalAlignment = Element.ALIGN_CENTER,
+                Padding = 10,
+                BorderWidth = 0
+            };
+            bannerTable.AddCell(bannerCell);
+            document.Add(bannerTable);
+        }
+
+        /// <summary>
         /// Crée une cellule de tableau avec couleur de fond
         /// </summary>
         public static PdfPCell CreateCell(string text, Font font, BaseColor bgColor, int alignment = Element.ALIGN_LEFT, float padding = 5)

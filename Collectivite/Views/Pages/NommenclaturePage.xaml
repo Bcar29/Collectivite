@@ -3,8 +3,9 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
       xmlns:models="clr-namespace:Collectivite.Models"
+      xmlns:utils="clr-namespace:Collectivite.Utils"
       Language="fr-FR"
-      Background="#F5F5F5"
+      Background="{StaticResource AppPageBackgroundBrush}"
       Title="Gestion des Nomenclatures">
 
     <Page.Resources>
@@ -53,7 +54,7 @@
                     <Style TargetType="Border">
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                                <Setter Property="Background" Value="#E3F2FD"/>
+                                <Setter Property="Background" Value="{StaticResource AppPrimaryLightBrush}"/>
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
@@ -69,7 +70,7 @@
 
                     <!-- Code (Chapitre-Article-Paragraphe-SousParagraphe) -->
                     <Border Grid.Column="0"
-                            Background="#F5F5F5"
+                            Background="{StaticResource AppPageBackgroundBrush}"
                             CornerRadius="4"
                             Padding="8,4"
                             MinWidth="80">
@@ -112,7 +113,7 @@
                                         CommandParameter="{Binding Nommenclature}"
                                         IsEnabled="{Binding DataContext.CanEditNommenclature, RelativeSource={RelativeSource AncestorType=Page}}">
                                     <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="Pencil" Foreground="#1976D2" Margin="0,0,10,0"/>
+                                        <materialDesign:PackIcon Kind="Pencil" Foreground="{StaticResource AppPrimaryBrush}" Margin="0,0,10,0"/>
                                         <TextBlock Text="Modifier"/>
                                     </StackPanel>
                                 </Button>
@@ -123,7 +124,7 @@
                                         CommandParameter="{Binding Nommenclature}"
                                         IsEnabled="{Binding DataContext.CanDeleteNommenclature, RelativeSource={RelativeSource AncestorType=Page}}">
                                     <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="Delete" Foreground="#F44336" Margin="0,0,10,0"/>
+                                        <materialDesign:PackIcon Kind="Delete" Foreground="{StaticResource AppDangerBrush}" Margin="0,0,10,0"/>
                                         <TextBlock Text="Supprimer"/>
                                     </StackPanel>
                                 </Button>
@@ -175,7 +176,7 @@
                     <materialDesign:PackIcon Kind="BookmarkMultiple"
                                      Width="32"
                                      Height="32"
-                                     Foreground="#1976D2"
+                                     Foreground="{StaticResource AppPrimaryBrush}"
                                      VerticalAlignment="Center"/>
                     <TextBlock Text="Gestion des Nomenclatures"
                        FontSize="24"
@@ -217,7 +218,7 @@
                                                  Width="24"
                                                  Height="24"
                                                  HorizontalAlignment="Center"
-                                                 Foreground="#388E3C"/>
+                                                 Foreground="{StaticResource AppSuccessBrush}"/>
                                 <TextBlock Text="RECETTES"
                                    FontWeight="SemiBold"
                                    FontSize="12"
@@ -261,7 +262,7 @@
                                                  Width="24"
                                                  Height="24"
                                                  HorizontalAlignment="Center"
-                                                 Foreground="#D32F2F"/>
+                                                 Foreground="{StaticResource AppDangerBrush}"/>
                                 <TextBlock Text="DÉPENSES"
                                    FontWeight="SemiBold"
                                    FontSize="12"
@@ -317,7 +318,7 @@
                         <materialDesign:PackIcon Kind="BookmarkMultiple" 
                                                Width="24" 
                                                Height="24"
-                                               Foreground="#1976D2"
+                                               Foreground="{StaticResource AppPrimaryBrush}"
                                                VerticalAlignment="Center"
                                                Margin="0,0,10,0"/>
                         <TextBlock Text="{Binding DialogTitle}"
@@ -389,7 +390,8 @@
                                 materialDesign:HintAssist.Hint="Nature *"
                                 Style="{StaticResource MaterialDesignOutlinedComboBox}"
                                 ItemsSource="{Binding Source={StaticResource NatureTypeValues}}"
-                                SelectedItem="{Binding DialogNommenclature.Nature}">
+                                SelectedItem="{Binding DialogNommenclature.Nature}"
+                                utils:ComboBoxAutoCompleteBehavior.IsEnabled="True">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal">
@@ -399,11 +401,11 @@
                                             <materialDesign:PackIcon.Style>
                                                 <Style TargetType="materialDesign:PackIcon">
                                                     <Setter Property="Kind" Value="ArrowUp"/>
-                                                    <Setter Property="Foreground" Value="#388E3C"/>
+                                                    <Setter Property="Foreground" Value="{StaticResource AppSuccessBrush}"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding}" Value="Depense">
                                                             <Setter Property="Kind" Value="ArrowDown"/>
-                                                            <Setter Property="Foreground" Value="#D32F2F"/>
+                                                            <Setter Property="Foreground" Value="{StaticResource AppDangerBrush}"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
@@ -420,7 +422,8 @@
                                 materialDesign:HintAssist.Hint="Section *"
                                 Style="{StaticResource MaterialDesignOutlinedComboBox}"
                                 ItemsSource="{Binding Source={StaticResource SectionTypeValues}}"
-                                SelectedItem="{Binding DialogNommenclature.Section}">
+                                SelectedItem="{Binding DialogNommenclature.Section}"
+                                utils:ComboBoxAutoCompleteBehavior.IsEnabled="True">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal">
@@ -430,11 +433,11 @@
                                             <materialDesign:PackIcon.Style>
                                                 <Style TargetType="materialDesign:PackIcon">
                                                     <Setter Property="Kind" Value="Cog"/>
-                                                    <Setter Property="Foreground" Value="#1976D2"/>
+                                                    <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding}" Value="Investissement">
                                                             <Setter Property="Kind" Value="ChartLine"/>
-                                                            <Setter Property="Foreground" Value="#F57C00"/>
+                                                            <Setter Property="Foreground" Value="{StaticResource AppWarningBrush}"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
@@ -452,12 +455,14 @@
                                 Style="{StaticResource MaterialDesignOutlinedComboBox}"
                                 ItemsSource="{Binding Nommenclatures}"
                                 SelectedValue="{Binding DialogNommenclature.ParentId}"
-                                SelectedValuePath="Id">
+                                SelectedValuePath="Id"
+                                utils:ComboBoxAutoCompleteBehavior.IsEnabled="True"
+                                utils:ComboBoxAutoCompleteBehavior.FilterMemberPath="DisplayLabel">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal">
                                         <!-- Code -->
-                                        <Border Background="#F5F5F5"
+                                        <Border Background="{StaticResource AppPageBackgroundBrush}"
                                               CornerRadius="4"
                                               Padding="6,2"
                                               Margin="0,0,8,0">

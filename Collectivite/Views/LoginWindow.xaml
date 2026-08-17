@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:controls="clr-namespace:Collectivite.Views.Controls"
+        xmlns:utils="clr-namespace:Collectivite.Utils"
         TextElement.Foreground="{DynamicResource MaterialDesignBody}"
         TextElement.FontWeight="Regular"
         TextElement.FontSize="13"
@@ -19,7 +20,7 @@
         AllowsTransparency="True">
 
     <Window.Resources>
-        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <utils:StringToVisibilityConverters x:Key="StringToVis"/>
     </Window.Resources>
 
     <Border CornerRadius="10" Background="White">
@@ -46,23 +47,18 @@
 
                 <!-- Header -->
                 <StackPanel Grid.Row="0" VerticalAlignment="Top">
-                    <materialDesign:PackIcon Kind="AccountCircle" 
-                                           Width="80" 
-                                           Height="80"
-                                           Foreground="{DynamicResource PrimaryHueMidBrush}"
-                                           HorizontalAlignment="Center"/>
-                    
                     <TextBlock Text="Bienvenue"
-                             FontSize="32"
-                             FontWeight="Bold"
+                             FontSize="30"
+                             FontWeight="SemiBold"
                              HorizontalAlignment="Center"
-                             Margin="0,20,0,5"
-                             Foreground="{DynamicResource MaterialDesignBody}"/>
-                    
+                             Margin="0,10,0,8"
+                             Foreground="#1E293B"/>
+
                     <TextBlock Text="Connectez-vous à votre compte"
                              FontSize="14"
+                             FontWeight="Normal"
                              HorizontalAlignment="Center"
-                             Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                             Foreground="#8A94A6"/>
                 </StackPanel>
 
                 <!-- Formulaire -->
@@ -95,7 +91,7 @@
                              FontSize="13"
                              Margin="5,5,0,15"
                              TextWrapping="Wrap"
-                             Visibility="{Binding ErrorMessage, Converter={StaticResource BoolToVis}}"/>
+                             Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVis}}"/>
 
                     <!-- Bouton de connexion -->
                     <Button Style="{StaticResource MaterialDesignRaisedButton}"
@@ -134,68 +130,62 @@
                 </StackPanel>
 
                 <!-- Footer -->
-                <StackPanel Grid.Row="2" 
+                <StackPanel Grid.Row="2"
                           VerticalAlignment="Bottom">
-                    <TextBlock Text="© 2025 Gestion Communale"
+                    <TextBlock Text="© 2026 Gestion Communale"
                              HorizontalAlignment="Center"
-                             FontSize="12"
-                             Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                             FontSize="11"
+                             Foreground="#B0B8C4"/>
                 </StackPanel>
             </Grid>
 
-            <!-- Section Droite - Image -->
+            <!-- Section Droite - Illustration -->
             <Grid Grid.Column="1">
-                <Border CornerRadius="0,10,10,0"
-                      Background="{DynamicResource PrimaryHueMidBrush}">
-                    <Grid>
-                        <!-- Image de la commune -->
-                        <Image Source="pack://application:,,,/app_icon_256.png"
-                             Stretch="UniformToFill"
-                             Opacity="0.9"/>
-                        
-                        <!-- Overlay gradient -->
-                        <Border>
-                            <Border.Background>
-                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                    <GradientStop Color="#80000000" Offset="0"/>
-                                    <GradientStop Color="#B0000000" Offset="1"/>
-                                </LinearGradientBrush>
-                            </Border.Background>
+                <Border CornerRadius="0,10,10,0">
+                    <Border.Background>
+                        <!-- Mirrors AppPrimaryBrush -> AppPrimaryDarkBrush (Styles/Palette.xaml) -->
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#1976D2" Offset="0"/>
+                            <GradientStop Color="#0D47A1" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+
+                    <StackPanel VerticalAlignment="Center"
+                              HorizontalAlignment="Center"
+                              Margin="40">
+
+                        <!-- Illustration -->
+                        <Border Width="180" Height="180"
+                              CornerRadius="90"
+                              Background="White"
+                              Margin="0,0,0,30">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="20"
+                                                ShadowDepth="4"
+                                                Opacity="0.25"
+                                                Color="Black"/>
+                            </Border.Effect>
+                            <Image Source="pack://application:,,,/Assets/mairie-illustration.png"
+                                 Width="120"
+                                 Height="120"
+                                 Stretch="Uniform"/>
                         </Border>
 
-                        <!-- Texte superposé -->
-                        <StackPanel VerticalAlignment="Center" 
-                                  HorizontalAlignment="Center"
-                                  Margin="40">
-                            <materialDesign:PackIcon Kind="CityVariant"
-                                  Width="100"
-                                  Height="100"
-                                  Foreground="White"
-                                  HorizontalAlignment="Center"
-                                  Margin="0,0,0,20"/>
-
-                            <TextBlock Text="Plateforme de Gestion Budgetaire "
-                                  FontSize="15"
-                                  FontWeight="Bold"
-                                  Foreground="White"
-                                  TextAlignment="Center"
-                                  Margin="0,15,0,0"/>
-                            <TextBlock Text="et Comptable des Collectivités"
-                                  FontSize="15"
-                                  FontWeight="Bold"
-                                  Foreground="White"
-                                  TextAlignment="Center"
-                                  Opacity="0.9"
-                                  Margin="0,5,0,0"/>
-                            <TextBlock Text="Locales"
-                                  FontSize="15"
-                                  FontWeight="Bold"
-                                  Foreground="White"
-                                  TextAlignment="Center"
-                                  Opacity="0.9"
-                                  Margin="0,5,0,0"/>
-                        </StackPanel>
-                    </Grid>
+                        <TextBlock Text="GESTION BUDGÉTAIRE &amp; COMPTABLE"
+                              FontSize="12"
+                              FontWeight="SemiBold"
+                              Foreground="White"
+                              Opacity="0.75"
+                              TextAlignment="Center"
+                              Margin="0,18,0,6"/>
+                        <TextBlock Text="Collectivités Locales"
+                              FontSize="26"
+                              FontWeight="Bold"
+                              Foreground="White"
+                              TextAlignment="Center"
+                              TextWrapping="Wrap"
+                              MaxWidth="280"/>
+                    </StackPanel>
                 </Border>
             </Grid>
 

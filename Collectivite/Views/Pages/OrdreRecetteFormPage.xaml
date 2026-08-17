@@ -114,6 +114,7 @@
                                       SelectedValue="{Binding OrdreRecette.ExerciceId}"
                                       SelectedValuePath="Id"
                                       DisplayMemberPath="Libelle"
+                                      utils:ComboBoxAutoCompleteBehavior.IsEnabled="True"
                                       Margin="0,0,0,15"/>
 
                             <!-- Commune -->
@@ -124,6 +125,7 @@
                                       SelectedValue="{Binding OrdreRecette.CommuneId}"
                                       SelectedValuePath="Id"
                                       DisplayMemberPath="Nom"
+                                      utils:ComboBoxAutoCompleteBehavior.IsEnabled="True"
                                       Margin="0,0,0,15"/>
 
                             <!-- Ligne budgétaire -->
@@ -133,6 +135,8 @@
                                       ItemsSource="{Binding BudgetLines}"
                                       SelectedValue="{Binding OrdreRecette.BudgetLineId}"
                                       SelectedValuePath="Id"
+                                      utils:ComboBoxAutoCompleteBehavior.IsEnabled="True"
+                                      utils:ComboBoxAutoCompleteBehavior.FilterMemberPath="DisplayLabel"
                                       Margin="0,0,0,15">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
@@ -166,6 +170,7 @@
                                       SelectedValue="{Binding OrdreRecette.TiersId}"
                                       SelectedValuePath="Id"
                                       DisplayMemberPath="NomComplet"
+                                      utils:ComboBoxAutoCompleteBehavior.IsEnabled="True"
                                       Margin="0,0,0,15"/>
                         </Grid>
 

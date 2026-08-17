@@ -19,6 +19,9 @@
         
         <!-- Converter pour activer/désactiver les ComboBox en cascade -->
         <Utils:NullToBooleanConverter x:Key="NullToBooleanConverter"/>
+
+        <!-- 🆕 Masque la colonne Actions en mode Tableau -->
+        <Utils:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter"/>
     </Page.Resources>
 
     <Grid>
@@ -78,8 +81,22 @@
 
             <!-- Boutons (visibles seulement si budget non validé) -->
             <StackPanel Grid.Row="1"
-                Orientation="Horizontal" 
+                Orientation="Horizontal"
                 HorizontalAlignment="Right">
+
+                <!-- 🆕 Bascule Formulaire / Tableau (saisie rapide façon Excel) -->
+                <ToggleButton Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                              IsChecked="{Binding IsGridEditMode}"
+                              VerticalAlignment="Center"
+                              Margin="0,0,8,0"
+                              Visibility="{Binding CanModifyBudget, Converter={StaticResource BooleanToVisibilityConverter}}"
+                              ToolTip="Basculer entre la saisie par formulaire et la saisie en tableau (façon Excel)"/>
+                <TextBlock Text="Mode Tableau"
+                           VerticalAlignment="Center"
+                           FontSize="12"
+                           Foreground="{StaticResource AppMutedTextBrush}"
+                           Margin="0,0,20,0"
+                           Visibility="{Binding CanModifyBudget, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
                 <!-- 🆕 Bouton Export PDF -->
                 <Button Style="{StaticResource MaterialDesignOutlinedButton}"
@@ -156,11 +173,13 @@
                     <materialDesign:Card Grid.Row="0" Padding="0" Margin="0,10,0,0">
                         <DataGrid ItemsSource="{Binding DisplayedLines}"
                              AutoGenerateColumns="False"
-                             IsReadOnly="True"
+                             IsReadOnly="{Binding IsGridEditMode, Converter={StaticResource InverseBooleanConverter}}"
                              CanUserSortColumns="False"
                              CanUserReorderColumns="False"
                              HeadersVisibility="Column"
                              GridLinesVisibility="Horizontal"
+                             BeginningEdit="BudgetGrid_BeginningEdit"
+                             CellEditEnding="BudgetGrid_CellEditEnding"
                              Style="{StaticResource MaterialDesignDataGrid}">
 
                             <!-- 🆕 Style avec support ligne de totaux -->
@@ -209,16 +228,35 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <DataGridTextColumn Header="Article" Binding="{Binding BudgetLine.Nommenclature.Article}" Width="100"/>
-                            <DataGridTextColumn Header="Paragraphe" Binding="{Binding BudgetLine.Nommenclature.Paragraphe}" Width="100"/>
-                            <DataGridTextColumn Header="Sous-Paragraphe" Binding="{Binding BudgetLine.Nommenclature.SousParagraphe}" Width="150"/>
-                            <DataGridTextColumn Header="Intitulé" Binding="{Binding BudgetLine.Nommenclature.Intitule}" Width="*"/>
-                            <DataGridTextColumn Header="Montant prévu" Binding="{Binding BudgetLine.MontantPrevu, StringFormat={}{0:N2} GNF}" Width="150"/>
+                            <DataGridTextColumn Header="Article" Binding="{Binding BudgetLine.Nommenclature.Article}" Width="100" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Paragraphe" Binding="{Binding BudgetLine.Nommenclature.Paragraphe}" Width="100" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Sous-Paragraphe" Binding="{Binding BudgetLine.Nommenclature.SousParagraphe}" Width="150" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Intitulé" Binding="{Binding BudgetLine.Nommenclature.Intitule}" Width="*" IsReadOnly="True"/>
+
+                            <!-- 🆕 Montant prévu : lecture seule sur les lignes parent/total, éditable en place
+                                 sur les lignes-feuilles lorsque le mode Tableau est actif -->
+                            <DataGridTemplateColumn Header="Montant prévu" Width="150">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding BudgetLine.MontantPrevu, StringFormat={}{0:N2} GNF}"
+                                                   VerticalAlignment="Center"
+                                                   Margin="8,0,0,0"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.CellEditingTemplate>
+                                    <DataTemplate>
+                                        <TextBox Text="{Binding BudgetLine.MontantPrevu, StringFormat=N2}"
+                                                 VerticalAlignment="Center"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellEditingTemplate>
+                            </DataGridTemplateColumn>
 
                             <!-- 🆕 Colonne Actions - masquée pour ligne de totaux -->
                             <DataGridTemplateColumn Header="Actions" Width="60">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
+                                        <!-- 🆕 Masquée en mode Tableau : l'édition se fait directement dans la cellule -->
+                                        <Grid Visibility="{Binding DataContext.IsGridEditMode, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
                                         <materialDesign:PopupBox Style="{StaticResource RowActionsPopupBoxStyle}">
                                             <materialDesign:PopupBox.Visibility>
                                                 <MultiBinding Converter="{StaticResource ShowActionsConverter}">
@@ -247,6 +285,7 @@
                                                 </Button>
                                             </StackPanel>
                                         </materialDesign:PopupBox>
+                                        </Grid>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
@@ -305,11 +344,13 @@
                     <materialDesign:Card Grid.Row="0" Padding="0" Margin="0,10,0,0">
                     <DataGrid ItemsSource="{Binding DisplayedLines}"
                          AutoGenerateColumns="False"
-                         IsReadOnly="True"
+                         IsReadOnly="{Binding IsGridEditMode, Converter={StaticResource InverseBooleanConverter}}"
                          CanUserSortColumns="False"
                          CanUserReorderColumns="False"
                          HeadersVisibility="Column"
                          GridLinesVisibility="Horizontal"
+                         BeginningEdit="BudgetGrid_BeginningEdit"
+                         CellEditEnding="BudgetGrid_CellEditEnding"
                          Style="{StaticResource MaterialDesignDataGrid}">
 
                         <DataGrid.RowStyle>
@@ -355,15 +396,34 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <DataGridTextColumn Header="Article" Binding="{Binding BudgetLine.Nommenclature.Article}" Width="100"/>
-                            <DataGridTextColumn Header="Paragraphe" Binding="{Binding BudgetLine.Nommenclature.Paragraphe}" Width="100"/>
-                            <DataGridTextColumn Header="Sous-Paragraphe" Binding="{Binding BudgetLine.Nommenclature.SousParagraphe}" Width="150"/>
-                            <DataGridTextColumn Header="Intitulé" Binding="{Binding BudgetLine.Nommenclature.Intitule}" Width="*"/>
-                            <DataGridTextColumn Header="Montant prévu" Binding="{Binding BudgetLine.MontantPrevu, StringFormat={}{0:N2} GNF}" Width="150"/>
+                            <DataGridTextColumn Header="Article" Binding="{Binding BudgetLine.Nommenclature.Article}" Width="100" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Paragraphe" Binding="{Binding BudgetLine.Nommenclature.Paragraphe}" Width="100" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Sous-Paragraphe" Binding="{Binding BudgetLine.Nommenclature.SousParagraphe}" Width="150" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Intitulé" Binding="{Binding BudgetLine.Nommenclature.Intitule}" Width="*" IsReadOnly="True"/>
+
+                            <!-- 🆕 Montant prévu : lecture seule sur les lignes parent/total, éditable en place
+                                 sur les lignes-feuilles lorsque le mode Tableau est actif -->
+                            <DataGridTemplateColumn Header="Montant prévu" Width="150">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding BudgetLine.MontantPrevu, StringFormat={}{0:N2} GNF}"
+                                                   VerticalAlignment="Center"
+                                                   Margin="8,0,0,0"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.CellEditingTemplate>
+                                    <DataTemplate>
+                                        <TextBox Text="{Binding BudgetLine.MontantPrevu, StringFormat=N2}"
+                                                 VerticalAlignment="Center"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellEditingTemplate>
+                            </DataGridTemplateColumn>
 
                             <DataGridTemplateColumn Header="Actions" Width="60">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
+                                        <!-- 🆕 Masquée en mode Tableau : l'édition se fait directement dans la cellule -->
+                                        <Grid Visibility="{Binding DataContext.IsGridEditMode, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
                                         <materialDesign:PopupBox Style="{StaticResource RowActionsPopupBoxStyle}">
                                             <materialDesign:PopupBox.Visibility>
                                                 <MultiBinding Converter="{StaticResource ShowActionsConverter}">
@@ -392,6 +452,7 @@
                                                 </Button>
                                             </StackPanel>
                                         </materialDesign:PopupBox>
+                                        </Grid>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
@@ -480,11 +541,13 @@
                     <materialDesign:Card Grid.Row="0" Padding="0" Margin="0,10,0,0">
                     <DataGrid ItemsSource="{Binding DisplayedLines}"
                      AutoGenerateColumns="False"
-                     IsReadOnly="True"
+                     IsReadOnly="{Binding IsGridEditMode, Converter={StaticResource InverseBooleanConverter}}"
                      CanUserSortColumns="False"
                      CanUserReorderColumns="False"
                      HeadersVisibility="Column"
                      GridLinesVisibility="Horizontal"
+                     BeginningEdit="BudgetGrid_BeginningEdit"
+                     CellEditEnding="BudgetGrid_CellEditEnding"
                      Style="{StaticResource MaterialDesignDataGrid}">
 
                         <DataGrid.RowStyle>
@@ -530,15 +593,34 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <DataGridTextColumn Header="Article" Binding="{Binding BudgetLine.Nommenclature.Article}" Width="100"/>
-                            <DataGridTextColumn Header="Paragraphe" Binding="{Binding BudgetLine.Nommenclature.Paragraphe}" Width="100"/>
-                            <DataGridTextColumn Header="Sous-Paragraphe" Binding="{Binding BudgetLine.Nommenclature.SousParagraphe}" Width="150"/>
-                            <DataGridTextColumn Header="Intitulé" Binding="{Binding BudgetLine.Nommenclature.Intitule}" Width="*"/>
-                            <DataGridTextColumn Header="Montant prévu" Binding="{Binding BudgetLine.MontantPrevu, StringFormat={}{0:N2} GNF}" Width="150"/>
+                            <DataGridTextColumn Header="Article" Binding="{Binding BudgetLine.Nommenclature.Article}" Width="100" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Paragraphe" Binding="{Binding BudgetLine.Nommenclature.Paragraphe}" Width="100" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Sous-Paragraphe" Binding="{Binding BudgetLine.Nommenclature.SousParagraphe}" Width="150" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Intitulé" Binding="{Binding BudgetLine.Nommenclature.Intitule}" Width="*" IsReadOnly="True"/>
+
+                            <!-- 🆕 Montant prévu : lecture seule sur les lignes parent/total, éditable en place
+                                 sur les lignes-feuilles lorsque le mode Tableau est actif -->
+                            <DataGridTemplateColumn Header="Montant prévu" Width="150">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding BudgetLine.MontantPrevu, StringFormat={}{0:N2} GNF}"
+                                                   VerticalAlignment="Center"
+                                                   Margin="8,0,0,0"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.CellEditingTemplate>
+                                    <DataTemplate>
+                                        <TextBox Text="{Binding BudgetLine.MontantPrevu, StringFormat=N2}"
+                                                 VerticalAlignment="Center"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellEditingTemplate>
+                            </DataGridTemplateColumn>
 
                             <DataGridTemplateColumn Header="Actions" Width="60">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
+                                        <!-- 🆕 Masquée en mode Tableau : l'édition se fait directement dans la cellule -->
+                                        <Grid Visibility="{Binding DataContext.IsGridEditMode, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
                                         <materialDesign:PopupBox Style="{StaticResource RowActionsPopupBoxStyle}">
                                             <materialDesign:PopupBox.Visibility>
                                                 <MultiBinding Converter="{StaticResource ShowActionsConverter}">
@@ -567,6 +649,7 @@
                                                 </Button>
                                             </StackPanel>
                                         </materialDesign:PopupBox>
+                                        </Grid>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
@@ -641,11 +724,13 @@
                     <materialDesign:Card Grid.Row="0" Padding="0" Margin="0,10,0,0">
                     <DataGrid ItemsSource="{Binding DisplayedLines}"
                          AutoGenerateColumns="False"
-                         IsReadOnly="True"
+                         IsReadOnly="{Binding IsGridEditMode, Converter={StaticResource InverseBooleanConverter}}"
                          CanUserSortColumns="False"
                          CanUserReorderColumns="False"
                          HeadersVisibility="Column"
                          GridLinesVisibility="Horizontal"
+                         BeginningEdit="BudgetGrid_BeginningEdit"
+                         CellEditEnding="BudgetGrid_CellEditEnding"
                          Style="{StaticResource MaterialDesignDataGrid}">
 
                         <DataGrid.RowStyle>
@@ -691,15 +776,34 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <DataGridTextColumn Header="Article" Binding="{Binding BudgetLine.Nommenclature.Article}" Width="100"/>
-                            <DataGridTextColumn Header="Paragraphe" Binding="{Binding BudgetLine.Nommenclature.Paragraphe}" Width="100"/>
-                            <DataGridTextColumn Header="Sous-Paragraphe" Binding="{Binding BudgetLine.Nommenclature.SousParagraphe}" Width="150"/>
-                            <DataGridTextColumn Header="Intitulé" Binding="{Binding BudgetLine.Nommenclature.Intitule}" Width="*"/>
-                            <DataGridTextColumn Header="Montant prévu" Binding="{Binding BudgetLine.MontantPrevu, StringFormat={}{0:N2} GNF}" Width="150"/>
+                            <DataGridTextColumn Header="Article" Binding="{Binding BudgetLine.Nommenclature.Article}" Width="100" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Paragraphe" Binding="{Binding BudgetLine.Nommenclature.Paragraphe}" Width="100" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Sous-Paragraphe" Binding="{Binding BudgetLine.Nommenclature.SousParagraphe}" Width="150" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Intitulé" Binding="{Binding BudgetLine.Nommenclature.Intitule}" Width="*" IsReadOnly="True"/>
+
+                            <!-- 🆕 Montant prévu : lecture seule sur les lignes parent/total, éditable en place
+                                 sur les lignes-feuilles lorsque le mode Tableau est actif -->
+                            <DataGridTemplateColumn Header="Montant prévu" Width="150">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding BudgetLine.MontantPrevu, StringFormat={}{0:N2} GNF}"
+                                                   VerticalAlignment="Center"
+                                                   Margin="8,0,0,0"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.CellEditingTemplate>
+                                    <DataTemplate>
+                                        <TextBox Text="{Binding BudgetLine.MontantPrevu, StringFormat=N2}"
+                                                 VerticalAlignment="Center"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellEditingTemplate>
+                            </DataGridTemplateColumn>
 
                             <DataGridTemplateColumn Header="Actions" Width="60">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
+                                        <!-- 🆕 Masquée en mode Tableau : l'édition se fait directement dans la cellule -->
+                                        <Grid Visibility="{Binding DataContext.IsGridEditMode, RelativeSource={RelativeSource AncestorType=Page}, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
                                         <materialDesign:PopupBox Style="{StaticResource RowActionsPopupBoxStyle}">
                                             <materialDesign:PopupBox.Visibility>
                                                 <MultiBinding Converter="{StaticResource ShowActionsConverter}">
@@ -728,6 +832,7 @@
                                                 </Button>
                                             </StackPanel>
                                         </materialDesign:PopupBox>
+                                        </Grid>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>

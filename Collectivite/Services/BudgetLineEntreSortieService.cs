@@ -48,6 +48,7 @@ namespace Collectivite.Services
             // OrdreRecette → BudgetLine (direct)
             var ordreRecette = await context.OrdreRecettes
                 .Include(o => o.BudgetLine)
+                    .ThenInclude(b => b.Nommenclature)
                 .FirstOrDefaultAsync(o => o.Id == idOrdreRecette);
 
             if (ordreRecette?.BudgetLine == null)
@@ -55,6 +56,10 @@ namespace Collectivite.Services
 
             ordreRecette.BudgetLine.MontantEntreSortie += montantEncaisse;
             await OrdreRecetteService.RecalculateEntreSortie(context, ordreRecette.BudgetLine.NommenclatureId, ordreRecette.BudgetLine.BudgetPrimitifId);
+
+            // Prélèvement de 60% sur le montant réellement encaissé (pas le montant total de l'ordre)
+            await OrdreRecetteService.AppliquerPrelevementEntreSortieAsync(context, ordreRecette.BudgetLine, montantEncaisse);
+
             await context.SaveChangesAsync();
 
             return true;
