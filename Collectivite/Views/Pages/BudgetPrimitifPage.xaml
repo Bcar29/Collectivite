@@ -19,13 +19,9 @@
         <utils:RecetteDepenseToSoldeBrushConverter x:Key="RecetteDepenseToSoldeBrushConverter"/>
         <utils:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
 
-        <!-- Style partagé pour les DataGrid de la Vue d'Ensemble : lignes zébrées + séparateurs -->
+        <!-- Style partagé pour les DataGrid de la Vue d'Ensemble : lignes en rouge clair (comme Compte Administratif) -->
         <Style x:Key="VueEnsembleRowStyle" TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
-            <Style.Triggers>
-                <Trigger Property="ItemsControl.AlternationIndex" Value="1">
-                    <Setter Property="Background" Value="{StaticResource AppPageBackgroundBrush}"/>
-                </Trigger>
-            </Style.Triggers>
+            <Setter Property="Background" Value="#FFCDD2"/>
         </Style>
         <Style x:Key="VueEnsembleHeaderStyle" TargetType="DataGridColumnHeader" BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">
             <Setter Property="FontWeight" Value="SemiBold"/>
@@ -77,7 +73,7 @@
                                 <TextBlock Text="Déballer pour valider le budget"
                                            FontSize="15"
                                            FontWeight="SemiBold"/>
-                                <TextBlock Text="Suivez la progression de chaque exercice : Brouillon → Approuvé → Validé"
+                                <TextBlock Text="Suivez la progression de chaque exercice : Brouillon → Validé → Approuvé"
                                            Style="{StaticResource SectionSubtitleTextStyle}"/>
                             </StackPanel>
                         </StackPanel>
@@ -445,7 +441,7 @@
                                                         </Button.Visibility>
                                                         <StackPanel Orientation="Horizontal">
                                                             <materialDesign:PackIcon Kind="CheckCircleOutline" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                                            <TextBlock Text="Approuver le budget" VerticalAlignment="Center"/>
+                                                            <TextBlock Text="Valider le budget" VerticalAlignment="Center"/>
                                                         </StackPanel>
                                                     </Button>
 
@@ -466,7 +462,7 @@
                                                         </Button.Visibility>
                                                         <StackPanel Orientation="Horizontal">
                                                             <materialDesign:PackIcon Kind="CheckCircle" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                                            <TextBlock Text="Valider le budget" VerticalAlignment="Center"/>
+                                                            <TextBlock Text="Approuver le budget" VerticalAlignment="Center"/>
                                                         </StackPanel>
                                                     </Button>
 
@@ -749,20 +745,20 @@
                         </Grid.RowDefinitions>
 
                         <!-- Header -->
-                        <Border Grid.Row="0" Background="#FF9800" Padding="20">
+                        <Border Grid.Row="0" Background="#4CAF50" Padding="20">
                             <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="CheckCircleOutline" 
-                                               Width="32" 
+                                <materialDesign:PackIcon Kind="CheckCircle"
+                                               Width="32"
                                                Height="32"
                                                Foreground="White"
                                                VerticalAlignment="Center"
                                                Margin="0,0,15,0"/>
                                 <StackPanel>
-                                    <TextBlock Text="Approbation du Budget Primitif"
+                                    <TextBlock Text="Validation du Budget Primitif"
                                      FontSize="20"
                                      FontWeight="SemiBold"
                                      Foreground="White"/>
-                                    <TextBlock Text="Approuver le budget avant validation"
+                                    <TextBlock Text="Rendre le budget disponible pour l'approbation"
                                      FontSize="12"
                                      Foreground="White"
                                      Opacity="0.9"
@@ -776,7 +772,7 @@
 
                             <!-- Date d'approbation -->
                             <DatePicker SelectedDate="{Binding DateApprobationDateTime, Mode=TwoWay}"
-                              materialDesign:HintAssist.Hint="Date d'approbation *"
+                              materialDesign:HintAssist.Hint="Date de validation *"
                               Style="{StaticResource MaterialDesignOutlinedDatePicker}"
                               Margin="0,0,0,20"/>
 
@@ -786,27 +782,27 @@
                           Padding="15">
                                 <StackPanel>
                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                        <materialDesign:PackIcon Kind="InformationOutline" 
-                                                       Width="24" 
+                                        <materialDesign:PackIcon Kind="InformationOutline"
+                                                       Width="24"
                                                        Height="24"
                                                        Foreground="#FF9800"
                                                        VerticalAlignment="Top"
                                                        Margin="0,0,10,0"/>
-                                        <TextBlock TextWrapping="Wrap" 
-                                         FontSize="13" 
+                                        <TextBlock TextWrapping="Wrap"
+                                         FontSize="13"
                                          Foreground="#F57C00"
                                          FontWeight="Medium">
                                     <Run Text="ℹ️ Information"/>
                                         </TextBlock>
                                     </StackPanel>
 
-                                    <TextBlock TextWrapping="Wrap" 
-                                     FontSize="12" 
+                                    <TextBlock TextWrapping="Wrap"
+                                     FontSize="12"
                                      Foreground="#666"
                                      Margin="34,0,0,0">
-                                <Run Text="L'approbation du budget permet de le rendre disponible pour la validation."/>
+                                <Run Text="La validation du budget permet de le rendre disponible pour l'approbation."/>
                                 <LineBreak/>
-                                <Run Text="Une fois approuvé, le budget pourra être validé avec un fichier de validation."/>
+                                <Run Text="Une fois validé, le budget pourra être approuvé avec un fichier justificatif."/>
                                     </TextBlock>
                                 </StackPanel>
                             </Border>
@@ -814,9 +810,9 @@
                         </StackPanel>
 
                         <!-- Footer -->
-                        <Border Grid.Row="2" 
-                      Background="#FAFAFA" 
-                      BorderBrush="#E0E0E0" 
+                        <Border Grid.Row="2"
+                      Background="#FAFAFA"
+                      BorderBrush="#E0E0E0"
                       BorderThickness="0,1,0,0"
                       Padding="20">
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
@@ -830,14 +826,14 @@
                                 <Button Command="{Binding ConfirmApprovalCommand}"
                               Width="140"
                               Height="40"
-                              Background="#FF9800"
-                              BorderBrush="#FF9800"
+                              Background="#4CAF50"
+                              BorderBrush="#4CAF50"
                               Style="{StaticResource MaterialDesignRaisedButton}">
                                     <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="CheckCircleOutline" 
+                                        <materialDesign:PackIcon Kind="CheckCircle"
                                                        VerticalAlignment="Center"
                                                        Margin="0,0,8,0"/>
-                                        <TextBlock Text="Approuver" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Valider" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
                             </StackPanel>
@@ -865,16 +861,16 @@
                         </Grid.RowDefinitions>
 
                         <!-- Header -->
-                        <Border Grid.Row="0" Background="#4CAF50" Padding="20">
+                        <Border Grid.Row="0" Background="#FF9800" Padding="20">
                             <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="CheckCircle" 
-                                               Width="32" 
+                                <materialDesign:PackIcon Kind="CheckCircleOutline"
+                                               Width="32"
                                                Height="32"
                                                Foreground="White"
                                                VerticalAlignment="Center"
                                                Margin="0,0,15,0"/>
                                 <StackPanel>
-                                    <TextBlock Text="Validation du Budget Primitif"
+                                    <TextBlock Text="Approbation du Budget Primitif"
                                      FontSize="20"
                                      FontWeight="SemiBold"
                                      Foreground="White"/>
@@ -892,13 +888,13 @@
 
                             <!-- Date de validation -->
                             <DatePicker SelectedDate="{Binding DateValidationDateTime, Mode=TwoWay}"
-                              materialDesign:HintAssist.Hint="Date de validation *"
+                              materialDesign:HintAssist.Hint="Date d'approbation *"
                               Style="{StaticResource MaterialDesignOutlinedDatePicker}"
                               Margin="0,0,0,15"/>
 
                             <!-- Fichier de validation -->
                             <StackPanel Margin="0,0,0,15">
-                                <TextBlock Text="Fichier de validation"
+                                <TextBlock Text="Fichier d'approbation"
                                      FontSize="12"
                                      FontWeight="Medium"
                                      Foreground="#424242"
@@ -930,31 +926,29 @@
                           Padding="15">
                                 <StackPanel>
                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                        <materialDesign:PackIcon Kind="AlertCircle" 
-                                                       Width="24" 
+                                        <materialDesign:PackIcon Kind="AlertCircle"
+                                                       Width="24"
                                                        Height="24"
                                                        Foreground="#FF9800"
                                                        VerticalAlignment="Top"
                                                        Margin="0,0,10,0"/>
-                                        <TextBlock TextWrapping="Wrap" 
-                                         FontSize="13" 
+                                        <TextBlock TextWrapping="Wrap"
+                                         FontSize="13"
                                          Foreground="#F57C00"
                                          FontWeight="Medium">
                                     <Run Text="⚠️ Attention : Action irréversible"/>
                                         </TextBlock>
                                     </StackPanel>
 
-                                    <TextBlock TextWrapping="Wrap" 
-                                     FontSize="12" 
+                                    <TextBlock TextWrapping="Wrap"
+                                     FontSize="12"
                                      Foreground="#666"
                                      Margin="34,0,0,0">
-                                <Run Text="Une fois le budget validé, vous ne pourrez plus :"/>
+                                <Run Text="Une fois le budget approuvé, vous ne pourrez plus :"/>
                                 <LineBreak/>
                                 <Run Text="• Modifier les lignes budgétaires"/>
                                 <LineBreak/>
-                                <Run Text="• Ajouter ou supprimer des lignes"/>
-                                <LineBreak/>
-                                <Run Text="• Modifier le budget primitif"/>
+                                <Run Text="• Ajouter ou supprimer des lignes sauf par remaniement"/>
                                     </TextBlock>
                                 </StackPanel>
                             </Border>
@@ -962,9 +956,9 @@
                         </StackPanel>
 
                         <!-- Footer -->
-                        <Border Grid.Row="2" 
-                      Background="#FAFAFA" 
-                      BorderBrush="#E0E0E0" 
+                        <Border Grid.Row="2"
+                      Background="#FAFAFA"
+                      BorderBrush="#E0E0E0"
                       BorderThickness="0,1,0,0"
                       Padding="20">
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
@@ -978,14 +972,14 @@
                                 <Button Command="{Binding ConfirmValidationCommand}"
                               Width="140"
                               Height="40"
-                              Background="#4CAF50"
-                              BorderBrush="#4CAF50"
+                              Background="#FF9800"
+                              BorderBrush="#FF9800"
                               Style="{StaticResource MaterialDesignRaisedButton}">
                                     <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="CheckCircle" 
+                                        <materialDesign:PackIcon Kind="CheckCircleOutline"
                                                        VerticalAlignment="Center"
                                                        Margin="0,0,8,0"/>
-                                        <TextBlock Text="Valider" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Approuver" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
                             </StackPanel>

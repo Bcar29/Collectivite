@@ -211,9 +211,55 @@ namespace Collectivite.Services
                 var nomenclatureId = line.NommenclatureId;
                 var budgetPrimitifId = line.BudgetPrimitifId;
 
+                var nature = line.Nommenclature.Nature;
+                var section = line.Nommenclature.Section;
+
                 // Suppression
                 context.BudgetLines.Remove(line);
                 await context.SaveChangesAsync();
+
+                // Mettre à jour les totaux du budget primitif (non recalculés par RecalculateAncestorsAsync,
+                // qui ne touche que les montants des chapitres/articles/paragraphes parents)
+                var bp = await context.BudgetsPrimitifs
+                    .FirstOrDefaultAsync(b => b.Id == budgetPrimitifId);
+
+                if (bp != null)
+                {
+                    if (nature == NatureType.Recette)
+                    {
+                        bp.MontantRecette -= montant;
+
+                        if (section == SectionType.Fonctionnement)
+                        {
+                            var n110 = await context.BudgetLines
+                                .FirstOrDefaultAsync(n => n.Nommenclature.Article == "110" && bp.Id == n.BudgetPrimitifId);
+
+                            var n662 = await context.BudgetLines
+                                .FirstOrDefaultAsync(n => n.Nommenclature.Article == "662" && bp.Id == n.BudgetPrimitifId);
+
+                            if (n110 != null)
+                            {
+                                n110.MontantPrevu -= montant * 0.6m;
+                                await context.SaveChangesAsync();
+
+                                await RecalculateAncestorsAsync(n110.NommenclatureId, n110.BudgetPrimitifId);
+                            }
+                            if (n662 != null)
+                            {
+                                n662.MontantPrevu -= montant * 0.6m;
+                                await context.SaveChangesAsync();
+
+                                await RecalculateAncestorsAsync(n662.NommenclatureId, n662.BudgetPrimitifId);
+                            }
+                        }
+                        await context.SaveChangesAsync();
+                    }
+                    else if (nature == NatureType.Depense)
+                    {
+                        bp.MontantDepense -= montant;
+                        await context.SaveChangesAsync();
+                    }
+                }
 
                 // Recalculer les ancêtres
                 await RecalculateAncestorsAsync(nomenclatureId, budgetPrimitifId);

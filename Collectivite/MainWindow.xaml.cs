@@ -61,6 +61,14 @@ namespace Collectivite
 
         private async Task InitializeAsync()
         {
+
+            // bloquer l'ouvertutre de l'application à partir du 01/01/2027
+            if (DateTime.Now.Date >= new DateTime(2027, 1, 1))
+            {
+                MessageBox.Show("L'application ne peut pas être utilisée après le 31/12/2026. Veuillez contacter l'administrateur.", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                Application.Current.Shutdown();
+                return;
+            }
             // Charger les exercices d'abord
             await _viewModel.LoadExercicesAsync();
 

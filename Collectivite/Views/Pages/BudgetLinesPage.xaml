@@ -55,6 +55,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <!-- Message d'information si budget validé -->
@@ -65,13 +66,13 @@
                     CornerRadius="8"
                     Visibility="{Binding IsBudgetValidated, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <StackPanel Orientation="Horizontal">
-                    <materialDesign:PackIcon Kind="Lock" 
-                                           Width="24" 
+                    <materialDesign:PackIcon Kind="Lock"
+                                           Width="24"
                                            Height="24"
                                            Foreground="#FF9800"
                                            VerticalAlignment="Center"
                                            Margin="0,0,10,0"/>
-                    <TextBlock Text="Ce budget est validé et ne peut plus être modifié."
+                    <TextBlock Text="Ce budget est validé et ne peut plus être modifié. pour ajuster les montants, vous devez passer par le remaniement."
                              FontSize="14"
                              Foreground="#F57C00"
                              FontWeight="Medium"
@@ -79,8 +80,61 @@
                 </StackPanel>
             </Border>
 
+            <!-- Bandeau équilibre du budget (recettes vs dépenses) -->
+            <Border Grid.Row="1"
+                    Background="#E8F5E9"
+                    Padding="15"
+                    Margin="0,0,0,10"
+                    CornerRadius="8">
+                <Border.Visibility>
+                    <MultiBinding Converter="{StaticResource BooleanAndToVisibilityConverter}">
+                        <Binding Path="CanShowEquilibreBanner"/>
+                        <Binding Path="IsBudgetEquilibre"/>
+                    </MultiBinding>
+                </Border.Visibility>
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="CheckCircle"
+                                           Width="24"
+                                           Height="24"
+                                           Foreground="#388E3C"
+                                           VerticalAlignment="Center"
+                                           Margin="0,0,10,0"/>
+                    <TextBlock Text="{Binding MessageEquilibre}"
+                             FontSize="14"
+                             Foreground="#2E7D32"
+                             FontWeight="Medium"
+                             VerticalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Row="1"
+                    Background="#FFEBEE"
+                    Padding="15"
+                    Margin="0,0,0,10"
+                    CornerRadius="8">
+                <Border.Visibility>
+                    <MultiBinding Converter="{StaticResource BooleanAndToVisibilityConverter}">
+                        <Binding Path="CanShowEquilibreBanner"/>
+                        <Binding Path="IsBudgetEquilibre" Converter="{StaticResource InverseBooleanConverter}"/>
+                    </MultiBinding>
+                </Border.Visibility>
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="AlertCircle"
+                                           Width="24"
+                                           Height="24"
+                                           Foreground="#D32F2F"
+                                           VerticalAlignment="Center"
+                                           Margin="0,0,10,0"/>
+                    <TextBlock Text="{Binding MessageEquilibre}"
+                             FontSize="14"
+                             Foreground="#C62828"
+                             FontWeight="Medium"
+                             VerticalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+
             <!-- Boutons (visibles seulement si budget non validé) -->
-            <StackPanel Grid.Row="1"
+            <StackPanel Grid.Row="2"
                 Orientation="Horizontal"
                 HorizontalAlignment="Right">
 

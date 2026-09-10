@@ -276,6 +276,10 @@ namespace Collectivite.ViewModels
 
         public bool IsBudgetValidated => _budgetPrimitif?.Status == BudgetPrimitif.Statusbudget.VALIDATED;
         public bool CanModifyBudget => !IsBudgetValidated;
+        public bool HasBudgetPrimitif => _budgetPrimitifId != 0;
+
+        // Le bandeau d'équilibre n'a plus d'intérêt une fois le budget validé : il est figé.
+        public bool CanShowEquilibreBanner => HasBudgetPrimitif && !IsBudgetValidated;
 
         // ═══════════════════════════════════════════════════════════
         // PROPRIÉTÉS - TOTAUX (4 valeurs par catégorie: Prévu, Définitif, Réalisé, EntreSortie)
@@ -376,7 +380,15 @@ namespace Collectivite.ViewModels
         public decimal TotalGeneralRecettesReels
         {
             get => _totalGeneralRecettesReels;
-            set => SetProperty(ref _totalGeneralRecettesReels, value);
+            set
+            {
+                if (SetProperty(ref _totalGeneralRecettesReels, value))
+                {
+                    OnPropertyChanged(nameof(IsBudgetEquilibre));
+                    OnPropertyChanged(nameof(DifferenceEquilibre));
+                    OnPropertyChanged(nameof(MessageEquilibre));
+                }
+            }
         }
 
         private decimal _totalGeneralRecetteReelDefinitif;
@@ -496,7 +508,37 @@ namespace Collectivite.ViewModels
         public decimal TotalGeneralDepensesReels
         {
             get => _totalGeneralDepensesReels;
-            set => SetProperty(ref _totalGeneralDepensesReels, value);
+            set
+            {
+                if (SetProperty(ref _totalGeneralDepensesReels, value))
+                {
+                    OnPropertyChanged(nameof(IsBudgetEquilibre));
+                    OnPropertyChanged(nameof(DifferenceEquilibre));
+                    OnPropertyChanged(nameof(MessageEquilibre));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Vrai si le budget est équilibré (total général des recettes réelles = total général des dépenses réelles).
+        /// </summary>
+        public bool IsBudgetEquilibre => TotalGeneralRecettesReels == TotalGeneralDepensesReels;
+
+        /// <summary>
+        /// Différence Recettes - Dépenses. Positive si excédent de recette, négative si excédent de dépense.
+        /// </summary>
+        public decimal DifferenceEquilibre => TotalGeneralRecettesReels - TotalGeneralDepensesReels;
+
+        public string MessageEquilibre
+        {
+            get
+            {
+                if (IsBudgetEquilibre)
+                    return "Budget équilibré";
+
+                var cote = DifferenceEquilibre > 0 ? "recette" : "dépense";
+                return $"Budget non équilibré : il y a {Math.Abs(DifferenceEquilibre):N0} GNF de plus en {cote}";
+            }
         }
 
         private decimal _totalGeneralDepenseReelDefinitif;
@@ -1204,6 +1246,8 @@ namespace Collectivite.ViewModels
                     _budgetPrimitif = null;
                     _budgetPrimitifId = 0;
                     DisplayedLines.Clear();
+                    OnPropertyChanged(nameof(HasBudgetPrimitif));
+                    OnPropertyChanged(nameof(CanShowEquilibreBanner));
                     return;
                 }
 
@@ -1223,6 +1267,8 @@ namespace Collectivite.ViewModels
 
                 OnPropertyChanged(nameof(IsBudgetValidated));
                 OnPropertyChanged(nameof(CanModifyBudget));
+                OnPropertyChanged(nameof(HasBudgetPrimitif));
+                OnPropertyChanged(nameof(CanShowEquilibreBanner));
 
                 // Le budget vient de devenir non modifiable (validé, ou plus de budget du
                 // tout pour l'exercice) : on repasse en mode Formulaire pour ne pas laisser
@@ -1269,6 +1315,8 @@ namespace Collectivite.ViewModels
                 {
                     DisplayedLines.Clear();
                     _fullHierarchy.Clear();
+                    TotalGeneralRecettesReels = 0;
+                    TotalGeneralDepensesReels = 0;
                     return;
                 }
 
