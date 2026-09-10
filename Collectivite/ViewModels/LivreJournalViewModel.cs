@@ -275,9 +275,8 @@ namespace Collectivite.ViewModels
                     .ToListAsync();
                 ComptesDisponibles = new ObservableCollection<CompteComptable>(comptes);
 
-                // Charger les écritures
-                PageNumber = 1;
-                await ApplyFiltersAsync();
+                // Charger les écritures : on atterrit par défaut sur la dernière page (les plus récentes)
+                await ApplyFiltersAsync(goToLastPage: true);
             }
             catch (Exception ex)
             {
@@ -293,7 +292,7 @@ namespace Collectivite.ViewModels
 
         #region Méthodes - Filtres
 
-        public async Task ApplyFiltersAsync()
+        public async Task ApplyFiltersAsync(bool goToLastPage = false)
         {
             try
             {
@@ -336,8 +335,20 @@ namespace Collectivite.ViewModels
 
                 TotalCount = await query.CountAsync();
 
+                if (goToLastPage)
+                {
+                    PageNumber = TotalPages;
+                }
+                else if (PageNumber > TotalPages)
+                {
+                    PageNumber = TotalPages;
+                }
+
+                // Ordre chronologique (comptable) : les écritures les plus anciennes en premier,
+                // comme dans l'export. On atterrit par défaut sur la dernière page (les plus récentes).
                 var ecritures = await query
-                    .OrderByDescending(e => e.Id)
+                    .OrderBy(e => e.DateEcriture)
+                    .ThenBy(e => e.Id)
                     .Skip((PageNumber - 1) * PageSize)
                     .Take(PageSize)
                     .ToListAsync();
@@ -357,8 +368,7 @@ namespace Collectivite.ViewModels
 
         public async Task ApplyFiltersButtonAsync()
         {
-            PageNumber = 1;
-            await ApplyFiltersAsync();
+            await ApplyFiltersAsync(goToLastPage: true);
         }
 
         public async Task ClearFiltersAsync()
@@ -366,8 +376,7 @@ namespace Collectivite.ViewModels
             DateDebutDateTime = null;
             DateFinDateTime = null;
             CompteFiltre = null;
-            PageNumber = 1;
-            await ApplyFiltersAsync();
+            await ApplyFiltersAsync(goToLastPage: true);
         }
 
         public async Task NextPageAsync()
@@ -659,7 +668,9 @@ namespace Collectivite.ViewModels
 
                 using var context = new AppDbContext();
 
-                if (DialogEcriture.Id == 0)
+                bool estCreation = DialogEcriture.Id == 0;
+
+                if (estCreation)
                 {
                     // Création
                     var exerciceService = ExerciceService.Instance;
@@ -684,7 +695,8 @@ namespace Collectivite.ViewModels
 
                 await context.SaveChangesAsync();
                 IsDialogOpen = false;
-                await ApplyFiltersAsync();
+                // Après une création, on va voir la nouvelle écriture sur la dernière page (ordre chronologique)
+                await ApplyFiltersAsync(goToLastPage: estCreation);
 
                 NotificationService.ShowSuccess("Écriture enregistrée avec succès.");
             }
